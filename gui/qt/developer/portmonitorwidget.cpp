@@ -290,7 +290,7 @@ void PortMonitorWidget::clrCorePortMonitor(const QString &portStr)
 {
     if (Util::isHexPort(portStr))
     {
-        core().set(cemucore::CEMUCORE_PROP_DBG_PORT_FLAGS, Util::hex2int(portStr), 0);
+        core().set(cemucore::CEMUCORE_PROP_PORT_DBG_FLAGS, Util::hex2int(portStr), 0);
     }
 }
 
@@ -309,7 +309,7 @@ void PortMonitorWidget::setCorePortMonitor(const QString &portStr, int mode)
         int flags = (mode & PortMonitor::Mode::R ? cemucore::CEMUCORE_DBG_WATCH_READ : 0) |
                     (mode & PortMonitor::Mode::W ? cemucore::CEMUCORE_DBG_WATCH_WRITE : 0);
 
-        core().set(cemucore::CEMUCORE_PROP_DBG_PORT_FLAGS, port, flags);
+        core().set(cemucore::CEMUCORE_PROP_PORT_DBG_FLAGS, port, flags);
     }
 }
 

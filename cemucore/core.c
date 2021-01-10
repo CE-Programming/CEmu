@@ -123,9 +123,8 @@ void cemucore_destroy(cemucore_t *core)
     free(core);
 }
 
-int32_t cemucore_get(const cemucore_t *const_core, cemucore_prop_t prop, int32_t addr)
+int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
 {
-    cemucore_t *core = (cemucore_t *)const_core;
     int32_t val = -1;
     if (!core)
     {
@@ -235,11 +234,6 @@ int32_t cemucore_get(const cemucore_t *const_core, cemucore_prop_t prop, int32_t
                                                   memory_order_relaxed) >> (addr & 15) & 1;
         sync_leave(&core->sync);
         break;
-#ifndef CEMUCORE_NODEBUG
-    case CEMUCORE_PROP_DBG_FLAGS:
-        val = core->mem.dbg[addr & 0xFFFFFF];
-        break;
-#endif
     case CEMUCORE_PROP_MEM:
         if (addr >= 0 && addr < 0x400000)
         {
@@ -272,6 +266,22 @@ int32_t cemucore_get(const cemucore_t *const_core, cemucore_prop_t prop, int32_t
         break;
     case CEMUCORE_PROP_PORT:
         break;
+#ifndef CEMUCORE_NODEBUG
+    case CEMUCORE_PROP_MEM_DBG_FLAGS:
+        val = core->mem.dbg[addr & 0xFFFFFF];
+        break;
+    case CEMUCORE_PROP_FLASH_DBG_FLAGS:
+        val = core->mem.dbg[addr & 0x3FFFFF];
+        break;
+    case CEMUCORE_PROP_RAM_DBG_FLAGS:
+        if ((addr &= 0x7FFFF) < 0x65800)
+        {
+            val = core->mem.dbg[0xD00000 + addr];
+        }
+        break;
+    case CEMUCORE_PROP_PORT_DBG_FLAGS:
+        break;
+#endif
     }
     return val;
 }
@@ -387,45 +397,64 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
                                                       memory_order_release);
         // handle keypad_intrpt_check?
         break;
-#ifndef CEMUCORE_NODEBUG
-    case CEMUCORE_PROP_DBG_FLAGS:
-        core->mem.dbg[addr & 0xFFFFFF] = val;
-        break;
-#endif
     case CEMUCORE_PROP_MEM:
-        if (addr >= 0 && addr < 0x400000)
+        if (addr >= INT32_C(0) && addr < INT32_C(0x400000))
         {
             core->mem.flash[addr] = val;
         }
-        else if (addr >= 0xD00000 && addr < 0xE00000)
+        else if (addr >= INT32_C(0xD00000) && addr < INT32_C(0xE00000))
         {
-            if ((addr &= 0x7FFFF) < 0x65800)
+            if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
             {
                 core->mem.ram[addr] = val;
             }
         }
         break;
     case CEMUCORE_PROP_FLASH:
-        core->mem.flash[addr & 0x3FFFFF] = val;
+        core->mem.flash[addr & INT32_C(0x3FFFFF)] = val;
         break;
     case CEMUCORE_PROP_RAM:
-        if ((addr &= 0x7FFFF) < 0x65800)
+        if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
         {
             core->mem.ram[addr] = val;
         }
         break;
     case CEMUCORE_PROP_PORT:
         break;
+#ifndef CEMUCORE_NODEBUG
+    case CEMUCORE_PROP_MEM_DBG_FLAGS:
+        core->mem.dbg[addr & INT32_C(0xFFFFFF)] = val;
+        break;
+    case CEMUCORE_PROP_FLASH_DBG_FLAGS:
+        core->mem.dbg[addr & INT32_C(0x3FFFFF)] = val;
+        break;
+    case CEMUCORE_PROP_RAM_DBG_FLAGS:
+        if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
+        {
+            core->mem.dbg[INT32_C(0xD00000) + addr] = val;
+        }
+        break;
+    case CEMUCORE_PROP_PORT_DBG_FLAGS:
+        break;
+#endif
     }
 }
 
-void cemucore_sleep(cemucore_t *core)
+bool cemucore_sleep(cemucore_t *core)
 {
-    sync_sleep(&core->sync);
+    if (!core)
+    {
+        return false;
+    }
+    return sync_sleep(&core->sync);
 }
 
 void cemucore_wake(cemucore_t *core)
 {
+    if (!core)
+    {
+        return;
+    }
     sync_wake(&core->sync);
 }
 

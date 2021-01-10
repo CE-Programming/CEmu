@@ -17,6 +17,7 @@
 #ifndef COREWRAPPER_H
 #define COREWRAPPER_H
 
+#include <QtCore/QByteArray>
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
 
@@ -24,43 +25,52 @@ namespace cemucore
 {
     Q_NAMESPACE
 #include <cemucore.h>
-    using signal_t       = cemucore_signal_t;
-    Q_ENUM_NS(signal_t)
-    using create_flags_t = cemucore_create_flags_t;
-    Q_FLAG_NS(create_flags_t)
-    using prop_t         = cemucore_prop_t;
-    Q_ENUM_NS(prop_t)
-    using reg_t          = cemucore_reg_t;
-    Q_ENUM_NS(reg_t)
-    using dbg_flags_t    = cemucore_dbg_flags_t;
-    Q_FLAG_NS(dbg_flags_t)
+    using signal       = cemucore_signal_t;
+    Q_ENUM_NS(signal)
+    using create_flags = cemucore_create_flags_t;
+    Q_FLAG_NS(create_flags)
+    using prop         = cemucore_prop_t;
+    Q_ENUM_NS(prop)
+    using reg          = cemucore_reg_t;
+    Q_ENUM_NS(reg)
+    using dbg_flags    = cemucore_dbg_flags_t;
+    Q_FLAG_NS(dbg_flags)
 }
 
 class CoreWrapper : public QObject
 {
     Q_OBJECT
 
+    struct ScopedLock
+    {
+        cemucore::cemucore *mCore;
+        ~ScopedLock();
+    };
+
 public:
     CoreWrapper(QObject *parent = nullptr);
     ~CoreWrapper();
 
-    cemucore::cemucore_t *core();
-    const cemucore::cemucore_t *core() const;
+    cemucore::cemucore *core();
+    const cemucore::cemucore *core() const;
 
-    int32_t get(cemucore::prop_t prop, int32_t addr) const;
-    void set(cemucore::prop_t prop, int32_t addr, int32_t val);
+    bool sleep() const;
+    void wake() const;
+    ScopedLock lock() const;
 
-    void sleep();
-    void wake();
+    qint32 get(cemucore::prop prop, qint32 addr) const;
+    QByteArray get(cemucore::prop prop, qint32 addr, qint32 len) const;
+    void set(cemucore::prop prop, qint32 addr, qint32 val);
+    void set(cemucore::prop prop, qint32 addr, const QByteArray &data);
 
 signals:
     void lcdFrame();
     void softCmd();
 
 private:
-    static void signalHandler(cemucore::signal_t, void *);
+    void signalHandler(cemucore::signal);
 
-    cemucore::cemucore_t *mCore;
+    mutable cemucore::cemucore *mCore;
 };
 
 #endif

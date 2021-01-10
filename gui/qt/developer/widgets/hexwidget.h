@@ -17,114 +17,136 @@
 #ifndef HEXWIDGET_H
 #define HEXWIDGET_H
 
+#include "../../corewrapper.h"
+class CoreWrapper;
 class MemWidget;
 
+#include <QtCore/QByteArray>
+#include <QtCore/QChar>
+#include <QtCore/QContiguousCache>
+#include <QtCore/QLatin1Char>
 #include <QtCore/QPoint>
-#include <QtCore/QStack>
-#include <QtWidgets/QWidget>
+#include <QtCore/QRect>
+#include <QtCore/QSize>
+#include <QtCore/QTimer>
 #include <QtWidgets/QAbstractScrollArea>
+QT_BEGIN_NAMESPACE
+class QFocusEvent;
+class QKeyEvent;
+class QMouseEvent;
+class QPaintEvent;
+class QResizeEvent;
+class QTimerEvent;
+QT_END_NAMESPACE
 
 class HexWidget : public QAbstractScrollArea
 {
     Q_OBJECT
 
+    enum class Area
+    {
+        Addr,
+        Data,
+        Char,
+    };
+
+    class Pos
+    {
+    public:
+        Pos(Area area, int off);
+
+        bool isValid() const;
+        bool isData() const;
+        bool isChar() const;
+        Area area() const;
+
+        bool low() const;
+        bool high() const;
+        int off() const;
+        int addr() const;
+
+        Pos withArea(Area area) const;
+        Pos withOff(int off) const;
+        Pos withLow(bool low = true) const;
+        Pos withHigh(bool high = true) const;
+        Pos withMinOff(int off) const;
+        Pos withMaxOff(int off) const;
+        Pos off(int off) const;
+        Pos byteOff(int byteOff) const;
+        int byteDiff(int off) const;
+        Pos atLineStart(int stride) const;
+        Pos atLineEnd(int stride) const;
+
+    private:
+        Area mArea;
+        int mOff;
+    };
+
+    struct UndoEntry
+    {
+        Pos mPos;
+        QByteArray mBefore;
+        QByteArray mAfter;
+    };
+
 public:
-    explicit HexWidget(MemWidget *parent);
+    enum class Charset : quint8
+    {
+        None,
+        Ascii,
+        TIAscii,
+    };
+
+    HexWidget(MemWidget *parent, cemucore::prop prop, int len);
     MemWidget *parent() const;
+    CoreWrapper &core() const;
 
-    void setData(const QByteArray &ba);
-    void setBase(int address) { m_base = address; adjust(); }
-    void setBytesPerLine(int bytes) { m_bytesPerLine = bytes; adjust(); }
-    void setAsciiArea(bool area) { m_asciiArea = area; adjust(); }
-    void setCursorOffset(int address, bool selection = true);
-    void setScrollable(bool state) { m_scrollable = state; adjust(); }
-    void setFont(const QFont &font) { QAbstractScrollArea::setFont(font); adjust(); }
-    void setOffset(int addr);
-    void prependData(const QByteArray &ba);
-    void appendData(const QByteArray &ba);
-    int getBase() { return m_base; }
-    int getOffset() { return m_cursorOffset / 2; }
-    int getCursorOffset() { return m_cursorOffset; }
-    bool getAsciiArea() { return m_asciiArea; }
-    bool getScrolled() { return m_scrolled; }
-    int getSize() { return m_size; }
-    int modifiedCount() { return m_modified.count(); }
-    int indexNotOf(const QByteArray &ba);
-    int indexPrevOf(const QByteArray &ba);
-    int indexPrevNotOf(const QByteArray &ba);
-    int indexOf(const QByteArray &ba);
-    const char *data() { return m_data.constData(); }
-    const char *modified() { return m_modified.constData(); }
+    int bytesPerLine() const;
+    void setBytesPerLine(int bytesPerLine);
+    Charset charset() const;
+    void setCharset(Charset charset);
 
-protected:
-    virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
-    virtual void focusInEvent(QFocusEvent *) Q_DECL_OVERRIDE;
-    virtual void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
-    virtual void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    virtual void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    virtual void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-
-signals:
-    void focused();
-
-private slots:
-    void adjust();
-    void scroll(int value);
+public slots:
+    void undo();
+    void redo();
+    void copy(bool selection = false);
+    void paste(bool selection = false);
 
 private:
-    void redo();
-    void undo();
-    void showCursor();
-    void setSelection(int addr);
-    void resetSelection() { m_selectStart = m_selectEnd = -1; }
-    bool isSelected() { return m_selectStart != -1; }
-    void setSelected(char n) { overwrite(m_selectStart * 2, m_selectLen, QByteArray(m_selectLen, n)); }
-    void overwrite(int pos, char c);
-    void overwrite(int pos, int len, const QByteArray &ba);
-    int getPosition(QPoint posa, bool allow = true);
+    static QChar tiasciiToUnicode(char c, QChar placeholder = QLatin1Char{'.'});
+    static char unicodeToTIAscii(QChar c, char placeholder = '\0');
 
-    typedef struct {
-        int addr;
-        QByteArray ba;
-    } stack_entry_t;
+    QChar charToUnicode(char c) const;
+    char unicodeToChar(QChar c) const;
 
-    int m_bytesPerLine = 8;
-    int m_base = 0;
+    QSize cellSize() const;
+    QRect posToCell(Pos pos) const;
+    Pos absToPos(QPoint abs) const;
+    Pos locToPos(QPoint loc) const;
 
-    int m_charWidth;
-    int m_charHeight;
-    int m_margin;
-    int m_gap;
-    int m_addrLoc;
-    int m_dataLine;
-    int m_dataLoc;
-    int m_asciiLine;
-    int m_asciiLoc;
+    void setCurPos(Pos pos, bool select);
+    void overwriteChar(Pos pos, char c);
+    void overwriteRange(Pos pos, QByteArray data);
+    void overwriteNibble(Pos pos, int digit);
 
-    int m_visibleRows;
+    void resizeEvent(QResizeEvent *event = nullptr) override;
+    void focusInEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 
-    int m_lineStart;
-    int m_lineEnd;
+    cemucore::prop mProp;
+    int mLastPos, mStride;
+    Charset mCharset;
 
-    QByteArray m_data;
-    QByteArray m_modified;
-    int m_size;
-    int m_maxOffset;
+    int mTopLine, mVisibleLines;
+    Pos mCurPos;
+    int mSelEnd;
 
-    QRect m_cursor;
-    int m_cursorOffset = 0;
-    int m_cursorHeight;
-
-    int m_selectStart;
-    int m_selectEnd;
-    int m_selectLen;
-
-    bool m_scrollable = false;          // fetch bytes from memory on scroll
-    bool m_asciiArea = true;            // show character representations
-    bool m_scrolled = false;            // scrolled while focused
-    bool m_asciiEdit = false;           // editing from the ascii side
-
-    QStack<stack_entry_t> m_stack;
+    int mUndoPos;
+    QContiguousCache<UndoEntry> mUndoStack;
 };
 
 #endif

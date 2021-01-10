@@ -16,6 +16,7 @@
 
 #include "memwidget.h"
 
+#include "../../corewrapper.h"
 #include "../../dockedwidget.h"
 #include "../../util.h"
 #include "hexwidget.h"
@@ -35,14 +36,35 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-MemWidget::MemWidget(DockedWidget *parent)
-    : QWidget{parent},
-      mSeachHex{true}
+MemWidget::MemWidget(DockedWidget *parent, Area area)
+    : mDockedWidget{parent},
+      mSearchHex{true}
 {
     QLineEdit *editAddr = new QLineEdit;
     editAddr->setFont(Util::monospaceFont());
 
-    mView = new HexWidget{this};
+    cemucore::prop prop;
+    qint32 len;
+    switch (area)
+    {
+        case Area::Mem:
+            prop = cemucore::CEMUCORE_PROP_MEM;
+            len = INT32_C(1) << 24;
+            break;
+        case Area::Flash:
+            prop = cemucore::CEMUCORE_PROP_FLASH;
+            len = INT32_C(1) << 22;
+            break;
+        case Area::Ram:
+            prop = cemucore::CEMUCORE_PROP_RAM;
+            len = INT32_C(0x65800);
+            break;
+        case Area::Port:
+            prop = cemucore::CEMUCORE_PROP_PORT;
+            len = INT32_C(1) << 16;
+            break;
+    }
+    mView = new HexWidget{this, prop, len};
 
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
@@ -78,15 +100,15 @@ MemWidget::MemWidget(DockedWidget *parent)
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSeachDialog);
+    connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSearchDialog);
 }
 
-DockedWidget *MemWidget::parent() const
+DockedWidget *MemWidget::dockedWidget() const
 {
-    return static_cast<DockedWidget *>(QWidget::parent());
+    return mDockedWidget;
 }
 
-void MemWidget::showSeachDialog()
+void MemWidget::showSearchDialog()
 {
     QDialog dialog;
     int ret;
@@ -112,8 +134,8 @@ void MemWidget::showSeachDialog()
 
     QGroupBox *grpOptions = new QGroupBox(tr("Search options"));
 
-    chkHex->setChecked(mSeachHex);
-    chkAscii->setChecked(!mSeachHex);
+    chkHex->setChecked(mSearchHex);
+    chkAscii->setChecked(!mSearchHex);
 
     QGridLayout *gLayout = new QGridLayout;
     gLayout->addWidget(btnNext, 0, 0);
@@ -151,7 +173,7 @@ void MemWidget::showSeachDialog()
 
     if ((ret = dialog.exec()))
     {
-        mSeachHex = chkHex->isChecked();
+        mSearchHex = chkHex->isChecked();
         mSearch = edtSearch->text();
 
         switch (ret)

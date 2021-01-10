@@ -38,14 +38,16 @@ typedef enum cemucore_prop
     CEMUCORE_PROP_REG,
     CEMUCORE_PROP_REG_SHADOW,
     CEMUCORE_PROP_KEY,
-#ifndef CEMUCORE_NODEBUG
-    CEMUCORE_PROP_DBG_FLAGS,
-    CEMUCORE_PROP_DBG_PORT_FLAGS,
-#endif
     CEMUCORE_PROP_MEM,
     CEMUCORE_PROP_FLASH,
     CEMUCORE_PROP_RAM,
     CEMUCORE_PROP_PORT,
+#ifndef CEMUCORE_NODEBUG
+    CEMUCORE_PROP_MEM_DBG_FLAGS,
+    CEMUCORE_PROP_FLASH_DBG_FLAGS,
+    CEMUCORE_PROP_RAM_DBG_FLAGS,
+    CEMUCORE_PROP_PORT_DBG_FLAGS,
+#endif
     CEMUCORE_PROP_GPIO_ENABLE,
 } cemucore_prop_t;
 
@@ -122,10 +124,10 @@ typedef void (*cemucore_signal_handler_t)(cemucore_signal_t, void *);
 cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_signal_handler_t, void *);
 void cemucore_destroy(cemucore_t *);
 
-int32_t cemucore_get(const cemucore_t *, cemucore_prop_t, int32_t);
+int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
 void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
 
-void cemucore_sleep(cemucore_t *);
+bool cemucore_sleep(cemucore_t *);
 void cemucore_wake(cemucore_t *);
 
 /* !!! DEPRECATED API !!! */

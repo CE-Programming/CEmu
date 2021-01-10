@@ -14,42 +14,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEMWIDGET_H
-#define MEMWIDGET_H
+#ifndef SLIDERPANNER_H
+#define SLIDERPANNER_H
 
-class DockedWidget;
-class HexWidget;
+#include <QtCore/QTimer>
+QT_BEGIN_NAMESPACE
+class QAbstractSlider;
+QT_END_NAMESPACE
 
-namespace KDDockWidgets
-{
-class DockWidget;
-}
-
-#include <QtWidgets/QWidget>
-
-class MemWidget : public QWidget
+class SliderPanner : public QTimer
 {
     Q_OBJECT
 
 public:
-    enum class Area
-    {
-        Mem,
-        Flash,
-        Ram,
-        Port,
-    };
+    SliderPanner(QAbstractSlider *slider, int interval = 50);
+    QAbstractSlider *parent() const;
 
-    explicit MemWidget(DockedWidget *dockedWidget, Area area = Area::Mem);
-    DockedWidget *dockedWidget() const;
-
-private:
-    void showSearchDialog();
-
-    DockedWidget *mDockedWidget;
-    HexWidget *mView;
-    QString mSearch;
-    bool mSearchHex;
+signals:
+    void panBy(int amount);
 };
 
 #endif

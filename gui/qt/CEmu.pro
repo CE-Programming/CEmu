@@ -92,6 +92,7 @@ HEADERS += \
     developer/widgets/hexwidget.h \
     developer/widgets/highlighteditwidget.h \
     developer/widgets/memwidget.h \
+    developer/widgets/sliderpanner.h \
     developer/widgets/visualizerlcdwidget.h \
     dockedwidget.h \
     dockwidget.h \
@@ -147,6 +148,7 @@ SOURCES += \
     developer/widgets/hexwidget.cpp \
     developer/widgets/highlighteditwidget.cpp \
     developer/widgets/memwidget.cpp \
+    developer/widgets/sliderpanner.cpp \
     developer/widgets/visualizerlcdwidget.cpp \
     dockedwidget.cpp \
     dockwidget.cpp \

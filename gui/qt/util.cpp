@@ -33,7 +33,7 @@ qulonglong Util::hex2int(const QString &str)
     return static_cast<qulonglong>(strtoull(str.toStdString().c_str(), nullptr, 16));
 }
 
-QString Util::int2hex(qulonglong a, uint8_t l)
+QString Util::int2hex(qulonglong a, quint8 l)
 {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }

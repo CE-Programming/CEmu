@@ -16,6 +16,7 @@
 
 #include "flashramwidget.h"
 
+#include "../corewrapper.h"
 #include "widgets/memwidget.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -32,8 +33,8 @@ FlashRamWidget::FlashRamWidget(CoreWindow *coreWindow)
     QGroupBox *grpFlash = new QGroupBox(tr("Flash"));
     QGroupBox *grpRam = new QGroupBox(tr("RAM"));
 
-    mFlash = new MemWidget{this};
-    mRam = new MemWidget{this};
+    mFlash = new MemWidget{this, MemWidget::Area::Flash};
+    mRam = new MemWidget{this, MemWidget::Area::Ram};
 
     QHBoxLayout *hboxFlash = new QHBoxLayout;
     hboxFlash->addWidget(mFlash);

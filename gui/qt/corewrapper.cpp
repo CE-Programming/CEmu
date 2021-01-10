@@ -16,16 +16,25 @@
 
 #include "corewrapper.h"
 
+CoreWrapper::ScopedLock::~ScopedLock()
+{
+    cemucore::cemucore_wake(mCore);
+}
+
 CoreWrapper::CoreWrapper(QObject *parent)
     : QObject{parent},
-      mCore{cemucore::cemucore_create(cemucore::CEMUCORE_CREATE_FLAG_THREADED,
-                                      &CoreWrapper::signalHandler, this)}
+      mCore{cemucore::cemucore_create(
+              cemucore::CEMUCORE_CREATE_FLAG_THREADED,
+              [](cemucore::signal signal, void *data)
+              {
+                  static_cast<CoreWrapper *>(data)->signalHandler(signal);
+              }, this)}
 {
-    qRegisterMetaType<cemucore::signal_t>();
-    qRegisterMetaType<cemucore::create_flags_t>();
-    qRegisterMetaType<cemucore::prop_t>();
-    qRegisterMetaType<cemucore::reg_t>();
-    qRegisterMetaType<cemucore::dbg_flags_t>();
+    qRegisterMetaType<cemucore::signal>();
+    qRegisterMetaType<cemucore::create_flags>();
+    qRegisterMetaType<cemucore::prop>();
+    qRegisterMetaType<cemucore::reg>();
+    qRegisterMetaType<cemucore::dbg_flags>();
 }
 
 CoreWrapper::~CoreWrapper()
@@ -33,46 +42,73 @@ CoreWrapper::~CoreWrapper()
     cemucore::cemucore_destroy(qExchange(mCore, nullptr));
 }
 
-cemucore::cemucore_t *CoreWrapper::core()
+cemucore::cemucore *CoreWrapper::core()
 {
     return mCore;
 }
 
-const cemucore::cemucore_t *CoreWrapper::core() const
+const cemucore::cemucore *CoreWrapper::core() const
 {
     return mCore;
 }
 
-void CoreWrapper::sleep()
+bool CoreWrapper::sleep() const
 {
-    cemucore::cemucore_sleep(mCore);
+    return cemucore::cemucore_sleep(mCore);
 }
 
-void CoreWrapper::wake()
+void CoreWrapper::wake() const
 {
     cemucore::cemucore_wake(mCore);
 }
 
-int32_t CoreWrapper::get(cemucore::cemucore_prop_t prop, int32_t addr) const
+auto CoreWrapper::lock() const -> ScopedLock
+{
+    return {sleep() ? mCore : nullptr};
+}
+
+qint32 CoreWrapper::get(cemucore::prop prop, qint32 addr) const
 {
     return cemucore::cemucore_get(mCore, prop, addr);
 }
 
-void CoreWrapper::set(cemucore::cemucore_prop_t prop, int32_t addr, int32_t val)
+QByteArray CoreWrapper::get(cemucore::prop prop, qint32 addr, qint32 len) const
+{
+    // FIXME: implement in core, currently not atomic!
+    QByteArray data;
+    data.reserve(len);
+    auto scope = lock();
+    for (int i = 0; i < len; ++i)
+    {
+        data += char(get(prop, addr + i));
+    }
+    return data;
+}
+
+void CoreWrapper::set(cemucore::prop prop, qint32 addr, qint32 val)
 {
     cemucore::cemucore_set(mCore, prop, addr, val);
 }
 
-void CoreWrapper::signalHandler(cemucore::signal_t signal, void *data)
+void CoreWrapper::set(cemucore::prop prop, qint32 addr, const QByteArray &data)
 {
-    CoreWrapper *core = static_cast<CoreWrapper *>(data);
+    // FIXME: implement in core
+    auto scope = lock();
+    for (int i = 0; i < data.length(); ++i)
+    {
+        set(prop, addr + i, data[i]);
+    }
+}
+
+void CoreWrapper::signalHandler(cemucore::signal signal)
+{
     switch (signal)
     {
     case cemucore::CEMUCORE_SIGNAL_LCD_FRAME:
-        emit core->lcdFrame();
+        emit lcdFrame();
         break;
     case cemucore::CEMUCORE_SIGNAL_SOFT_CMD:
-        emit core->softCmd();
+        emit softCmd();
         break;
     }
 }

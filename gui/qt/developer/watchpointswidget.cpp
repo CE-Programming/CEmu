@@ -354,7 +354,7 @@ void WatchpointsWidget::clrCoreWatchpoint(const QString &addrStr, const QString 
                 break;
             }
 
-            core().set(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + i, 0);
+            core().set(cemucore::CEMUCORE_PROP_MEM_DBG_FLAGS, addr + i, 0);
         }
     }
 }
@@ -384,7 +384,7 @@ void WatchpointsWidget::setCoreWatchpoint(const QString &addrStr, const QString 
                 break;
             }
 
-            core().set(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + i, flags);
+            core().set(cemucore::CEMUCORE_PROP_MEM_DBG_FLAGS, addr + i, flags);
         }
     }
 }

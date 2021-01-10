@@ -17,32 +17,32 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <QtWidgets/QWidget>
+#include <QtCore/QString>
+#include <QtCore/QtGlobal>
+#include <QtGui/QFont>
 
-class Util
+namespace Util
 {
 
-public:
-    explicit Util() {};
+extern const int addrByteWidth;
+extern const int portByteWidth;
 
-    static const int addrByteWidth;
-    static const int portByteWidth;
+extern const QString error;
+extern const QString warning;
+extern const QString information;
 
-    static const QString error;
-    static const QString warning;
-    static const QString information;
+extern const QString stateExtension;
+extern const QString portablePath;
 
-    static const QString stateExtension;
-    static const QString portablePath;
+extern bool isHexAddress(const QString &str);
+extern bool isHexPort(const QString &str);
+extern bool isHexString(const QString &str, int min = 0, int max = INT_MAX);
+extern bool isDecString(const QString &str, int min = 0, int max = INT_MAX);
+extern qulonglong hex2int(const QString &str);
+extern QString int2hex(qulonglong a, quint8 l);
+extern QString randomString(const int length);
+extern QFont monospaceFont();
 
-    static bool isHexAddress(const QString &str);
-    static bool isHexPort(const QString &str);
-    static bool isHexString(const QString &str, int min = 0, int max = INT_MAX);
-    static bool isDecString(const QString &str, int min = 0, int max = INT_MAX);
-    static qulonglong hex2int(const QString &str);
-    static QString int2hex(qulonglong a, uint8_t l);
-    static QString randomString(const int length);
-    static QFont monospaceFont();
-};
+}
 
 #endif

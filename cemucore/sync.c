@@ -147,13 +147,15 @@ static void sync_wait_run(sync_t *sync)
     }
 }
 
-void sync_sleep(sync_t *sync)
+bool sync_sleep(sync_t *sync)
 {
-    if (likely(!(atomic_fetch_or_explicit(&sync->state, STATE_SLEEPING,
-                                          memory_order_relaxed) & STATE_SLEEPING)))
+    if (unlikely(atomic_fetch_or_explicit(&sync->state, STATE_SLEEPING,
+                                          memory_order_relaxed) & STATE_SLEEPING))
     {
-        (void)atomic_fetch_add_explicit(&sync->state, STATE_COUNTER, memory_order_relaxed);
+        return false;
     }
+    (void)atomic_fetch_add_explicit(&sync->state, STATE_COUNTER, memory_order_relaxed);
+    return true;
 }
 
 void sync_wake(sync_t *sync)

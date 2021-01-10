@@ -16,20 +16,134 @@
 
 #include "hexwidget.h"
 
-#include "../../corewrapper.h"
 #include "../../dockedwidget.h"
-#include "../../util.h"
 #include "memwidget.h"
+#include "sliderpanner.h"
 
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QScrollBar>
-#include <QtGui/QPainter>
-#include <QtGui/QPaintEvent>
+#include <QtCore/QHash>
+#include <QtCore/QtGlobal>
 #include <QtGui/QClipboard>
+#include <QtGui/QFocusEvent>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QKeyEvent>
+#include <QtGui/QKeySequence>
+#include <QtGui/QMouseEvent>
+#include <QtGui/QPaintEvent>
+#include <QtGui/QPainter>
+#include <QtWidgets/QScrollBar>
 
-HexWidget::HexWidget(MemWidget *parent)
+HexWidget::Pos::Pos(Area area, int off)
+    : mArea{area},
+      mOff{off}
+{
+}
+
+bool HexWidget::Pos::isValid() const
+{
+    return mArea != Area::Addr;
+}
+
+bool HexWidget::Pos::isData() const
+{
+    return mArea == Area::Data;
+}
+
+bool HexWidget::Pos::isChar() const
+{
+    return mArea == Area::Char;
+}
+
+auto HexWidget::Pos::area() const -> Area
+{
+    return mArea;
+}
+
+bool HexWidget::Pos::low() const
+{
+    return mOff & 1;
+}
+
+bool HexWidget::Pos::high() const
+{
+    return !low();
+}
+
+int HexWidget::Pos::off() const
+{
+    return mOff;
+}
+
+int HexWidget::Pos::addr() const
+{
+    return mOff >> 1;
+}
+
+auto HexWidget::Pos::withArea(Area area) const -> Pos
+{
+    return {area, mOff};
+}
+
+auto HexWidget::Pos::withOff(int off) const -> Pos
+{
+    return {mArea, off};
+}
+
+auto HexWidget::Pos::withLow(bool low) const -> Pos
+{
+    return withOff((mOff & ~1) | low);
+}
+
+auto HexWidget::Pos::withHigh(bool high) const -> Pos
+{
+    return withLow(!high);
+}
+
+auto HexWidget::Pos::withMinOff(int off) const -> Pos
+{
+    return withOff(qMin(mOff, off));
+}
+
+auto HexWidget::Pos::withMaxOff(int off) const -> Pos
+{
+    return withOff(qMax(mOff, off));
+}
+
+auto HexWidget::Pos::off(int off) const -> Pos
+{
+    return withOff(mOff + off);
+}
+
+auto HexWidget::Pos::byteOff(int byteOff) const -> Pos
+{
+    return off(byteOff << 1);
+}
+
+int HexWidget::Pos::byteDiff(int off) const
+{
+    return qAbs(addr() - (off >> 1)) + 1;
+}
+
+auto HexWidget::Pos::atLineStart(int stride) const -> Pos
+{
+    return off(-(mOff % stride));
+}
+
+auto HexWidget::Pos::atLineEnd(int stride) const -> Pos
+{
+    return atLineStart(stride).off(stride - 1);
+}
+
+HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
     : QAbstractScrollArea{parent},
-      m_data{Q_NULLPTR}
+      mProp{prop},
+      mLastPos{len * 2 - 1},
+      mStride{32},
+      mCharset{Charset::TIAscii},
+      mTopLine{},
+      mCurPos{Area::Data, {}},
+      mSelEnd{},
+      mUndoPos{},
+      mUndoStack{1024}
 {
 #ifdef Q_OS_WIN
     setFont(QFont(QStringLiteral("Courier"), 10));
@@ -37,652 +151,791 @@ HexWidget::HexWidget(MemWidget *parent)
     setFont(QFont(QStringLiteral("Monospace"), 10));
 #endif
 
-    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
-    connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjust);
+    auto *vBar = verticalScrollBar();
+    vBar->setRange(-100, 100);
+    connect(new SliderPanner{vBar}, &SliderPanner::panBy, [this](int amount)
+    {
+        mTopLine = qBound(0, mTopLine + amount * qMax(1, qAbs(amount) - 50),
+                          mLastPos / mStride - mVisibleLines + 2);
+        viewport()->update();
+    });
 
-    resetSelection();
-    adjust();
+    resizeEvent();
 }
 
 MemWidget *HexWidget::parent() const
 {
-    return static_cast<MemWidget *>(QWidget::parent());
+    return static_cast<MemWidget *>(QAbstractScrollArea::parent());
 }
 
-void HexWidget::setData(const QByteArray &ba)
+CoreWrapper &HexWidget::core() const
 {
-    if (!isEnabled())
-    {
-        return;
-    }
-
-    m_scrolled = false;
-    m_data = ba;
-    m_modified.resize(m_data.size());
-    m_modified.fill(0);
-    adjust();
+    return parent()->dockedWidget()->core();
 }
 
-void HexWidget::prependData(const QByteArray &ba)
+int HexWidget::bytesPerLine() const
 {
-    m_data.prepend(ba);
-    m_modified.prepend(QByteArray(ba.size(), 0));
-    adjust();
+    return mStride / 2;
 }
 
-void HexWidget::appendData(const QByteArray &ba)
+void HexWidget::setBytesPerLine(int bytesPerLine)
 {
-    m_data.append(ba);
-    m_modified.append(QByteArray(ba.size(), 0));
-    adjust();
+    mStride = bytesPerLine * 2;
+    resizeEvent();
 }
 
-void HexWidget::scroll(int value)
+auto HexWidget::charset() const -> Charset
 {
-    adjust();
-
-    if (!m_scrollable || !isEnabled())
-    {
-        return;
-    }
-
-    verticalScrollBar()->blockSignals(true);
-    if (value <= verticalScrollBar()->minimum())
-    {
-        int addr = m_base;
-        QByteArray data;
-        for (int i = -m_bytesPerLine; i < 0; i++)
-        {
-            if (addr + i >= 0)
-            {
-                data.append(parent()->parent()->core().get(cemucore::CEMUCORE_PROP_MEM, addr + i));
-            }
-        }
-        if (data.size())
-        {
-            m_scrolled = true;
-            m_base -= data.size();
-            prependData(data);
-            verticalScrollBar()->setValue(1);
-        }
-    }
-
-    if (value >= verticalScrollBar()->maximum())
-    {
-        int addr = m_maxOffset + m_base + 1;
-        QByteArray data;
-        for (int i = 0; i < m_bytesPerLine && (addr + i) < 0x1000000; i++)
-        {
-            data.append(parent()->parent()->core().get(cemucore::CEMUCORE_PROP_MEM, addr + i));
-        }
-        if (data.size())
-        {
-            m_scrolled = true;
-            appendData(data);
-            verticalScrollBar()->setValue(verticalScrollBar()->maximum() - 1);
-        }
-    }
-
-    verticalScrollBar()->blockSignals(false);
+    return mCharset;
 }
 
-int HexWidget::indexPrevOf(const QByteArray &ba)
+void HexWidget::setCharset(Charset charset)
 {
-    int res = m_data.mid(0, m_cursorOffset / 2).lastIndexOf(ba);
-    if (res >= 0)
+    mCharset = charset;
+    if (charset == Charset::None && mCurPos.isChar())
     {
-        m_selectStart = res;
-        m_selectLen = ba.size();
-        m_selectEnd = m_selectStart + m_selectLen - 1;
-        setCursorOffset(res * 2, false);
+        mCurPos = mCurPos.withArea(Area::Data);
     }
-    return res;
-}
-
-int HexWidget::indexPrevNotOf(const QByteArray &ba)
-{
-    int res = -1;
-    QByteArray buffer{m_data.mid(0, m_cursorOffset / 2 - 1)};
-    std::size_t found = buffer.toStdString().find_last_not_of(ba.toStdString());
-    if (found != std::string::npos)
-    {
-        setOffset(res = static_cast<int>(found));
-    }
-    return res;
-}
-
-int HexWidget::indexOf(const QByteArray &ba)
-{
-    int res = m_data.indexOf(ba, m_cursorOffset / 2 + 1);
-    if (res >= 0)
-    {
-        m_selectStart = res;
-        m_selectLen = ba.size();
-        m_selectEnd = m_selectStart + m_selectLen - 1;
-        setCursorOffset(res * 2, false);
-    }
-    return res;
-}
-
-int HexWidget::indexNotOf(const QByteArray &ba)
-{
-    int res = -1;
-    QByteArray buffer{m_data.mid(m_cursorOffset, m_maxOffset)};
-    std::size_t found = buffer.toStdString().find_first_not_of(ba.toStdString());
-    if (found != std::string::npos)
-    {
-        setOffset(res = static_cast<int>(found));
-    }
-    return res;
-}
-
-void HexWidget::setOffset(int offset)
-{
-    setCursorOffset(offset * 2);
-}
-
-void HexWidget::setCursorOffset(int offset, bool selection)
-{
-    if (offset > m_size * 2)
-    {
-        offset = m_size * 2;
-    }
-    if (offset < 0)
-    {
-        offset = 0;
-    }
-    if (selection)
-    {
-        resetSelection();
-    }
-
-    m_cursorOffset = offset;
-    adjust();
-    showCursor();
-}
-
-int HexWidget::getPosition(QPoint posa, bool allow)
-{
-    int xOffset = posa.x() + horizontalScrollBar()->value();
-    int result = -1;
-
-    if (xOffset >= m_asciiLoc && xOffset < (m_asciiLoc + m_bytesPerLine * m_charWidth))
-    {
-        if (allow)
-        {
-            m_asciiEdit = true;
-        }
-        if (m_asciiEdit)
-        {
-            int y = ((posa.y() - m_gap) / m_charHeight) * m_bytesPerLine * 2;
-            int x = (xOffset - m_asciiLoc) / m_charWidth;
-            result = m_lineStart * 2 + x * 2 + y;
-        }
-    }
-
-    if (xOffset >= m_dataLoc && xOffset < m_asciiLine)
-    {
-        if (allow)
-        {
-            m_asciiEdit = false;
-        }
-        if (!m_asciiEdit)
-        {
-            int y = ((posa.y() - m_gap) / m_charHeight) * m_bytesPerLine * 2;
-            int x = (xOffset - m_dataLoc) / m_charWidth;
-            x = (x / 3) * 2 + x % 3;
-            result = m_lineStart * 2 + x + y;
-        }
-    }
-
-    return result;
-}
-
-void HexWidget::showCursor()
-{
-    disconnect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
-    int addr = m_cursorOffset / 2;
-
-    if (addr <= m_bytesPerLine)
-    {
-        verticalScrollBar()->setValue(0);
-    }
-    else if (addr <= m_lineStart)
-    {
-        verticalScrollBar()->setValue(addr / m_bytesPerLine);
-    }
-
-    if (addr > (m_lineStart + m_visibleRows * m_bytesPerLine - 1))
-    {
-        verticalScrollBar()->setValue((addr / m_bytesPerLine) - m_visibleRows + 1);
-    }
-    if (m_cursor.x() < horizontalScrollBar()->value())
-    {
-        horizontalScrollBar()->setValue(0);
-    }
-
-    adjust();
-    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
-}
-
-void HexWidget::adjust()
-{
-    m_size = m_data.size();
-    m_maxOffset = m_size - 1;
-
-    m_charWidth = fontMetrics().maxWidth();
-    m_charHeight = fontMetrics().height();
-    m_cursorHeight = m_charHeight / 7;
-    m_margin = m_charHeight / 5;
-    m_gap = m_charWidth / 2;
-    m_addrLoc = m_gap;
-
-    m_dataLine = m_addrLoc + (6 * m_charWidth) + m_charWidth;
-    m_dataLoc = m_dataLine + m_charWidth;
-
-    int xWidth = m_dataLoc + (m_bytesPerLine * 3 * m_charWidth);
-    m_asciiLine = xWidth + m_gap;
-    m_asciiLoc = m_asciiLine + m_gap;
-    if (m_asciiArea)
-    {
-        xWidth = m_asciiLoc + (m_bytesPerLine * m_charWidth) + m_gap;
-    }
-    horizontalScrollBar()->setRange(0, xWidth - viewport()->width());
-    horizontalScrollBar()->setPageStep(viewport()->width());
-
-    int rows = m_size / m_bytesPerLine;
-    int visibleHeight = viewport()->height() - m_gap;
-    if (horizontalScrollBar()->isVisible())
-    {
-        visibleHeight -= horizontalScrollBar()->height();
-    }
-    m_visibleRows = visibleHeight / m_charHeight;
-    verticalScrollBar()->setRange(0, rows - m_visibleRows);
-    verticalScrollBar()->setPageStep(m_visibleRows);
-
-    int lines = verticalScrollBar()->value();
-    m_lineStart = lines * m_bytesPerLine;
-    m_lineEnd = m_lineStart + m_visibleRows * m_bytesPerLine - 1;
-    if (m_lineEnd >= m_size)
-    {
-        m_lineEnd = m_maxOffset;
-    }
-
-    int x, y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
-    if (!m_asciiEdit)
-    {
-        y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
-        x = m_cursorOffset % (m_bytesPerLine * 2);
-        x = (((x / 2) * 3) + (x % 2)) * m_charWidth + m_dataLoc;
-    }
-    else
-    {
-        y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
-        x = (m_cursorOffset % (m_bytesPerLine * 2)) / 2;
-        x = x * m_charWidth + m_asciiLoc;
-    }
-    m_cursor = QRect(x - horizontalScrollBar()->value(), y + m_cursorHeight, m_charWidth, m_cursorHeight);
-
-    update();
-    viewport()->update();
-}
-
-void HexWidget::setSelection(int addr)
-{
-    if ((addr /= 2) < 0)
-    {
-        addr = 0;
-    }
-
-    if (m_selectStart == -1)
-    {
-        m_selectStart = addr;
-        m_selectEnd = addr;
-        m_selectLen = 0;
-    }
-    if (addr > m_selectStart)
-    {
-        m_selectEnd = addr;
-        m_selectLen = addr - m_selectStart + 1;
-    }
-    else
-    {
-        m_selectStart = addr;
-        m_selectLen = m_selectEnd - addr + 1;
-    }
+    resizeEvent();
 }
 
 void HexWidget::undo()
 {
-    if (!m_stack.isEmpty())
+    if (mUndoStack.isEmpty() || mUndoPos < mUndoStack.firstIndex())
     {
-        stack_entry_t entry = m_stack.pop();
-        int address = entry.addr / 2;
-        int len = entry.ba.size();
-        m_data.replace(address, len, entry.ba);
-        for (int i = address; i < address + len; i++)
+        return;
+    }
+    auto &entry = mUndoStack.at(mUndoPos);
+    core().set(mProp, entry.mPos.addr(), entry.mBefore);
+    --mUndoPos;
+    setCurPos(entry.mPos, false);
+    if (entry.mBefore.length() > 1)
+    {
+        setCurPos(entry.mPos.byteOff(entry.mBefore.length() - 1), true);
+    }
+}
+
+void HexWidget::redo()
+{
+    if (mUndoStack.isEmpty() || mUndoPos >= mUndoStack.lastIndex())
+    {
+        return;
+    }
+    ++mUndoPos;
+    auto &entry = mUndoStack.at(mUndoPos);
+    core().set(mProp, entry.mPos.addr(), entry.mAfter);
+    setCurPos(entry.mPos, false);
+    if (entry.mAfter.length() > 1)
+    {
+        setCurPos(entry.mPos.byteOff(entry.mAfter.length() - 1), true);
+    }
+}
+
+void HexWidget::copy(bool selection)
+{
+    QClipboard *clip = QGuiApplication::clipboard();
+    if (selection && !clip->supportsSelection())
+    {
+        return;
+    }
+    QString text;
+    auto data = core().get(mProp, mCurPos.withMinOff(mSelEnd).addr(), mCurPos.byteDiff(mSelEnd));
+    if (mCurPos.isChar())
+    {
+        text.reserve(data.length());
+        for (char c : data)
         {
-            m_modified[i] = m_modified[i] - 1;
+            text += charToUnicode(c);
         }
-        setCursorOffset(entry.addr);
     }
+    else
+    {
+        text = QString::fromLatin1(data.toHex().toUpper());
+    }
+    clip->setText(text, selection ? QClipboard::Selection : QClipboard::Clipboard);
 }
 
-void HexWidget::overwrite(int addr, char c)
+void HexWidget::paste(bool selection)
 {
-    int address = addr / 2;
-    stack_entry_t entry{addr, m_data.mid(address, 1)};
-    m_stack.push(entry);
-    m_data[address] = c;
-    m_modified[address] = m_modified[address] + 1;
-}
-
-void HexWidget::overwrite(int addr, int len, const QByteArray &ba)
-{
-    int address = addr / 2;
-    stack_entry_t entry{addr, m_data.mid(address, len)};
-    m_stack.push(entry);
-    m_data.replace(address, len, ba);
-    for (int i = address; i < address + len; i++)
+    QClipboard *clip = QGuiApplication::clipboard();
+    if (selection && !clip->supportsSelection())
     {
-        m_modified[i] = m_modified[i] + 1;
+        return;
     }
-}
-
-void HexWidget::paintEvent(QPaintEvent *event)
-{
-    QRect r;
-    QPainter painter(viewport());
-    const QRect &region = event->rect();
-    const QPalette &pal = viewport()->palette();
-    const QColor &cText = pal.color(QPalette::WindowText);
-    const QColor &cBg = pal.color(QPalette::Background);
-    const QColor &cSelected = pal.color(QPalette::Highlight);
-    const QColor cModified = QColor(Qt::blue).lighter(160);
-    const QColor cBoth = QColor(Qt::green).lighter(160);
-    const int xOffset = horizontalScrollBar()->value();
-    const int xAddr = m_addrLoc - xOffset;
-
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(region, cBg);
-
-    painter.setPen(Qt::gray);
-    painter.drawLine(m_dataLine - xOffset, region.top(), m_dataLine - xOffset, height());
-    if (m_asciiArea)
+    QString subtype = QStringLiteral("plain");
+    QString text = clip->text(subtype, selection ? QClipboard::Selection : QClipboard::Clipboard);
+    if (text.isEmpty())
     {
-        painter.drawLine(m_asciiLine - xOffset, region.top(), m_asciiLine - xOffset, height());
+        return;
     }
-
-    for (int row = 0, y = m_charHeight; row <= m_visibleRows; row++, y += m_charHeight)
+    QByteArray data;
+    if (mCurPos.isChar())
     {
-        int xData = m_dataLoc - xOffset;
-        int xAscii = m_asciiLoc - xOffset;
-        int lineAddr = m_lineStart + row * m_bytesPerLine;
-        int addr = lineAddr;
-
-        if (addr + m_base > 0xffffff)
+        data.reserve(text.length());
+        for (QChar c : text)
         {
+            data += unicodeToChar(c);
+        }
+    }
+    else
+    {
+        data = QByteArray::fromHex(text.toLatin1());
+    }
+    if (data.isEmpty())
+    {
+        return;
+    }
+    auto minPos = mCurPos.withMinOff(mSelEnd);
+    overwriteRange(minPos, data);
+    setCurPos(minPos.byteOff(data.length()), false);
+}
+
+QChar HexWidget::tiasciiToUnicode(char c, QChar placeholder)
+{
+    static const QChar sTIAsciiToUnicode[] =
+    {
+        0x0000, 0xF00E, 0x0000, 0x0000, 0x0000, 0xF014, 0x0000, 0xF016,
+        0x222B, 0x00D7, 0x25AB, 0x207A, 0x2022, 0xF038, 0x00B3, 0xF02E,
+        0x221A, 0xF005, 0x00B2, 0x2220, 0x00B0, 0xF001, 0xF002, 0x2264,
+        0x2260, 0x2265, 0x00AF, 0xF000, 0x2192, 0xF01D, 0x2191, 0x2193,
+        0x0020, 0x0021, 0x0022, 0x0023, 0x0024, 0x0025, 0x0026, 0x0027,
+        0x0028, 0x0029, 0x002A, 0x002B, 0x002C, 0x002D, 0x002E, 0x002F,
+        0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037,
+        0x0038, 0x0039, 0x003A, 0x003B, 0x003C, 0x003D, 0x003E, 0x003F,
+        0x0040, 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047,
+        0x0048, 0x0049, 0x004A, 0x004B, 0x004C, 0x004D, 0x004E, 0x004F,
+        0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057,
+        0x0058, 0x0059, 0x005A, 0x03B8, 0x005C, 0x005D, 0x005E, 0x005F,
+        0x0060, 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067,
+        0x0068, 0x0069, 0x006A, 0x006B, 0x006C, 0x006D, 0x006E, 0x006F,
+        0x0070, 0x0071, 0x0072, 0x0073, 0x0074, 0x0075, 0x0076, 0x0077,
+        0x0078, 0x0079, 0x007A, 0x007B, 0x007C, 0x007D, 0x007E, 0x0000,
+        0x2080, 0x2081, 0x2082, 0x2083, 0x2084, 0x2085, 0x2086, 0x2087,
+        0x2088, 0x2089, 0x00C1, 0x00C0, 0x00C2, 0x00C4, 0x00E1, 0x00E0,
+        0x00E2, 0x00E4, 0x00C9, 0x00C8, 0x00CA, 0x00CB, 0x00E9, 0x00E8,
+        0x00EA, 0x00EB, 0x00CD, 0x00CC, 0x00CE, 0x00CF, 0x00ED, 0x00EC,
+        0x00EE, 0x00EF, 0x00D3, 0x00D2, 0x00D4, 0x00D6, 0x00F3, 0x00F2,
+        0x00F4, 0x00F6, 0x00DA, 0x00D9, 0x00DB, 0x00DC, 0x00FA, 0x00F9,
+        0x00FB, 0x00FC, 0x00C7, 0x00E7, 0x00D1, 0x00F1, 0x00B4, 0x0000,
+        0x00A8, 0x00BF, 0x00A1, 0x03B1, 0x03B2, 0x03B3, 0x0394, 0x03B4,
+        0x03B5, 0x005B, 0x03BB, 0x00B5, 0x03C0, 0x03C1, 0x03A3, 0x03C3,
+        0x03C4, 0x03C6, 0x03A9, 0xF003, 0xF004, 0xF006, 0x2026, 0xF00B,
+        0x0000, 0xF00A, 0x0000, 0x00B2, 0x00B0, 0x00B3, 0x000A, 0xF02F,
+        0xF022, 0x03C7, 0xF021, 0x212F, 0x230A, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x2074, 0xF015, 0x00DF, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    };
+    QChar r = sTIAsciiToUnicode[quint8(c)];
+    return r.isNull() ? placeholder : r;
+}
+
+char HexWidget::unicodeToTIAscii(QChar c, char placeholder)
+{
+    static const QHash<QChar, char> sUnicodeToTIAscii
+    {
+        {0x000A, 0xD6}, {0x0020, 0x20}, {0x0021, 0x21}, {0x0022, 0x22},
+        {0x0023, 0x23}, {0x0024, 0x24}, {0x0025, 0x25}, {0x0026, 0x26},
+        {0x0027, 0x27}, {0x0028, 0x28}, {0x0029, 0x29}, {0x002A, 0x2A},
+        {0x002B, 0x2B}, {0x002C, 0x2C}, {0x002D, 0x2D}, {0x002E, 0x2E},
+        {0x002F, 0x2F}, {0x0030, 0x30}, {0x0031, 0x31}, {0x0032, 0x32},
+        {0x0033, 0x33}, {0x0034, 0x34}, {0x0035, 0x35}, {0x0036, 0x36},
+        {0x0037, 0x37}, {0x0038, 0x38}, {0x0039, 0x39}, {0x003A, 0x3A},
+        {0x003B, 0x3B}, {0x003C, 0x3C}, {0x003D, 0x3D}, {0x003E, 0x3E},
+        {0x003F, 0x3F}, {0x0040, 0x40}, {0x0041, 0x41}, {0x0042, 0x42},
+        {0x0043, 0x43}, {0x0044, 0x44}, {0x0045, 0x45}, {0x0046, 0x46},
+        {0x0047, 0x47}, {0x0048, 0x48}, {0x0049, 0x49}, {0x004A, 0x4A},
+        {0x004B, 0x4B}, {0x004C, 0x4C}, {0x004D, 0x4D}, {0x004E, 0x4E},
+        {0x004F, 0x4F}, {0x0050, 0x50}, {0x0051, 0x51}, {0x0052, 0x52},
+        {0x0053, 0x53}, {0x0054, 0x54}, {0x0055, 0x55}, {0x0056, 0x56},
+        {0x0057, 0x57}, {0x0058, 0x58}, {0x0059, 0x59}, {0x005A, 0x5A},
+        {0x005B, 0xC1}, {0x005C, 0x5C}, {0x005D, 0x5D}, {0x005E, 0x5E},
+        {0x005F, 0x5F}, {0x0060, 0x60}, {0x0061, 0x61}, {0x0062, 0x62},
+        {0x0063, 0x63}, {0x0064, 0x64}, {0x0065, 0x65}, {0x0066, 0x66},
+        {0x0067, 0x67}, {0x0068, 0x68}, {0x0069, 0x69}, {0x006A, 0x6A},
+        {0x006B, 0x6B}, {0x006C, 0x6C}, {0x006D, 0x6D}, {0x006E, 0x6E},
+        {0x006F, 0x6F}, {0x0070, 0x70}, {0x0071, 0x71}, {0x0072, 0x72},
+        {0x0073, 0x73}, {0x0074, 0x74}, {0x0075, 0x75}, {0x0076, 0x76},
+        {0x0077, 0x77}, {0x0078, 0x78}, {0x0079, 0x79}, {0x007A, 0x7A},
+        {0x007B, 0x7B}, {0x007C, 0x7C}, {0x007D, 0x7D}, {0x007E, 0x7E},
+        {0x00A1, 0xBA}, {0x00A8, 0xB8}, {0x00AF, 0x1A}, {0x00B0, 0xD4},
+        {0x00B2, 0xD3}, {0x00B3, 0xD5}, {0x00B4, 0xB6}, {0x00B5, 0xC3},
+        {0x00BF, 0xB9}, {0x00C0, 0x8B}, {0x00C1, 0x8A}, {0x00C2, 0x8C},
+        {0x00C4, 0x8D}, {0x00C7, 0xB2}, {0x00C8, 0x93}, {0x00C9, 0x92},
+        {0x00CA, 0x94}, {0x00CB, 0x95}, {0x00CC, 0x9B}, {0x00CD, 0x9A},
+        {0x00CE, 0x9C}, {0x00CF, 0x9D}, {0x00D1, 0xB4}, {0x00D2, 0xA3},
+        {0x00D3, 0xA2}, {0x00D4, 0xA4}, {0x00D6, 0xA5}, {0x00D7, 0x09},
+        {0x00D9, 0xAB}, {0x00DA, 0xAA}, {0x00DB, 0xAC}, {0x00DC, 0xAD},
+        {0x00DF, 0xF4}, {0x00E0, 0x8F}, {0x00E1, 0x8E}, {0x00E2, 0x90},
+        {0x00E4, 0x91}, {0x00E7, 0xB3}, {0x00E8, 0x97}, {0x00E9, 0x96},
+        {0x00EA, 0x98}, {0x00EB, 0x99}, {0x00EC, 0x9F}, {0x00ED, 0x9E},
+        {0x00EE, 0xA0}, {0x00EF, 0xA1}, {0x00F1, 0xB5}, {0x00F2, 0xA7},
+        {0x00F3, 0xA6}, {0x00F4, 0xA8}, {0x00F6, 0xA9}, {0x00F9, 0xAF},
+        {0x00FA, 0xAE}, {0x00FB, 0xB0}, {0x00FC, 0xB1}, {0x0394, 0xBE},
+        {0x03A3, 0xC6}, {0x03A9, 0xCA}, {0x03B1, 0xBB}, {0x03B2, 0xBC},
+        {0x03B3, 0xBD}, {0x03B4, 0xBF}, {0x03B5, 0xC0}, {0x03B8, 0x5B},
+        {0x03BB, 0xC2}, {0x03C0, 0xC4}, {0x03C1, 0xC5}, {0x03C3, 0xC7},
+        {0x03C4, 0xC8}, {0x03C6, 0xC9}, {0x03C7, 0xD9}, {0x2022, 0x0C},
+        {0x2026, 0xCE}, {0x2074, 0xF2}, {0x207A, 0x0B}, {0x2080, 0x80},
+        {0x2081, 0x81}, {0x2082, 0x82}, {0x2083, 0x83}, {0x2084, 0x84},
+        {0x2085, 0x85}, {0x2086, 0x86}, {0x2087, 0x87}, {0x2088, 0x88},
+        {0x2089, 0x89}, {0x212F, 0xDB}, {0x2191, 0x1E}, {0x2192, 0x1C},
+        {0x2193, 0x1F}, {0x221A, 0x10}, {0x2220, 0x13}, {0x222B, 0x08},
+        {0x2260, 0x18}, {0x2264, 0x17}, {0x2265, 0x19}, {0x230A, 0xDC},
+        {0x25AB, 0x0A}, {0xF000, 0x1B}, {0xF001, 0x15}, {0xF002, 0x16},
+        {0xF003, 0xCB}, {0xF004, 0xCC}, {0xF005, 0x11}, {0xF006, 0xCD},
+        {0xF00A, 0xD1}, {0xF00B, 0xCF}, {0xF00E, 0x01}, {0xF014, 0x05},
+        {0xF015, 0xF3}, {0xF016, 0x07}, {0xF01D, 0x1D}, {0xF021, 0xDA},
+        {0xF022, 0xD8}, {0xF02E, 0x0F}, {0xF02F, 0xD7}, {0xF038, 0x0D},
+    };
+    return sUnicodeToTIAscii.value(c, placeholder);
+}
+
+QChar HexWidget::charToUnicode(char c) const
+{
+    if (mCharset == Charset::TIAscii)
+    {
+        return tiasciiToUnicode(c);
+    }
+    QChar r = QChar::fromLatin1(c);
+    return r.isPrint() ? r : QLatin1Char{'.'};
+}
+
+char HexWidget::unicodeToChar(QChar c) const
+{
+    if (mCharset == Charset::TIAscii)
+    {
+        return unicodeToTIAscii(c);
+    }
+    return c.toLatin1();
+}
+
+QSize HexWidget::cellSize() const
+{
+    const auto &metrics = fontMetrics();
+    return {metrics.maxWidth(), metrics.lineSpacing()};
+}
+
+QRect HexWidget::posToCell(Pos pos) const
+{
+    auto size = cellSize();
+    int x = pos.off() % mStride;
+    switch (pos.area())
+    {
+        case Area::Addr:
+            x = 1;
             break;
-        }
-
-        painter.setPen(cText);
-        painter.drawText(xAddr, y, Util::int2hex(m_base + lineAddr, 6));
-        for (int col = 0; col < m_bytesPerLine && addr < m_maxOffset; col++)
-        {
-            addr = lineAddr + col;
-
-            painter.setPen(cText);
-            uint8_t data = m_data[addr];
-            int flags = parent()->parent()->core().get(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + m_base);
-            bool selected = addr >= m_selectStart && addr <= m_selectEnd;
-            bool modified = m_modified[addr];
-
-            QFont font = painter.font();
-            const QFont fontorig = painter.font();
-
-            if (flags & cemucore::CEMUCORE_DBG_WATCH_READ)
-            {
-                font.setWeight(QFont::DemiBold);
-                painter.setFont(font);
-                painter.setPen(Qt::darkGreen);
-            }
-            if (flags & cemucore::CEMUCORE_DBG_WATCH_WRITE)
-            {
-                font.setWeight(QFont::DemiBold);
-                painter.setFont(font);
-                painter.setPen(Qt::darkYellow);
-            }
-            if (flags & cemucore::CEMUCORE_DBG_WATCH_EXEC)
-            {
-                font.setWeight(QFont::DemiBold);
-                painter.setFont(font);
-                painter.setPen(Qt::darkRed);
-            }
-
-            if (modified || selected)
-            {
-                if (!col)
-                {
-                    r.setRect(xData, y - m_charHeight + m_margin, 2 * m_charWidth, m_charHeight);
-                }
-                else
-                {
-                    r.setRect(xData - m_charWidth, y - m_charHeight + m_margin, 3 * m_charWidth, m_charHeight);
-                }
-                painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
-            }
-
-            QString hex = Util::int2hex(data, 2);
-            if ((flags & cemucore::CEMUCORE_DBG_WATCH_READ) &&
-                (flags & cemucore::CEMUCORE_DBG_WATCH_WRITE))
-            {
-                painter.setPen(Qt::darkGreen);
-                painter.drawText(xData, y, hex.at(0));
-                xData += m_charWidth;
-                painter.setPen(Qt::darkYellow);
-                painter.drawText(xData, y, hex.at(1));
-                xData += 2 * m_charWidth;
-            }
-            else
-            {
-                painter.drawText(xData, y, hex);
-                xData += 3 * m_charWidth;
-            }
-
-            painter.setFont(fontorig);
-
-            if (m_asciiArea)
-            {
-                char ch = static_cast<char>(data);
-                if (ch < 0x20 || ch > 0x7e)
-                {
-                    ch = '.';
-                }
-                if (modified || selected)
-                {
-                    r.setRect(xAscii, y - m_charHeight + m_margin, m_charWidth, m_charHeight);
-                    painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
-                }
-                painter.drawText(xAscii, y, QChar(ch));
-                xAscii += m_charWidth;
-            }
-        }
+        case Area::Data:
+            x = (x * 3 >> 1) + 8;
+            break;
+        case Area::Char:
+            x = ((mStride * 3 + x) >> 1) + 8;
+            break;
     }
-
-    if (!isEnabled())
-    {
-        m_stack.clear();
-        m_modified.clear();
-    }
-
-    if (m_data.size())
-    {
-        painter.fillRect(m_cursor, cText);
-    }
+    return {{x * size.width() - (size.width() >> 1), pos.off() / mStride * size.height()}, size};
 }
 
-void HexWidget::resizeEvent(QResizeEvent *event)
+auto HexWidget::absToPos(QPoint abs) const -> Pos
 {
-    adjust();
-    event->accept();
+    auto size = cellSize();
+    int x = (abs.x() << 1) / size.width() + 1;
+    int hexWidth = mStride * 3 >> 1;
+    int off = abs.y() / size.height() * mStride;
+    if (mCharset != Charset::None && x >> 1 >= hexWidth + 8 && x >> 1 < (mStride << 1) + 8)
+    {
+        return {Area::Char, off + x - (hexWidth << 1) - 16};
+    }
+    if (x >= 15 && x < (hexWidth << 1) + 15)
+    {
+        return {Area::Data, off + x / 3 - 5};
+    }
+    return {Area::Addr, off};
+}
+
+auto HexWidget::locToPos(QPoint loc) const -> Pos
+{
+    return absToPos(loc + QPoint{horizontalScrollBar()->value(), mTopLine * cellSize().height()});
+}
+
+void HexWidget::setCurPos(Pos pos, bool select)
+{
+    mCurPos = mCurPos.withArea(pos.area());
+    mSelEnd = qBound(0, pos.off(), mLastPos);
+    if (!select)
+    {
+        mCurPos = mCurPos.withOff(mSelEnd);
+    }
+    else if (mCurPos.off() != mSelEnd)
+    {
+        copy(true);
+    }
+    int line = mSelEnd / mStride;
+    mTopLine = qBound(line - mVisibleLines + 2, mTopLine, line);
+    auto cell = posToCell({mCurPos.area(), mSelEnd});
+    auto *hBar = horizontalScrollBar();
+    auto *view = viewport();
+    hBar->setValue(qBound(cell.right() + 1 - view->width(), hBar->value(), cell.left()));
+    view->update();
+}
+
+void HexWidget::overwriteChar(Pos pos, char c)
+{
+    overwriteRange(pos, {1, c});
+}
+
+void HexWidget::overwriteRange(Pos pos, QByteArray data)
+{
+    if (data.isEmpty())
+    {
+        return;
+    }
+    while (!mUndoStack.isEmpty() && mUndoPos != mUndoStack.lastIndex())
+    {
+        mUndoStack.removeLast();
+    }
+    data.truncate(pos.byteDiff(mLastPos));
+    auto lock = core().lock();
+    mUndoStack.append({pos, core().get(mProp, pos.addr(), data.length()), data});
+    mUndoStack.normalizeIndexes();
+    mUndoPos = mUndoStack.lastIndex();
+    core().set(mProp, pos.addr(), data);
+}
+
+void HexWidget::overwriteNibble(Pos pos, int digit)
+{
+    while (!mUndoStack.isEmpty() && mUndoPos != mUndoStack.lastIndex())
+    {
+        mUndoStack.removeLast();
+    }
+    auto lock = core().lock();
+    char before = core().get(mProp, pos.addr()), after;
+    if (pos.low())
+    {
+        after = (before & 0xF0) | (digit << 0 & 0x0F);
+    }
+    else
+    {
+        after = (before & 0x0F) | (digit << 4 & 0xF0);
+    }
+    mUndoStack.append({pos, {1, before}, {1, after}});
+    mUndoStack.normalizeIndexes();
+    mUndoPos = mUndoStack.lastIndex();
+    core().set(mProp, pos.addr(), after);
+}
+
+void HexWidget::resizeEvent(QResizeEvent *)
+{
+    auto cell = posToCell({mCharset == Charset::None ? Area::Data : Area::Char, mStride - 1});
+    const auto *view = viewport();
+    int viewWidth = view->width(), viewHeight = view->height();
+    auto *hBar = horizontalScrollBar();
+    hBar->setRange(0, cell.right() + (cell.width() >> 1) - viewWidth);
+    hBar->setPageStep(viewWidth);
+    mVisibleLines = (viewHeight + cell.height() - 1) / cell.height();
+    mTopLine = qBound(0, mTopLine, mLastPos / mStride - mVisibleLines + 2);
 }
 
 void HexWidget::focusInEvent(QFocusEvent *event)
 {
-    emit focused();
     event->accept();
+}
+
+void HexWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (event->matches(QKeySequence::MoveToPreviousChar))
+    {
+        setCurPos(mCurPos.off(-(mCurPos.isChar() + 1)), false);
+    }
+    else if (event->matches(QKeySequence::MoveToNextChar))
+    {
+        setCurPos(mCurPos.off(+(mCurPos.isChar() + 1)), false);
+    }
+    if (event->matches(QKeySequence::MoveToPreviousWord))
+    {
+        setCurPos(mCurPos.byteOff(-1).withLow(), false);
+    }
+    else if (event->matches(QKeySequence::MoveToNextWord))
+    {
+        setCurPos(mCurPos.byteOff(+1).withHigh(mCurPos.isChar()), false);
+    }
+    else if (event->matches(QKeySequence::MoveToPreviousLine))
+    {
+        setCurPos(mCurPos.off(-mStride), false);
+    }
+    else if (event->matches(QKeySequence::MoveToNextLine))
+    {
+        setCurPos(mCurPos.off(+mStride), false);
+    }
+    else if (event->matches(QKeySequence::MoveToStartOfLine))
+    {
+        setCurPos(mCurPos.atLineStart(mStride), false);
+    }
+    else if (event->matches(QKeySequence::MoveToEndOfLine))
+    {
+        setCurPos(mCurPos.atLineEnd(mStride).withHigh(mCurPos.isChar()), false);
+    }
+    else if (event->matches(QKeySequence::MoveToPreviousPage))
+    {
+        setCurPos(mCurPos.off(-mVisibleLines * mStride), false);
+    }
+    else if (event->matches(QKeySequence::MoveToNextPage))
+    {
+        setCurPos(mCurPos.off(+mVisibleLines * mStride), false);
+    }
+    else if (event->matches(QKeySequence::MoveToStartOfDocument))
+    {
+        setCurPos(mCurPos.withOff(0), false);
+    }
+    else if (event->matches(QKeySequence::MoveToEndOfDocument))
+    {
+        setCurPos(mCurPos.withOff(mLastPos), false);
+    }
+    if (event->matches(QKeySequence::SelectPreviousChar))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd + (mCurPos.isChar() ||
+                                             ((mCurPos.withLow().off() >= mSelEnd) ^
+                                              mSelEnd) & 1) - 1), true);
+    }
+    else if (event->matches(QKeySequence::SelectNextChar))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd + (mCurPos.isChar() ||
+                                             ((mCurPos.off() > (mSelEnd | 1)) ^
+                                              mSelEnd) & 1) + 1), true);
+    }
+    if (event->matches(QKeySequence::SelectPreviousWord))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd - 2).withHigh(), true);
+    }
+    else if (event->matches(QKeySequence::SelectNextWord))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd + 2).withLow(mCurPos.isChar()), true);
+    }
+    else if (event->matches(QKeySequence::SelectPreviousLine))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd - mStride), true);
+    }
+    else if (event->matches(QKeySequence::SelectNextLine))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd + mStride), true);
+    }
+    else if (event->matches(QKeySequence::SelectStartOfLine))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd).atLineStart(mStride), true);
+    }
+    else if (event->matches(QKeySequence::SelectEndOfLine))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd).atLineEnd(mStride).withHigh(mCurPos.isChar()), true);
+    }
+    else if (event->matches(QKeySequence::SelectPreviousPage))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd - mVisibleLines * mStride), true);
+    }
+    else if (event->matches(QKeySequence::SelectNextPage))
+    {
+        setCurPos(mCurPos.withOff(mSelEnd + mVisibleLines * mStride), true);
+    }
+    else if (event->matches(QKeySequence::SelectStartOfDocument))
+    {
+        setCurPos(mCurPos.withOff(0), true);
+    }
+    else if (event->matches(QKeySequence::SelectEndOfDocument))
+    {
+        setCurPos(mCurPos.withOff(mLastPos), true);
+    }
+    else if (event->matches(QKeySequence::SelectAll))
+    {
+        setCurPos(mCurPos.withOff(0), false);
+        setCurPos(mCurPos.withOff(mLastPos), true);
+    }
+    else if (event->matches(QKeySequence::Deselect))
+    {
+        setCurPos(mCurPos, false);
+    }
+    else if (event->matches(QKeySequence::Undo))
+    {
+        undo();
+    }
+    else if (event->matches(QKeySequence::Redo))
+    {
+        redo();
+    }
+    else if (event->matches(QKeySequence::Copy))
+    {
+        copy();
+    }
+    else if (event->matches(QKeySequence::Paste))
+    {
+        paste();
+    }
+#if 0
+    else if (event->matches(QKeySequence::Backspace))
+    {
+        if (mCurPos.off() != mSelEnd || mCurPos.isChar())
+        {
+            overwriteRange(mCurPos.minOff(mSelEnd), {mCurPos.byteDiff(mSelEnd), 0});
+            if (mCurPos.off() != mSelEnd)
+            {
+                setCurPos(mCurPos.minOff(mSelEnd).withHigh(), false);
+            }
+            else
+            {
+                setCurPos(mCurPos.off(-2), false);
+            }
+        }
+        else
+        {
+            overwriteNibble(mCurPos, 0);
+            setCurPos(mCurPos.off(-1), false);
+        }
+    }
+#endif
+    else if (!(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier)) &&
+             !event->text().isEmpty())
+    {
+        if (mCurPos.isChar())
+        {
+            QChar c = event->text().front();
+            char b = c.toLatin1();
+            if (mCharset == Charset::TIAscii)
+            {
+                static const QHash<QChar, char> sUnicodeToTIAscii
+                {
+                    {0x000A, 0xD6}, {0x0020, 0x20}, {0x0021, 0x21}, {0x0022, 0x22},
+                    {0x0023, 0x23}, {0x0024, 0x24}, {0x0025, 0x25}, {0x0026, 0x26},
+                    {0x0027, 0x27}, {0x0028, 0x28}, {0x0029, 0x29}, {0x002A, 0x2A},
+                    {0x002B, 0x2B}, {0x002C, 0x2C}, {0x002D, 0x2D}, {0x002E, 0x2E},
+                    {0x002F, 0x2F}, {0x0030, 0x30}, {0x0031, 0x31}, {0x0032, 0x32},
+                    {0x0033, 0x33}, {0x0034, 0x34}, {0x0035, 0x35}, {0x0036, 0x36},
+                    {0x0037, 0x37}, {0x0038, 0x38}, {0x0039, 0x39}, {0x003A, 0x3A},
+                    {0x003B, 0x3B}, {0x003C, 0x3C}, {0x003D, 0x3D}, {0x003E, 0x3E},
+                    {0x003F, 0x3F}, {0x0040, 0x40}, {0x0041, 0x41}, {0x0042, 0x42},
+                    {0x0043, 0x43}, {0x0044, 0x44}, {0x0045, 0x45}, {0x0046, 0x46},
+                    {0x0047, 0x47}, {0x0048, 0x48}, {0x0049, 0x49}, {0x004A, 0x4A},
+                    {0x004B, 0x4B}, {0x004C, 0x4C}, {0x004D, 0x4D}, {0x004E, 0x4E},
+                    {0x004F, 0x4F}, {0x0050, 0x50}, {0x0051, 0x51}, {0x0052, 0x52},
+                    {0x0053, 0x53}, {0x0054, 0x54}, {0x0055, 0x55}, {0x0056, 0x56},
+                    {0x0057, 0x57}, {0x0058, 0x58}, {0x0059, 0x59}, {0x005A, 0x5A},
+                    {0x005B, 0xC1}, {0x005C, 0x5C}, {0x005D, 0x5D}, {0x005E, 0x5E},
+                    {0x005F, 0x5F}, {0x0060, 0x60}, {0x0061, 0x61}, {0x0062, 0x62},
+                    {0x0063, 0x63}, {0x0064, 0x64}, {0x0065, 0x65}, {0x0066, 0x66},
+                    {0x0067, 0x67}, {0x0068, 0x68}, {0x0069, 0x69}, {0x006A, 0x6A},
+                    {0x006B, 0x6B}, {0x006C, 0x6C}, {0x006D, 0x6D}, {0x006E, 0x6E},
+                    {0x006F, 0x6F}, {0x0070, 0x70}, {0x0071, 0x71}, {0x0072, 0x72},
+                    {0x0073, 0x73}, {0x0074, 0x74}, {0x0075, 0x75}, {0x0076, 0x76},
+                    {0x0077, 0x77}, {0x0078, 0x78}, {0x0079, 0x79}, {0x007A, 0x7A},
+                    {0x007B, 0x7B}, {0x007C, 0x7C}, {0x007D, 0x7D}, {0x007E, 0x7E},
+                    {0x00A1, 0xBA}, {0x00A8, 0xB8}, {0x00AF, 0x1A}, {0x00B0, 0xD4},
+                    {0x00B2, 0xD3}, {0x00B3, 0xD5}, {0x00B4, 0xB6}, {0x00B5, 0xC3},
+                    {0x00BF, 0xB9}, {0x00C0, 0x8B}, {0x00C1, 0x8A}, {0x00C2, 0x8C},
+                    {0x00C4, 0x8D}, {0x00C7, 0xB2}, {0x00C8, 0x93}, {0x00C9, 0x92},
+                    {0x00CA, 0x94}, {0x00CB, 0x95}, {0x00CC, 0x9B}, {0x00CD, 0x9A},
+                    {0x00CE, 0x9C}, {0x00CF, 0x9D}, {0x00D1, 0xB4}, {0x00D2, 0xA3},
+                    {0x00D3, 0xA2}, {0x00D4, 0xA4}, {0x00D6, 0xA5}, {0x00D7, 0x09},
+                    {0x00D9, 0xAB}, {0x00DA, 0xAA}, {0x00DB, 0xAC}, {0x00DC, 0xAD},
+                    {0x00DF, 0xF4}, {0x00E0, 0x8F}, {0x00E1, 0x8E}, {0x00E2, 0x90},
+                    {0x00E4, 0x91}, {0x00E7, 0xB3}, {0x00E8, 0x97}, {0x00E9, 0x96},
+                    {0x00EA, 0x98}, {0x00EB, 0x99}, {0x00EC, 0x9F}, {0x00ED, 0x9E},
+                    {0x00EE, 0xA0}, {0x00EF, 0xA1}, {0x00F1, 0xB5}, {0x00F2, 0xA7},
+                    {0x00F3, 0xA6}, {0x00F4, 0xA8}, {0x00F6, 0xA9}, {0x00F9, 0xAF},
+                    {0x00FA, 0xAE}, {0x00FB, 0xB0}, {0x00FC, 0xB1}, {0x0394, 0xBE},
+                    {0x03A3, 0xC6}, {0x03A9, 0xCA}, {0x03B1, 0xBB}, {0x03B2, 0xBC},
+                    {0x03B3, 0xBD}, {0x03B4, 0xBF}, {0x03B5, 0xC0}, {0x03B8, 0x5B},
+                    {0x03BB, 0xC2}, {0x03C0, 0xC4}, {0x03C1, 0xC5}, {0x03C3, 0xC7},
+                    {0x03C4, 0xC8}, {0x03C6, 0xC9}, {0x03C7, 0xD9}, {0x2022, 0x0C},
+                    {0x2026, 0xCE}, {0x2074, 0xF2}, {0x207A, 0x0B}, {0x2080, 0x80},
+                    {0x2081, 0x81}, {0x2082, 0x82}, {0x2083, 0x83}, {0x2084, 0x84},
+                    {0x2085, 0x85}, {0x2086, 0x86}, {0x2087, 0x87}, {0x2088, 0x88},
+                    {0x2089, 0x89}, {0x212F, 0xDB}, {0x2191, 0x1E}, {0x2192, 0x1C},
+                    {0x2193, 0x1F}, {0x221A, 0x10}, {0x2220, 0x13}, {0x222B, 0x08},
+                    {0x2260, 0x18}, {0x2264, 0x17}, {0x2265, 0x19}, {0x230A, 0xDC},
+                    {0x25AB, 0x0A}, {0xF000, 0x1B}, {0xF001, 0x15}, {0xF002, 0x16},
+                    {0xF003, 0xCB}, {0xF004, 0xCC}, {0xF005, 0x11}, {0xF006, 0xCD},
+                    {0xF00A, 0xD1}, {0xF00B, 0xCF}, {0xF00E, 0x01}, {0xF014, 0x05},
+                    {0xF015, 0xF3}, {0xF016, 0x07}, {0xF01D, 0x1D}, {0xF021, 0xDA},
+                    {0xF022, 0xD8}, {0xF02E, 0x0F}, {0xF02F, 0xD7}, {0xF038, 0x0D},
+                };
+                b = sUnicodeToTIAscii.value(c);
+            }
+            if (b)
+            {
+                overwriteChar(mCurPos, b);
+                setCurPos(mCurPos.byteOff(+1), false);
+            }
+        }
+        else
+        {
+            bool ok;
+            int digit = event->text().toInt(&ok, 16);
+            if (ok)
+            {
+                overwriteNibble(mCurPos, digit);
+                setCurPos(mCurPos.off(+1), false);
+            }
+        }
+    }
 }
 
 void HexWidget::mousePressEvent(QMouseEvent *event)
 {
-    int addr = getPosition(event->pos());
-    if (addr >= 0)
+    bool select = event->button() == Qt::LeftButton && event->modifiers() & Qt::ShiftModifier;
+    auto pos = locToPos(event->pos());
+    if (pos.isValid() && (!select || pos.area() == mCurPos.area()))
     {
-        setCursorOffset(addr, true);
+        setCurPos(pos, select);
+        event->accept();
     }
 }
 
 void HexWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    int addr = getPosition(event->pos(), false);
-    if (addr >= 0)
+    if (!(event->buttons() & Qt::LeftButton))
     {
-        setSelection(addr);
-        setCursorOffset(addr, false);
+        return;
+    }
+    auto pos = locToPos(event->pos());
+    if (pos.area() == mCurPos.area())
+    {
+        setCurPos(pos, true);
+        event->accept();
     }
 }
 
-void HexWidget::keyPressEvent(QKeyEvent *event)
+void HexWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    int addr = m_cursorOffset;
-
-    if (event->matches(QKeySequence::MoveToNextChar))
+    if (event->button() != Qt::MiddleButton)
     {
-        setCursorOffset(m_asciiEdit ? addr + 2 : addr + 1);
+        return;
     }
-    else if (event->matches(QKeySequence::MoveToPreviousChar))
+    auto pos = locToPos(event->pos());
+    if (pos.area() == mCurPos.area())
     {
-        setCursorOffset(m_asciiEdit ? addr - 2 : addr - 1);
-    }
-    else if (event->matches(QKeySequence::MoveToEndOfLine))
-    {
-        setCursorOffset(addr | (m_bytesPerLine * 2 - 1));
-    }
-    else if (event->matches(QKeySequence::MoveToStartOfLine))
-    {
-        setCursorOffset(addr - (m_cursorOffset % (m_bytesPerLine * 2)));
-    }
-    else if (event->matches(QKeySequence::MoveToPreviousLine))
-    {
-        setCursorOffset(addr - m_bytesPerLine * 2);
-    }
-    else if (event->matches(QKeySequence::MoveToNextLine))
-    {
-        setCursorOffset(addr + m_bytesPerLine * 2);
-    }
-    else if (event->matches(QKeySequence::MoveToPreviousPage))
-    {
-        setCursorOffset(addr - (m_visibleRows - 1) * m_bytesPerLine * 2);
-    }
-    else if (event->matches(QKeySequence::MoveToNextPage))
-    {
-        setCursorOffset(addr + (m_visibleRows - 1) * m_bytesPerLine * 2);
-    }
-    else if (event->matches(QKeySequence::MoveToEndOfDocument))
-    {
-        setCursorOffset(m_size * 2);
-    }
-    else if (event->matches(QKeySequence::MoveToStartOfDocument))
-    {
-        setCursorOffset(0);
-    }
-    else if (event->matches(QKeySequence::Copy) && isSelected())
-    {
-        if (m_asciiEdit)
-        {
-            QByteArray ba = m_data.mid(m_selectStart, m_selectLen);
-            QByteArray ascii;
-            for (const char ch : ba)
-            {
-                ascii.append((ch < 0x20 || ch > 0x7e) ? '.' : ch);
-            }
-            ascii.append('\0');
-            qApp->clipboard()->setText(ascii);
-        }
-        else
-        {
-            QByteArray ba = m_data.mid(m_selectStart, m_selectLen).toHex();
-            qApp->clipboard()->setText(ba);
-        }
-    }
-    else if (event->matches(QKeySequence::Paste))
-    {
-        QByteArray ba = qApp->clipboard()->text().toLatin1();
-        if (!m_asciiEdit)
-        {
-            ba = QByteArray::fromHex(ba);
-        }
-        overwrite(addr, ba.size(), ba);
-        setCursorOffset(addr + ba.size() * 2);
-    }
-    else if (event->matches(QKeySequence::Delete))
-    {
-        if (isSelected())
-        {
-            setSelected(0);
-        }
-        else
-        {
-            overwrite(addr, 0);
-        }
-        setCursorOffset(addr + 2);
-    }
-    else if (event->matches(QKeySequence::Undo))
-    {
-            undo();
-    }
-    else if (!(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier)))
-    {
-        int key = event->key();
-        if (!m_asciiEdit)
-        {
-            if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'F'))
-            {
-                if (isSelected())
-                {
-                    setSelected(0);
-                }
-
-                if (m_data.size() > 0)
-                {
-                    uint8_t value;
-                    uint8_t num =  (key <= '9') ? (key - '0') : (key - 'A' + 10);
-                    if (m_cursorOffset % 2)
-                    {
-                        value = (m_data[addr / 2] & 0xf0) | num;
-                    }
-                    else
-                    {
-                        value = (m_data[addr / 2] & 0x0f) | (num << 4);
-                    }
-                    overwrite(addr, value);
-                    setCursorOffset(addr + 1);
-                }
-            }
-        }
-        else
-        {
-            if (isSelected())
-            {
-                setSelected(0);
-            }
-
-            if (m_data.size() > 0)
-            {
-                overwrite(addr, static_cast<char>(key));
-                setCursorOffset(addr + 2);
-            }
-        }
+        setCurPos(pos, false);
+        paste(true);
+        event->accept();
     }
 }
 
+void HexWidget::paintEvent(QPaintEvent *event)
+{
+    QRect region = event->rect();
+    QPainter painter{viewport()};
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.fillRect(region, palette().color(QPalette::Background));
+    painter.translate(-horizontalScrollBar()->value(), 0);
+
+    const auto drawSep = [&](Area area)
+    {
+        auto cell = posToCell({area, 0});
+        auto x = cell.x() - (cell.width() >> 1);
+        painter.drawLine(x, region.top(), x, region.bottom() + 1);
+    };
+
+    const auto drawText = [&](Pos pos, const QString &text)
+    {
+        auto cell = posToCell(pos);
+        painter.drawText(cell.x(), cell.y() + fontMetrics().ascent(), text);
+    };
+
+    painter.setPen(Qt::gray);
+    drawSep(Area::Data);
+    if (mCharset != Charset::None)
+    {
+        drawSep(Area::Char);
+    }
+
+    painter.translate(0, -posToCell({Area::Addr, mTopLine * mStride}).top());
+    if (mCurPos.off() != mSelEnd)
+    {
+        auto color = palette().color(QPalette::Highlight);
+        auto minPos = mCurPos.withMinOff(mSelEnd).withHigh(),
+             maxPos = mCurPos.withMaxOff(mSelEnd).withLow();
+        auto min = posToCell(minPos), max = posToCell(maxPos);
+        if (min.top() == max.top())
+        {
+            painter.fillRect(min | max, color);
+        }
+        else
+        {
+            auto rightPos = minPos.atLineEnd(mStride), leftPos = maxPos.atLineStart(mStride);
+            painter.fillRect(min | posToCell(rightPos), color);
+            painter.fillRect(posToCell(rightPos.off(+1)) | posToCell(leftPos.off(-1)), color);
+            painter.fillRect(posToCell(leftPos) | max, color);
+        }
+    }
+
+    auto data = core().get(mProp, mTopLine * mStride >> 1,
+                           qMin(mVisibleLines * mStride, mLastPos + 1 - mTopLine * mStride) >> 1);
+    auto hex = QString::fromLatin1(data.toHex().toUpper());
+    painter.setPen(palette().color(QPalette::WindowText));
+    int pos = mTopLine * mStride;
+    for (int line = 0, linePos = 0; line < mVisibleLines && linePos < hex.length();
+         ++line, linePos += mStride)
+    {
+        drawText({Area::Addr, pos + linePos}, QStringLiteral("%1")
+                 .arg(QString::number((pos + linePos) >> 1, 16).toUpper(), 6, QLatin1Char{'0'}));
+        for (int colPos = 0; colPos < mStride && linePos + colPos < hex.length(); ++colPos)
+        {
+            drawText({Area::Data, pos + linePos + colPos}, hex.mid(linePos + colPos, 1));
+        }
+        if (mCharset == Charset::None)
+        {
+            continue;
+        }
+        for (int colPos = 0; colPos < mStride && linePos + colPos < hex.length(); colPos += 2)
+        {
+            QChar c = QLatin1Char(data.at((linePos + colPos) >> 1));
+            if (mCharset == Charset::TIAscii)
+            {
+                static const QChar sTIAsciiToUnicode[] =
+                {
+                    0x0000, 0xF00E, 0x0000, 0x0000, 0x0000, 0xF014, 0x0000, 0xF016,
+                    0x222B, 0x00D7, 0x25AB, 0x207A, 0x2022, 0xF038, 0x00B3, 0xF02E,
+                    0x221A, 0xF005, 0x00B2, 0x2220, 0x00B0, 0xF001, 0xF002, 0x2264,
+                    0x2260, 0x2265, 0x00AF, 0xF000, 0x2192, 0xF01D, 0x2191, 0x2193,
+                    0x0020, 0x0021, 0x0022, 0x0023, 0x0024, 0x0025, 0x0026, 0x0027,
+                    0x0028, 0x0029, 0x002A, 0x002B, 0x002C, 0x002D, 0x002E, 0x002F,
+                    0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037,
+                    0x0038, 0x0039, 0x003A, 0x003B, 0x003C, 0x003D, 0x003E, 0x003F,
+                    0x0040, 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047,
+                    0x0048, 0x0049, 0x004A, 0x004B, 0x004C, 0x004D, 0x004E, 0x004F,
+                    0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057,
+                    0x0058, 0x0059, 0x005A, 0x03B8, 0x005C, 0x005D, 0x005E, 0x005F,
+                    0x0060, 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067,
+                    0x0068, 0x0069, 0x006A, 0x006B, 0x006C, 0x006D, 0x006E, 0x006F,
+                    0x0070, 0x0071, 0x0072, 0x0073, 0x0074, 0x0075, 0x0076, 0x0077,
+                    0x0078, 0x0079, 0x007A, 0x007B, 0x007C, 0x007D, 0x007E, 0x0000,
+                    0x2080, 0x2081, 0x2082, 0x2083, 0x2084, 0x2085, 0x2086, 0x2087,
+                    0x2088, 0x2089, 0x00C1, 0x00C0, 0x00C2, 0x00C4, 0x00E1, 0x00E0,
+                    0x00E2, 0x00E4, 0x00C9, 0x00C8, 0x00CA, 0x00CB, 0x00E9, 0x00E8,
+                    0x00EA, 0x00EB, 0x00CD, 0x00CC, 0x00CE, 0x00CF, 0x00ED, 0x00EC,
+                    0x00EE, 0x00EF, 0x00D3, 0x00D2, 0x00D4, 0x00D6, 0x00F3, 0x00F2,
+                    0x00F4, 0x00F6, 0x00DA, 0x00D9, 0x00DB, 0x00DC, 0x00FA, 0x00F9,
+                    0x00FB, 0x00FC, 0x00C7, 0x00E7, 0x00D1, 0x00F1, 0x00B4, 0x0000,
+                    0x00A8, 0x00BF, 0x00A1, 0x03B1, 0x03B2, 0x03B3, 0x0394, 0x03B4,
+                    0x03B5, 0x005B, 0x03BB, 0x00B5, 0x03C0, 0x03C1, 0x03A3, 0x03C3,
+                    0x03C4, 0x03C6, 0x03A9, 0xF003, 0xF004, 0xF006, 0x2026, 0xF00B,
+                    0x0000, 0xF00A, 0x0000, 0x00B2, 0x00B0, 0x00B3, 0x000A, 0xF02F,
+                    0xF022, 0x03C7, 0xF021, 0x212F, 0x230A, 0x0000, 0x0000, 0x0000,
+                    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+                    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+                    0x0000, 0x0000, 0x2074, 0xF015, 0x00DF, 0x0000, 0x0000, 0x0000,
+                    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+                };
+                c = sTIAsciiToUnicode[quint8(c.toLatin1())];
+            }
+            if (!c.isPrint())
+            {
+                c = QLatin1Char{'.'};
+            }
+            drawText({Area::Char, pos + linePos + colPos}, {1, c});
+        }
+    }
+
+    {
+        painter.setPen(palette().color(QPalette::WindowText));
+        auto cell = posToCell(mCurPos);
+        auto y = cell.top() + fontMetrics().ascent() + fontMetrics().underlinePos();
+        painter.drawLine(cell.left(), y, cell.right(), y);
+    }
+}
