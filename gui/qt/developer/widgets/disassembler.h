@@ -20,6 +20,7 @@
 #include "../../deps/zdis/zdis.h"
 class CoreWrapper;
 
+#include <QtCore/QPair>
 #include <QtCore/QString>
 
 class Disassembler
@@ -27,7 +28,7 @@ class Disassembler
 public:
     explicit Disassembler();
 
-    QString disassemble(const CoreWrapper &core, uint32_t &addr);
+    QPair<QString, QString> disassemble(const CoreWrapper &core, uint32_t &addr);
 
 private:
     QString strWord(int32_t data, bool il);
@@ -39,6 +40,7 @@ private:
     zdis_ctx mZdis;
     const CoreWrapper *mCore;
     QString mBuffer;
+    QString mData;
 };
 
 #endif

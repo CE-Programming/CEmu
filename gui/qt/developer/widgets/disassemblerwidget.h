@@ -21,17 +21,34 @@
 class DisassemblyWidget;
 
 #include <QtWidgets/QTableWidget>
+#include <QtWidgets/QStyledItemDelegate>
+
+class DisassemblerWidgetDelegate : public QStyledItemDelegate
+{
+public:
+    DisassemblerWidgetDelegate(QObject *parent = nullptr)
+        : QStyledItemDelegate(parent) {}
+
+protected:
+    virtual void initStyleOption(QStyleOptionViewItem *, const QModelIndex &) const;
+    virtual void paint(QPainter *, const QStyleOptionViewItem &, const QModelIndex &) const;
+};
 
 class DisassemblerWidget : public QTableWidget
 {
     Q_OBJECT
 
 public:
-    explicit DisassemblerWidget(DisassemblyWidget *parent);
+    explicit DisassemblerWidget(DisassemblyWidget *);
     DisassemblyWidget *parent() const;
 
     void setAddress(uint32_t);
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+    void wheelEvent(QWheelEvent* event) override;
+
+private:
     enum Column
     {
         Address,
@@ -40,21 +57,22 @@ public:
         Count
     };
 
-private slots:
-    void scroll(int);
-
-private:
     bool isAtTop();
     bool isAtBottom();
     void append();
     void prepend();
+    void scrollAction(int);
+    void toggleBreakpoint(int);
 
-    QString disassemble(uint32_t &addr);
+    QPair<QString, QString> disassemble(uint32_t &addr);
 
     uint32_t mTopAddress;
     uint32_t mBottomAddress;
 
     Disassembler mDis;
+
+    DisassemblerWidgetDelegate *mDelegate;
+    QFont mBoldFont;
 };
 
 #endif

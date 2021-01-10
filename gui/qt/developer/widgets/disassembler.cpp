@@ -17,6 +17,7 @@
 #include "disassembler.h"
 
 #include "../../corewrapper.h"
+#include "../../util.h"
 
 #include <utility>
 
@@ -33,7 +34,7 @@ Disassembler::Disassembler()
     };
 }
 
-QString Disassembler::disassemble(const CoreWrapper &core, uint32_t &addr)
+QPair<QString, QString> Disassembler::disassemble(const CoreWrapper &core, uint32_t &addr)
 {
     mZdis.zdis_end_addr = addr;
     mZdis.zdis_adl = 1;
@@ -41,12 +42,13 @@ QString Disassembler::disassemble(const CoreWrapper &core, uint32_t &addr)
     mZdis.zdis_implicit = 0;
     mCore = &core;
     mBuffer.clear();
+    mData.clear();
 
     zdis_put_inst(&mZdis);
 
     addr = mZdis.zdis_end_addr;
 
-    return std::move(mBuffer);
+    return {std::move(mBuffer), std::move(mData)};
 }
 
 QString Disassembler::strWord(int32_t data, bool il)
@@ -65,7 +67,9 @@ int Disassembler::zdisRead(uint32_t addr)
     {
         return EOF;
     }
-    return mCore->get(cemucore::CEMUCORE_PROP_MEM, addr);
+    int data = mCore->get(cemucore::CEMUCORE_PROP_MEM, addr);
+    mData += Util::int2hex(data, 2);
+    return data;
 }
 
 bool Disassembler::zdisPut(zdis_ctx *ctx, zdis_put kind, int32_t val, bool il)
@@ -106,7 +110,7 @@ bool Disassembler::zdisPut(zdis_ctx *ctx, zdis_put kind, int32_t val, bool il)
             mBuffer += QLatin1Char(val);
             break;
         case ZDIS_PUT_MNE_SEP:
-            mBuffer += QLatin1Char{' '};
+            mBuffer += QString{' '};
             break;
         case ZDIS_PUT_ARG_SEP:
             mBuffer += QLatin1Char{','};

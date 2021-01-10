@@ -54,5 +54,7 @@
         <file>assets/icons/high_priority.svg</file>
         <file>assets/icons/run.svg</file>
         <file>assets/icons/updown.svg</file>
+        <file>assets/icons/breakpoint.svg</file>
+        <file>assets/icons/nobreakpoint.svg</file>
     </qresource>
 </RCC>
