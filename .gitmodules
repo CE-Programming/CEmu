@@ -7,3 +7,6 @@
 [submodule "gui/qt/deps/KDDockWidgets"]
 	path = gui/qt/deps/KDDockWidgets
 	url = https://github.com/CE-Programming/KDDockWidgets.git
+[submodule "gui/qt/deps/zdis"]
+	path = gui/qt/deps/zdis
+	url = https://github.com/CE-Programming/zdis.git

@@ -14,23 +14,33 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISASSEMBLYWIDGET_H
-#define DISASSEMBLYWIDGET_H
+#ifndef DISASSEMBLY_H
+#define DISASSEMBLY_H
 
-#include "../dockedwidget.h"
-class DisassemblyView;
+#include "../../corewindow.h"
 
-class DisassemblyWidget : public DockedWidget
+#include "../../deps/zdis/zdis.h"
+
+#include <string>
+#include <unordered_map>
+
+class Disassembly
 {
-    Q_OBJECT
-
 public:
-    explicit DisassemblyWidget(CoreWindow *coreWindow);
+    explicit Disassembly();
 
-    void enableDebugWidgets(bool) override;
+    QString disassemble(uint32_t addr, uint32_t *nextAddr);
 
 private:
-    DisassemblyView *mDisasm;
+    char *strWord(int32_t data, bool il);
+    char *strAddr(int32_t data, bool il);
+
+    int zdisRead(struct zdis_ctx *ctx, uint32_t addr);
+    bool zdisPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il);
+
+    struct zdis_ctx mZdis;
+
+    QString mBuffer;
 };
 
 #endif

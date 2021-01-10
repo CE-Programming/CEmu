@@ -6,6 +6,9 @@ TEMPLATE = app
 
 CONFIG += c++11 console no_include_pwd
 
+# Temporary for zdis
+DEFINES += DEBUG_SUPPORT
+
 # Dependencies
 !defined(DEPLIBS, var) : DEPLIBS = STATIC
 
@@ -69,6 +72,7 @@ HEADERS += \
     consolewidget.h \
     corewindow.h \
     corewrapper.h \
+    deps/zdis/zdis.h \
     developer/autotesterwidget.h \
     developer/clockswidget.h \
     developer/controlwidget.h \
@@ -83,7 +87,8 @@ HEADERS += \
     developer/portmonitorwidget.h \
     developer/visualizerwidget.h \
     developer/watchpointswidget.h \
-    developer/widgets/disasmwidget.h \
+    developer/widgets/disassembly.h \
+    developer/widgets/disassemblyview.h \
     developer/widgets/hexwidget.h \
     developer/widgets/highlighteditwidget.h \
     developer/widgets/memwidget.h \
@@ -122,6 +127,7 @@ SOURCES += \
     consolewidget.cpp \
     corewindow.cpp \
     corewrapper.cpp \
+    deps/zdis/zdis.c \
     developer/autotesterwidget.cpp \
     developer/clockswidget.cpp \
     developer/controlwidget.cpp \
@@ -136,7 +142,8 @@ SOURCES += \
     developer/portmonitorwidget.cpp \
     developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
-    developer/widgets/disasmwidget.cpp \
+    developer/widgets/disassembly.cpp \
+    developer/widgets/disassemblyview.cpp \
     developer/widgets/hexwidget.cpp \
     developer/widgets/highlighteditwidget.cpp \
     developer/widgets/memwidget.cpp \
