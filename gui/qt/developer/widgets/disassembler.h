@@ -29,6 +29,7 @@ public:
     explicit Disassembler();
 
     QPair<QString, QString> disassemble(const CoreWrapper &core, uint32_t &addr);
+    void setAdl(bool enable);
 
 private:
     QString strWord(int32_t data, bool il);

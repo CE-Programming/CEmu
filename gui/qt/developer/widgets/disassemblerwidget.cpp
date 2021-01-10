@@ -19,10 +19,12 @@
 #include "../../corewrapper.h"
 #include "../disassemblywidget.h"
 #include "../../util.h"
+#include "../watchpointswidget.h"
 
 #include <QtGui/QPainter>
 #include <QtGui/QWheelEvent>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QTextEdit>
 
@@ -37,7 +39,7 @@ DisassemblerWidget::DisassemblerWidget(DisassemblyWidget *parent)
     setColumnCount(Column::Count);
     setHorizontalHeaderItem(Column::Address, new QTableWidgetItem{tr("Address")});
     setHorizontalHeaderItem(Column::Data, new QTableWidgetItem{tr("Data")});
-    setHorizontalHeaderItem(Column::Mnemonic, new QTableWidgetItem{tr("Mnemonic")});
+    setHorizontalHeaderItem(Column::Mnemonic, new QTableWidgetItem{tr("Disassembly")});
 
     setItemDelegate(mDelegate);
     horizontalHeader()->setStretchLastSection(true);
@@ -50,10 +52,12 @@ DisassemblerWidget::DisassemblerWidget(DisassemblyWidget *parent)
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     verticalHeader()->setDefaultSectionSize(fontMetrics().height() + 4);
     verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    verticalHeader()->setFixedWidth(fontMetrics().maxWidth() * 5);
 
     setShowGrid(false);
-
-    setAddress(512);
+    QPalette p(palette());
+    p.setColor(QPalette::Highlight, QColor(Qt::yellow).lighter());
+    setPalette(p);
 
     connect(verticalScrollBar(), &QScrollBar::actionTriggered, this, &DisassemblerWidget::scrollAction);
     connect(verticalHeader(), &QHeaderView::sectionClicked, this, &DisassemblerWidget::toggleBreakpoint);
@@ -66,49 +70,98 @@ DisassemblyWidget *DisassemblerWidget::parent() const
 
 void DisassemblerWidget::toggleBreakpoint(int row)
 {
-    QTableWidgetItem *item = verticalHeaderItem(row);
-    bool enabled = item->data(Qt::UserRole).toBool();
+    const QString toggleX = tr("Toggle execute watchpoint (x)");
+    const QString toggleR = tr("Toggle read watchpoint (r)");
+    const QString toggleW = tr("Toggle write watchpoint (w)");
 
-    if (enabled)
-    {
-        item->setIcon(QIcon(QStringLiteral(":/assets/icons/nobreakpoint.svg")));
-    }
-    else
-    {
-        item->setIcon(QIcon(QStringLiteral(":/assets/icons/breakpoint.svg")));
-    }
+    QMenu menu;
+    menu.addAction(toggleX);
+    menu.addAction(toggleR);
+    menu.addAction(toggleW);
 
-    item->setData(Qt::UserRole, !enabled);
+    int y = rowViewportPosition(row) + verticalHeader()->defaultSectionSize() + 1;
+    QAction *action = menu.exec(mapToGlobal({0, y}));
+    if (action)
+    {
+        QString flags;
+        int mode = verticalHeaderItem(row)->data(Qt::UserRole).toInt();
+
+        if (action->text() == toggleX)
+        {
+            mode ^= Watchpoint::Mode::X;
+        }
+        else if (action->text() == toggleR)
+        {
+            mode ^= Watchpoint::Mode::R;
+        }
+        else if (action->text() == toggleW)
+        {
+            mode ^= Watchpoint::Mode::W;
+        }
+        flags += mode & Watchpoint::Mode::R ? QString{'r'} : QString{' '};
+        flags += mode & Watchpoint::Mode::W ? QString{'w'} : QString{' '};
+        flags += mode & Watchpoint::Mode::X ? QString{'x'} : QString{' '};
+
+        verticalHeaderItem(row)->setData(Qt::UserRole, mode);
+        verticalHeaderItem(row)->setText(flags);
+    }
 }
 
-void DisassemblerWidget::setAddress(uint32_t addr)
+void DisassemblerWidget::insertDisasmRow(int row,
+                                         uint32_t addr,
+                                         const QString &data,
+                                         const QString &mnemonic)
 {
-    clearContents();
+    uint32_t pcAddr = 0x200;//parent()->core().get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_PC);
+
+    insertRow(row);
+    setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(addr, Util::addrByteWidth)});
+    setItem(row, Column::Data, new QTableWidgetItem{data});
+    setItem(row, Column::Mnemonic, new QTableWidgetItem{mnemonic});
+    item(row, Column::Address)->setFont(mBoldFont);
+    setVerticalHeaderItem(row, new QTableWidgetItem);
+    verticalHeaderItem(row)->setTextAlignment(Qt::AlignCenter);
+    verticalHeaderItem(row)->setData(Qt::UserRole, 0);
+
+    if ((addr <= pcAddr && pcAddr <= ((addr + (data.length() / 2)) - 1)))
+    {
+        QBrush highlight({200, 235, 255});
+
+        item(row, Column::Address)->setBackground(highlight);
+        item(row, Column::Data)->setBackground(highlight);
+        item(row, Column::Mnemonic)->setBackground(highlight);
+    }
+}
+
+bool DisassemblerWidget::gotoAddress(const QString &addrStr)
+{
+    setRowCount(0);
+
+    // todo: lookup the string in equates map
+    uint32_t addr = Util::hex2int(addrStr);
 
     mTopAddress = addr;
 
     addr = addr < 32 ? 0 : addr - 32;
 
-    for (int i = 0; i < 128; i++)
+    int height = size().height();
+    int amount = ((height / verticalHeader()->defaultSectionSize()) * 1.5) + 32;
+    for (int i = 0; i < amount; i++)
     {
         uint32_t prevAddr = addr;
         QPair<QString, QString> dis = disassemble(addr);
 
         if (prevAddr >= mTopAddress)
         {
-            int row = rowCount();
-            insertRow(row);
-            setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(prevAddr, Util::addrByteWidth)});
-            setItem(row, Column::Data, new QTableWidgetItem{dis.second});
-            setItem(row, Column::Mnemonic, new QTableWidgetItem{dis.first});
-            item(row, Column::Address)->setFont(mBoldFont);
-            auto item = new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/nobreakpoint.svg")), QString());
-            item->setData(Qt::UserRole, false);
-            setVerticalHeaderItem(row, item);
+            insertDisasmRow(rowCount(), prevAddr, dis.second, dis.first);
         }
     }
 
     mBottomAddress = addr;
+
+    selectRow(0);
+
+    return true;
 }
 
 bool DisassemblerWidget::isAtTop()
@@ -121,21 +174,20 @@ bool DisassemblerWidget::isAtBottom()
     return mBottomAddress >= 0xFFFFFF;
 }
 
+void DisassemblerWidget::setAdl(bool enable)
+{
+    mDis.setAdl(enable);
+}
+
 void DisassemblerWidget::append()
 {
     uint32_t addr = mBottomAddress;
     QPair<QString, QString> dis = disassemble(addr);
-    mBottomAddress = addr;
 
-    int row = rowCount();
-    insertRow(row);
-    setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(addr, Util::addrByteWidth)});
-    setItem(row, Column::Data, new QTableWidgetItem{dis.second});
-    setItem(row, Column::Mnemonic, new QTableWidgetItem{dis.first});
-    item(row, Column::Address)->setFont(mBoldFont);
-    auto item = new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/nobreakpoint.svg")), QString());
-    item->setData(Qt::UserRole, false);
-    setVerticalHeaderItem(row, item);}
+    insertDisasmRow(rowCount(), mBottomAddress, dis.second, dis.first);
+
+    mBottomAddress = addr;
+}
 
 void DisassemblerWidget::prepend()
 {
@@ -144,9 +196,16 @@ void DisassemblerWidget::prepend()
         return;
     }
 
-    uint32_t addr = mBottomAddress;
+    if (mTopAddress == 1)
+    {
+        uint32_t addr = 0;
+        QPair<QString, QString> dis = disassemble(addr);
+        insertDisasmRow(0, 0, dis.second, dis.first);
+        mTopAddress = 0;
+        return;
+    }
 
-    addr = mTopAddress;
+    uint32_t addr = mTopAddress;
     addr = addr < 32 ? 0 : addr - 32;
 
     for (int i = 0; i < 64; i++)
@@ -158,15 +217,7 @@ void DisassemblerWidget::prepend()
         {
             uint32_t instSize = addr - prevAddr;
 
-            int row = 0;
-            insertRow(row);
-            setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(prevAddr, Util::addrByteWidth)});
-            setItem(row, Column::Data, new QTableWidgetItem{dis.second});
-            setItem(row, Column::Mnemonic, new QTableWidgetItem{dis.first});
-            item(row, Column::Address)->setFont(mBoldFont);
-            auto item = new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/nobreakpoint.svg")), QString());
-            item->setData(Qt::UserRole, false);
-            setVerticalHeaderItem(row, item);
+            insertDisasmRow(0, prevAddr, dis.second, dis.first);
 
             mTopAddress = instSize > mTopAddress ? 0 : mTopAddress - instSize;
             return;
@@ -308,7 +359,6 @@ void DisassemblerWidget::scrollAction(int action)
             }
             break;
         case QAbstractSlider::SliderMove:
-            qDebug() << "move";
             break;
     }
 

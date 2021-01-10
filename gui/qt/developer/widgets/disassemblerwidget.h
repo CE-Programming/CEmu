@@ -42,11 +42,12 @@ public:
     explicit DisassemblerWidget(DisassemblyWidget *);
     DisassemblyWidget *parent() const;
 
-    void setAddress(uint32_t);
+    bool gotoAddress(const QString &);
+    void setAdl(bool enable);
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override;
-    void wheelEvent(QWheelEvent* event) override;
+    void keyPressEvent(QKeyEvent *) override;
+    void wheelEvent(QWheelEvent *) override;
 
 private:
     enum Column
@@ -63,11 +64,14 @@ private:
     void prepend();
     void scrollAction(int);
     void toggleBreakpoint(int);
+    void insertDisasmRow(int, uint32_t, const QString &, const QString &);
 
-    QPair<QString, QString> disassemble(uint32_t &addr);
+    QPair<QString, QString> disassemble(uint32_t &);
 
     uint32_t mTopAddress;
     uint32_t mBottomAddress;
+
+    int mAdlMode;
 
     Disassembler mDis;
 

@@ -37,9 +37,8 @@ Disassembler::Disassembler()
 QPair<QString, QString> Disassembler::disassemble(const CoreWrapper &core, uint32_t &addr)
 {
     mZdis.zdis_end_addr = addr;
-    mZdis.zdis_adl = 1;
-    mZdis.zdis_lowercase = 1;
-    mZdis.zdis_implicit = 0;
+    mZdis.zdis_lowercase = true;
+    mZdis.zdis_implicit = false;
     mCore = &core;
     mBuffer.clear();
     mData.clear();
@@ -49,6 +48,11 @@ QPair<QString, QString> Disassembler::disassemble(const CoreWrapper &core, uint3
     addr = mZdis.zdis_end_addr;
 
     return {std::move(mBuffer), std::move(mData)};
+}
+
+void Disassembler::setAdl(bool enable)
+{
+    mZdis.zdis_adl = enable;
 }
 
 QString Disassembler::strWord(int32_t data, bool il)

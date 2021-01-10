@@ -20,6 +20,11 @@
 #include "../dockedwidget.h"
 class DisassemblerWidget;
 
+QT_BEGIN_NAMESPACE
+class QLineEdit;
+class QCheckBox;
+QT_END_NAMESPACE
+
 class DisassemblyWidget : public DockedWidget
 {
     Q_OBJECT
@@ -29,8 +34,12 @@ public:
 
     void enableDebugWidgets(bool) override;
 
+    bool gotoAddress(const QString &addr);
+
 private:
     DisassemblerWidget *mDisasm;
+    QLineEdit *mEdtAddr;
+    QCheckBox *mChkAdl;
 };
 
 #endif

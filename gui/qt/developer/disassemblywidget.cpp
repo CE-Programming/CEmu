@@ -16,6 +16,7 @@
 
 #include "disassemblywidget.h"
 
+#include "../corewrapper.h"
 #include "../util.h"
 #include "widgets/disassemblerwidget.h"
 
@@ -38,16 +39,16 @@ DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
     QGroupBox *grpAddr = new QGroupBox(tr("Address"));
     QGroupBox *grpEquates = new QGroupBox(tr("Equates"));
 
-    QLineEdit *editAddr = new QLineEdit;
-    editAddr->setFont(Util::monospaceFont());
+    mEdtAddr = new QLineEdit;
+    mEdtAddr->setFont(Util::monospaceFont());
 
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
     QPushButton *btnLoadEquates = new QPushButton(QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")), tr("Load"));
     QPushButton *btnReloadEquates = new QPushButton(QIcon(QStringLiteral(":/assets/icons/process.svg")), tr("Reload"));
     QPushButton *btnRemoveEquates = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove All"));
 
-    QCheckBox *chkAdl = new QCheckBox(tr("ADL"));
-    chkAdl->setTristate(true);
+    mChkAdl = new QCheckBox(tr("ADL"));
+    mChkAdl->setTristate(true);
 
     QHBoxLayout *hboxEquates = new QHBoxLayout;
     hboxEquates->addWidget(btnLoadEquates);
@@ -57,9 +58,9 @@ DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
     grpEquates->setLayout(hboxEquates);
 
     QHBoxLayout *hboxAddr = new QHBoxLayout;
-    hboxAddr->addWidget(editAddr);
+    hboxAddr->addWidget(mEdtAddr);
     hboxAddr->addWidget(btnGoto);
-    hboxAddr->addWidget(chkAdl);
+    hboxAddr->addWidget(mChkAdl);
     grpAddr->setLayout(hboxAddr);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
@@ -70,7 +71,32 @@ DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+    connect(btnGoto, &QPushButton::clicked, [this]
+    {
+        gotoAddress(mEdtAddr->text());
+    });
+    connect(mEdtAddr, &QLineEdit::returnPressed, [this]
+    {
+        gotoAddress(mEdtAddr->text());
+    });
+    connect(mChkAdl, &QCheckBox::stateChanged, [this]
+    {
+        gotoAddress(mEdtAddr->text());
+    });
+
     enableDebugWidgets(false);
+}
+
+bool DisassemblyWidget::gotoAddress(const QString &addr)
+{
+    bool adl = mChkAdl->checkState() == Qt::Checked;
+    if (mChkAdl->checkState() == Qt::PartiallyChecked)
+    {
+        adl = true;//core().get();
+    }
+
+    mDisasm->setAdl(adl);
+    return mDisasm->gotoAddress(addr);
 }
 
 void DisassemblyWidget::enableDebugWidgets(bool enbaled)
