@@ -87,27 +87,27 @@ bool DisassemblyModel::isAtTop()
 
 bool DisassemblyModel::isAtBottom()
 {
-    return mTopAddress == (2 << 24) - 1;
+    return mBottomAddress >= 0xFFFFFF;
 }
 
 void DisassemblyModel::append()
 {
-    uint32_t addr = mLastAddress;
+    uint32_t addr = mBottomAddress;
     uint32_t nextAddr;
 
-    beginInsertRows(QModelIndex(), mAddress.count(), mAddress.count());
+    beginResetModel();
 
     mAddress.append(addr);
     mMnemonic.append(mDis.disassemble(addr, &nextAddr));
 
-    mLastAddress = nextAddr;
+    mBottomAddress = nextAddr;
 
-    endInsertRows();
+    endResetModel();
 }
 
 void DisassemblyModel::prepend()
 {
-    uint32_t addr = mLastAddress;
+    uint32_t addr = mBottomAddress;
     uint32_t prevAddr = addr;
     uint32_t nextAddr;
 
@@ -119,7 +119,7 @@ void DisassemblyModel::prepend()
     addr = mTopAddress;
     addr = addr < 32 ? 0 : addr - 32;
 
-    beginInsertRows(QModelIndex(), 0, 0);
+    beginResetModel();
 
     for (int i = 0; i < 64; i++)
     {
@@ -131,7 +131,7 @@ void DisassemblyModel::prepend()
             mAddress.prepend(prevAddr);
             mMnemonic.prepend(mDis.disassemble(prevAddr, nullptr));
             mTopAddress = instSize > mTopAddress ? 0 : mTopAddress - instSize;
-            endInsertRows();
+            endResetModel();
             return;
         }
 
@@ -168,21 +168,9 @@ void DisassemblyModel::setAddress(uint32_t addr)
         addr = nextAddr;
     }
 
-    mLastAddress = addr;
+    mBottomAddress = addr;
 
     endResetModel();
-}
-
-int DisassemblyModel::rowCount(const QModelIndex &parent) const
-{
-    Q_UNUSED(parent);
-    return mAddress.count();
-}
-
-int DisassemblyModel::columnCount(const QModelIndex &parent) const
-{
-    Q_UNUSED(parent);
-    return 3;
 }
 
 QVariant DisassemblyModel::data(const QModelIndex &index, int role) const
@@ -228,3 +216,25 @@ QVariant DisassemblyModel::headerData(int section, Qt::Orientation orientation, 
     return QVariant();
 }
 
+int DisassemblyModel::rowCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+    {
+        return 0;
+    }
+    return mAddress.count();
+}
+
+int DisassemblyModel::columnCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+    {
+        return 0;
+    }
+    return 3;
+}
+
+bool DisassemblyModel::hasChildren(const QModelIndex &parent) const
+{
+    return rowCount(parent) > 0;
+}
