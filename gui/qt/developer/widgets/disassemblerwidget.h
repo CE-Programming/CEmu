@@ -18,6 +18,7 @@
 #define DISASSEMBLERWIDGET_H
 
 #include "disassembler.h"
+class DisassemblyWidget;
 
 #include <QtWidgets/QTableWidget>
 
@@ -26,7 +27,8 @@ class DisassemblerWidget : public QTableWidget
     Q_OBJECT
 
 public:
-    explicit DisassemblerWidget(QWidget *parent = nullptr);
+    explicit DisassemblerWidget(DisassemblyWidget *parent);
+    DisassemblyWidget *parent() const;
 
     void setAddress(uint32_t);
 
@@ -46,6 +48,8 @@ private:
     bool isAtBottom();
     void append();
     void prepend();
+
+    QString disassemble(uint32_t &addr);
 
     uint32_t mTopAddress;
     uint32_t mBottomAddress;

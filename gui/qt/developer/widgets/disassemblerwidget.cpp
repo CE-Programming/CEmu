@@ -25,7 +25,7 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QScrollBar>
 
-DisassemblerWidget::DisassemblerWidget(QWidget *parent)
+DisassemblerWidget::DisassemblerWidget(DisassemblyWidget *parent)
     : QTableWidget{parent}
 {
     setColumnCount(Column::Count);
@@ -46,6 +46,11 @@ DisassemblerWidget::DisassemblerWidget(QWidget *parent)
     connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &DisassemblerWidget::scroll);
 }
 
+DisassemblyWidget *DisassemblerWidget::parent() const
+{
+    return static_cast<DisassemblyWidget *>(QTableWidget::parent());
+}
+
 void DisassemblerWidget::setAddress(uint32_t addr)
 {
     clearContents();
@@ -57,7 +62,7 @@ void DisassemblerWidget::setAddress(uint32_t addr)
     for (int i = 0; i < 128; i++)
     {
         uint32_t prevAddr = addr;
-        QString mnemonic = mDis.disassemble(addr);
+        QString mnemonic = disassemble(addr);
 
         if (prevAddr >= mTopAddress)
         {
@@ -116,7 +121,7 @@ void DisassemblerWidget::append()
     insertRow(row);
     setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(addr, Util::addrByteWidth)});
     setItem(row, Column::Data, new QTableWidgetItem{QStringLiteral("00")});
-    setItem(row, Column::Mnemonic, new QTableWidgetItem{mDis.disassemble(addr)});
+    setItem(row, Column::Mnemonic, new QTableWidgetItem{disassemble(addr)});
 
     mBottomAddress = addr;
 }
@@ -136,7 +141,7 @@ void DisassemblerWidget::prepend()
     for (int i = 0; i < 64; i++)
     {
         uint32_t prevAddr = addr;
-        QString mnemonic = mDis.disassemble(addr);
+        QString mnemonic = disassemble(addr);
 
         if (addr >= mTopAddress)
         {
@@ -154,4 +159,9 @@ void DisassemblerWidget::prepend()
     }
 
     abort();
+}
+
+QString DisassemblerWidget::disassemble(uint32_t &addr)
+{
+    return mDis.disassemble(parent()->core(), addr);
 }

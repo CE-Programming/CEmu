@@ -17,9 +17,8 @@
 #ifndef DISASSEMBLER_H
 #define DISASSEMBLER_H
 
-#include "../../corewindow.h"
-
 #include "../../deps/zdis/zdis.h"
+class CoreWrapper;
 
 #include <QtCore/QString>
 
@@ -28,17 +27,17 @@ class Disassembler
 public:
     explicit Disassembler();
 
-    QString disassemble(uint32_t &addr);
+    QString disassemble(const CoreWrapper &core, uint32_t &addr);
 
 private:
     QString strWord(int32_t data, bool il);
     QString strAddr(int32_t data, bool il);
 
-    int zdisRead(zdis_ctx *ctx, uint32_t addr);
+    int zdisRead(uint32_t addr);
     bool zdisPut(zdis_ctx *ctx, zdis_put kind, int32_t val, bool il);
 
     zdis_ctx mZdis;
-
+    const CoreWrapper *mCore;
     QString mBuffer;
 };
 

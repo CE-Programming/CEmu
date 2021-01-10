@@ -16,6 +16,8 @@
 
 #include "disassembler.h"
 
+#include "../../corewrapper.h"
+
 #include <utility>
 
 Disassembler::Disassembler()
@@ -23,7 +25,7 @@ Disassembler::Disassembler()
     mZdis.zdis_user_ptr = reinterpret_cast<uint8_t *>(this);
     mZdis.zdis_read = [](zdis_ctx *ctx, uint32_t addr) -> int
     {
-        return reinterpret_cast<Disassembler *>(ctx->zdis_user_ptr)->zdisRead(ctx, addr);
+        return reinterpret_cast<Disassembler *>(ctx->zdis_user_ptr)->zdisRead(addr);
     };
     mZdis.zdis_put = [](zdis_ctx *ctx, zdis_put kind, int32_t val, bool il) -> bool
     {
@@ -31,14 +33,14 @@ Disassembler::Disassembler()
     };
 }
 
-QString Disassembler::disassemble(uint32_t &addr)
+QString Disassembler::disassemble(const CoreWrapper &core, uint32_t &addr)
 {
-    mBuffer.clear();
-
     mZdis.zdis_end_addr = addr;
     mZdis.zdis_adl = 1;
     mZdis.zdis_lowercase = 1;
     mZdis.zdis_implicit = 0;
+    mCore = &core;
+    mBuffer.clear();
 
     zdis_put_inst(&mZdis);
 
@@ -57,14 +59,13 @@ QString Disassembler::strAddr(int32_t data, bool il)
     return QStringLiteral("$%1").arg(QString::number(data, 16).toUpper(), il ? 6 : 4, QLatin1Char{'0'});
 }
 
-int Disassembler::zdisRead(zdis_ctx *ctx, uint32_t addr)
+int Disassembler::zdisRead(uint32_t addr)
 {
-    int value = 0x83;
-
-    (void)ctx;
-    (void)addr;
-
-    return value;
+    if (addr >= UINT32_C(1) << 24)
+    {
+        return EOF;
+    }
+    return mCore->get(cemucore::CEMUCORE_PROP_MEM, addr);
 }
 
 bool Disassembler::zdisPut(zdis_ctx *ctx, zdis_put kind, int32_t val, bool il)

@@ -25,6 +25,10 @@ static void *thread_start(void *data)
 {
     cemucore_t *core = data;
     int debug_keypad_row = 0;
+    for (int i = 1; i != 256; ++i)
+    {
+        core->mem.flash[0x200 + i] = i;
+    }
     while (sync_loop(&core->sync))
     {
         const struct timespec sleep = {
