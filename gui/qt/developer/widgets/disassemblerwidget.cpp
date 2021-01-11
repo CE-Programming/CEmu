@@ -469,7 +469,7 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
             else if (string.at(i) == QLatin1Char{','} || string.at(i) == QLatin1Char{' '} ||
                     (string.at(i) == QLatin1Char{'+'} || string.at(i) == QLatin1Char{'-'}))
             {
-                painter->setPen(Qt::black);
+                painter->setPen(opt.palette.text().color());
             }
         }
 
@@ -478,7 +478,7 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
 
         if (reset)
         {
-            painter->setPen(Qt::black);
+            painter->setPen(opt.palette.text().color());
         }
     }
 

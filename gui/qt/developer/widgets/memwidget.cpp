@@ -39,6 +39,9 @@
 
 MemWidget::MemWidget(DockedWidget *parent, Area area)
     : mDockedWidget{parent},
+      mCharsetNoneText{tr("None")},
+      mCharsetTiAsciiText{QStringLiteral("TI ASCII")},
+      mCharsetAsciiText{QStringLiteral("ASCII")},
       mSearchHex{true}
 {
     mEdtAddr = new QLineEdit;
@@ -70,12 +73,25 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
     QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
-    mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QStringLiteral("ASCII"));
+    mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QString());
     QSpinBox *spnNumBytes = new QSpinBox;
 
     spnNumBytes->setMinimum(1);
     spnNumBytes->setMaximum(256);
     spnNumBytes->setValue(mView->bytesPerLine());
+
+    switch (mView->charset())
+    {
+        case HexWidget::Charset::Ascii:
+            mBtnCharset->setText(mCharsetAsciiText);
+            break;
+        case HexWidget::Charset::TIAscii:
+            mBtnCharset->setText(mCharsetTiAsciiText);
+            break;
+        case HexWidget::Charset::None:
+            mBtnCharset->setText(mCharsetNoneText);
+            break;
+    }
 
     QHBoxLayout *hboxBtns = new QHBoxLayout;
     hboxBtns->addWidget(mEdtAddr);
@@ -117,28 +133,24 @@ DockedWidget *MemWidget::dockedWidget() const
 
 void MemWidget::selectCharset()
 {
-    const QString setAscii = QStringLiteral("ASCII");
-    const QString setTiAscii = QStringLiteral("TI ASCII");
-    const QString setNone = tr("None");
-
     QMenu menu;
-    menu.addAction(setAscii);
-    menu.addAction(setTiAscii);
-    menu.addAction(setNone);
+    menu.addAction(mCharsetAsciiText);
+    menu.addAction(mCharsetTiAsciiText);
+    menu.addAction(mCharsetNoneText);
 
     QAction *action = menu.exec(mBtnCharset->mapToGlobal({0, mBtnCharset->height() + 1}));
     if (action)
     {
         mBtnCharset->setText(action->text());
-        if (action->text() == setAscii)
+        if (action->text() == mCharsetAsciiText)
         {
             mView->setCharset(HexWidget::Charset::Ascii);
         }
-        else if (action->text() == setTiAscii)
+        else if (action->text() == mCharsetTiAsciiText)
         {
             mView->setCharset(HexWidget::Charset::TIAscii);
         }
-        else if (action->text() == setNone)
+        else if (action->text() == mCharsetNoneText)
         {
             mView->setCharset(HexWidget::Charset::None);
         }

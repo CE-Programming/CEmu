@@ -57,6 +57,9 @@ private:
     HexWidget *mView;
     QString mSearch;
     QLineEdit *mEdtAddr;
+    QString mCharsetNoneText;
+    QString mCharsetTiAsciiText;
+    QString mCharsetAsciiText;
     bool mSearchHex;
 };
 
