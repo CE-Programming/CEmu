@@ -768,8 +768,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
     QRect region = event->rect();
     QPainter painter{viewport()};
     painter.setRenderHint(QPainter::Antialiasing);
-
-    painter.fillRect(region, palette.color(QPalette::Window));
+    painter.fillRect(region, palette.color(QPalette::Base));
     painter.translate(-horizontalScrollBar()->value(), 0);
 
     auto minPos = mCurPos.withMinOff(mSelEnd).withHigh(),

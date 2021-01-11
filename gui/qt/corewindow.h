@@ -19,7 +19,7 @@
 
 #include "corewrapper.h"
 #include "developer/visualizerwidget.h"
-#include "dockedwidget.h"
+#include "developer/watchpointswidget.h"
 class QtKeypadBridge;
 
 #include <kddockwidgets/DockWidget.h>

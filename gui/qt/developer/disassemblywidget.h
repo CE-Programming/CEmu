@@ -17,7 +17,7 @@
 #ifndef DISASSEMBLYWIDGET_H
 #define DISASSEMBLYWIDGET_H
 
-#include "../dockedwidget.h"
+#include "watchpointswidget.h"
 class DisassemblerWidget;
 
 QT_BEGIN_NAMESPACE

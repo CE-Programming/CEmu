@@ -18,6 +18,7 @@
 #define DISASSEMBLERWIDGET_H
 
 #include "disassembler.h"
+#include "../watchpointswidget.h"
 class DisassemblyWidget;
 
 #include <QtWidgets/QTableWidget>
@@ -27,11 +28,22 @@ class DisassemblerWidgetDelegate : public QStyledItemDelegate
 {
 public:
     DisassemblerWidgetDelegate(QObject *parent = nullptr)
-        : QStyledItemDelegate(parent) {}
+        : QStyledItemDelegate(parent), mWidth{0} {}
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override;
+    QWidget *createEditor(QWidget *parent,
+                          const QStyleOptionViewItem &option,
+                          const QModelIndex &index) const override;
+    void setModelData(QWidget *editor, QAbstractItemModel *model,
+                      const QModelIndex &index) const override;
+
+    void setOptionWidth(int value);
 
 protected:
-    virtual void initStyleOption(QStyleOptionViewItem *, const QModelIndex &) const;
-    virtual void paint(QPainter *, const QStyleOptionViewItem &, const QModelIndex &) const;
+    virtual void initStyleOption(QStyleOptionViewItem *, const QModelIndex &) const override;
+
+private:
+    int mWidth;
 };
 
 class DisassemblerWidget : public QTableWidget
@@ -45,11 +57,6 @@ public:
     bool gotoAddress(const QString &);
     void setAdl(bool enable);
 
-protected:
-    void keyPressEvent(QKeyEvent *) override;
-    void wheelEvent(QWheelEvent *) override;
-
-private:
     enum Column
     {
         Address,
@@ -58,18 +65,28 @@ private:
         Count
     };
 
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *) override;
+    void wheelEvent(QWheelEvent *) override;
+
+signals:
+    void toggleWatchpoint(const Watchpoint watchpoint);
+
+private:
     bool isAtTop();
     bool isAtBottom();
     void append();
     void prepend();
     void scrollAction(int);
-    void toggleBreakpoint(int);
     void insertDisasmRow(int, uint32_t, const QString &, const QString &);
 
+    int selectedAddress();
     QPair<QString, QString> disassemble(uint32_t &);
 
     uint32_t mTopAddress;
     uint32_t mBottomAddress;
+    uint32_t mPcAddr;
 
     int mAdlMode;
 

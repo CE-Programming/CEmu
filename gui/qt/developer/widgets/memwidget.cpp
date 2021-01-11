@@ -41,8 +41,8 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     : mDockedWidget{parent},
       mSearchHex{true}
 {
-    QLineEdit *editAddr = new QLineEdit;
-    editAddr->setFont(Util::monospaceFont());
+    mEdtAddr = new QLineEdit;
+    mEdtAddr->setFont(Util::monospaceFont());
 
     cemucore::prop prop;
     qint32 len;
@@ -78,7 +78,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     spnNumBytes->setValue(mView->bytesPerLine());
 
     QHBoxLayout *hboxBtns = new QHBoxLayout;
-    hboxBtns->addWidget(editAddr);
+    hboxBtns->addWidget(mEdtAddr);
     hboxBtns->addWidget(btnGoto);
     hboxBtns->addWidget(btnSearch);
 
@@ -99,6 +99,15 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSearchDialog);
     connect(spnNumBytes, QOverload<int>::of(&QSpinBox::valueChanged), mView, &HexWidget::setBytesPerLine);
     connect(mBtnCharset, &QPushButton::clicked, this, &MemWidget::selectCharset);
+
+    connect(btnGoto, &QPushButton::clicked, [this]
+    {
+        mView->gotoAddr(Util::hex2int(mEdtAddr->text()));
+    });
+    connect(mEdtAddr, &QLineEdit::returnPressed, [this]
+    {
+        mView->gotoAddr(Util::hex2int(mEdtAddr->text()));
+    });
 }
 
 DockedWidget *MemWidget::dockedWidget() const

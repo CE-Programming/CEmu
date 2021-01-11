@@ -84,7 +84,7 @@ DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
         gotoAddress(mEdtAddr->text());
     });
 
-    enableDebugWidgets(false);
+    enableDebugWidgets(true);
 }
 
 bool DisassemblyWidget::gotoAddress(const QString &addr)

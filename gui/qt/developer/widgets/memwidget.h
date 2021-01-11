@@ -28,6 +28,7 @@ class DockWidget;
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
+class QLineEdit;
 class QPushButton;
 QT_END_NAMESPACE
 
@@ -55,6 +56,7 @@ private:
     QPushButton *mBtnCharset;
     HexWidget *mView;
     QString mSearch;
+    QLineEdit *mEdtAddr;
     bool mSearchHex;
 };
 
