@@ -764,11 +764,16 @@ void HexWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void HexWidget::paintEvent(QPaintEvent *event)
 {
+    const QPalette &palette = viewport()->palette();
     QRect region = event->rect();
     QPainter painter{viewport()};
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(region, palette().color(QPalette::Background));
+
+    painter.fillRect(region, palette.color(QPalette::Window));
     painter.translate(-horizontalScrollBar()->value(), 0);
+
+    auto minPos = mCurPos.withMinOff(mSelEnd).withHigh(),
+         maxPos = mCurPos.withMaxOff(mSelEnd).withLow();
 
     const auto drawSep = [&](Area area)
     {
@@ -777,8 +782,16 @@ void HexWidget::paintEvent(QPaintEvent *event)
         painter.drawLine(x, region.top(), x, region.bottom() + 1);
     };
 
+    const auto textColor = [&](Pos pos)
+    {
+        painter.setPen(palette.color(pos.area() == mCurPos.area() && mCurPos.off() != mSelEnd &&
+                                     minPos.off() <= pos.off() && pos.off() <= maxPos.off()
+                                     ? QPalette::HighlightedText : QPalette::WindowText));
+    };
+
     const auto drawText = [&](Pos pos, const QString &text)
     {
+        textColor(pos);
         auto cell = posToCell(pos);
         painter.drawText(cell.x(), cell.y() + fontMetrics().ascent(), text);
     };
@@ -793,27 +806,27 @@ void HexWidget::paintEvent(QPaintEvent *event)
     painter.translate(0, -posToCell({Area::Addr, mTopLine * mStride}).top());
     if (mCurPos.off() != mSelEnd)
     {
-        auto color = palette().color(QPalette::Highlight);
-        auto minPos = mCurPos.withMinOff(mSelEnd).withHigh(),
-             maxPos = mCurPos.withMaxOff(mSelEnd).withLow();
+        auto highlight = palette.color(QPalette::Highlight);
         auto min = posToCell(minPos), max = posToCell(maxPos);
         if (min.top() == max.top())
         {
-            painter.fillRect(min | max, color);
+            painter.fillRect(min | max, highlight);
         }
         else
         {
             auto rightPos = minPos.atLineEnd(mStride), leftPos = maxPos.atLineStart(mStride);
-            painter.fillRect(min | posToCell(rightPos), color);
-            painter.fillRect(posToCell(rightPos.off(+1)) | posToCell(leftPos.off(-1)), color);
-            painter.fillRect(posToCell(leftPos) | max, color);
+            painter.fillRect(min | posToCell(rightPos), highlight);
+            if (min.bottom() + 1 < max.top())
+            {
+                painter.fillRect(posToCell(rightPos.off(+1)) | posToCell(leftPos.off(-1)), highlight);
+            }
+            painter.fillRect(posToCell(leftPos) | max, highlight);
         }
     }
 
     auto data = core().get(mProp, mTopLine * mStride >> 1,
                            qMin(mVisibleLines * mStride, mLastPos + 1 - mTopLine * mStride) >> 1);
     auto hex = QString::fromLatin1(data.toHex().toUpper());
-    painter.setPen(palette().color(QPalette::WindowText));
     int pos = mTopLine * mStride;
     for (int line = 0, linePos = 0; line < mVisibleLines && linePos < hex.length();
          ++line, linePos += mStride)
@@ -835,7 +848,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
     }
 
     {
-        painter.setPen(palette().color(QPalette::WindowText));
+        textColor(mCurPos);
         auto cell = posToCell(mCurPos);
         auto y = cell.top() + fontMetrics().ascent() + fontMetrics().underlinePos();
         painter.drawLine(cell.left(), y, cell.right(), y);
