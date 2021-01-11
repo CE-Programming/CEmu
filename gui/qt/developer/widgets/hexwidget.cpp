@@ -19,6 +19,7 @@
 #include "../../dockedwidget.h"
 #include "memwidget.h"
 #include "sliderpanner.h"
+#include "../../util.h"
 
 #include <QtCore/QHash>
 #include <QtCore/QtGlobal>
@@ -150,11 +151,7 @@ HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
       mUndoPos{},
       mUndoStack{1024}
 {
-#ifdef Q_OS_WIN
-    setFont(QFont(QStringLiteral("Courier"), 10));
-#else
-    setFont(QFont(QStringLiteral("Monospace"), 10));
-#endif
+    setFont(Util::monospaceFont());
 
     auto *vBar = verticalScrollBar();
     vBar->setRange(-100, 100);

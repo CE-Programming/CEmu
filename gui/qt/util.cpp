@@ -16,10 +16,12 @@
 
 #include "util.h"
 
-#include <QApplication>
 #include <QtCore/QRandomGenerator>
 #include <QtCore/QRegularExpression>
+#include <QtGui/QFontDatabase>
+#include <QtGui/QFontInfo>
 #include <QtGui/QValidator>
+#include <QtWidgets/QApplication>
 
 const int Util::addrByteWidth = 6;
 const int Util::portByteWidth = 4;
@@ -99,11 +101,35 @@ QString Util::randomString(const int length)
 
 QFont Util::monospaceFont()
 {
-#ifdef Q_OS_WIN
-    static QFont font(QStringLiteral("Courier"), 10);
-#else
-    static QFont font(QStringLiteral("Monospace"), 10);
-#endif
+    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    if (QFontInfo(font).fixedPitch())
+    {
+        return font;
+    }
+
+    font.setFamily("monospace");
+    if (QFontInfo(font).fixedPitch())
+    {
+        return font;
+    }
+
+    font.setStyleHint(QFont::Monospace);
+    if (QFontInfo(font).fixedPitch())
+    {
+        return font;
+    }
+
+    font.setStyleHint(QFont::TypeWriter);
+    if (QFontInfo(font).fixedPitch())
+    {
+        return font;
+    }
+
+    font.setFamily("courier");
+    if (QFontInfo(font).fixedPitch())
+    {
+        return font;
+    }
 
     return font;
 }
