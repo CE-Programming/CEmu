@@ -67,6 +67,7 @@ class HexWidget : public QAbstractScrollArea
 
         Pos withArea(Area area) const;
         Pos withOff(int off) const;
+        Pos withAddr(int addr) const;
         Pos withLow(bool low = true) const;
         Pos withHigh(bool high = true) const;
         Pos withMinOff(int off) const;
@@ -107,6 +108,7 @@ public:
     void setCharset(Charset charset);
 
 public slots:
+    void gotoAddr(int addr);
     void undo();
     void redo();
     void copy(bool selection = false);
