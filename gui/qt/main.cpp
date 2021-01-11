@@ -44,6 +44,9 @@ int main(int argc, char **argv)
     app.setOrganizationName(appName);
     app.setApplicationName(appName);
 
+    // This actually looks better, especially with the new docks.
+    app.setStyle(QStyleFactory::create("Fusion"));
+
     QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/TICELarge.ttf"));
 
     QCommandLineParser parser;
