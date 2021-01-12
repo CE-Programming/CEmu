@@ -478,6 +478,3 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control,
     (void)size;
     (void)spi;
 }
-FILE *fopen_utf8(const char *filename, const char *mode) {
-    return fopen(filename, mode);
-}

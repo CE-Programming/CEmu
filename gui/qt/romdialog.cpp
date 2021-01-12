@@ -16,9 +16,10 @@
 
 #include "romdialog.h"
 
-#include "corewrapper.h"
 #include "settings.h"
 
+#include <QtCore/QDataStream>
+#include <QtCore/QFile>
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDragLeaveEvent>
@@ -166,72 +167,82 @@ void RomDialog::openSegments()
     parseROMSegments();
 }
 
+bool RomDialog::validateROMSegment(const QString &filename)
+{
+    QFile file(filename);
+    char type;
+    if (!file.open(QIODevice::ReadOnly) || !file.seek(0x3C) ||
+        file.read(7) != "ROMData" || !file.getChar(&type))
+    {
+        return false;
+    }
+    if (type == '0')
+    {
+        // metadata
+        if (!file.seek(0x4A))
+        {
+            return false;
+        }
+        QDataStream stream(file.read(3) + '\0');
+        stream.setByteOrder(QDataStream::LittleEndian);
+        quint32 dumpsize;
+        stream >> dumpsize;
+        if (stream.status())
+        {
+            return false;
+        }
+        mTotalSegments = dumpsize / SEG_SIZE + 2;
+        mHasMetaSegment = true;
+    }
+    else
+    {
+        if (!file.seek(0x48))
+        {
+            return false;
+        }
+        QDataStream stream(&file);
+        stream.setByteOrder(QDataStream::LittleEndian);
+        quint16 size;
+        stream >> size;
+        if (size != SEG_SIZE)
+        {
+            return false;
+        }
+        if (type == '1')
+        {
+            // certificate
+            stream.readRawData(mArray.data() + CERT_LOC, SEG_SIZE);
+        }
+        else if (type >= 'A' && type < 'A' + 32)
+        {
+            int seg = type - 'A';
+            if (mStatus & 1 << seg)
+            {
+                return true;
+            }
+            mStatus |= 1 << seg;
+            stream.readRawData(mArray.data() + SEG_SIZE * seg, SEG_SIZE);
+        }
+        if (stream.status())
+        {
+            return false;
+        }
+    }
+    mNumSentSegments++;
+    return true;
+}
+
 void RomDialog::parseROMSegments()
 {
-    FILE *fd;
-    int i, seg;
-    uint8_t buf[10];
-    uint16_t size = 0;
-    int dumpsize;
+    mArray.fill('\xFF', ROM_SIZE);
 
-    if (mArray == nullptr)
+    foreach (const QString &filename, mSegments)
     {
-        mArray = new uint8_t[ROM_SIZE];
-        memset(mArray, 255, ROM_SIZE);
-    }
-
-    for (i = 0; i < mSegments.size(); ++i)
-    {
-        fd = cemucore::fopen_utf8(mSegments.at(i).toStdString().c_str(), "rb");
-        if (!fd) goto invalid;
-        if (fseek(fd, 0x3C, SEEK_SET)) goto invalid;
-        if (fread(buf, 1, 8, fd) != 8) goto invalid;
-        if (memcmp(buf, "ROMData", 7)) goto invalid;
-
-        switch (buf[7]) {
-            // metadata
-            case '0':
-                if (fseek(fd, 0x4A, 0)) goto invalid;
-                if (fread(buf, 1, 3, fd) != 3) goto invalid;
-
-                dumpsize = static_cast<int>(buf[0] << 0) |
-                           static_cast<int>(buf[1] << 8) |
-                           static_cast<int>(buf[2] << 16);
-
-                mTotalSegments = (dumpsize / SEG_SIZE) + 2;
-                mHasMetaSegment = true;
-                mNumSentSegments++;
-                break;
-
-            // certificate
-            case '1':
-                if (fseek(fd, 0x48, 0)) goto invalid;
-                if (fread(&size, sizeof(size), 1 ,fd) != 1) goto invalid;
-                if (size != SEG_SIZE) goto invalid;
-
-                if (fread(&mArray[CERT_LOC], SEG_SIZE, 1, fd) != 1) {
-                    goto invalid;
-                }
-                mNumSentSegments++;
-                break;
-
-            default:
-                if (fseek(fd, 0x48, 0)) goto invalid;
-                if (fread(&size, sizeof(size), 1 ,fd) != 1) goto invalid;
-                if (size != SEG_SIZE) goto invalid;
-
-                seg = buf[7] - 'A';
-                if (mStatus[seg] == false) {
-                    mStatus[seg] = true;
-                    if (fread(&mArray[SEG_SIZE * seg], SEG_SIZE, 1, fd) != 1) {
-                        goto invalid;
-                    }
-                    mNumSentSegments++;
-                }
-                break;
+        if (!validateROMSegment(filename))
+        {
+            QMessageBox::critical(this, tr("Error"), tr("Invalid ROM segment\n") + filename);
+            return;
         }
-
-        fclose(fd);
     }
     mDropArea->setText(tr("Drop ROMData files here (%1/%2)").arg(mNumSentSegments).arg(mTotalSegments == 0 ? "unk" : QString(mTotalSegments)));
 
@@ -241,17 +252,11 @@ void RomDialog::parseROMSegments()
         mBtnSaveImage->setEnabled(true);
     }
     return;
-
-invalid:
-    QMessageBox::critical(this, tr("Error"), tr("Invalid ROM segment\n") + mSegments.at(i));
-    fclose(fd);
-    return;
 }
 
 void RomDialog::saveDumper()
 {
-    FILE* file;
-    QFileDialog dialog(this);
+    QFileDialog dialog{this};
 
     dialog.setFileMode(QFileDialog::AnyFile);
     QString filename = dialog.getSaveFileName(this, tr("Save ROM Dumper Program"), mDir.absolutePath(), tr("ROM Dumper (*.8xp)"));
@@ -267,19 +272,16 @@ void RomDialog::saveDumper()
         filename += QStringLiteral(".8xp");
     }
 
-    file = cemucore::fopen_utf8(filename.toStdString().c_str(), "wb");
-
-    if (file)
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly) || file.write(reinterpret_cast<const char *>(sPrgmDumper),
+                                                       sizeof(sPrgmDumper)) != sizeof(sPrgmDumper))
     {
-        fwrite(sPrgmDumper, sizeof(sPrgmDumper), 1, file);
-        fclose(file);
+        QMessageBox::critical(this, tr("Error"), tr("Could not save ROM Dumper program."));
     }
 }
 
 void RomDialog::saveImage()
 {
-    FILE* saveRom;
-
     QFileDialog dialog(this);
 
     dialog.setFileMode(QFileDialog::AnyFile);
@@ -293,13 +295,10 @@ void RomDialog::saveImage()
     if (!filename.endsWith(QStringLiteral(".rom"), Qt::CaseInsensitive))
         filename += QStringLiteral(".rom");
 
-    saveRom = cemucore::fopen_utf8(filename.toStdString().c_str(), "wb");
-    if (saveRom)
+    QFile saveRom(filename);
+    if (saveRom.open(QIODevice::WriteOnly) && saveRom.write(mArray) == ROM_SIZE)
     {
         mRomPath = filename;
-
-        fwrite(mArray, 1, ROM_SIZE, saveRom);
-        fclose(saveRom);
         close();
     }
     else

@@ -17,6 +17,7 @@
 #ifndef ROMDIALOG_H
 #define ROMDIALOG_H
 
+#include <QtCore/QByteArray>
 #include <QtCore/QDir>
 #include <QtCore/QString>
 #include <QtWidgets/QDialog>
@@ -76,6 +77,7 @@ private slots:
     void openSegments();
 
 private:
+    bool validateROMSegment(const QString &filename);
     void parseROMSegments();
 
     QPushButton *mBtnSaveDumper;
@@ -84,9 +86,9 @@ private:
     DropArea *mDropArea;
 
     QDir mDir;
-    uint8_t *mArray = nullptr;
+    QByteArray mArray;
     QString mRomPath;
-    bool mStatus[30] = {0};
+    quint32 mStatus = 0;
     int mTotalSegments = 0;
     int mNumSentSegments = 0;
     QStringList mSegments;

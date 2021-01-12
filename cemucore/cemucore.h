@@ -138,8 +138,6 @@ typedef enum {
 ti_device_t get_device_type(void);
 void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask);
 void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi);
-#include <stdio.h>
-FILE *fopen_utf8(const char *filename, const char *mode);
 
 #ifdef __cplusplus
 }
