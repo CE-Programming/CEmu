@@ -199,6 +199,7 @@ void sync_stop(sync_t *sync)
     }
     else
     {
+        sync_wake(sync);
         sync_run_leave(sync);
         sync_destroy(sync);
     }
