@@ -82,7 +82,6 @@ void ScreenWidget::setModel(const QString &product, const QString &model, const 
 
 void ScreenWidget::lcdFrame()
 {
-    calcWidget()->coreWindow()->core().wake();
 }
 
 void ScreenWidget::paintEvent(QPaintEvent *)

@@ -62,10 +62,9 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     : KDDockWidgets::MainWindow(uniqueName, options, parent),
       mKeypadBridge{new QtKeypadBridge{this}},
       mCalcOverlay{nullptr},
-      mCalcType{cemucore::ti_device_t::TI84PCE},
       mCore{this}
 {
-    connect(&mCore, &CoreWrapper::softCmd, this, &CoreWindow::softCmd, Qt::QueuedConnection);
+    connect(&mCore, &CoreWrapper::softCmd, this, &CoreWindow::softCmd);
 
     auto *menubar = menuBar();
 
@@ -165,8 +164,10 @@ void CoreWindow::createDockWidgets()
     connect(mCalcOverlay, &CalculatorOverlay::createRom, this, &CoreWindow::createRom);
     connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::importRom);
 
-    connect(&mCore, &CoreWrapper::lcdFrame, mCalcWidget, &CalculatorWidget::lcdFrame, Qt::QueuedConnection);
+    connect(&mCore, &CoreWrapper::devChanged, mCalcWidget, &CalculatorWidget::setDev);
+    connect(&mCore, &CoreWrapper::lcdFrame, mCalcWidget, &CalculatorWidget::lcdFrame);
     connect(mCalcWidget, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
+    connect(&mCore, &CoreWrapper::devChanged, mKeypadBridge, &QtKeypadBridge::setDev);
     connect(mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalcWidget, &CalculatorWidget::changeKeyState);
     mCalcWidget->installEventFilter(mKeypadBridge);
 
@@ -241,6 +242,7 @@ void CoreWindow::createDeveloperWidgets()
     connect(visualizerAction, &QAction::triggered, [this]
     {
         auto *visualizer = new VisualizerWidget{this};
+        connect(&mCore, &CoreWrapper::lcdFrame, visualizer, &VisualizerWidget::lcdFrame);
         visualizer->dock()->show();
     });
 }
@@ -310,12 +312,12 @@ void CoreWindow::resetEmu()
     if (true)
     {
 
-        mCalcWidget->setConfig(mCalcType, keycolor);
+        mCalcWidget->setColor(keycolor);
         mCalcOverlay->setVisible(false);
     }
     else
     {
-        mCalcWidget->setConfig(mCalcType, keycolor);
+        mCalcWidget->setColor(keycolor);
         mCalcOverlay->setVisible(true);
     }
 }
@@ -324,10 +326,7 @@ void CoreWindow::showPreferences()
 {
     SettingsDialog dialog;
 
-    connect(&dialog, &SettingsDialog::changedKeypadColor, [this](int color)
-    {
-        mCalcWidget->setConfig(mCalcType, color);
-    });
+    connect(&dialog, &SettingsDialog::changedKeypadColor, mCalcWidget, &CalculatorWidget::setColor);
 
     if (dialog.exec())
     {
@@ -408,7 +407,9 @@ bool CoreWindow::restoreLayout()
         {
             if (name.startsWith(QLatin1String("Visualizer #")))
             {
-                dockedWidget = new VisualizerWidget{this, restoredDockWidget};
+                auto *visualizer = new VisualizerWidget{this, restoredDockWidget};
+                connect(&mCore, &CoreWrapper::lcdFrame, visualizer, &VisualizerWidget::lcdFrame);
+                dockedWidget = visualizer;
             }
             else if (name.startsWith(QLatin1String("Memory #")))
             {

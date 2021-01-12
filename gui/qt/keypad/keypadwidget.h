@@ -26,7 +26,7 @@ public:
     virtual ~KeypadWidget();
     CalculatorWidget *parent() const;
 
-    enum Color {
+    enum class Color {
         Black,
         White,
         TrueBlue,
@@ -47,9 +47,10 @@ public:
         TotallyTeal
     };
 
-    void setType(bool is83, Color color);
+    Color color();
+    void setColor(Color color);
+    void setType(bool is83);
     void setHolding(bool);
-    Color getCurrColor(void);
 
     static const QRect sBaseRect;
 
@@ -73,8 +74,10 @@ public slots:
 private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
+    void reset();
 
-    Color color = KeypadWidget::Black;
+    Color mColor = KeypadWidget::Color::Black;
+    bool m83 = false;
     bool mHoldingEnabled = true;
     QColor cclrBackground;
     QPainterPath keypadPath;
@@ -85,12 +88,9 @@ private:
     Key *mKeys[sRows][sCols];
     QSet<KeyCode> mClicked;
     QSet<KeyCode> mTouched;
-    int m22;
-    int m11;
 #ifndef Q_OS_WIN
     int fontId = -2;
 #endif
-    QColor cCenter, cSides, cNum, cText, cOther, cGraph;
 };
 
 #endif

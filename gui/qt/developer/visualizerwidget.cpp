@@ -313,6 +313,10 @@ void VisualizerWidget::stringToView()
     viewToString();
 }
 
+void VisualizerWidget::lcdFrame()
+{
+}
+
 void VisualizerWidget::resetView()
 {
     mScale = 100.0;

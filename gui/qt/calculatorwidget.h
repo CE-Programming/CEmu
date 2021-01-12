@@ -19,9 +19,10 @@
 
 #include "corewrapper.h"
 #include "dockedwidget.h"
-#include "keypad/keypadwidget.h"
+#include "keypad/keycode.h"
 #include "overlaywidget.h"
 class CoreWindow;
+class KeypadWidget;
 class ScreenWidget;
 
 #include <QtWidgets/QWidget>
@@ -48,9 +49,9 @@ class CalculatorWidget : public DockedWidget
 public:
     explicit CalculatorWidget(CoreWindow *coreWindow);
 
-    void setConfig(cemucore::ti_device_t type, int color);
-
 public slots:
+    void setDev(cemucore::dev);
+    void setColor(int color);
     void changeKeyState(KeyCode keycode, bool press);
 
 signals:

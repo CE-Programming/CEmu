@@ -31,6 +31,9 @@ public:
     void translate();
     void forceUpdate();
 
+public slots:
+    void lcdFrame();
+
 private slots:
     void resetView();
     void showConfig();

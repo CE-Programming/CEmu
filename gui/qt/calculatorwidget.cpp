@@ -16,10 +16,12 @@
 
 #include "calculatorwidget.h"
 
+#include "keypad/keypadwidget.h"
 #include "screenwidget.h"
 
 #include <kddockwidgets/DockWidget.h>
 
+#include <QtGui/QPainter>
 #include <QtGui/QPalette>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
@@ -97,25 +99,54 @@ CalculatorWidget::CalculatorWidget(CoreWindow *coreWindow)
 
     connect(this, &CalculatorWidget::lcdFrame, mScreen, &ScreenWidget::lcdFrame);
     connect(mKeypad, &KeypadWidget::keyPressed, this, &CalculatorWidget::keyPressed);
+
+    mScreen->setScreen(QStringLiteral(":/assets/test/screen.png"));
 }
 
-void CalculatorWidget::setConfig(cemucore::ti_device_t type, int color)
+void CalculatorWidget::setDev(cemucore::dev dev)
 {
-    KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(color);
-
-    switch (type)
+    switch (dev)
     {
-        default:
-            mKeypad->setType(false, keycolor);
-            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE")/*, QStringLiteral("PYTHON EDITION")*/);
+        case cemucore::CEMUCORE_DEV_TI84PCE:
+        case cemucore::CEMUCORE_DEV_TI84PCEPE:
+        case cemucore::CEMUCORE_DEV_TI84PCET:
+        case cemucore::CEMUCORE_DEV_TI84PCETPE:
+            mKeypad->setType(false);
             break;
-
-        case cemucore::TI83PCE:
-            mKeypad->setType(true, keycolor);
-            mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE")/*, QStringLiteral("EDITION PYTHON")*/);
+        case cemucore::CEMUCORE_DEV_TI83PCE:
+        case cemucore::CEMUCORE_DEV_TI83PCEEP:
+            mKeypad->setType(true);
             break;
     }
-    mScreen->setScreen(QStringLiteral(":/assets/test/screen.png"));
+    switch (dev)
+    {
+        case cemucore::CEMUCORE_DEV_TI84PCE:
+            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"));
+            break;
+        case cemucore::CEMUCORE_DEV_TI84PCEPE:
+            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"),
+                              QStringLiteral("PYTHON EDITION"));
+            break;
+        case cemucore::CEMUCORE_DEV_TI83PCE:
+            mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE"));
+            break;
+        case cemucore::CEMUCORE_DEV_TI83PCEEP:
+            mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE"),
+                              QStringLiteral("EDITION PYTHON"));
+            break;
+        case cemucore::CEMUCORE_DEV_TI84PCET:
+            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE-T"));
+            break;
+        case cemucore::CEMUCORE_DEV_TI84PCETPE:
+            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE-T"),
+                              QStringLiteral("PYTHON EDITION"));
+            break;
+    }
+}
+
+void CalculatorWidget::setColor(int color)
+{
+    mKeypad->setColor(KeypadWidget::Color(color));
 }
 
 void CalculatorWidget::changeKeyState(KeyCode code, bool press)

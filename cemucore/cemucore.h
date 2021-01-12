@@ -20,11 +20,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef enum cemucore_signal
+typedef enum cemucore_sig
 {
-    CEMUCORE_SIGNAL_LCD_FRAME,
-    CEMUCORE_SIGNAL_SOFT_CMD,
-} cemucore_signal_t;
+    CEMUCORE_SIG_DEV_CHANGED,
+    CEMUCORE_SIG_LCD_FRAME,
+    CEMUCORE_SIG_SOFT_CMD,
+} cemucore_sig_t;
 
 typedef enum cemucore_create_flags
 {
@@ -35,6 +36,7 @@ typedef enum cemucore_create_flags
 
 typedef enum cemucore_prop
 {
+    CEMUCORE_PROP_DEV,
     CEMUCORE_PROP_REG,
     CEMUCORE_PROP_REG_SHADOW,
     CEMUCORE_PROP_KEY,
@@ -50,6 +52,16 @@ typedef enum cemucore_prop
 #endif
     CEMUCORE_PROP_GPIO_ENABLE,
 } cemucore_prop_t;
+
+typedef enum cemucore_dev
+{
+    CEMUCORE_DEV_TI84PCE,
+    CEMUCORE_DEV_TI84PCEPE,
+    CEMUCORE_DEV_TI83PCE,
+    CEMUCORE_DEV_TI83PCEEP,
+    CEMUCORE_DEV_TI84PCET,
+    CEMUCORE_DEV_TI84PCETPE,
+} cemucore_dev_t;
 
 typedef enum cemucore_reg
 {
@@ -119,9 +131,9 @@ extern "C"
 {
 #endif
 
-typedef void (*cemucore_signal_handler_t)(cemucore_signal_t, void *);
+typedef void (*cemucore_sig_handler_t)(cemucore_sig_t, void *);
 
-cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_signal_handler_t, void *);
+cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_sig_handler_t, void *);
 void cemucore_destroy(cemucore_t *);
 
 int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
@@ -129,15 +141,6 @@ void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
 
 bool cemucore_sleep(cemucore_t *);
 void cemucore_wake(cemucore_t *);
-
-/* !!! DEPRECATED API !!! */
-typedef enum {
-    TI84PCE = 0,
-    TI83PCE = 1
-} ti_device_t;
-ti_device_t get_device_type(void);
-void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask);
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi);
 
 #ifdef __cplusplus
 }

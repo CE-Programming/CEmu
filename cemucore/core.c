@@ -20,6 +20,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+void core_sig(cemucore_t *core, cemucore_sig_t sig)
+{
+    if (core->sig_handler)
+    {
+        core->sig_handler(sig, core->sig_handler_data);
+    }
+}
+
 #ifndef CEMUCORE_NOTHREADS
 static void *thread_start(void *data)
 {
@@ -53,9 +61,9 @@ static void *thread_start(void *data)
             core->keypad.keys[debug_keypad_row] &= ~events;
             debug_keypad_row = (debug_keypad_row + 1) & 7;
         }
-        if (!(rand() & 0xF) && core->signal_handler)
+        if (!(rand() & 7))
         {
-            core->signal_handler(CEMUCORE_SIGNAL_SOFT_CMD, core->signal_handler_data);
+            core_sig(core, CEMUCORE_SIG_SOFT_CMD);
             sync_sleep(&core->sync); // wait for response
         }
         core->cpu.regs.r += 2;
@@ -65,8 +73,8 @@ static void *thread_start(void *data)
 #endif
 
 cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
-                            cemucore_signal_handler_t signal_handler,
-                            void *signal_handler_data)
+                            cemucore_sig_handler_t sig_handler,
+                            void *sig_handler_data)
 {
     cemucore_t *core = calloc(1, sizeof(cemucore_t));
     if (!core)
@@ -80,8 +88,8 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
         return NULL;
     }
 
-    core->signal_handler = signal_handler;
-    core->signal_handler_data = signal_handler_data;
+    core->sig_handler = sig_handler;
+    core->sig_handler_data = sig_handler_data;
 
 #ifndef CEMUCORE_NOTHREADS
     if (!sync_init(&core->sync))
@@ -134,56 +142,60 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
     {
     default:
         break;
+    case CEMUCORE_PROP_DEV:
+        val = core->dev;
+        break;
     case CEMUCORE_PROP_REG:
         sync_enter(&core->sync);
         switch (addr)
         {
-        case CEMUCORE_FLAG_C:  val = core->cpu.regs.cf;  break;
-        case CEMUCORE_FLAG_N:  val = core->cpu.regs.nf;  break;
-        case CEMUCORE_FLAG_PV: val = core->cpu.regs.pv;  break;
-        case CEMUCORE_FLAG_X:  val = core->cpu.regs.xf;  break;
-        case CEMUCORE_FLAG_HC: val = core->cpu.regs.hc;  break;
-        case CEMUCORE_FLAG_Y:  val = core->cpu.regs.yf;  break;
-        case CEMUCORE_FLAG_Z:  val = core->cpu.regs.zf;  break;
-        case CEMUCORE_FLAG_S:  val = core->cpu.regs.sf;  break;
+        case CEMUCORE_FLAG_C:  val = core->cpu.regs.cf;   break;
+        case CEMUCORE_FLAG_N:  val = core->cpu.regs.nf;   break;
+        case CEMUCORE_FLAG_PV: val = core->cpu.regs.pv;   break;
+        case CEMUCORE_FLAG_X:  val = core->cpu.regs.xf;   break;
+        case CEMUCORE_FLAG_HC: val = core->cpu.regs.hc;   break;
+        case CEMUCORE_FLAG_Y:  val = core->cpu.regs.yf;   break;
+        case CEMUCORE_FLAG_Z:  val = core->cpu.regs.zf;   break;
+        case CEMUCORE_FLAG_S:  val = core->cpu.regs.sf;   break;
 
-        case CEMUCORE_REG_F:   val = core->cpu.regs.f;   break;
-        case CEMUCORE_REG_A:   val = core->cpu.regs.a;   break;
-        case CEMUCORE_REG_C:   val = core->cpu.regs.c;   break;
-        case CEMUCORE_REG_B:   val = core->cpu.regs.b;   break;
-        case CEMUCORE_REG_BCU: val = core->cpu.regs.bcu; break;
-        case CEMUCORE_REG_E:   val = core->cpu.regs.e;   break;
-        case CEMUCORE_REG_D:   val = core->cpu.regs.d;   break;
-        case CEMUCORE_REG_DEU: val = core->cpu.regs.deu; break;
-        case CEMUCORE_REG_L:   val = core->cpu.regs.l;   break;
-        case CEMUCORE_REG_H:   val = core->cpu.regs.h;   break;
-        case CEMUCORE_REG_HLU: val = core->cpu.regs.hlu; break;
-        case CEMUCORE_REG_IXL: val = core->cpu.regs.ixl; break;
-        case CEMUCORE_REG_IXH: val = core->cpu.regs.ixh; break;
-        case CEMUCORE_REG_IXU: val = core->cpu.regs.ixu; break;
-        case CEMUCORE_REG_IYL: val = core->cpu.regs.iyl; break;
-        case CEMUCORE_REG_IYH: val = core->cpu.regs.iyh; break;
-        case CEMUCORE_REG_IYU: val = core->cpu.regs.iyu; break;
-        case CEMUCORE_REG_R:   val = core->cpu.regs.r;   break;
-        case CEMUCORE_REG_MB:  val = core->cpu.regs.mb;  break;
+        case CEMUCORE_REG_F:   val = core->cpu.regs.f;    break;
+        case CEMUCORE_REG_A:   val = core->cpu.regs.a;    break;
+        case CEMUCORE_REG_C:   val = core->cpu.regs.c;    break;
+        case CEMUCORE_REG_B:   val = core->cpu.regs.b;    break;
+        case CEMUCORE_REG_BCU: val = core->cpu.regs.bcu;  break;
+        case CEMUCORE_REG_E:   val = core->cpu.regs.e;    break;
+        case CEMUCORE_REG_D:   val = core->cpu.regs.d;    break;
+        case CEMUCORE_REG_DEU: val = core->cpu.regs.deu;  break;
+        case CEMUCORE_REG_L:   val = core->cpu.regs.l;    break;
+        case CEMUCORE_REG_H:   val = core->cpu.regs.h;    break;
+        case CEMUCORE_REG_HLU: val = core->cpu.regs.hlu;  break;
+        case CEMUCORE_REG_IXL: val = core->cpu.regs.ixl;  break;
+        case CEMUCORE_REG_IXH: val = core->cpu.regs.ixh;  break;
+        case CEMUCORE_REG_IXU: val = core->cpu.regs.ixu;  break;
+        case CEMUCORE_REG_IYL: val = core->cpu.regs.iyl;  break;
+        case CEMUCORE_REG_IYH: val = core->cpu.regs.iyh;  break;
+        case CEMUCORE_REG_IYU: val = core->cpu.regs.iyu;  break;
+        case CEMUCORE_REG_R:   val = (core->cpu.regs.r & 1) << 7 |
+                                   core->cpu.regs.r >> 1; break;
+        case CEMUCORE_REG_MB:  val = core->cpu.regs.mb;   break;
 
-        case CEMUCORE_REG_AF:  val = core->cpu.regs.af;  break;
-        case CEMUCORE_REG_BC:  val = core->cpu.regs.bc;  break;
-        case CEMUCORE_REG_DE:  val = core->cpu.regs.de;  break;
-        case CEMUCORE_REG_HL:  val = core->cpu.regs.hl;  break;
-        case CEMUCORE_REG_IX:  val = core->cpu.regs.ix;  break;
-        case CEMUCORE_REG_IY:  val = core->cpu.regs.iy;  break;
-        case CEMUCORE_REG_SPS: val = core->cpu.regs.sps; break;
-        case CEMUCORE_REG_I:   val = core->cpu.regs.i;   break;
+        case CEMUCORE_REG_AF:  val = core->cpu.regs.af;   break;
+        case CEMUCORE_REG_BC:  val = core->cpu.regs.bc;   break;
+        case CEMUCORE_REG_DE:  val = core->cpu.regs.de;   break;
+        case CEMUCORE_REG_HL:  val = core->cpu.regs.hl;   break;
+        case CEMUCORE_REG_IX:  val = core->cpu.regs.ix;   break;
+        case CEMUCORE_REG_IY:  val = core->cpu.regs.iy;   break;
+        case CEMUCORE_REG_SPS: val = core->cpu.regs.sps;  break;
+        case CEMUCORE_REG_I:   val = core->cpu.regs.i;    break;
 
-        case CEMUCORE_REG_UBC: val = core->cpu.regs.ubc; break;
-        case CEMUCORE_REG_UDE: val = core->cpu.regs.ude; break;
-        case CEMUCORE_REG_UHL: val = core->cpu.regs.uhl; break;
-        case CEMUCORE_REG_UIX: val = core->cpu.regs.uix; break;
-        case CEMUCORE_REG_UIY: val = core->cpu.regs.uiy; break;
-        case CEMUCORE_REG_SPL: val = core->cpu.regs.spl; break;
-        case CEMUCORE_REG_PC:  val = core->cpu.regs.pc;  break;
-        case CEMUCORE_REG_RPC: val = core->cpu.regs.rpc; break;
+        case CEMUCORE_REG_UBC: val = core->cpu.regs.ubc;  break;
+        case CEMUCORE_REG_UDE: val = core->cpu.regs.ude;  break;
+        case CEMUCORE_REG_UHL: val = core->cpu.regs.uhl;  break;
+        case CEMUCORE_REG_UIX: val = core->cpu.regs.uix;  break;
+        case CEMUCORE_REG_UIY: val = core->cpu.regs.uiy;  break;
+        case CEMUCORE_REG_SPL: val = core->cpu.regs.spl;  break;
+        case CEMUCORE_REG_PC:  val = core->cpu.regs.pc;   break;
+        case CEMUCORE_REG_RPC: val = core->cpu.regs.rpc;  break;
         }
         sync_leave(&core->sync);
         break;
@@ -296,6 +308,13 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
     {
     default:
         break;
+    case CEMUCORE_PROP_DEV:
+        if (core->dev != (cemucore_dev_t)val)
+        {
+            core->dev = val;
+            core_sig(core, CEMUCORE_SIG_DEV_CHANGED);
+        }
+        break;
     case CEMUCORE_PROP_REG:
         sync_enter(&core->sync);
         switch (addr)
@@ -326,7 +345,8 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
         case CEMUCORE_REG_IYL: core->cpu.regs.iyl = val; break;
         case CEMUCORE_REG_IYH: core->cpu.regs.iyh = val; break;
         case CEMUCORE_REG_IYU: core->cpu.regs.iyu = val; break;
-        case CEMUCORE_REG_R:   core->cpu.regs.r   = val; break;
+        case CEMUCORE_REG_R:   core->cpu.regs.r   =
+                                   val << 1 | val >> 7;  break;
         case CEMUCORE_REG_MB:  core->cpu.regs.mb  = val; break;
 
         case CEMUCORE_REG_AF:  core->cpu.regs.af  = val; break;
@@ -456,25 +476,4 @@ void cemucore_wake(cemucore_t *core)
         return;
     }
     sync_wake(&core->sync);
-}
-
-ti_device_t get_device_type(void) {
-    return TI84PCE;
-}
-void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask) {
-    (void)dat;
-    (void)dat_end;
-    (void)width;
-    (void)height;
-    (void)addr;
-    (void)control;
-    (void)mask;
-}
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi) {
-    (void)output;
-    (void)data;
-    (void)data_end;
-    (void)control;
-    (void)size;
-    (void)spi;
 }

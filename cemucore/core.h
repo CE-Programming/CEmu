@@ -36,11 +36,14 @@ struct cemucore
     pthread_t thread;
     sync_t sync;
 #endif
-    cemucore_signal_handler_t signal_handler;
-    void *signal_handler_data;
+    cemucore_sig_handler_t sig_handler;
+    void *sig_handler_data;
+    cemucore_dev_t dev;
     cpu_t cpu;
     mem_t mem;
     keypad_t keypad;
 };
+
+void core_sig(cemucore_t *core, cemucore_sig_t sig);
 
 #endif

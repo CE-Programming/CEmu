@@ -87,7 +87,6 @@ private:
     CalculatorOverlay *mCalcOverlay;
     CalculatorWidget *mCalcWidget;
 
-    cemucore::ti_device_t mCalcType;
     CoreWrapper mCore;
 };
 

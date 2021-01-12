@@ -25,15 +25,17 @@ namespace cemucore
 {
     Q_NAMESPACE
 #include <cemucore.h>
-    using signal       = cemucore_signal_t;
-    Q_ENUM_NS(signal)
-    using create_flags = cemucore_create_flags_t;
+    using sig          = cemucore_sig;
+    Q_ENUM_NS(sig)
+    using create_flags = cemucore_create_flags;
     Q_FLAG_NS(create_flags)
-    using prop         = cemucore_prop_t;
+    using prop         = cemucore_prop;
     Q_ENUM_NS(prop)
-    using reg          = cemucore_reg_t;
+    using dev          = cemucore_dev;
+    Q_ENUM_NS(dev)
+    using reg          = cemucore_reg;
     Q_ENUM_NS(reg)
-    using dbg_flags    = cemucore_dbg_flags_t;
+    using dbg_flags    = cemucore_dbg_flags;
     Q_FLAG_NS(dbg_flags)
 }
 
@@ -64,11 +66,12 @@ public:
     void set(cemucore::prop prop, qint32 addr, const QByteArray &data);
 
 signals:
+    void devChanged(cemucore::dev);
     void lcdFrame();
     void softCmd();
 
 private:
-    void signalHandler(cemucore::signal);
+    void signalHandler(cemucore::sig);
 
     mutable cemucore::cemucore *mCore;
 };

@@ -24,33 +24,6 @@ QtKeypadBridge::QtKeypadBridge(CoreWindow *parent)
 {
 }
 
-bool QtKeypadBridge::setKeymap(Keymap map)
-{
-    bool ret = true;
-    mKeymap = map;
-    switch (map) {
-        case Keymap::Natural:
-            keymap = nullptr;
-            break;
-        case Keymap::CEmu:
-            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? cemu_keymap_84pce : cemu_keymap_83pce;
-            break;
-        case Keymap::TilEm:
-            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? tilem_keymap_84pce : tilem_keymap_83pce;
-            break;
-        case Keymap::WabbitEmu:
-            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? wabbitemu_keymap_84pce : wabbitemu_keymap_83pce;
-            break;
-        case Keymap::JsTIfied:
-            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? jstified_keymap_84pce : jstified_keymap_83pce;
-            break;
-        case Keymap::Custom:
-            keymap = custom_keymap;
-            break;
-    }
-    return ret;
-}
-
 void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
     if (event->isAutoRepeat())
         return;
@@ -238,6 +211,56 @@ bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e) {
     }
 
     return true;
+}
+
+void QtKeypadBridge::setDev(cemucore::dev dev)
+{
+    mDev = dev;
+    updateKeymap();
+}
+
+void QtKeypadBridge::setKeymap(Keymap map)
+{
+    mKeymap = map;
+    updateKeymap();
+}
+
+void QtKeypadBridge::updateKeymap()
+{
+    bool is83 = false;
+    switch (mDev)
+    {
+        case cemucore::CEMUCORE_DEV_TI84PCE:
+        case cemucore::CEMUCORE_DEV_TI84PCEPE:
+        case cemucore::CEMUCORE_DEV_TI84PCET:
+        case cemucore::CEMUCORE_DEV_TI84PCETPE:
+            is83 = false;
+            break;
+        case cemucore::CEMUCORE_DEV_TI83PCE:
+        case cemucore::CEMUCORE_DEV_TI83PCEEP:
+            is83 = true;
+            break;
+    }
+    switch (mKeymap) {
+        case Keymap::Natural:
+            keymap = nullptr;
+            break;
+        case Keymap::CEmu:
+            keymap = is83 ? cemu_keymap_83pce : cemu_keymap_84pce;
+            break;
+        case Keymap::TilEm:
+            keymap = is83 ? tilem_keymap_83pce : tilem_keymap_84pce;
+            break;
+        case Keymap::WabbitEmu:
+            keymap = is83 ? wabbitemu_keymap_83pce : wabbitemu_keymap_84pce;
+            break;
+        case Keymap::JsTIfied:
+            keymap = is83 ? jstified_keymap_83pce : jstified_keymap_84pce;
+            break;
+        case Keymap::Custom:
+            keymap = custom_keymap;
+            break;
+    }
 }
 
 const QHash<QChar, quint32> QtKeypadBridge::kTextMap = {

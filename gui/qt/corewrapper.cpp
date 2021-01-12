@@ -25,12 +25,12 @@ CoreWrapper::CoreWrapper(QObject *parent)
     : QObject{parent},
       mCore{cemucore::cemucore_create(
               cemucore::CEMUCORE_CREATE_FLAG_THREADED,
-              [](cemucore::signal signal, void *data)
+              [](cemucore::sig sig, void *data)
               {
-                  static_cast<CoreWrapper *>(data)->signalHandler(signal);
+                  static_cast<CoreWrapper *>(data)->signalHandler(sig);
               }, this)}
 {
-    qRegisterMetaType<cemucore::signal>();
+    qRegisterMetaType<cemucore::sig>();
     qRegisterMetaType<cemucore::create_flags>();
     qRegisterMetaType<cemucore::prop>();
     qRegisterMetaType<cemucore::reg>();
@@ -100,14 +100,17 @@ void CoreWrapper::set(cemucore::prop prop, qint32 addr, const QByteArray &data)
     }
 }
 
-void CoreWrapper::signalHandler(cemucore::signal signal)
+void CoreWrapper::signalHandler(cemucore::sig sig)
 {
-    switch (signal)
+    switch (sig)
     {
-    case cemucore::CEMUCORE_SIGNAL_LCD_FRAME:
+    case cemucore::CEMUCORE_SIG_DEV_CHANGED:
+        emit devChanged(cemucore::dev(get(cemucore::CEMUCORE_PROP_DEV, 0)));
+        break;
+    case cemucore::CEMUCORE_SIG_LCD_FRAME:
         emit lcdFrame();
         break;
-    case cemucore::CEMUCORE_SIGNAL_SOFT_CMD:
+    case cemucore::CEMUCORE_SIG_SOFT_CMD:
         emit softCmd();
         break;
     }
