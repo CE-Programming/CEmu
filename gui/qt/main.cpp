@@ -60,6 +60,7 @@ int main(int argc, char **argv)
 
     auto flags = KDDockWidgets::Config::self().flags();
     flags |= KDDockWidgets::Config::Flag_AlwaysTitleBarWhenFloating;
+    flags |= KDDockWidgets::Config::Flag_AllowReorderTabs;
     flags |= KDDockWidgets::Config::Flag_TabsHaveCloseButton;
     KDDockWidgets::Config::self().setFlags(flags);
 
