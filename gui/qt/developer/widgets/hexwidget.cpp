@@ -601,7 +601,7 @@ void HexWidget::keyPressEvent(QKeyEvent *event)
     }
     if (event->matches(QKeySequence::SelectPreviousChar))
     {
-        setCurPos(mCurPos.withOff(mSelEnd + (mCurPos.isChar() ||
+        setCurPos(mCurPos.withOff(mSelEnd - (mCurPos.isChar() ||
                                              ((mCurPos.withLow().off() >= mSelEnd) ^
                                               mSelEnd) & 1) - 1), true);
     }
