@@ -57,7 +57,7 @@ public:
     const cemucore::cemucore *core() const;
 
     bool sleep() const;
-    void wake() const;
+    bool wake() const;
     ScopedLock lock() const;
 
     qint32 get(cemucore::prop prop, qint32 addr) const;

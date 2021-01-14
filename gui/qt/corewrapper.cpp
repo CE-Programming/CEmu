@@ -18,7 +18,7 @@
 
 CoreWrapper::ScopedLock::~ScopedLock()
 {
-    cemucore::cemucore_wake(mCore);
+    void(cemucore::cemucore_wake(mCore));
 }
 
 CoreWrapper::CoreWrapper(QObject *parent)
@@ -57,9 +57,9 @@ bool CoreWrapper::sleep() const
     return cemucore::cemucore_sleep(mCore);
 }
 
-void CoreWrapper::wake() const
+bool CoreWrapper::wake() const
 {
-    cemucore::cemucore_wake(mCore);
+    return cemucore::cemucore_wake(mCore);
 }
 
 auto CoreWrapper::lock() const -> ScopedLock

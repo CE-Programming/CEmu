@@ -28,6 +28,26 @@
 # define unlikely(x) (x)
 # define   likely(x) (x)
 #endif
+#if __has_builtin(__builtin_unpredictable)
+# define unpredictable __builtin_unpredictable
+#else
+# define unpredictable
+#endif
+
+#if __has_builtin(__builtin_add_overflow)
+#define add_overflow __builtin_add_overflow
+#else
+#define add_overflow(lhs, rhs, res)                     \
+    (*(res) = (uintmax_t)(lhs) + (uintmax_t)(rhs),      \
+     (rhs) < 0 ? *(res) > (lhs) : *(res) < (lhs))
+#endif
+#if __has_builtin(__builtin_sub_overflow)
+#define sub_overflow __builtin_sub_overflow
+#else
+#define sub_overflow(lhs, rhs, res)                     \
+    (*(res) = (uintmax_t)(lhs) - (uintmax_t)(rhs),      \
+     (rhs) < 0 ? *(res) < (lhs) : *(res) > (lhs))
+#endif
 
 #ifndef CEMUCORE_BYTE_ORDER
 # ifdef __BYTE_ORDER__

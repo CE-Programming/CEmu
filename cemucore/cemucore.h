@@ -140,7 +140,7 @@ int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
 void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
 
 bool cemucore_sleep(cemucore_t *);
-void cemucore_wake(cemucore_t *);
+bool cemucore_wake(cemucore_t *);
 
 #ifdef __cplusplus
 }
