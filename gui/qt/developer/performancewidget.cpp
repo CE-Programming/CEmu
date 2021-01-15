@@ -91,8 +91,10 @@ void PerformanceWidget::enableDebugWidgets(bool enbaled)
 
 void PerformanceWidget::loadFromCore(const CoreWrapper &core)
 {
+    static_cast<void>(core);
 }
 
 void PerformanceWidget::storeToCore(CoreWrapper &core) const
 {
+    static_cast<void>(core);
 }

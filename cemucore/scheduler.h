@@ -14,21 +14,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_MEM_H
-#define CEMUCORE_MEM_H
+#ifndef CEMUCORE_SCHEDULER_H
+#define CEMUCORE_SCHEDULER_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
-typedef struct mem
+typedef struct scheduler
 {
-    uint8_t *flash, *ram;
-#ifndef CEMUCORE_NODEBUG
-    uint8_t *dbg;
-#endif
-} mem_t;
-
-bool mem_init(mem_t *mem);
-void mem_destroy(mem_t *mem);
+    uint8_t count, alloc, *heap;
+} scheduler_t;
 
 #endif

@@ -354,7 +354,7 @@ void WatchpointsWidget::clrCoreWatchpoint(const QString &addrStr, const QString 
                 break;
             }
 
-            core().set(cemucore::CEMUCORE_PROP_MEM_DBG_FLAGS, addr + i, 0);
+            core().set(cemucore::CEMUCORE_PROP_MEMORY_DEBUG_FLAGS, addr + i, 0);
         }
     }
 }
@@ -373,9 +373,9 @@ void WatchpointsWidget::setCoreWatchpoint(const QString &addrStr, const QString 
         uint32_t size = sizeStr.toUInt();
         int flags = 0;
 
-        flags |= mode & Watchpoint::Mode::R ? cemucore::CEMUCORE_DBG_WATCH_READ : 0;
-        flags |= mode & Watchpoint::Mode::W ? cemucore::CEMUCORE_DBG_WATCH_WRITE : 0;
-        flags |= mode & Watchpoint::Mode::X ? cemucore::CEMUCORE_DBG_WATCH_EXEC : 0;
+        flags |= mode & Watchpoint::Mode::R ? cemucore::CEMUCORE_DEBUG_WATCH_READ : 0;
+        flags |= mode & Watchpoint::Mode::W ? cemucore::CEMUCORE_DEBUG_WATCH_WRITE : 0;
+        flags |= mode & Watchpoint::Mode::X ? cemucore::CEMUCORE_DEBUG_WATCH_EXEC : 0;
 
         for (uint32_t i = 0; i < size; ++i)
         {
@@ -384,7 +384,7 @@ void WatchpointsWidget::setCoreWatchpoint(const QString &addrStr, const QString 
                 break;
             }
 
-            core().set(cemucore::CEMUCORE_PROP_MEM_DBG_FLAGS, addr + i, flags);
+            core().set(cemucore::CEMUCORE_PROP_MEMORY_DEBUG_FLAGS, addr + i, flags);
         }
     }
 }

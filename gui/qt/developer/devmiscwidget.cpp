@@ -123,8 +123,10 @@ void DevMiscWidget::enableDebugWidgets(bool enabled)
 
 void DevMiscWidget::loadFromCore(const CoreWrapper &core)
 {
+    static_cast<void>(core);
 }
 
 void DevMiscWidget::storeToCore(CoreWrapper &core) const
 {
+    static_cast<void>(core);
 }

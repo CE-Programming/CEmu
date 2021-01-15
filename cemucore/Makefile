@@ -31,7 +31,7 @@ STATICLIB_EXT = .a
 FIRST_EXE     = $(or $(firstword $(shell $(WHERE_IS) $1)),$(lastword $1))
 
 CC            = $(call FIRST_EXE,$(addprefix $(CROSS_COMPILE),clang gcc cc))
-ALL_CFLAGS    = -std=c11 -Wall -Wextra -pedantic
+ALL_CFLAGS    = -std=c11 -Wall -Wextra -pedantic -D_GNU_SOURCE -fPIC
 ifneq ($(NOTHREADS),)
 ALL_CFLAGS   += -DCEMUCORE_NOTHREADS
 else
@@ -58,13 +58,15 @@ HEADERS += \
 	compiler.h \
 	core.h \
 	cpu.h \
-	mem.h \
+	memory.h \
+	scheduler.h \
 	sync.h
 
 SOURCES += \
 	core.c \
 	cpu.c \
-	mem.c \
+	memory.c \
+	scheduler.c \
 	sync.c
 
 OBJECTS = $(addprefix $(BUILD)/,$(addsuffix $(OBJECT_EXT),$(SOURCES)))

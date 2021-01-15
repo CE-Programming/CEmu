@@ -52,7 +52,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     switch (area)
     {
         case Area::Mem:
-            prop = cemucore::CEMUCORE_PROP_MEM;
+            prop = cemucore::CEMUCORE_PROP_MEMORY;
             len = INT32_C(1) << 24;
             break;
         case Area::Flash:

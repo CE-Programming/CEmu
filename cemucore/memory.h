@@ -14,38 +14,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_CORE_H
-#define CEMUCORE_CORE_H
+#ifndef CEMUCORE_MEM_H
+#define CEMUCORE_MEM_H
 
-#include "cemucore.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-#include "cpu.h"
-#include "keypad.h"
-#include "memory.h"
-#include "scheduler.h"
-
-#ifndef CEMUCORE_NOTHREADS
-# include "sync.h"
-
-# include <pthread.h>
-# include <stdatomic.h>
-#endif
-
-struct cemucore
+typedef struct memory
 {
-#ifndef CEMUCORE_NOTHREADS
-    pthread_t thread;
-    sync_t sync;
+    uint8_t *flash, *ram;
+#ifndef CEMUCORE_NODEBUG
+    uint8_t *debug;
 #endif
-    cemucore_sig_handler_t sig_handler;
-    void *sig_handler_data;
-    cemucore_dev_t dev;
-    scheduler_t scheduler;
-    cpu_t cpu;
-    memory_t memory;
-    keypad_t keypad;
-};
+} memory_t;
 
-void core_sig(cemucore_t *core, cemucore_sig_t sig);
+bool memory_init(memory_t *memory);
+void memory_destroy(memory_t *memory);
 
 #endif

@@ -32,10 +32,11 @@ void core_sig(cemucore_t *core, cemucore_sig_t sig)
 static void *thread_start(void *data)
 {
     cemucore_t *core = data;
+    pthread_setname_np(core->thread, "cemucore");
     int debug_keypad_row = 0;
     for (int i = 1; i != 256; ++i)
     {
-        core->mem.flash[0x200 + i] = i;
+        core->memory.flash[0x200 + i] = i;
     }
     while (sync_loop(&core->sync))
     {
@@ -85,7 +86,7 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
         return NULL;
     }
 
-    if (!mem_init(&core->mem))
+    if (!memory_init(&core->memory))
     {
         free(core);
         return NULL;
@@ -131,7 +132,7 @@ void cemucore_destroy(cemucore_t *core)
     sync_destroy(&core->sync);
 #endif
 
-    mem_destroy(&core->mem);
+    memory_destroy(&core->memory);
     free(core);
 }
 
@@ -251,16 +252,16 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
                         case CEMUCORE_REG_UHL: val = core->cpu.regs.shadow.uhl; break;
                     }
                     break;
-                case CEMUCORE_PROP_MEM:
+                case CEMUCORE_PROP_MEMORY:
                     if (addr >= 0 && addr < 0x400000)
                     {
-                        val = core->mem.flash[addr];
+                        val = core->memory.flash[addr];
                     }
                     else if (addr >= 0xD00000 && addr < 0xE00000)
                     {
                         if ((addr &= 0x7FFFF) < 0x65800)
                         {
-                            val = core->mem.ram[addr];
+                            val = core->memory.ram[addr];
                         }
                         else
                         {
@@ -269,12 +270,12 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
                     }
                     break;
                 case CEMUCORE_PROP_FLASH:
-                    val = core->mem.flash[addr & 0x3FFFFF];
+                    val = core->memory.flash[addr & 0x3FFFFF];
                     break;
                 case CEMUCORE_PROP_RAM:
                     if ((addr &= 0x7FFFF) < 0x65800)
                     {
-                        val = core->mem.ram[addr];
+                        val = core->memory.ram[addr];
                     }
                     else
                     {
@@ -284,19 +285,19 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
                 case CEMUCORE_PROP_PORT:
                     break;
 #ifndef CEMUCORE_NODEBUG
-                case CEMUCORE_PROP_MEM_DBG_FLAGS:
-                    val = core->mem.dbg[addr & 0xFFFFFF];
+                case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
+                    val = core->memory.debug[addr & 0xFFFFFF];
                     break;
-                case CEMUCORE_PROP_FLASH_DBG_FLAGS:
-                    val = core->mem.dbg[addr & 0x3FFFFF];
+                case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
+                    val = core->memory.debug[addr & 0x3FFFFF];
                     break;
-                case CEMUCORE_PROP_RAM_DBG_FLAGS:
+                case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
                     if ((addr &= 0x7FFFF) < 0x65800)
                     {
-                        val = core->mem.dbg[0xD00000 + addr];
+                        val = core->memory.debug[0xD00000 + addr];
                     }
                     break;
-                case CEMUCORE_PROP_PORT_DBG_FLAGS:
+                case CEMUCORE_PROP_PORT_DEBUG_FLAGS:
                     break;
 #endif
             }
@@ -424,44 +425,44 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
                         case CEMUCORE_REG_UHL: core->cpu.regs.shadow.uhl = val; break;
                     }
                     break;
-                case CEMUCORE_PROP_MEM:
+                case CEMUCORE_PROP_MEMORY:
                     if (addr >= INT32_C(0) && addr < INT32_C(0x400000))
                     {
-                        core->mem.flash[addr] = val;
+                        core->memory.flash[addr] = val;
                     }
                     else if (addr >= INT32_C(0xD00000) && addr < INT32_C(0xE00000))
                     {
                         if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
                         {
-                            core->mem.ram[addr] = val;
+                            core->memory.ram[addr] = val;
                         }
                     }
                     break;
                 case CEMUCORE_PROP_FLASH:
-                    core->mem.flash[addr & INT32_C(0x3FFFFF)] = val;
+                    core->memory.flash[addr & INT32_C(0x3FFFFF)] = val;
                     break;
                 case CEMUCORE_PROP_RAM:
                     if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
                     {
-                        core->mem.ram[addr] = val;
+                        core->memory.ram[addr] = val;
                     }
                     break;
                 case CEMUCORE_PROP_PORT:
                     break;
 #ifndef CEMUCORE_NODEBUG
-                case CEMUCORE_PROP_MEM_DBG_FLAGS:
-                    core->mem.dbg[addr & INT32_C(0xFFFFFF)] = val;
+                case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
+                    core->memory.debug[addr & INT32_C(0xFFFFFF)] = val;
                     break;
-                case CEMUCORE_PROP_FLASH_DBG_FLAGS:
-                    core->mem.dbg[addr & INT32_C(0x3FFFFF)] = val;
+                case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
+                    core->memory.debug[addr & INT32_C(0x3FFFFF)] = val;
                     break;
-                case CEMUCORE_PROP_RAM_DBG_FLAGS:
+                case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
                     if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
                     {
-                        core->mem.dbg[INT32_C(0xD00000) + addr] = val;
+                        core->memory.debug[INT32_C(0xD00000) + addr] = val;
                     }
                     break;
-                case CEMUCORE_PROP_PORT_DBG_FLAGS:
+                case CEMUCORE_PROP_PORT_DEBUG_FLAGS:
                     break;
 #endif
             }
