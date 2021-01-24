@@ -20,6 +20,7 @@
 #include "capturewidget.h"
 #include "consolewidget.h"
 #include "developer/autotesterwidget.h"
+#include "developer/basicwidget.h"
 #include "developer/clockswidget.h"
 #include "developer/controlwidget.h"
 #include "developer/cpuwidget.h"
@@ -31,6 +32,8 @@
 #include "developer/osvarswidget.h"
 #include "developer/performancewidget.h"
 #include "developer/portmonitorwidget.h"
+#include "developer/sourceswidget.h"
+#include "developer/usbwidget.h"
 #include "developer/visualizerwidget.h"
 #include "developer/watchpointswidget.h"
 #include "dockwidget.h"
@@ -201,6 +204,7 @@ void CoreWindow::createDeveloperWidgets()
 
     auto *console = new ConsoleWidget{this};
     auto *autotester = new AutotesterWidget{this};
+    auto *basic = new BasicWidget{this};
     auto *clocks = new ClocksWidget{this};
     auto *control = new ControlWidget{this};
     auto *cpu = new CpuWidget{this};
@@ -210,6 +214,8 @@ void CoreWindow::createDeveloperWidgets()
     auto *osStacks = new OsStacksWidget{this};
     auto *osVars = new OsVarsWidget{this};
     auto *portMonitor = new PortMonitorWidget{this, portmonitorList};
+    auto *usbDevices = new UsbWidget{this};
+    auto *sources = new SourcesWidget{this};
     auto *watchpoints = new WatchpointsWidget{this, watchpointList};
     auto *performance = new PerformanceWidget{this};
 
@@ -225,6 +231,9 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(osStacks->dock()->toggleAction());
     mDevMenu->addAction(devMisc->dock()->toggleAction());
     mDevMenu->addAction(performance->dock()->toggleAction());
+    mDevMenu->addAction(usbDevices->dock()->toggleAction());
+    mDevMenu->addAction(sources->dock()->toggleAction());
+    mDevMenu->addAction(basic->dock()->toggleAction());
     mDevMenu->addAction(autotester->dock()->toggleAction());
 
     mDevMenu->addSeparator();

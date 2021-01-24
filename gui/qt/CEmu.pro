@@ -4,7 +4,17 @@ lessThan(QT_MAJOR_VERSION, 6) : if (lessThan(QT_MAJOR_VERSION, 5) | lessThan(QT_
 TARGET = CEmu
 TEMPLATE = app
 
-CONFIG += c++11 console no_include_pwd
+CONFIG += c++11 console no_include_pwd link_pkgconfig
+
+DEFINES += HAS_LIBUSB
+
+if (!win32-msvc*)
+{
+    if (contains(DEFINES, HAS_LIBUSB))
+    {
+        PKGCONFIG += libusb-1.0
+    }
+}
 
 # Temporary for zdis
 DEFINES += DEBUG_SUPPORT
@@ -74,6 +84,7 @@ HEADERS += \
     corewrapper.h \
     deps/zdis/zdis.h \
     developer/autotesterwidget.h \
+    developer/basicwidget.h \
     developer/clockswidget.h \
     developer/controlwidget.h \
     developer/cpuwidget.h \
@@ -85,6 +96,8 @@ HEADERS += \
     developer/osvarswidget.h \
     developer/performancewidget.h \
     developer/portmonitorwidget.h \
+    developer/sourceswidget.h \
+    developer/usbwidget.h \
     developer/visualizerwidget.h \
     developer/watchpointswidget.h \
     developer/widgets/disassembler.h \
@@ -130,6 +143,7 @@ SOURCES += \
     corewrapper.cpp \
     deps/zdis/zdis.c \
     developer/autotesterwidget.cpp \
+    developer/basicwidget.cpp \
     developer/clockswidget.cpp \
     developer/controlwidget.cpp \
     developer/cpuwidget.cpp \
@@ -141,6 +155,8 @@ SOURCES += \
     developer/osvarswidget.cpp \
     developer/performancewidget.cpp \
     developer/portmonitorwidget.cpp \
+    developer/sourceswidget.cpp \
+    developer/usbwidget.cpp \
     developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
     developer/widgets/disassembler.cpp \

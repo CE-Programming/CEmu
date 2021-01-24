@@ -14,32 +14,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TABLEWIDGET_H
-#define TABLEWIDGET_H
+#ifndef SOURCESWIDGET_H
+#define SOURCESWIDGET_H
 
-#include <QtWidgets/QTableWidget>
-#include <QtWidgets/QStyledItemDelegate>
+#include "../dockedwidget.h"
 
-class TableWidget : public QTableWidget
+class SourcesWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit TableWidget(int rows = 0, int cols = 0, QWidget *parent = nullptr);
+    explicit SourcesWidget(CoreWindow *coreWindow);
 
-protected:
-   virtual void keyPressEvent(QKeyEvent *) override;
-
-signals:
-   void deletePressed();
-};
-
-class TableWidgetItemFocusDelegate : public QStyledItemDelegate
-{
-public:
-    TableWidgetItemFocusDelegate(QObject *parent = nullptr)
-        : QStyledItemDelegate(parent) {}
-    virtual void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const;
+private:
 };
 
 #endif

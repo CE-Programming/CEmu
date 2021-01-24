@@ -69,7 +69,7 @@ void DisassemblerWidget::mousePressEvent(QMouseEvent *event)
 {
     QTableWidgetItem *item = itemAt(event->pos());
 
-    if (item->column() == Column::Address &&
+    if (item && item->column() == Column::Address &&
         event->x() >= 0 && event->x() <= verticalHeader()->defaultSectionSize())
     {
         Watchpoint watchpoint;
