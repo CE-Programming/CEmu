@@ -552,7 +552,7 @@ private:
     QDir m_dir;
     QStringList m_equateFiles;
 
-    bool m_uiEditMode;
+    bool m_uiEditMode = false;
     bool m_portable = false;
     bool m_nativeConsole = false;
     bool m_shutdown = false;
