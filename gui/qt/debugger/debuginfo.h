@@ -21,86 +21,103 @@
 #include <vector>
 
 namespace debuginfo {
-enum class _Void : unsigned char {};
-using _Sbyte = std::int8_t;
-using _Byte  = std::uint8_t;
-using _Shalf = std::int16_t;
-using _Half  = std::uint16_t;
-using _Off   = std::uint32_t;
-using _Sword = std::int32_t;
-using _Word  = std::uint32_t;
-using _Slong = std::int64_t;
-using _Long  = std::uint64_t;
+namespace detail {
 
-class [[gnu::packed]] _Addr {
-    std::array<_Byte, 3> _M_addr;
+constexpr auto BitsPerByte = std::numeric_limits<unsigned char>::digits;
+
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+class UnalignedLittleEndianIntegerImpl {
+    using Byte = unsigned char;
+    using IntMax = std::conditional_t<Signed, std::intmax_t, std::uintmax_t>;
+    std::array<Byte, sizeof...(Indices)> m_value;
 
 public:
-    constexpr _Addr() : _M_addr() {}
-    constexpr _Addr(_Word __value) noexcept
-        : _M_addr{ _Byte(__value >> 0), _Byte(__value >> 8), _Byte(__value >> 16) } {}
-    constexpr _Addr( _Long __value) noexcept : _Addr(_Word(__value)) {}
-    constexpr _Addr(_Sword __value) noexcept : _Addr(_Word(__value)) {}
-    constexpr _Addr(_Slong __value) noexcept : _Addr(_Word(__value)) {}
-    _Addr &operator=(_Word __value) {
-        _M_addr[0] = __value >> 0;
-        _M_addr[1] = __value >> 8;
-        _M_addr[2] = __value >> 16;
-        return *this;
+    constexpr UnalignedLittleEndianIntegerImpl() : m_value{} {}
+    constexpr UnalignedLittleEndianIntegerImpl(IntMax value)
+        : m_value{ Byte(value >> Indices * BitsPerByte)... } {}
+    template<bool ValSigned, std::size_t ValBits, std::size_t... ValIndices>
+    constexpr UnalignedLittleEndianIntegerImpl(
+            UnalignedLittleEndianIntegerImpl<ValSigned, ValBits, ValIndices...> value)
+        : UnalignedLittleEndianIntegerImpl{IntMax(value)} {}
+
+    constexpr UnalignedLittleEndianIntegerImpl &operator++() noexcept {
+        return *this = *this + 1;
     }
-    _Addr &operator=( _Long __value) { return *this = _Word(__value); }
-    _Addr &operator=(_Sword __value) { return *this = _Word(__value); }
-    _Addr &operator=(_Slong __value) { return *this = _Word(__value); }
-    constexpr operator _Word() const noexcept {
-        return _M_addr[0] << 0 | _M_addr[1] << 8 | _M_addr[2] << 16;
+    constexpr UnalignedLittleEndianIntegerImpl &operator++(int) noexcept {
+        auto result = *this;
+        ++*this;
+        return result;
     }
-    constexpr operator _Long() const noexcept { return _Word(*this); }
-    constexpr operator _Sword() const noexcept {
-        return _M_addr[0] << 0 | _M_addr[1] << 8 | _Sword(_M_addr[2] << 24) >> 8;
+    constexpr UnalignedLittleEndianIntegerImpl &operator+=(IntMax value) noexcept {
+        return *this = *this + value;
     }
-    constexpr operator _Slong() const noexcept { return _Sword(*this); }
+    constexpr UnalignedLittleEndianIntegerImpl &operator--() noexcept {
+        return *this = *this - 1;
+    }
+    constexpr UnalignedLittleEndianIntegerImpl &operator--(int) noexcept {
+        auto result = *this;
+        --*this;
+        return result;
+    }
+    constexpr UnalignedLittleEndianIntegerImpl &operator-=(IntMax value) noexcept {
+        return *this = *this - value;
+    }
 
-    constexpr _Addr operator+() const noexcept { return +_Word(*this); }
-    constexpr _Addr operator+(_Addr __addr) const noexcept { return _Word(*this) + _Word(__addr); }
-    constexpr _Addr &operator+=(_Addr __addr) noexcept { return *this = *this + __addr; }
-    constexpr _Addr &operator++() noexcept { return *this += 1; }
-    constexpr _Addr operator++(int) noexcept { _Addr __res(*this); ++(*this); return __res; }
-    constexpr _Addr operator-() const noexcept { return -_Word(*this); }
-    constexpr _Addr operator-(_Addr __addr) const noexcept { return _Word(*this) - _Word(__addr); }
-    constexpr _Addr &operator-=(_Addr __addr) noexcept { return *this = *this - __addr; }
-    constexpr _Addr &operator--() noexcept { return *this -= 1; }
-    constexpr _Addr operator--(int) noexcept { _Addr __res(*this); --(*this); return __res; }
-    constexpr _Addr operator*(_Addr __addr) const noexcept { return _Word(*this) * _Word(__addr); }
-    constexpr _Addr &operator*=(_Addr __addr) noexcept { return *this = *this * __addr; }
-    constexpr _Addr operator/(_Addr __addr) const noexcept { return _Word(*this) / _Word(__addr); }
-    constexpr _Addr &operator/=(_Addr __addr) noexcept { return *this = *this / __addr; }
-    constexpr _Addr operator%(_Addr __addr) const noexcept { return _Word(*this) % _Word(__addr); }
-    constexpr _Addr &operator%=(_Addr __addr) noexcept { return *this = *this % __addr; }
-
-    constexpr _Addr operator^(_Addr __addr) const noexcept { return _Word(*this) ^ _Word(__addr); }
-    constexpr _Addr &operator^=(_Addr __addr) noexcept { return *this = *this ^ __addr; }
-    constexpr _Addr operator&(_Addr __addr) const noexcept { return _Word(*this) & _Word(__addr); }
-    constexpr _Addr &operator&=(_Addr __addr) noexcept { return *this = *this & __addr; }
-    constexpr _Addr operator|(_Addr __addr) const noexcept { return _Word(*this) | _Word(__addr); }
-    constexpr _Addr &operator|=(_Addr __addr) noexcept { return *this = *this | __addr; }
-    constexpr _Addr operator~() const noexcept { return ~_Word(*this); }
-
-    constexpr _Addr operator<<(_Addr __addr) const noexcept { return _Word(*this) << _Word(__addr); }
-    constexpr _Addr &operator<<=(_Addr __addr) noexcept { return *this = *this << __addr; }
-    constexpr _Addr operator>>(_Addr __addr) const noexcept { return _Word(*this) >> _Word(__addr); }
-    constexpr _Addr &operator>>=(_Addr __addr) noexcept { return *this = *this >> __addr; }
-
-    constexpr bool operator!() const noexcept { return !_Word(*this); }
-    constexpr bool operator==(_Addr __addr) const noexcept { return _Word(*this) == _Word(__addr); }
-    constexpr bool operator!=(_Addr __addr) const noexcept { return _Word(*this) != _Word(__addr); }
-    constexpr bool operator< (_Addr __addr) const noexcept { return _Word(*this) <  _Word(__addr); }
-    constexpr bool operator> (_Addr __addr) const noexcept { return _Word(*this) >  _Word(__addr); }
-    constexpr bool operator<=(_Addr __addr) const noexcept { return _Word(*this) <= _Word(__addr); }
-    constexpr bool operator>=(_Addr __addr) const noexcept { return _Word(*this) >= _Word(__addr); }
+    constexpr operator IntMax() const noexcept {
+        constexpr IntMax extend = std::numeric_limits<IntMax>::digits +
+            std::numeric_limits<IntMax>::is_signed - Bits;
+        return ((IntMax(m_value[Indices]) << Indices * BitsPerByte) | ...) << extend >> extend;
+    }
 };
-static_assert(sizeof(_Addr) == 3, "_Addr should be 3 bytes");
-constexpr _Off _InvalidOff = std::numeric_limits<_Off>::max();
-constexpr _Word _InvalidWord = std::numeric_limits<_Word>::max();
+
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+UnalignedLittleEndianIntegerImpl<Signed, Bits, Indices...>
+UnalignedLittleEndianIntegerHelper(std::index_sequence<Indices...>);
+
+template<bool Signed, std::size_t Bits>
+using UnalignedLittleEndianInteger =
+    decltype(UnalignedLittleEndianIntegerHelper<Signed, Bits>(
+                     std::make_index_sequence<(Bits + CHAR_BIT - 1) / CHAR_BIT>{}));
+
+template<typename Integer> class SizedInteger {
+public:
+    template<typename Int> constexpr SizedInteger(
+            Int value, std::enable_if_t<std::numeric_limits<Int>::is_integer
+            && std::is_signed<Int>::value == std::is_signed<Integer>::value, std::size_t> width
+            = std::numeric_limits<Int>::digits + std::numeric_limits<Int>::is_signed) noexcept
+        : m_value(value), m_width(width) {}
+    template<typename Enum> explicit constexpr SizedInteger(
+            Enum value, std::enable_if_t<std::is_enum<Enum>::value
+            && std::is_signed<std::underlying_type_t<Enum>>::value ==
+            std::is_signed<Integer>::value, std::size_t> width
+            = std::numeric_limits<std::underlying_type_t<Enum>>::digits
+            + std::numeric_limits<std::underlying_type_t<Enum>>::is_signed) noexcept
+        : m_value(Integer(value)), m_width(width) {}
+    constexpr std::size_t width() const noexcept { return m_width; }
+    constexpr Integer get() const noexcept { return m_value; }
+    constexpr operator Integer() const noexcept { return m_value; }
+
+private:
+    Integer m_value;
+    std::size_t m_width;
+};
+
+} // end namespace detail
+
+enum class _Void : unsigned char {};
+using _Sbyte = detail::UnalignedLittleEndianInteger<true,   8>;
+using _Byte  = detail::UnalignedLittleEndianInteger<false,  8>;
+using _Shalf = detail::UnalignedLittleEndianInteger<true,  16>;
+using _Half  = detail::UnalignedLittleEndianInteger<false, 16>;
+using _Addr  = detail::UnalignedLittleEndianInteger<false, 24>;
+using _Off   = detail::UnalignedLittleEndianInteger<false, 32>;
+using _Sword = detail::UnalignedLittleEndianInteger<true,  32>;
+using _Word  = detail::UnalignedLittleEndianInteger<false, 32>;
+using _Slong = detail::UnalignedLittleEndianInteger<true,  64>;
+using _Long  = detail::UnalignedLittleEndianInteger<false, 64>;
+
+static_assert(alignof(_Addr) == 1 && sizeof(_Addr) == 3,
+              "_Addr should be unaligned and 3 bytes");
 
 template<typename _Type> class _View {
 public:
@@ -414,45 +431,68 @@ private:
 };
 template<std::size_t _MaxParts> const _Path<_MaxParts> _Path<_MaxParts>::_S_null;
 template<std::size_t _MaxParts> const _Str::value_type _Path<_MaxParts>::sep;
+
 } // end namespace debuginfo
 
 namespace std {
-template<> struct numeric_limits<debuginfo::_Addr> : numeric_limits<debuginfo::_Word> {
-    static constexpr int digits = numeric_limits<debuginfo::_Byte>::digits * sizeof(debuginfo::_Addr);
-    static constexpr int digits10 = M_LN2 / M_LN10 * digits;
-    static_assert(digits == 24 && digits10 == 7, "Miscalculated _Addr digits");
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+class numeric_limits<
+    debuginfo::detail::UnalignedLittleEndianIntegerImpl<Signed, Bits, Indices...>> {
+    using Integer = debuginfo::detail::UnalignedLittleEndianIntegerImpl<Signed, Bits, Indices...>;
 
-    static constexpr debuginfo::_Addr min() noexcept {
-        return numeric_limits<debuginfo::_Word>::min();
+public:
+    static constexpr bool is_specialized = true;
+    static constexpr bool is_signed = Signed;
+    static constexpr bool is_integer = true;
+    static constexpr bool is_exact = true;
+    static constexpr bool has_infinity = false;
+    static constexpr bool has_quiet_NaN = false;
+    static constexpr bool has_signaling_NaN = false;
+    static constexpr float_denorm_style has_denorm = denorm_absent;
+    static constexpr bool has_denorm_loss = false;
+    static constexpr float_round_style round_style = round_toward_zero;
+    static constexpr bool is_iec559 = false;
+    static constexpr bool is_modulo = !Signed;
+    static constexpr int digits = Bits - Signed;
+    static constexpr int digits10 = M_LN2 / M_LN10 * digits;
+    static constexpr int max_digits10 = 0;
+    static constexpr int radix = 2;
+    static constexpr int min_exponent = 0;
+    static constexpr int min_exponent10 = 0;
+    static constexpr int max_exponent = 0;
+    static constexpr int max_exponent10 = 0;
+    static constexpr bool traps = true;
+    static constexpr bool tinyness_before = false;
+
+    static constexpr Integer min() noexcept {
+        return Signed ? ~INTMAX_C(0) << (Bits - 1) : UINTMAX_C(0);
     }
-    static constexpr debuginfo::_Addr lowest() noexcept {
-        return numeric_limits<debuginfo::_Word>::lowest();
+    static constexpr Integer lowest() noexcept {
+        return Signed ? ~INTMAX_C(0) << (Bits - 1) : UINTMAX_C(0);
     }
-    static constexpr debuginfo::_Addr max() noexcept {
-        return numeric_limits<debuginfo::_Word>::max();
-    }
-    static constexpr debuginfo::_Addr epsilon() noexcept {
-        return numeric_limits<debuginfo::_Word>::epsilon();
-    }
-    static constexpr debuginfo::_Addr round_error() noexcept {
-        return numeric_limits<debuginfo::_Word>::round_error();
-    }
-    static constexpr debuginfo::_Addr infinity() noexcept {
-        return numeric_limits<debuginfo::_Word>::infinity();
-    }
-    static constexpr debuginfo::_Addr quiet_NaN() noexcept {
-        return numeric_limits<debuginfo::_Word>::quiet_NaN();
-    }
-    static constexpr debuginfo::_Addr signaling_NaN() noexcept {
-        return numeric_limits<debuginfo::_Word>::signaling_NaN();
-    }
-    static constexpr debuginfo::_Addr denorm_min() noexcept {
-        return numeric_limits<debuginfo::_Word>::denorm_min();
-    }
+    static constexpr Integer max() noexcept { return ~min(); }
+    static constexpr Integer epsilon()       noexcept { return 0; }
+    static constexpr Integer round_error()   noexcept { return 0; }
+    static constexpr Integer infinity()      noexcept { return 0; }
+    static constexpr Integer quiet_NaN()     noexcept { return 0; }
+    static constexpr Integer signaling_NaN() noexcept { return 0; }
+    static constexpr Integer denorm_min()    noexcept { return 0; }
 };
-template<> struct numeric_limits<const          debuginfo::_Addr> : numeric_limits<debuginfo::_Addr> {};
-template<> struct numeric_limits<      volatile debuginfo::_Addr> : numeric_limits<debuginfo::_Addr> {};
-template<> struct numeric_limits<const volatile debuginfo::_Addr> : numeric_limits<debuginfo::_Addr> {};
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+struct numeric_limits<const          debuginfo::detail::UnalignedLittleEndianIntegerImpl<
+                          Signed, Bits, Indices...>>
+    : numeric_limits<debuginfo::detail::UnalignedLittleEndianIntegerImpl<
+                          Signed, Bits, Indices...>> {};
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+struct numeric_limits<      volatile debuginfo::detail::UnalignedLittleEndianIntegerImpl<
+                          Signed, Bits, Indices...>>
+    : numeric_limits<debuginfo::detail::UnalignedLittleEndianIntegerImpl<
+                          Signed, Bits, Indices...>> {};
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+struct numeric_limits<const volatile debuginfo::detail::UnalignedLittleEndianIntegerImpl<
+                          Signed, Bits, Indices...>>
+    : numeric_limits<debuginfo::detail::UnalignedLittleEndianIntegerImpl<
+                          Signed, Bits, Indices...>> {};
 
 template<> struct hash<debuginfo::_Str> {
     constexpr std::size_t operator()(debuginfo::_Str __str) const noexcept {
@@ -476,6 +516,9 @@ template<std::size_t _MaxParts> struct hash<debuginfo::_Path<_MaxParts>> {
 } // end namespace std
 
 namespace debuginfo {
+constexpr _Off _InvalidOff = std::numeric_limits<_Off>::max();
+constexpr _Word _InvalidWord = std::numeric_limits<_Word>::max();
+
 namespace elf {
 class File;
 
@@ -515,7 +558,7 @@ class File {
     constexpr bool has_header() const noexcept { return _M_data.size_bytes() >= sizeof(Header); }
 
     template<typename _Header> constexpr _View<_Header> get(
-            _Off __offset, _Half __size, _Half __count) const noexcept {
+            std::uint32_t __offset, std::uint16_t __size, std::uint16_t __count) const noexcept {
         if (__size != sizeof(_Header)) {
             return {};
         }
@@ -574,10 +617,10 @@ protected:
 } // end namespace elf
 
 namespace dwarf {
-enum class Reg : _Byte { BC, DE, HL, AF, IX, IY, SPS, SPL, PC, None };
+enum class Reg : std::uint8_t { BC, DE, HL, AF, IX, IY, SPS, SPL, PC, None };
 
 // Table 7.3: Tag encodings
-enum class _Tag : _Byte {
+enum class _Tag : std::uint8_t {
     _None,
     DW_TAG_array_type               = 0x01,
     DW_TAG_class_type               = 0x02,
@@ -659,7 +702,7 @@ enum {
     DW_TAG_hi_user                  = 0xffff,
 };
 // Table 7.5: Attribute encodings
-enum class _At : _Byte {
+enum class _At : std::uint8_t {
     _None,
     DW_AT_sibling                   = 0x01, // reference
     DW_AT_location                  = 0x02, // exprloc, loclist
@@ -794,7 +837,7 @@ enum {
     DW_AT_hi_user                   = 0x3fff,
 };
 // Table 7.6: Attribute form encodings
-enum class _Form : _Byte {
+enum class _Form : std::uint8_t {
     _None,
     DW_FORM_addr                    = 0x01,
     DW_FORM_block2                  = 0x03,
@@ -1053,29 +1096,8 @@ private:
     _Lines _M_lines;
 };
 
-template<typename _Type> class _SizedIntegral {
-public:
-    template<typename _Int> constexpr _SizedIntegral(
-            _Int __value, std::enable_if_t<std::is_integral<_Int>::value
-            && std::is_signed<_Int>::value == std::is_signed<_Type>::value, std::size_t> __width
-            = std::numeric_limits<_Int>::digits) noexcept : _M_value(__value), _M_width(__width) {}
-    template<typename _Enum> explicit constexpr _SizedIntegral(
-            _Enum __value, std::enable_if_t<std::is_enum<_Enum>::value
-            && std::is_signed<std::underlying_type_t<_Enum>>::value ==
-            std::is_signed<_Type>::value, std::size_t> __width
-            = std::numeric_limits<std::underlying_type_t<_Enum>>::digits) noexcept
-        : _M_value(_Type(__value)), _M_width(__width) {}
-    constexpr std::size_t width() const noexcept { return _M_width; }
-    constexpr _Type get() const noexcept { return _M_value; }
-    constexpr operator _Type() const noexcept { return _M_value; }
-
-private:
-    _Type _M_value;
-    std::size_t _M_width;
-};
-
 class _Val {
-    enum class _Kind : _Byte {
+    enum class _Kind : std::uint8_t {
         _None,
         _Addr,
         _Cst,
@@ -1181,16 +1203,16 @@ public:
     constexpr bool is_addr() const noexcept { return _M_kind == _Kind::_Addr; }
     constexpr _Addr addr() const noexcept { if (is_addr()) return _M_addr; return {}; }
 
-    template<typename _Int> _Val(_SizedIntegral<_Int> __cst)
+    template<typename _Int> _Val(detail::SizedInteger<_Int> __cst)
         : _M_kind(_Kind::_Cst), _M_flag(std::is_signed<_Int>::value), _M_addr(__cst.width()), _U_ptr() {
         if (is_large()) {
-            _M_large = new std::uintmax_t(__cst);
+            _M_large = new std::uintmax_t(__cst.get());
         } else {
-            _M_small = __cst;
+            _M_small = __cst.get();
         }
     }
-    template<typename _Int, std::enable_if_t<std::is_integral<_Int>::value, int> = 0>
-    _Val(_Int __cst) : _Val(_SizedIntegral<_Int>(__cst)) {}
+    template<typename _Int, std::enable_if_t<std::numeric_limits<_Int>::is_integer, int> = 0>
+    _Val(_Int __cst) : _Val(detail::SizedInteger<_Int>(__cst)) {}
     constexpr bool is_cst() const noexcept { return _M_kind == _Kind::_Cst; }
     constexpr std::uintmax_t cst() const noexcept {
         if (is_large()) return *_M_large;
@@ -1267,7 +1289,8 @@ private:
 struct _Die {
     _Tag _M_tag : std::numeric_limits<_Sbyte>::digits;
     bool _M_children : 1;
-    _Word _M_sibling : std::numeric_limits<_Word>::digits - std::numeric_limits<_Byte>::digits;
+    std::uint32_t _M_sibling : std::numeric_limits<_Word>::digits -
+                               std::numeric_limits<_Byte>::digits;
     std::unordered_map<_At, _Val> _M_attrs;
 
     const _Val &attr(_At __at) const noexcept;
@@ -1293,16 +1316,16 @@ public:
     struct _Attr {
         _At _M_at;
         _Form _M_form;
-        _Slong _M_implicit_const;
+        std::int64_t _M_implicit_const;
     };
     struct _Entry {
-        _Tag _M_tag : std::numeric_limits<_Sbyte>::digits;
+        _Tag _M_tag : std::numeric_limits<std::int8_t>::digits;
         bool _M_children : 1;
         std::vector<_Attr> _M_attrs;
     };
 
     Abbrev(File &__file) noexcept : Base(__file) {}
-    std::unordered_map<_Word, _Entry> get(_Off __base) const noexcept;
+    std::unordered_map<std::uint32_t, _Entry> get(std::uint32_t __base) const noexcept;
 };
 
 class Addr : public Base {
@@ -1314,7 +1337,7 @@ public:
 class Frame : public Base {
 public:
     class Rule {
-        enum class _Kind : _Byte {
+        enum class _Kind : std::uint8_t {
             _Undef,
             _SameVal,
             _Off,
@@ -1340,16 +1363,16 @@ public:
         static constexpr Rule same_val() noexcept { return { _Kind::_SameVal }; }
         constexpr bool is_same_val() const noexcept { return _M_kind == _Kind::_SameVal; }
 
-        static constexpr Rule off(_Sword __off) noexcept { return { _Kind::_Off, __off }; }
+        static constexpr Rule off(std::int32_t __off) noexcept { return { _Kind::_Off, __off }; }
         constexpr bool is_off() const noexcept { return _M_kind == _Kind::_Off; }
 
-        static constexpr Rule val_off(_Sword __off) noexcept { return { _Kind::_ValOff, __off }; }
+        static constexpr Rule val_off(std::int32_t __off) noexcept { return { _Kind::_ValOff, __off }; }
         constexpr bool is_val_off() const noexcept { return _M_kind == _Kind::_ValOff; }
 
         static constexpr Rule reg(Reg __reg) noexcept { return { _Kind::_ValOff, __reg }; }
         constexpr bool is_reg() const noexcept { return _M_kind == _Kind::_Reg; }
 
-        static constexpr Rule reg_off(Reg __reg, _Sword __off) noexcept {
+        static constexpr Rule reg_off(Reg __reg, std::int32_t __off) noexcept {
             return { _Kind::_RegOff, __reg, __off };
         }
         constexpr bool is_reg_off() const noexcept { return _M_kind == _Kind::_RegOff; }
@@ -1372,7 +1395,7 @@ public:
         constexpr bool is_addr() const noexcept { return is_off() || is_expr(); }
 
         constexpr Reg reg() const noexcept { return _M_reg; }
-        constexpr _Sword off() const noexcept { return _M_off; }
+        constexpr std::int32_t off() const noexcept { return _M_off; }
         constexpr Data expr(const Frame &__frame) const noexcept {
             if (is_expr() || is_val_expr())
                 return __frame.expr(_M_off);
@@ -1519,7 +1542,7 @@ class Line : public Base {
         DW_LNE_hi_user            = 0xff,
     };
     // Table 7.27: Line number header entry format encodings
-    enum class _Lnct : _Byte {
+    enum class _Lnct : std::uint8_t {
         DW_LNCT_path              = 0x1,
         DW_LNCT_directory_index   = 0x2,
         DW_LNCT_timestamp         = 0x3,
@@ -1543,27 +1566,27 @@ class Line : public Base {
 
 public:
     struct _Loc {
-        _Word _M_file;
-        _Word _M_line;
-        _Word _M_column;
-        _Addr _M_address;
-         bool _M_is_stmt        : 1;
-         bool _M_basic_block    : 1;
-         bool _M_end_sequence   : 1;
-         bool _M_prologue_end   : 1;
-         bool _M_epilogue_begin : 1;
-        _Byte _M_isa            : 1;
-        _Byte _M_discriminator  : 2;
+        std::uint32_t _M_file;
+        std::uint32_t _M_line;
+        std::uint32_t _M_column;
+        std::uint32_t _M_address        : 24;
+        bool          _M_is_stmt        :  1;
+        bool          _M_basic_block    :  1;
+        bool          _M_end_sequence   :  1;
+        bool          _M_prologue_end   :  1;
+        bool          _M_epilogue_begin :  1;
+        std::uint8_t  _M_isa            :  1;
+        std::uint8_t  _M_discriminator  :  2;
     };
 
 private:
     using _Files = std::vector<SrcFile>;
-    using _Paths = std::unordered_map<_Path<3>, _Word>;
-    using _Locs = std::map<_Addr, _Loc>;
+    using _Paths = std::unordered_map<_Path<3>, std::uint32_t>;
+    using _Locs = std::map<std::uint32_t, _Loc>;
 
 public:
     Line(File &__file) noexcept : Base(__file) {}
-    std::vector<_Word> __parse(_Byte __address_size, const _Die &__unit_entry);
+    std::vector<std::uint32_t> __parse(std::uint8_t __address_size, const _Die &__unit_entry);
     void shrink_to_fit() noexcept { _M_files.shrink_to_fit(); }
     const SrcFile &get(_Files::size_type __pos) const noexcept;
     _Files::size_type size() const noexcept { return _M_files.size(); }
@@ -1591,9 +1614,9 @@ class LocLists : public Base {
 
 public:
     LocLists(File &__file) noexcept : Base(__file) {}
-    std::vector<std::pair<_Word, _Word>> __parse(const _Die &__unit_entry);
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> __parse(const _Die &__unit_entry);
     void shrink_to_fit() noexcept { _M_locs.shrink_to_fit(); }
-    _LocView get(std::pair<_Word, _Word> __indices) const noexcept;
+    _LocView get(std::pair<std::uint32_t, std::uint32_t> __indices) const noexcept;
 
 private:
     std::vector<_Loc> _M_locs;
@@ -1614,9 +1637,9 @@ class RngLists : public Base {
 
 public:
     RngLists(File &__file) noexcept : Base(__file) {}
-    std::vector<std::pair<_Word, _Word>> __parse(const _Die &__unit_entry);
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> __parse(const _Die &__unit_entry);
     void shrink_to_fit() noexcept { _M_rngs.shrink_to_fit(); }
-    _RngView get(std::pair<_Word, _Word> __indices) const noexcept;
+    _RngView get(std::pair<std::uint32_t, std::uint32_t> __indices) const noexcept;
 
 private:
     std::vector<_Rng> _M_rngs;
@@ -1625,7 +1648,7 @@ private:
 class Str : public Base {
 public:
     Str(File &__file) noexcept : Base(__file) {}
-    _Str get(_Off __offset) const noexcept;
+    _Str get(std::uint32_t __offset) const noexcept;
 };
 
 class StrOffsets : public Base {

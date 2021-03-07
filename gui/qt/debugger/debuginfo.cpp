@@ -112,25 +112,25 @@ template<typename Enum> constexpr
 std::enable_if_t<std::is_enum<Enum>::value, std::underlying_type_t<Enum>> underlying(Enum e) noexcept {
     return std::underlying_type_t<Enum>(e);
 }
-constexpr _SizedIntegral<std::uintmax_t> consume_uleb128(Data &data) noexcept {
-    _Sbyte cur{};
+constexpr detail::SizedInteger<std::uintmax_t> consume_uleb128(Data &data) noexcept {
+    std::int8_t cur{};
     std::uintmax_t res{};
     std::size_t shift{};
     do {
         cur = consume<_Sbyte>(data);
         res |= (cur & 0x7F) << shift;
-        shift += std::numeric_limits<_Sbyte>::digits;
+        shift += std::numeric_limits<std::int8_t>::digits;
     } while (cur < 0);
     return { res, shift };
 }
-constexpr _SizedIntegral<std::intmax_t> consume_sleb128(Data &data) noexcept {
-    _Sbyte cur{};
+constexpr detail::SizedInteger<std::intmax_t> consume_sleb128(Data &data) noexcept {
+    std::int8_t cur{};
     std::intmax_t res{};
     std::size_t shift{};
     do {
         cur = consume<_Sbyte>(data);
         res |= (cur & 0x7F) << shift;
-        shift += std::numeric_limits<_Sbyte>::digits;
+        shift += std::numeric_limits<std::int8_t>::digits;
     } while (cur < 0);
     if (shift <= std::numeric_limits<std::intmax_t>::digits) {
         res = res << (std::numeric_limits<std::intmax_t>::digits - shift + 1)
@@ -259,6 +259,12 @@ template<typename Type, std::size_t Extent> constexpr std::size_t size(const Typ
     return Extent;
 }
 
+template<bool Signed, std::size_t Bits, std::size_t... Indices>
+QDebug operator<<[[gnu::unused]](QDebug debug, detail::UnalignedLittleEndianIntegerImpl<
+                                 Signed, Bits, Indices...> i) {
+    return debug << Qt::hex << Qt::showbase << i;
+}
+
 QDebug operator<<[[gnu::unused]](QDebug debug, _Tag tag) {
     static const char *names[] = {
         "_None",
@@ -342,7 +348,8 @@ QDebug operator<<[[gnu::unused]](QDebug debug, _Tag tag) {
     static_assert(size(names) == std::size_t(_Tag::_Unused), "Missing names");
     QDebugStateSaver saver(debug);
     return debug.nospace().noquote() << Qt::left << qSetFieldWidth(31)
-                                     << (_Word(tag) < size(names) ? names[_Word(tag)] : "_Reserved");
+                                     << (std::size_t(tag) < size(names)
+                                         ? names[std::size_t(tag)] : "_Reserved");
 }
 QDebug operator<<[[gnu::unused]](QDebug debug, _At at) {
     const char *names[] = {
@@ -492,7 +499,8 @@ QDebug operator<<[[gnu::unused]](QDebug debug, _At at) {
     static_assert(size(names) == std::size_t(_At::_Unused), "Missing names");
     QDebugStateSaver saver(debug);
     return debug.nospace().noquote() << Qt::left << qSetFieldWidth(30)
-                                     << (_Word(at) < size(names) ? names[_Word(at)] : "_Reserved");
+                                     << (std::size_t(at) < size(names)
+                                         ? names[std::size_t(at)] : "_Reserved");
 }
 QDebug operator<<[[gnu::used]](QDebug debug, _Form form) {
     const char *names[] = {
@@ -547,7 +555,8 @@ QDebug operator<<[[gnu::used]](QDebug debug, _Form form) {
     static_assert(size(names) == std::size_t(_Form::_Unused), "Missing names");
     QDebugStateSaver saver(debug);
     return debug.nospace().noquote() << Qt::left << qSetFieldWidth(29)
-                                     << (_Word(form) < size(names) ? names[_Word(form)] : "_Reserved");
+                                     << (std::size_t(form) < size(names)
+                                         ? names[std::size_t(form)] : "_Reserved");
 }
 QDebug operator<<[[gnu::unused]](QDebug debug, _Str str) {
     return debug << QString::fromUtf8(str.data(), str.rtrim('\0').size());
@@ -558,10 +567,6 @@ template<std::size_t MaxParts> QDebug operator<<[[gnu::unused]](QDebug debug,
     for (auto c : path.canon())
         str += c;
     return debug << str;
-}
-QDebug operator<<[[gnu::unused]](QDebug debug, _Addr addr) {
-    QDebugStateSaver saver(debug);
-    return debug << Qt::hex << Qt::showbase << _Word(addr);
 }
 QDebug operator<<[[gnu::unused]](QDebug debug, const _Die &entry);
 QDebug operator<<[[gnu::unused]](QDebug debug, const _Val &val) {
@@ -633,15 +638,15 @@ const _Val &_Die::attr(_At at) const noexcept {
 
 const _Die _Die::_S_null{};
 
-auto Abbrev::get(_Off base) const noexcept -> std::unordered_map<_Word, _Entry> {
-    std::unordered_map<_Word, _Entry> abbrevs;
+auto Abbrev::get(std::uint32_t base) const noexcept -> std::unordered_map<std::uint32_t, _Entry> {
+    std::unordered_map<std::uint32_t, _Entry> abbrevs;
     auto unit = _M_data.subview(base);
     while (!error()) {
         auto code = consume_uleb128(unit);
         if (!code) {
             return abbrevs;
         }
-        if (_Slong(code) != _Sword(code)) {
+        if (std::int64_t(code) != std::int32_t(code)) {
             error("Unsupported code value size");
             return {};
         }
@@ -728,7 +733,7 @@ auto Abbrev::get(_Off base) const noexcept -> std::unordered_map<_Word, _Entry> 
                 error("Out of range abbrev attr form");
                 return {};
             }
-            _Slong implicit_const{};
+            std::int64_t implicit_const{};
             if (_Form(form.get()) == _Form::DW_FORM_implicit_const) {
                 implicit_const = consume_sleb128(unit);
             }
@@ -810,11 +815,11 @@ void Frame::__parse() {
         DW_CFA_hi_user            = 0x3f,
     };
     struct CIE {
-        _Word code_alignment_factor;
-        _Sword data_alignment_factor;
-        RuleSet initial_rules;
+        std::uint32_t code_alignment_factor;
+        std::int32_t  data_alignment_factor;
+        RuleSet       initial_rules;
     };
-    std::unordered_map<_Off, CIE> cies;
+    std::unordered_map<std::uint32_t, CIE> cies;
 
     const auto evaluate_instructions = [&](const CIE &cie, RuleSet &rules, Data instructions,
                                            _Word location = _InvalidWord) {
@@ -823,10 +828,10 @@ void Frame::__parse() {
                 return error("Invalid location in initial instructions");
             _M_rules[std::exchange(location, new_location)] = rules;
         };
-        const auto advance_loc = [&](_Word advance) {
+        const auto advance_loc = [&](std::uint32_t advance) {
             set_loc(location + advance * cie.code_alignment_factor);
         };
-        const auto parse_reg = [&](_Long reg) -> Reg {
+        const auto parse_reg = [&](std::uint64_t reg) -> Reg {
             if (reg >= decltype(reg)(Reg::None)) {
                 error("Unknown register");
                 return Reg::None;
@@ -1037,18 +1042,18 @@ const Info::_Scope Info::_Scope::_S_null;
 
 void Info::__parse(Line &line, LocLists &loclists, RngLists &rnglists) {
     struct Fixup {
-        _Word entry;
+        std::uint32_t entry;
         _At at;
         _Form form;
     };
     struct Unit {
-        _Off offset;
+        std::uint32_t offset;
         std::vector<Fixup> fixups;
-        std::vector<_Word> file_map;
-        std::vector<std::pair<_Word, _Word>> loclists, rnglists;
+        std::vector<std::uint32_t> file_map;
+        std::vector<std::pair<std::uint32_t, std::uint32_t>> loclists, rnglists;
     };
     std::vector<Unit> units;
-    std::unordered_map<_Off, _Word> entry_offsets;
+    std::unordered_map<std::uint32_t, _Word> entry_offsets;
 
     {
         std::vector<_Word> stack{ _InvalidWord };
@@ -1092,7 +1097,7 @@ void Info::__parse(Line &line, LocLists &loclists, RngLists &rnglists) {
                     if (first != (abbrev->second._M_tag == _Tag::DW_TAG_compile_unit))
                         return error("Expected only the first entry to be a compile unit");
 
-                    _Word entry_index = _M_entries.size();
+                    std::uint32_t entry_index = _M_entries.size();
                     entry_offsets.emplace(entry_offset, entry_index);
                     if (stack.back() != _InvalidWord) {
                         _M_entries[stack.back()]._M_sibling = entry_index;
@@ -1374,8 +1379,8 @@ void Info::__parse(Line &line, LocLists &loclists, RngLists &rnglists) {
 #endif
 }
 
-std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
-    std::vector<_Word> file_map;
+std::vector<std::uint32_t> Line::__parse(std::uint8_t address_size, const _Die &unit_entry) {
+    std::vector<std::uint32_t> file_map;
     auto base = unit_entry.attr(_At::DW_AT_stmt_list);
     if (base.is_none()) {
         return file_map;
@@ -1388,7 +1393,7 @@ std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
         error("Unsupported line version");
         return {};
     }
-    _Byte segment_selector_size{};
+    std::uint8_t segment_selector_size{};
     if (version >= 5) {
         address_size = consume<_Byte>(unit);
         segment_selector_size = consume<_Byte>(unit);
@@ -1408,7 +1413,7 @@ std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
         error("Unsupported minimum instruction length");
         return {};
     }
-    auto maximum_operations_per_instruction = version < 4 ? 1u : consume<_Byte>(header);
+    auto maximum_operations_per_instruction = version < 4 ? _Byte(1) : consume<_Byte>(header);
     if (maximum_operations_per_instruction != 1) {
         error("Unsupported maximum operations per instruction");
         return {};
@@ -1424,7 +1429,7 @@ std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
     auto standard_opcode_lengths = header.take_first(opcode_base - 1).bitcast<const _Byte>();
     auto parse_header_entries = [&](std::initializer_list<_EntryFormat> default_format,
                                     _At default_path_attr) -> std::vector<_Entry> {
-        auto entry_format_count = version < 5 ? default_format.size() : consume<_Byte>(header);
+        auto entry_format_count = version < 5 ? _Byte(default_format.size()) : consume<_Byte>(header);
         std::array<_EntryFormat, 5> entry_format;
         if (entry_format_count > entry_format.size()) {
             error("Unsupported entry format count");
@@ -1433,7 +1438,7 @@ std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
         if (version < 5) {
             std::copy_n(default_format.begin(), entry_format_count, entry_format.begin());
         } else {
-            for (decltype(entry_format_count) i{}; i != entry_format_count; i++) {
+            for (decltype(entry_format_count) i{}; i != entry_format_count; ++i) {
                 entry_format[i].first = _Lnct(consume_uleb128(header).get());
                 entry_format[i].second = _Form(consume_uleb128(header).get());
             }
@@ -1452,7 +1457,7 @@ std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
                 return {};
             }
             _Entry entry;
-            for (decltype(entry_format_count) i{}; i != entry_format_count; i++) {
+            for (decltype(entry_format_count) i{}; i != entry_format_count; ++i) {
                 auto fixup = _Form::_Unused;
                 auto val = consume_form({ _At::_None, entry_format[i].second, 0 }, header, fixup);
                 if (fixup != _Form::_Unused) {
@@ -1555,9 +1560,9 @@ std::vector<_Word> Line::__parse(_Byte address_size, const _Die &unit_entry) {
         auto file = file_map[state._M_file];
 #ifdef MY_DEBUG_DISABLED
         qDebug() << _M_files[file].path() << state._M_line <<  state._M_column
-                 << Qt::showbase << Qt::hex << _Word(state._M_address);
+                 << Qt::showbase << Qt::hex << state._M_address;
 #endif
-        auto inserted_loc = _M_locs.emplace(state._M_address, state);
+        auto inserted_loc = _M_locs.emplace(std::uint32_t(state._M_address), state);
         if (!inserted_loc.second &&
             inserted_loc.first->second._M_end_sequence) {
             inserted_loc.first->second = state;
@@ -1668,8 +1673,8 @@ const SrcFile &Line::get(_Files::size_type pos) const noexcept {
     return _M_files[pos];
 }
 
-std::vector<std::pair<_Word, _Word>> LocLists::__parse(const _Die &unit_entry) {
-    std::vector<std::pair<_Word, _Word>> indices;
+std::vector<std::pair<std::uint32_t, std::uint32_t>> LocLists::__parse(const _Die &unit_entry) {
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> indices;
     auto base = unit_entry.attr(_At::DW_AT_loclists_base);
     if (base.is_none()) {
         return indices;
@@ -1704,8 +1709,8 @@ std::vector<std::pair<_Word, _Word>> LocLists::__parse(const _Die &unit_entry) {
         indices.emplace_back(_M_locs.size(), _InvalidWord);
         auto loclist = unit.subview(offset);
         while (!error() && indices.back().second == _InvalidWord) {
-            _Long base_index, start_index, end_index;
-            _Addr start_addr, end_addr;
+            std::uint64_t base_index, start_index, end_index;
+            std::uint32_t start_addr, end_addr;
             switch (consume<_Byte>(loclist)) {
                 case DW_LLE_end_of_list:
                     indices.back().second = _M_locs.size();
@@ -1767,7 +1772,7 @@ std::vector<std::pair<_Word, _Word>> LocLists::__parse(const _Die &unit_entry) {
     }
     return indices;
 }
-_LocView LocLists::get(std::pair<_Word, _Word> indices) const noexcept {
+_LocView LocLists::get(std::pair<std::uint32_t, std::uint32_t> indices) const noexcept {
     if (indices.first > indices.second || indices.first > _M_locs.size()
                                        || indices.second > _M_locs.size()) {
         error("Out of range index into location offsets");
@@ -1776,8 +1781,8 @@ _LocView LocLists::get(std::pair<_Word, _Word> indices) const noexcept {
     return { _M_locs.data() + indices.first, _M_locs.data() + indices.second };
 }
 
-std::vector<std::pair<_Word, _Word>> RngLists::__parse(const _Die &unit_entry) {
-    std::vector<std::pair<_Word, _Word>> indices;
+std::vector<std::pair<std::uint32_t, std::uint32_t>> RngLists::__parse(const _Die &unit_entry) {
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> indices;
     auto base = unit_entry.attr(_At::DW_AT_rnglists_base);
     if (base.is_none()) {
         return indices;
@@ -1812,8 +1817,8 @@ std::vector<std::pair<_Word, _Word>> RngLists::__parse(const _Die &unit_entry) {
         indices.emplace_back(_M_rngs.size(), _InvalidWord);
         auto rnglist = unit.subview(offset);
         while (!error() && indices.back().second == _InvalidWord) {
-            _Long base_index, start_index, end_index;
-            _Addr start_addr, end_addr;
+            std::uint64_t base_index, start_index, end_index;
+            std::uint32_t start_addr, end_addr;
             switch (consume<_Byte>(rnglist)) {
                 case DW_RLE_end_of_list:
                     indices.back().second = _M_rngs.size();
@@ -1870,7 +1875,7 @@ std::vector<std::pair<_Word, _Word>> RngLists::__parse(const _Die &unit_entry) {
     }
     return indices;
 }
-_RngView RngLists::get(std::pair<_Word, _Word> indices) const noexcept {
+_RngView RngLists::get(std::pair<std::uint32_t, std::uint32_t> indices) const noexcept {
     if (indices.first > indices.second || indices.first > _M_rngs.size()
                                        || indices.second > _M_rngs.size()) {
         error("Out of range index into range offsets");
@@ -1879,7 +1884,7 @@ _RngView RngLists::get(std::pair<_Word, _Word> indices) const noexcept {
     return { _M_rngs.data() + indices.first, _M_rngs.data() + indices.second };
 }
 
-_Str Str::get(_Word offset) const noexcept {
+_Str Str::get(std::uint32_t offset) const noexcept {
     Data temp(_M_data.subview(offset));
     return consume_strz(temp);
 }
