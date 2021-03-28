@@ -108,7 +108,7 @@ private:
     emu_data_t m_loadType;
 
     int m_speed, m_actualSpeed;
-    bool m_throttle, m_backupThrottleForTransfers;
+    bool m_throttle;
     std::chrono::steady_clock::time_point m_lastTime;
     std::mutex m_mutexSpeed;
     std::condition_variable m_cvSpeed;
