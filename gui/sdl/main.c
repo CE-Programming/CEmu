@@ -206,15 +206,20 @@ int main(int argc, char **argv) {
             {"limit",      required_argument, 0,  'l' },
             {"spi",        no_argument,       0,  's' },
             {"keymap",     required_argument, 0,  'k' },
-            {"yum",        no_argument,       0,  'y' },
+            {}
         };
 
-        c = getopt_long(argc, argv, "fr:i:l:sk:y", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:l:sk:", long_options, &option_index);
         if (c == -1) {
             break;
         }
 
         switch (c) {
+            case 'f':
+                fprintf(stdout, "fullscreen: yes\n");
+                cemu.fullscreen = 1;
+                break;
+
             case 'r':
                 fprintf(stdout, "rom: %s\n", optarg);
                 cemu.rom = optarg;
@@ -234,11 +239,6 @@ int main(int argc, char **argv) {
             case 's':
                 fprintf(stdout, "spi: yes\n");
                 cemu.spi = 1;
-                break;
-
-            case 'f':
-                fprintf(stdout, "fullscreen: yes\n");
-                cemu.fullscreen = 1;
                 break;
 
             case 'k':
