@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #include "../../core/schedule.h"
+#include "../../core/emu.h"
 
 #ifdef _MSC_VER
 static inline int clzll(unsigned long long input_num) {
@@ -35,7 +36,9 @@ static apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
     /* temp file used for saving rgb888 data rather than storing everything in ram */
-    if (!(apng.tmp = fopen(tmp_name, "w+b"))) {
+    apng.tmp = fopen(tmp_name, "w+b");
+    gui_console_err_printf("[DEBUG] fopen(\"%s\") = %p;\n", tmp_name, apng.tmp);
+    if (!apng.tmp) {
         return false;
     }
 
@@ -111,6 +114,7 @@ bool apng_save(const char *filename, bool optimize) {
             for (j = 0; j != LCD_SIZE; j++) {
                 size_t size = fread(&pixel, sizeof(pixel), 1, apng.tmp);
                 if (size != 1) {
+                    gui_console_err_printf("[DEBUG] fclose(%p);\n", apng.tmp);
                     fclose(apng.tmp);
                     apng.tmp = NULL;
                     return false;
@@ -154,7 +158,10 @@ bool apng_save(const char *filename, bool optimize) {
     }
     rewind(apng.tmp);
 
-    if (!(f = fopen(filename, "wb"))) {
+    f = fopen(filename, "wb");
+    gui_console_err_printf("[DEBUG] fopen(\"%s\") = %p;\n", filename, f);
+    if (!f) {
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", apng.tmp);
         fclose(apng.tmp);
         apng.tmp = NULL;
         return false;
@@ -318,8 +325,10 @@ bool apng_save(const char *filename, bool optimize) {
 
 err:
     png_destroy_write_struct(&png_ptr, &info_ptr);
+    gui_console_err_printf("[DEBUG] fclose(%p);\n", f);
     fclose(f);
 
+    gui_console_err_printf(stderr, "[DEBUG] fclose(%p);\n", apng.tmp);
     fclose(apng.tmp);
     apng.tmp = NULL;
 

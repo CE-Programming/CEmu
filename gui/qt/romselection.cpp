@@ -2,6 +2,7 @@
 #include "ui_romselection.h"
 #include "utils.h"
 #include "../../core/os/os.h"
+#include "../../core/emu.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
@@ -173,6 +174,7 @@ void RomSelection::parseROMSegments() {
                 break;
         }
 
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", fd);
         fclose(fd);
     }
     m_segs.clear();
@@ -183,6 +185,7 @@ void RomSelection::parseROMSegments() {
 
 invalid:
     QMessageBox::critical(this, tr("Error"), tr("Invalid ROM segment\n") + m_segs.at(i));
+    gui_console_err_printf("[DEBUG] fclose(%p);\n", fd);
     fclose(fd);
     return;
 }
@@ -208,6 +211,7 @@ void RomSelection::saveDumpProgram() {
 
     if (file) {
         fwrite(dumper_program, sizeof(dumper_program), 1, file);
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", file);
         fclose(file);
     }
 }
@@ -232,6 +236,7 @@ void RomSelection::saveROMImage() {
 
     if (saveRom) {
         fwrite(m_array, 1, ROM_SIZE, saveRom);
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", saveRom);
         fclose(saveRom);
         m_rom = filename;
         close();

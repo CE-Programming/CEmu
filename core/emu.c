@@ -48,6 +48,7 @@ bool emu_save(emu_data_t type, const char *path) {
                 success = fwrite(mem.ram.block, 1, SIZE_RAM, file) == SIZE_RAM;
                 break;
         }
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", file);
         fclose(file);
     }
 
@@ -227,6 +228,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 rerr:
 
     if (file) {
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", file);
         fclose(file);
     }
 

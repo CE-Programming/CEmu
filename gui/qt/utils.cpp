@@ -3,6 +3,7 @@
 #include "debugger/disasm.h"
 #include "../../core/cpu.h"
 #include "../../core/os/os.h"
+#include "../../core/emu.h"
 #include "tivars_lib_cpp/src/TIVarType.h"
 #include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
 
@@ -39,6 +40,7 @@ bool fileExists(const QString &location) {
     }
 
     if (FILE *file = fopen_utf8(path.toStdString().c_str(), "r")) {
+        gui_console_err_printf("[DEBUG] fclose(%p);\n", file);
         fclose(file);
         return true;
     } else {

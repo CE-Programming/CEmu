@@ -1223,6 +1223,7 @@ int usb_dusb_device(usb_event_t *event) {
             }
             for (command = context->command; command && command->type; ++command) {
                 if (command->file) {
+                    gui_console_err_printf("[DEBUG] fclose(%p);\n", command->file);
                     fclose(command->file);
                 }
             }

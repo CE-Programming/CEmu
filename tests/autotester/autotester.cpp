@@ -204,7 +204,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                         char dump_path[150] = {0};
                         sprintf(dump_path, "failure_hash%s_num%d_dump.bin", which_hash.c_str(), hashesTested+1);
                         FILE *dump_file = fopen(dump_path, "wb");
+                        cemucore::gui_console_err_printf("[DEBUG] fopen(\"%s\") = %p;\n", dump_path, dump_file);
                         fwrite(temp_buffer_dup, param.size, 1, dump_file);
+                        cemucore::gui_console_err_printf("[DEBUG] fclose(%p);\n", dump_file);
                         fclose(dump_file);
                         std::cout << "\tDumped memory into " << dump_path << std::endl;
                     }

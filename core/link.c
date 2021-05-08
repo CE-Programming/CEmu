@@ -85,11 +85,13 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
         checksum += byte;
     }
     if (fwrite(&checksum,              2, 1, fd) != 1) goto w_err;
+    gui_console_err_printf("[DEBUG] fclose(%p);\n", fd);
     (void)fclose(fd);
 
     return LINK_GOOD;
 
 w_err:
+    gui_console_err_printf("[DEBUG] fclose(%p);\n", fd);
     (void)fclose(fd);
     if(remove(file)) {
         gui_console_printf("[CEmu] Transfer Error: Please contact the developers\n");
