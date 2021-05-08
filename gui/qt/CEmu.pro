@@ -58,7 +58,7 @@ TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 CONFIG += c++11 console
 
 # Seems to fix some LTO issues. See https://github.com/CE-Programming/CEmu/issues/366
-CONFIG += ltcg
+#CONFIG += ltcg
 
 # Core options
 DEFINES += DEBUG_SUPPORT
@@ -83,7 +83,7 @@ if (!win32-msvc*) {
     isEmpty(CI) {
         # Only enable opts for non-CI release builds
         # -flto might cause an internal compiler error on GCC in some circumstances (with -g3?)... Comment it if needed.
-        CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
+#        CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
     }
 
     if (contains(DEFINES, LIB_ARCHIVE_SUPPORT)) {
