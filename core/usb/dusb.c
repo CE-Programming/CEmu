@@ -1221,7 +1221,7 @@ int usb_dusb_device(usb_event_t *event) {
             if (!context) {
                 return 0;
             }
-            for (command = context->command; command && command->type; ++command) {
+            for (command = context->commands; command->type != DUSB_DONE_COMMAND; ++command) {
                 if (command->file) {
                     fclose(command->file);
                 }
