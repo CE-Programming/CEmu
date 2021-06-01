@@ -2183,7 +2183,7 @@ Archivo: </translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="284"/>
-        <source>To run the program, select Asm( from the catolog by pressing [2nd][0], and then pressing enter at the following prompt.</source>
+        <source>To run the program, select Asm( from the catalog by pressing [2nd][0], and then pressing enter at the following prompt.</source>
         <translation>Para ejecutar el programa, seleccione Asm ( del catálogo presionando [2nd] [0], y luego presione [enter] en el siguiente mensaje.</translation>
     </message>
     <message>

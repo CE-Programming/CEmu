@@ -281,7 +281,7 @@
        <item>
         <widget class="QLabel" name="line1_4">
          <property name="text">
-          <string>To run the program, select Asm( from the catolog by pressing [2nd][0], and then pressing enter at the following prompt.</string>
+          <string>To run the program, select Asm( from the catalog by pressing [2nd][0], and then pressing enter at the following prompt.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
