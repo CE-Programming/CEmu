@@ -129,16 +129,11 @@ jobs:
       uses: lukka/run-vcpkg@v4
       with:
         vcpkgArguments: '@${{ env.VCPKGRESPONSEFILE }}'
-        # This commit ID corresponds to 2020.07
-        vcpkgGitCommitId: 56fffbe49dfb4dd8fae0940f272c5fd2b86be991
+        # This commit ID corresponds to 2021.05.12
+        # libpng-apng portfile fixed (microsoft/vcpkg#13837) as of 2020.10.13
+        vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
         appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}-${{ runner.os }}-${{ matrix.arch_suffix }}-${{ matrix.linking }}
         setupOnly: true
-
-    # This is pending a fix being entered into microsoft/vcpkg#13837
-    - name: Patch libpng-apng portfile
-      shell: cmd
-      run: |
-        copy /Y ${{ github.workspace }}\.github\workflows\vcpkg\libpng-portfile.cmake .\vcpkg\ports\libpng\portfile.cmake
 
     - name: Install packages
       shell: cmd
