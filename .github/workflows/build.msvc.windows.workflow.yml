@@ -130,8 +130,8 @@ jobs:
       with:
         vcpkgArguments: '@${{ env.VCPKGRESPONSEFILE }}'
         # libpng-apng portfile fixed (microsoft/vcpkg#13837) as of 2020.10.13
-        # This commit ID corresponds to 2021.05.12 - disabled
-        # vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
+        # This commit ID corresponds to 2021.05.12
+        vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
         appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}-${{ runner.os }}-${{ matrix.arch_suffix }}-${{ matrix.linking }}
         setupOnly: true
 
