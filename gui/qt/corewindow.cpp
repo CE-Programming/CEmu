@@ -50,8 +50,10 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QEvent>
+#include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QString>
+#include <QtGui/QScreen>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMenu>
