@@ -126,19 +126,24 @@ jobs:
     # Then install libarchive + libpng-apng for all targets.
     - name: Restore from cache and install vcpkg + libraries (libarchive, libpng-apng)
       # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
-      uses: lukka/run-vcpkg@v6
+      uses: lukka/run-vcpkg@v7
       with:
         vcpkgArguments: '@${{ env.VCPKGRESPONSEFILE }}'
         # libpng-apng portfile fixed (microsoft/vcpkg#13837) as of 2020.10.13
-        # This commit ID dates 6/4/2021 (not tied to a tag)
-        vcpkgGitCommitId: 834a87732ce7677ae480febc1cb18c9c80371fbf
+        # This commit ID matches versioned tag 2021.05.12.
+        vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
         appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}-${{ runner.os }}-${{ matrix.arch_suffix }}-${{ matrix.linking }}
         setupOnly: true
+
+    - name: Workaround vcpkg bug where downloads folder does not exist
+      shell: cmd
+      run: |
+        echo Creating directory to prevent failure: vcpkg\downloads
+        md vcpkg\downloads
 
     - name: Install packages
       shell: cmd
       run: |
-        .\vcpkg\vcpkg update
         .\vcpkg\vcpkg remove --outdated --recurse
         .\vcpkg\vcpkg install @${{ env.VCPKGRESPONSEFILE }}
     
