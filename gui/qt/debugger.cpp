@@ -487,8 +487,8 @@ void MainWindow::debugSync() {
 
     cpu.registers.MBASE = static_cast<uint8_t>(hex2int(ui->mbregView->text()));
     cpu.registers.I = static_cast<uint16_t>(hex2int(ui->iregView->text()));
-    cpu.registers.R = static_cast<uint8_t>(hex2int(ui->rregView->text()));
-    cpu.registers.R = static_cast<uint8_t>(cpu.registers.R << 1 | cpu.registers.R >> 7);
+    uint8_t r = hex2int(ui->rregView->text());
+    cpu.registers.R = uint8_t(r << 1 | r >> 7);
     cpu.IM = static_cast<uint8_t>(hex2int(ui->imregView->text()));
     cpu.IM += !!cpu.IM;
 
@@ -688,7 +688,7 @@ void MainWindow::debugPopulate() {
     ui->pcregView->setPalette(tmp == ui->pcregView->text() ? m_cNone : m_cBack);
     ui->pcregView->setText(tmp);
 
-    tmp = int2hex(static_cast<uint32_t>(cpu.registers.R >> 1 | cpu.registers.R << 7), 2);
+    tmp = int2hex(uint8_t(cpu.registers.R >> 1 | cpu.registers.R << 7), 2);
     ui->rregView->setPalette(tmp == ui->rregView->text() ? m_cNone : m_cBack);
     ui->rregView->setText(tmp);
 
