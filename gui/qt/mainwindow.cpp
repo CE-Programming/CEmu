@@ -400,7 +400,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // sending handler
     connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
-    connect(sendingHandler, &SendingHandler::cancelTransfers, &emu, &EmuThread::cancelTransfers, Qt::QueuedConnection);
+    connect(sendingHandler, &SendingHandler::cancelTransfers, &emu, &EmuThread::abort, Qt::QueuedConnection);
     connect(&emu, &EmuThread::linkProgress, sendingHandler, &SendingHandler::linkProgress, Qt::QueuedConnection);
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
 
