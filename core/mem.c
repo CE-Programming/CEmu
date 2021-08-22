@@ -752,6 +752,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                         switch (value) {
                             case 1:
                                 gui_console_clear();
+                                break;
                             default:
                                 break;
                         }

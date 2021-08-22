@@ -1297,7 +1297,7 @@ void cpu_execute(void) {
                                                                 cpu_write_word(r->HL, r->IY);
                                                                 break;
                                                             }
-                                                            /* fallthrough */
+                                                            fallthrough;
                                                         case 5: /* OPCODETRAP */
                                                             cpu_trap();
                                                             break;

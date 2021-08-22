@@ -233,11 +233,12 @@ static bool dusb_convert_varname_to_utf8(dusb_command_t *command) {
             if (command->varname_length != 1) {
                 return false;
             }
-            /* fallthrough */
+            fallthrough;
         default:
             if (command->varname[0] < 'A' || command->varname[0] > 'Z' + 1) {
                 return false;
             }
+            fallthrough;
         case CALC_VAR_TYPE_OPERATING_SYSTEM:
             memcpy(tiascii, command->varname, command->varname_length);
             tiascii[command->varname_length] = '\0';
@@ -669,7 +670,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 break;
             case DUSB_NEXT_COMMAND_STATE:
                 dusb_next_command(event);
-                /* fallthrough */
+                fallthrough;
             case DUSB_COMMAND_STATE:
                 switch (context->command->type) {
                     case DUSB_DONE_COMMAND:

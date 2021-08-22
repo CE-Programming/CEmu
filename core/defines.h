@@ -2,9 +2,9 @@
 #define DEFINES_H
 
 #ifdef __EMSCRIPTEN__
- #include <emscripten.h>
+# include <emscripten.h>
 #else
- #define EMSCRIPTEN_KEEPALIVE
+# define EMSCRIPTEN_KEEPALIVE
 #endif
 
 #define GETMASK(index, size) (((1U << (size)) - 1) << (index))
@@ -16,12 +16,18 @@
 
 /* MSVC doesn't support __builtin_expect, stub it out */
 #ifndef _MSC_VER
- #define likely(x) __builtin_expect(!!(x), 1)
- #define unreachable() __builtin_unreachable()
+# ifndef __cplusplus
+#  define fallthrough __attribute__((fallthrough))
+# endif
+# define likely(x) __builtin_expect(!!(x), 1)
+# define unreachable() __builtin_unreachable()
 #else
- #define likely(x) (x)
- #define unreachable() abort()
- #define strcasecmp _stricmp
+# ifndef __cplusplus
+#  define fallthrough (void)0
+# endif
+# define likely(x) (x)
+# define unreachable() abort()
+# define strcasecmp _stricmp
 #endif
 
 #define unlikely(x) !likely(!(x))
