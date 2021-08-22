@@ -81,10 +81,11 @@ static void usb_plug(void) {
 }
 
 static int usb_dispatch_event(void) {
-    while (true) {
-        int error = usb.device(&usb.event);
+    int error = 0;
+    do {
+        error = usb.device(&usb.event);
         if (error) {
-            return error;
+            usb.event.type = USB_DESTROY_EVENT;
         }
         switch (usb.event.type) {
             case USB_INIT_EVENT:
@@ -155,8 +156,8 @@ static int usb_dispatch_event(void) {
                 break;
         }
         break;
-    }
-    return 0;
+    } while (!error);
+    return error;
 }
 
 int usb_init_device(int argc, const char *const *argv,
