@@ -140,6 +140,9 @@ void EmuThread::doStuff() {
             case RequestReceive:
                 block(req);
                 break;
+            case RequestAbort:
+                emu_abort_variable_transfer();
+                break;
             case RequestDebugger:
                 debug_open(DBG_USER, 0);
                 break;
@@ -221,6 +224,10 @@ void EmuThread::send(const QStringList &list, int location) {
     m_vars = list;
     m_sendLoc = location;
     req(RequestSend);
+}
+
+void EmuThread::abort() {
+    req(RequestAbort);
 }
 
 void EmuThread::sendFiles() {

@@ -15,6 +15,7 @@ int emu_send_variable(const char *file, int location);
 int emu_send_variables(const char *const *files, int num, int location,
                        usb_progress_handler_t *progress_handler, void *progress_context);
 int emu_receive_variable(const char *file, const calc_var_t *vars, int count);
+int emu_abort_variable_transfer(void);
 
 #ifdef __cplusplus
 }
