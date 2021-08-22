@@ -162,6 +162,9 @@ static int usb_dispatch_event(void) {
 
 int usb_init_device(int argc, const char *const *argv,
                     usb_progress_handler_t *progress_handler, void *progress_context) {
+    if (!usb.device) {
+        usb.device = usb_disconnected_device;
+    }
     usb.event.type = USB_DESTROY_EVENT;
     usb.device(&usb.event);
     usb.event.type = USB_INIT_EVENT;

@@ -80,6 +80,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             goto rerr;
         }
 
+        asic_free();
         asic_init();
         asic_reset();
 
