@@ -172,7 +172,7 @@ int usb_init_device(int argc, const char *const *argv,
     } else if (!strcasecmp(argv[0], "dusb")) {
         usb.device = usb_dusb_device;
     } else {
-        return ENOENT;
+        return ENOEXEC;
     }
     usb.event.progress_handler = progress_handler;
     usb.event.progress_context = progress_context;

@@ -845,13 +845,13 @@ int usb_dusb_device(usb_event_t *event) {
                 }
                 if (*arg == ':' ?
                     !(command->file = fopen_utf8(++arg, command->type == DUSB_SEND_COMMAND ? "rb" : "wb")) : *arg) {
-                    return EINVAL;
+                    return errno;
                 }
                 if (command->type == DUSB_SEND_COMMAND) {
                     long length;
                     if (fseek(command->file, 0, SEEK_END) ||
                         (length = ftell(command->file)) < 0) {
-                        return EINVAL;
+                        return errno;
                     }
                     command->file_length = length;
                     context->total += length;
