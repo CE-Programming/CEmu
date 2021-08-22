@@ -129,10 +129,13 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         tab->installEventFilter(keypadBridge);
     }
 
+
+    m_btnCancelTranser = new QPushButton(this);
     m_progressBar = new QProgressBar(this);
     m_progressBar->setMaximumHeight(ui->statusBar->height() / 2);
     ui->statusBar->addWidget(m_progressBar);
-    sendingHandler = new SendingHandler(this, m_progressBar, ui->varLoadedView);
+    ui->statusBar->addWidget(m_btnCancelTranser);
+    sendingHandler = new SendingHandler(this, m_btnCancelTranser, m_progressBar, ui->varLoadedView);
 
     // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
@@ -397,6 +400,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // sending handler
     connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
+    connect(sendingHandler, &SendingHandler::cancelTransfers, &emu, &EmuThread::cancelTransfers, Qt::QueuedConnection);
     connect(&emu, &EmuThread::linkProgress, sendingHandler, &SendingHandler::linkProgress, Qt::QueuedConnection);
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
 

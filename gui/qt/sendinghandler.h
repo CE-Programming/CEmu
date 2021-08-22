@@ -4,6 +4,7 @@
 #include <QtWidgets/QProgressBar>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
+#include <QtWidgets/QPushButton>
 #include <QtCore/QObject>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTableWidgetItem>
@@ -20,7 +21,7 @@ class SendingHandler : public QObject {
     Q_OBJECT
 
 public:
-    explicit SendingHandler(QObject *p = Q_NULLPTR, QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
+    explicit SendingHandler(QObject *p = Q_NULLPTR, QPushButton *cancelBtn = Q_NULLPTR, QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
     ~SendingHandler() = default;
 
     void sendFiles(const QStringList &fileNames, int location);
@@ -34,10 +35,12 @@ public slots:
     void linkProgress(int amount, int total);
     void resendPressed();
     void removeRow();
+    void cancelTransfer();
 
 signals:
     void send(const QStringList &names, int location);
     void loadEquateFile(const QString &path);
+    void cancelTransfers();
 
 private:
     void checkDirForEquateFiles(QString &dirPath);
@@ -52,6 +55,7 @@ private:
 
     QTemporaryDir m_tempDir;
     QProgressBar *m_progressBar;
+    QPushButton *m_btnCancelTransfer;
     QTableWidget *m_table;
     QIcon m_iconSend;
     QIcon m_iconCheck, m_iconCheckGray;

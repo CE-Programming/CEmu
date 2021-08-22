@@ -618,6 +618,7 @@ private:
     int m_fullscreen = FULLSCREEN_NONE;
     uint32_t m_runUntilAddr;
 
+    QPushButton *m_btnCancelTranser;
     QProgressBar *m_progressBar;
     QStringList m_docksMemory;
     QList<int> m_docksMemoryBytes;

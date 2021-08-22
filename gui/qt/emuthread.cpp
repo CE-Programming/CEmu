@@ -137,6 +137,9 @@ void EmuThread::doStuff() {
             case RequestSend:
                 sendFiles();
                 break;
+            case RequestCancelTransfers:
+                // jacobly to add stuff here
+                break;
             case RequestReceive:
                 block(req);
                 break;
@@ -214,6 +217,10 @@ void EmuThread::unblock() {
 
 void EmuThread::reset() {
     req(RequestReset);
+}
+
+void EmuThread::cancelTransfers() {
+    req(RequestCancelTransfers);
 }
 
 void EmuThread::receive() {
