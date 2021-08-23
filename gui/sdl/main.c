@@ -150,7 +150,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                                 break;
                         }
                     }
-                    // fallthrough
+                    fallthrough;
                 case SDL_KEYUP:
                     for (const cemu_sdl_key_t *key = keymap; key && (key->row | key->col) >= 0; key++) {
                         if (keysyms_match(&key->keysym, &event.key.keysym, event.type == SDL_KEYUP)) {

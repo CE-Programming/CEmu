@@ -10,6 +10,7 @@ extern "C" {
 
 #include "backlight.h"
 #include "control.h"
+#include "defines.h"
 #include "emu.h"
 #include "keypad.h"
 #include "lcd.h"
