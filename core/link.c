@@ -33,7 +33,8 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
         return LINK_ERR;
     }
 
-    argv[0] = "dusb";
+    char name[] = "dusb";
+    argv[0] = name;
     for(int i=0; i<num; i++) {
         argv[i+1] = malloc(7+strlen(files[i])+1);
         sprintf(argv[i+1], "send%s:%s", locations[location], files[i]);
