@@ -51,10 +51,20 @@ const File::Header File::Header::ez80 {
     .ei_data = ELFDATA2LSB,
     .ei_version = EV_CURRENT,
     .ei_osabi = ELFOSABI_STANDALONE,
+    .ei_pad = {},
     .e_type = ET_EXEC,
     .e_machine = EM_Z80,
     .e_version = EV_CURRENT,
+    .e_entry = {},
+    .e_phoff = {},
+    .e_shoff = {},
     .e_flags = EF_Z80_EZ80,
+    .e_ehsize = {},
+    .e_phentsize = {},
+    .e_phnum = {},
+    .e_shentsize = {},
+    .e_shnum = {},
+    .e_shstrndx = {},
 };
 
 
@@ -1572,7 +1582,8 @@ std::vector<std::uint32_t> Line::__parse(std::uint8_t address_size, const _Die &
             inserted_loc.first->second._M_file = file;
             if (state._M_is_stmt) {
                 auto inserted_line = _M_files[file].lines().insert(
-                        { { state._M_line, state._M_column }, state._M_address });
+                        { { state._M_line, state._M_column },
+                          std::uint32_t(state._M_address) });
                 if (!inserted_line.second &&
                     inserted_line.first->second > state._M_address) {
                     inserted_line.first->second = state._M_address;

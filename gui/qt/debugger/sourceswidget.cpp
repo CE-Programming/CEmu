@@ -1198,6 +1198,7 @@ int SourcesWidget::GlobalModel::commonPrefixLength(const QStringList &paths) {
     }
 }
 void SourcesWidget::GlobalModel::init(const QStringList &paths) {
+    static_cast<void>(paths);
     beginResetModel();
     m_freeVariable = -1;
     m_variables.clear();
@@ -1314,7 +1315,7 @@ void SourcesWidget::StackModel::update() {
         beginInsertRows(QModelIndex(), 0, stack.count() - commonSuffix);
         for (int parent = stack.count() - commonSuffix; parent >= 0; --parent) {
             const auto &entry = stack.at(parent);
-            const auto pc = entry.regs[debuginfo::dwarf::Reg::PC];
+            auto pc = entry.regs[debuginfo::dwarf::Reg::PC];
             const auto &name = entry.scope->function().entry().attr(debuginfo::dwarf::_At::DW_AT_name);
             m_topLevelData[0].prepend(QString::fromUtf8(name.str().data(),
                                                         name.str().rtrim('\0').size()));

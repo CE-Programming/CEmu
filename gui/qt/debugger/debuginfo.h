@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <climits>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -26,13 +27,13 @@ namespace detail {
 constexpr auto BitsPerByte = std::numeric_limits<unsigned char>::digits;
 
 template<bool Signed, std::size_t Bits, std::size_t... Indices>
-class UnalignedLittleEndianIntegerImpl {
+class [[gnu::packed]] UnalignedLittleEndianIntegerImpl {
     using Byte = unsigned char;
     using IntMax = std::conditional_t<Signed, std::intmax_t, std::uintmax_t>;
-    std::array<Byte, sizeof...(Indices)> m_value;
 
 public:
-    constexpr UnalignedLittleEndianIntegerImpl() : m_value{} {}
+    std::array<Byte, sizeof...(Indices)> m_value;
+    constexpr UnalignedLittleEndianIntegerImpl() = default;
     constexpr UnalignedLittleEndianIntegerImpl(IntMax value)
         : m_value{ Byte(value >> Indices * BitsPerByte)... } {}
     template<bool ValSigned, std::size_t ValBits, std::size_t... ValIndices>
@@ -116,8 +117,8 @@ using _Word  = detail::UnalignedLittleEndianInteger<false, 32>;
 using _Slong = detail::UnalignedLittleEndianInteger<true,  64>;
 using _Long  = detail::UnalignedLittleEndianInteger<false, 64>;
 
-static_assert(alignof(_Addr) == 1 && sizeof(_Addr) == 3,
-              "_Addr should be unaligned and 3 bytes");
+static_assert(std::is_trivial_v<_Addr> && alignof(_Addr) == 1 && sizeof(_Addr) == 3,
+              "_Addr should be trivial, unaligned, and 3 bytes");
 
 template<typename _Type> class _View {
 public:
@@ -1363,17 +1364,17 @@ public:
         static constexpr Rule same_val() noexcept { return { _Kind::_SameVal }; }
         constexpr bool is_same_val() const noexcept { return _M_kind == _Kind::_SameVal; }
 
-        static constexpr Rule off(std::int32_t __off) noexcept { return { _Kind::_Off, __off }; }
+        static constexpr Rule off(std::int32_t __off) noexcept { return { _Kind::_Off, std::uint32_t(__off) }; }
         constexpr bool is_off() const noexcept { return _M_kind == _Kind::_Off; }
 
-        static constexpr Rule val_off(std::int32_t __off) noexcept { return { _Kind::_ValOff, __off }; }
+        static constexpr Rule val_off(std::int32_t __off) noexcept { return { _Kind::_ValOff, std::uint32_t(__off) }; }
         constexpr bool is_val_off() const noexcept { return _M_kind == _Kind::_ValOff; }
 
         static constexpr Rule reg(Reg __reg) noexcept { return { _Kind::_ValOff, __reg }; }
         constexpr bool is_reg() const noexcept { return _M_kind == _Kind::_Reg; }
 
         static constexpr Rule reg_off(Reg __reg, std::int32_t __off) noexcept {
-            return { _Kind::_RegOff, __reg, __off };
+            return { _Kind::_RegOff, __reg, std::uint32_t(__off) };
         }
         constexpr bool is_reg_off() const noexcept { return _M_kind == _Kind::_RegOff; }
 
