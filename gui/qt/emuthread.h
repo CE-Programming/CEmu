@@ -51,8 +51,7 @@ public:
         RequestLoad,
         RequestSend,
         RequestReceive,
-        RequestCancelTransfers,
-        RequestAbort,
+        RequestCancelTransfer,
         RequestAutoTester,
         RequestDebugger
     };
@@ -85,8 +84,7 @@ signals:
 
 public slots:
     void send(const QStringList &names, int location);
-    void abort();
-    void cancelTransfers();
+    void cancelTransfer();
     void enqueueKeys(quint16 key1, quint16 key2 = 0, bool repeat = false);
 
 protected:

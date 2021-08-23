@@ -98,6 +98,6 @@ w_err:
     return LINK_ERR;
 }
 
-int emu_abort_variable_transfer(void) {
+int emu_cancel_transfer(void) {
     return usb_init_device(0, NULL, NULL, NULL);
 }

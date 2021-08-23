@@ -137,14 +137,11 @@ void EmuThread::doStuff() {
             case RequestSend:
                 sendFiles();
                 break;
-            case RequestCancelTransfers:
-                // jacobly to add stuff here
-                break;
             case RequestReceive:
                 block(req);
                 break;
-            case RequestAbort:
-                emu_abort_variable_transfer();
+            case RequestCancelTransfer:
+                emu_cancel_transfer();
                 break;
             case RequestDebugger:
                 debug_open(DBG_USER, 0);
@@ -219,8 +216,8 @@ void EmuThread::reset() {
     req(RequestReset);
 }
 
-void EmuThread::cancelTransfers() {
-    req(RequestCancelTransfers);
+void EmuThread::cancelTransfer() {
+    req(RequestCancelTransfer);
 }
 
 void EmuThread::receive() {
@@ -231,10 +228,6 @@ void EmuThread::send(const QStringList &list, int location) {
     m_vars = list;
     m_sendLoc = location;
     req(RequestSend);
-}
-
-void EmuThread::abort() {
-    req(RequestAbort);
 }
 
 void EmuThread::sendFiles() {

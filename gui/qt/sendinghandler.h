@@ -35,12 +35,11 @@ public slots:
     void linkProgress(int amount, int total);
     void resendPressed();
     void removeRow();
-    void cancelTransfer();
 
 signals:
     void send(const QStringList &names, int location);
     void loadEquateFile(const QString &path);
-    void cancelTransfers();
+    void cancelTransfer();
 
 private:
     void checkDirForEquateFiles(QString &dirPath);

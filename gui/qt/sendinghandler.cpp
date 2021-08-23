@@ -73,24 +73,12 @@ SendingHandler::SendingHandler(QObject *parent, QPushButton *cancelBtn, QProgres
     bar->setValue(0);
     bar->setVisible(false);
     m_btnCancelTransfer->setVisible(false);
-    m_btnCancelTransfer->setText(QObject::tr("Cancel"));
     m_iconSend.addPixmap(QPixmap(":/icons/resources/icons/variables.png"));
     m_iconCheck.addPixmap(QPixmap(":/icons/resources/icons/check.png"));
     m_btnCancelTransfer->setIcon(QIcon(QPixmap(":/icons/resources/icons/exit.png")));
     m_iconCheckGray.addPixmap(QPixmap(":/icons/resources/icons/checkgray.png"));
 
     connect(m_btnCancelTransfer, &QPushButton::clicked, this, &SendingHandler::cancelTransfer);
-}
-
-void SendingHandler::cancelTransfer() {
-    if (m_progressBar) {
-        m_progressBar->setVisible(false);
-        m_btnCancelTransfer->setVisible(false);
-        m_progressBar->setValue(0);
-    }
-    guiSend = false;
-
-    emit cancelTransfers();
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, int location) {
