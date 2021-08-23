@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define export __attribute__((visibility("default")))
+
 typedef enum cemucore_sig
 {
     CEMUCORE_SIG_DEV_CHANGED,
@@ -133,14 +135,16 @@ extern "C"
 
 typedef void (*cemucore_sig_handler_t)(cemucore_sig_t, void *);
 
-cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_sig_handler_t, void *);
-void cemucore_destroy(cemucore_t *);
+export cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_sig_handler_t, void *);
+export void cemucore_destroy(cemucore_t *);
 
-int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
-void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
+export int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
+export void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
 
-bool cemucore_sleep(cemucore_t *);
-bool cemucore_wake(cemucore_t *);
+export bool cemucore_sleep(cemucore_t *);
+export bool cemucore_wake(cemucore_t *);
+
+#undef export
 
 #ifdef __cplusplus
 }

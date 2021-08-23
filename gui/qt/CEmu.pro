@@ -20,7 +20,7 @@ if (!win32-msvc*)
 DEFINES += DEBUG_SUPPORT
 
 # Dependencies
-!defined(DEPLIBS, var) : DEPLIBS = STATIC
+!defined(DEPLIBS, var) : DEPLIBS = STATIC # SH
 
 QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
 cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
