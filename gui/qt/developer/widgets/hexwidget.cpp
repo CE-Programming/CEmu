@@ -129,21 +129,12 @@ int HexWidget::Pos::byteDiff(int off) const
     return qAbs(addr() - (off >> 1)) + 1;
 }
 
-auto HexWidget::Pos::atLineStart(int stride) const -> Pos
-{
-    return off(-(mOff % stride));
-}
-
-auto HexWidget::Pos::atLineEnd(int stride) const -> Pos
-{
-    return atLineStart(stride).off(stride - 1);
-}
-
 HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
     : QAbstractScrollArea{parent},
       mProp{prop},
-      mLastPos{len * 2 - 1},
+      mLastPos{(len << 1) - 1},
       mStride{32},
+      mOff{},
       mCharset{Charset::TIAscii},
       mTopLine{},
       mCurPos{Area::Data, {}},
@@ -159,7 +150,7 @@ HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
     {
         mTopLine = qBound(0, mTopLine + (amount - qBound(-2, amount, 2)) *
                           qMax(1, qAbs(amount) - 50),
-                          mLastPos / mStride - mVisibleLines + 2);
+                          (mLastPos + mOff) / mStride - mVisibleLines + 2);
         viewport()->update();
     });
 
@@ -178,12 +169,23 @@ CoreWrapper &HexWidget::core() const
 
 int HexWidget::bytesPerLine() const
 {
-    return mStride / 2;
+    return mStride >> 1;
 }
 
 void HexWidget::setBytesPerLine(int bytesPerLine)
 {
-    mStride = bytesPerLine * 2;
+    mStride = bytesPerLine << 1;
+    resizeEvent();
+}
+
+int HexWidget::byteOff() const
+{
+    return mOff >> 1;
+}
+
+void HexWidget::setByteOff(int byteOff)
+{
+    mOff = byteOff << 1;
     resizeEvent();
 }
 
@@ -215,7 +217,7 @@ void HexWidget::undo()
     }
     auto &entry = mUndoStack.at(mUndoPos);
     core().set(mProp, entry.mPos.addr(), entry.mBefore);
-    --mUndoPos;
+    mUndoPos -= 1;
     setCurPos(entry.mPos, false);
     if (entry.mBefore.length() > 1)
     {
@@ -229,7 +231,7 @@ void HexWidget::redo()
     {
         return;
     }
-    ++mUndoPos;
+    mUndoPos += 1;
     auto &entry = mUndoStack.at(mUndoPos);
     core().set(mProp, entry.mPos.addr(), entry.mAfter);
     setCurPos(entry.mPos, false);
@@ -419,6 +421,16 @@ char HexWidget::unicodeToChar(QChar c) const
     return c.toLatin1();
 }
 
+auto HexWidget::atLineStart(Pos pos) const -> Pos
+{
+    return pos.off(-((pos.off() + mOff) % mStride));
+}
+
+auto HexWidget::atLineEnd(Pos pos) const -> Pos
+{
+    return atLineStart(pos).off(mStride - 1);
+}
+
 QSize HexWidget::cellSize() const
 {
     const auto &metrics = fontMetrics();
@@ -428,7 +440,7 @@ QSize HexWidget::cellSize() const
 QRect HexWidget::posToCell(Pos pos) const
 {
     auto size = cellSize();
-    int x = pos.off() % mStride;
+    int visOff = pos.off() + mOff, x = visOff % mStride;
     switch (pos.area())
     {
         case Area::Addr:
@@ -441,7 +453,7 @@ QRect HexWidget::posToCell(Pos pos) const
             x = ((mStride * 3 + x) >> 1) + 8;
             break;
     }
-    return {{x * size.width() - (size.width() >> 1), pos.off() / mStride * size.height()}, size};
+    return {{x * size.width() - (size.width() >> 1), visOff / mStride * size.height()}, size};
 }
 
 auto HexWidget::absToPos(QPoint abs) const -> Pos
@@ -449,16 +461,16 @@ auto HexWidget::absToPos(QPoint abs) const -> Pos
     auto size = cellSize();
     int x = (abs.x() << 1) / size.width() + 1;
     int hexWidth = mStride * 3 >> 1;
-    int off = abs.y() / size.height() * mStride;
+    int visOff = abs.y() / size.height() * mStride - mOff;
     if (mCharset != Charset::None && x >> 1 >= hexWidth + 8 && x >> 1 < (mStride << 1) + 8)
     {
-        return {Area::Char, off + x - (hexWidth << 1) - 16};
+        return {Area::Char, visOff + x - (hexWidth << 1) - 16};
     }
     if (x >= 15 && x < (hexWidth << 1) + 15)
     {
-        return {Area::Data, off + x / 3 - 5};
+        return {Area::Data, visOff + x / 3 - 5};
     }
-    return {Area::Addr, off};
+    return {Area::Addr, visOff};
 }
 
 auto HexWidget::locToPos(QPoint loc) const -> Pos
@@ -478,7 +490,7 @@ void HexWidget::setCurPos(Pos pos, bool select)
     {
         copy(true);
     }
-    int line = mSelEnd / mStride;
+    int line = (mSelEnd + mOff) / mStride;
     mTopLine = qBound(line - mVisibleLines + 2, mTopLine, line);
     auto cell = posToCell({mCurPos.area(), mSelEnd});
     auto *hBar = horizontalScrollBar();
@@ -534,6 +546,8 @@ void HexWidget::overwriteNibble(Pos pos, int digit)
 
 void HexWidget::resizeEvent(QResizeEvent *)
 {
+    mStride = qMax(1, mStride);
+    mOff = qBound(0, mOff, mStride - 1);
     auto cell = posToCell({mCharset == Charset::None ? Area::Data : Area::Char, mStride - 1});
     const auto *view = viewport();
     int viewWidth = view->width(), viewHeight = view->height();
@@ -541,7 +555,7 @@ void HexWidget::resizeEvent(QResizeEvent *)
     hBar->setRange(0, cell.right() + (cell.width() >> 1) - viewWidth);
     hBar->setPageStep(viewWidth);
     mVisibleLines = (viewHeight + cell.height() - 1) / cell.height();
-    mTopLine = qBound(0, mTopLine, mLastPos / mStride - mVisibleLines + 2);
+    mTopLine = qBound(0, mTopLine, (mLastPos + mOff) / mStride - mVisibleLines + 2);
     viewport()->update();
 }
 
@@ -578,11 +592,11 @@ void HexWidget::keyPressEvent(QKeyEvent *event)
     }
     else if (event->matches(QKeySequence::MoveToStartOfLine))
     {
-        setCurPos(mCurPos.atLineStart(mStride), false);
+        setCurPos(atLineStart(mCurPos), false);
     }
     else if (event->matches(QKeySequence::MoveToEndOfLine))
     {
-        setCurPos(mCurPos.atLineEnd(mStride).withHigh(mCurPos.isChar()), false);
+        setCurPos(atLineEnd(mCurPos).withHigh(mCurPos.isChar()), false);
     }
     else if (event->matches(QKeySequence::MoveToPreviousPage))
     {
@@ -630,11 +644,11 @@ void HexWidget::keyPressEvent(QKeyEvent *event)
     }
     else if (event->matches(QKeySequence::SelectStartOfLine))
     {
-        setCurPos(mCurPos.withOff(mSelEnd).atLineStart(mStride), true);
+        setCurPos(atLineStart(mCurPos.withOff(mSelEnd)), true);
     }
     else if (event->matches(QKeySequence::SelectEndOfLine))
     {
-        setCurPos(mCurPos.withOff(mSelEnd).atLineEnd(mStride).withHigh(mCurPos.isChar()), true);
+        setCurPos(atLineEnd(mCurPos.withOff(mSelEnd)).withHigh(mCurPos.isChar()), true);
     }
     else if (event->matches(QKeySequence::SelectPreviousPage))
     {
@@ -774,7 +788,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
 
     const auto drawSep = [&](Area area)
     {
-        auto cell = posToCell({area, 0});
+        auto cell = posToCell({area, mStride - mOff});
         auto x = cell.x() - (cell.width() >> 1);
         painter.drawLine(x, region.top(), x, region.bottom() + 1);
     };
@@ -811,7 +825,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
         }
         else
         {
-            auto rightPos = minPos.atLineEnd(mStride), leftPos = maxPos.atLineStart(mStride);
+            auto rightPos = atLineEnd(minPos), leftPos = atLineStart(maxPos);
             painter.fillRect(min | posToCell(rightPos), highlight);
             if (min.bottom() + 1 < max.top())
             {
@@ -821,25 +835,29 @@ void HexWidget::paintEvent(QPaintEvent *event)
         }
     }
 
-    auto data = core().get(mProp, mTopLine * mStride >> 1,
-                           qMin(mVisibleLines * mStride, mLastPos + 1 - mTopLine * mStride) >> 1);
+    int pos = mTopLine * mStride - mOff, startPos = qMax(0, pos);
+    auto data = core().get(mProp, startPos >> 1,
+                           qMin(mVisibleLines * mStride,
+                                mLastPos + 1 - startPos) >> 1);
     auto hex = QString::fromLatin1(data.toHex().toUpper());
-    int pos = mTopLine * mStride;
-    for (int line = 0, linePos = 0; line < mVisibleLines && linePos < hex.length();
-         ++line, linePos += mStride)
+    for (int line = 0, linePos = 0, startIndex = 0, startCol = mTopLine ? 0 : mOff;
+         line < mVisibleLines && startIndex < hex.length();
+         line += 1, linePos += mStride, startIndex += mStride - startCol, startCol = 0)
     {
         drawText({Area::Addr, pos + linePos}, QStringLiteral("%1")
-                 .arg(QString::number((pos + linePos) >> 1, 16).toUpper(), 6, QLatin1Char{'0'}));
-        for (int colPos = 0; colPos < mStride && linePos + colPos < hex.length(); ++colPos)
+                 .arg(QString::number(qMax(0, pos + linePos) >> 1, 16).toUpper(), 6, QLatin1Char{'0'}));
+        for (int colPos = startCol, index = startIndex;
+             colPos < mStride && index < hex.length(); colPos += 1, index += 1)
         {
-            drawText({Area::Data, pos + linePos + colPos}, hex.mid(linePos + colPos, 1));
+            drawText({Area::Data, pos + linePos + colPos}, hex.mid(index, 1));
         }
         if (mCharset != Charset::None)
         {
-            for (int colPos = 0; colPos < mStride && linePos + colPos < hex.length(); colPos += 2)
+            for (int colPos = startCol, index = startIndex >> 1;
+                 colPos < mStride && index < data.length(); colPos += 2, index += 1)
             {
                 drawText({Area::Char, pos + linePos + colPos},
-                         {1, charToUnicode(data.at((linePos + colPos) >> 1))});
+                         {1, charToUnicode(data.at(index))});
             }
         }
     }

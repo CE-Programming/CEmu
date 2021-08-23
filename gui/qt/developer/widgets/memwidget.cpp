@@ -71,15 +71,38 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     mView = new HexWidget{this, prop, len};
 
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
+    QSpinBox *spnNumBytes = new QSpinBox;
+    QLabel *lblByteOff = new QLabel(tr("Byte offset") + ':');
+    QSpinBox *spnByteOff = new QSpinBox;
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
     QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
     mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QString());
-    QSpinBox *spnNumBytes = new QSpinBox;
+
+    QHBoxLayout *hboxBtns = new QHBoxLayout;
+    hboxBtns->addWidget(mEdtAddr);
+    hboxBtns->addWidget(btnGoto);
+    hboxBtns->addWidget(btnSearch);
+
+    QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
+    hboxBtmBtns->addWidget(lblNumBytes);
+    hboxBtmBtns->addWidget(spnNumBytes);
+    hboxBtmBtns->addWidget(lblByteOff);
+    hboxBtmBtns->addWidget(spnByteOff);
+    hboxBtmBtns->addStretch();
+    hboxBtmBtns->addWidget(mBtnCharset);
+
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->addLayout(hboxBtns);
+    vLayout->addWidget(mView);
+    vLayout->addLayout(hboxBtmBtns);
+    setLayout(vLayout);
+
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     spnNumBytes->setMinimum(1);
     spnNumBytes->setMaximum(256);
     spnNumBytes->setValue(mView->bytesPerLine());
-
+    spnByteOff->setMaximum(spnNumBytes->value() - 1);
     switch (mView->charset())
     {
         case HexWidget::Charset::Ascii:
@@ -93,27 +116,13 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
             break;
     }
 
-    QHBoxLayout *hboxBtns = new QHBoxLayout;
-    hboxBtns->addWidget(mEdtAddr);
-    hboxBtns->addWidget(btnGoto);
-    hboxBtns->addWidget(btnSearch);
-
-    QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
-    hboxBtmBtns->addWidget(lblNumBytes);
-    hboxBtmBtns->addWidget(spnNumBytes);
-    hboxBtmBtns->addStretch();
-    hboxBtmBtns->addWidget(mBtnCharset);
-
-    QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addLayout(hboxBtns);
-    vLayout->addWidget(mView);
-    vLayout->addLayout(hboxBtmBtns);
-    setLayout(vLayout);
-
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
     connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSearchDialog);
-    connect(spnNumBytes, QOverload<int>::of(&QSpinBox::valueChanged), mView, &HexWidget::setBytesPerLine);
+    connect(spnNumBytes, QOverload<int>::of(&QSpinBox::valueChanged), [this, spnByteOff](int value)
+    {
+        mView->setBytesPerLine(value);
+        spnByteOff->setMaximum(value - 1);
+    });
+    connect(spnByteOff, QOverload<int>::of(&QSpinBox::valueChanged), mView, &HexWidget::setByteOff);
     connect(mBtnCharset, &QPushButton::clicked, this, &MemWidget::selectCharset);
 
     connect(btnGoto, &QPushButton::clicked, [this]

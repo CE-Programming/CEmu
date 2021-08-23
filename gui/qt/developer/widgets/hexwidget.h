@@ -75,8 +75,6 @@ class HexWidget : public QAbstractScrollArea
         Pos off(int off) const;
         Pos byteOff(int byteOff) const;
         int byteDiff(int off) const;
-        Pos atLineStart(int stride) const;
-        Pos atLineEnd(int stride) const;
 
     private:
         Area mArea;
@@ -104,6 +102,8 @@ public:
 
     int bytesPerLine() const;
     void setBytesPerLine(int bytesPerLine);
+    int byteOff() const;
+    void setByteOff(int byteOff);
     Charset charset() const;
     void setCharset(Charset charset);
 
@@ -121,6 +121,8 @@ private:
     QChar charToUnicode(char c) const;
     char unicodeToChar(QChar c) const;
 
+    Pos atLineStart(Pos pos) const;
+    Pos atLineEnd(Pos pos) const;
     QSize cellSize() const;
     QRect posToCell(Pos pos) const;
     Pos absToPos(QPoint abs) const;
@@ -140,7 +142,7 @@ private:
     void paintEvent(QPaintEvent *event) override;
 
     cemucore::prop mProp;
-    int mLastPos, mStride;
+    int mLastPos, mStride, mOff;
     Charset mCharset;
 
     int mTopLine, mVisibleLines;
