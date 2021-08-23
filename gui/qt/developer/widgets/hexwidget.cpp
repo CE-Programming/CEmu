@@ -157,7 +157,8 @@ HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
     vBar->setRange(-100, 100);
     connect(new SliderPanner{vBar}, &SliderPanner::panBy, [this](int amount)
     {
-        mTopLine = qBound(0, mTopLine + amount * qMax(1, qAbs(amount) - 50),
+        mTopLine = qBound(0, mTopLine + (amount - qBound(-2, amount, 2)) *
+                          qMax(1, qAbs(amount) - 50),
                           mLastPos / mStride - mVisibleLines + 2);
         viewport()->update();
     });
