@@ -484,7 +484,7 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
     }
 }
 
-int cemucore_command(cemucore_t *core, const char *const *args)
+static int do_command(cemucore_t *core, const char *const *args)
 {
     if (!args[0])
     {
@@ -627,6 +627,14 @@ int cemucore_command(cemucore_t *core, const char *const *args)
         return EINVAL;
     }
     return EINVAL;
+}
+
+int cemucore_command(cemucore_t *core, const char *const *args)
+{
+    sync_enter(&core->sync);
+    int error = do_command(core, args);
+    sync_leave(&core->sync);
+    return error;
 }
 
 bool cemucore_sleep(cemucore_t *core)
