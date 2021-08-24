@@ -113,7 +113,7 @@ int CoreWrapper::command(const QStringList &args)
         utf8Args << utf8Storage.back().constData();
     }
     utf8Args << nullptr;
-    return cemucore::cemucore_command(utf8Args.constData());
+    return cemucore::cemucore_command(mCore, utf8Args.constData());
 }
 
 void CoreWrapper::signalHandler(cemucore::sig sig)

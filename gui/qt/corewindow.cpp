@@ -132,6 +132,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 
     connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
 
+    mCalcWidget->setColor(Settings::intOption(Settings::KeypadColor));
+
     resetEmu();
 }
 
@@ -304,33 +306,14 @@ void CoreWindow::exportRom()
         const QString romFile = dialog.selectedFiles().first();
         if (!romFile.isEmpty())
         {
-            // temporary for testing
-            QFile file(romFile);
-            file.open(QIODevice::WriteOnly);
-            file.putChar('R');
-            file.close();
+            mCore.command({"store", "rom", romFile});
         }
     }
 }
 
 void CoreWindow::resetEmu()
 {
-    int keycolor = Settings::intOption(Settings::KeypadColor);
-
-    // holds the path to the rom file to load into the emulator
-    //Settings::textOption(Settings::RomFile);
-
-    if (true)
-    {
-
-        mCalcWidget->setColor(keycolor);
-        mCalcOverlay->setVisible(false);
-    }
-    else
-    {
-        mCalcWidget->setColor(keycolor);
-        mCalcOverlay->setVisible(true);
-    }
+    mCalcOverlay->setVisible(mCore.command({"load", "rom", Settings::textOption(Settings::RomFile)}));
 }
 
 void CoreWindow::showPreferences()

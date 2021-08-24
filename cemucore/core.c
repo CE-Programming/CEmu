@@ -16,8 +16,12 @@
 
 #include "core.h"
 
+#include "os.h"
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 void core_sig(cemucore_t *core, cemucore_sig_t sig)
@@ -478,6 +482,151 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
             sync_leave(&core->sync);
             break;
     }
+}
+
+int cemucore_command(cemucore_t *core, const char *const *args)
+{
+    if (!args[0])
+    {
+        return EINVAL;
+    }
+    if (!strcmp(args[0], "load"))
+    {
+        if (!args[1] || !args[2])
+        {
+            return EINVAL;
+        }
+        if (!strcmp(args[1], "rom"))
+        {
+            FILE *file = fopen_utf8(args[2], "rb");
+            if (!file)
+            {
+                goto load_rom_return;
+            }
+            if (fseek(file, 0, SEEK_END))
+            {
+                goto load_rom_close_file;
+            }
+            long size = ftell(file);
+            if (size < 0)
+            {
+                goto load_rom_close_file;
+            }
+            if (!size || (size & (size - 1)) || size > MEMORY_MAX_FLASH_SIZE)
+            {
+                errno = EINVAL;
+                goto load_rom_close_file;
+            }
+            if (size != core->memory.flash_size)
+            {
+                core->memory.flash_size = size;
+                void *flash = realloc(core->memory.flash, core->memory.flash_size);
+                if (!flash)
+                {
+                    goto load_rom_close_file;
+                }
+                core->memory.flash = flash;
+            }
+            memset(core->memory.flash, 0xFF, core->memory.flash_size);
+            if (fseek(file, 0, SEEK_SET) ||
+                fread(core->memory.flash, core->memory.flash_size, 1, file) != 1)
+            {
+                goto load_rom_close_file;
+            }
+            // TODO: reset emu
+            errno = 0;
+        load_rom_close_file:
+            fclose(file);
+            file = NULL;
+        load_rom_return:
+            return errno;
+        }
+        if (!strcmp(args[1], "ram"))
+        {
+            FILE *file = fopen_utf8(args[2], "rb");
+            if (!file)
+            {
+                goto load_ram_return;
+            }
+            if (fseek(file, 0, SEEK_END))
+            {
+                goto load_ram_close_file;
+            }
+            long size = ftell(file);
+            if (size < 0)
+            {
+                goto load_ram_close_file;
+            }
+            if (size != MEMORY_RAM_SIZE)
+            {
+                errno = EINVAL;
+                goto load_ram_close_file;
+            }
+            memset(core->memory.ram, 0x00, MEMORY_RAM_SIZE);
+            if (fseek(file, 0, SEEK_SET) ||
+                fread(core->memory.ram, MEMORY_RAM_SIZE, 1, file) != 1)
+            {
+                goto load_ram_close_file;
+            }
+            // TODO: reset emu
+            errno = 0;
+        load_ram_close_file:
+            fclose(file);
+            file = NULL;
+        load_ram_return:
+            return errno;
+        }
+        return EINVAL;
+    }
+    if (!strcmp(args[0], "store"))
+    {
+        if (!args[1] || !args[2])
+        {
+            return EINVAL;
+        }
+        if (!strcmp(args[1], "rom"))
+        {
+            FILE *file = fopen_utf8(args[2], "wb");
+            if (!file)
+            {
+                goto store_rom_return;
+            }
+            if (fseek(file, 0, SEEK_END))
+            {
+                goto store_rom_close_file;
+            }
+            if (fwrite(core->memory.flash, core->memory.flash_size, 1, file) != 1)
+            {
+                goto store_rom_close_file;
+            }
+            errno = 0;
+        store_rom_close_file:
+            fclose(file);
+            file = NULL;
+        store_rom_return:
+            return errno;
+        }
+        if (!strcmp(args[1], "ram"))
+        {
+            FILE *file = fopen_utf8(args[2], "wb");
+            if (!file)
+            {
+                goto store_ram_return;
+            }
+            if (fwrite(core->memory.ram, MEMORY_RAM_SIZE, 1, file) != 1)
+            {
+                goto store_ram_close_file;
+            }
+            errno = 0;
+        store_ram_close_file:
+            fclose(file);
+            file = NULL;
+        store_ram_return:
+            return errno;
+        }
+        return EINVAL;
+    }
+    return EINVAL;
 }
 
 bool cemucore_sleep(cemucore_t *core)

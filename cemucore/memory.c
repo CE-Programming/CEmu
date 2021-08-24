@@ -17,12 +17,15 @@
 #include "memory.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 bool memory_init(memory_t *memory)
 {
-    if (memory && (memory->flash = calloc(0x400000, sizeof(uint8_t))))
+    memory->flash_size = MEMORY_DEFAULT_FLASH_SIZE;
+    if (memory && (memory->flash = malloc(memory->flash_size)))
     {
-        if ((memory->ram = calloc(0x65800, sizeof(uint8_t))))
+        memset(memory->flash, 0xFF, memory->flash_size);
+        if ((memory->ram = calloc(MEMORY_RAM_SIZE, sizeof(uint8_t))))
         {
 #ifdef CEMUCORE_NODEBUG
             return true;

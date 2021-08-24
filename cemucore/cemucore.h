@@ -152,7 +152,7 @@ export void cemucore_destroy(cemucore_t *);
 
 export int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
 export void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
-export int cemucore_command(const char *const *);
+export int cemucore_command(cemucore_t *, const char *const *);
 
 export bool cemucore_sleep(cemucore_t *);
 export bool cemucore_wake(cemucore_t *);

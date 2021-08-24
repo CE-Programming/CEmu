@@ -60,13 +60,16 @@ HEADERS += \
 	core.h \
 	cpu.h \
 	memory.h \
+	os.h \
 	scheduler.h \
-	sync.h
+	sync.h \
+	usb/usb.h
 
 SOURCES += \
 	core.c \
 	cpu.c \
 	memory.c \
+	os.c \
 	scheduler.c \
 	sync.c
 

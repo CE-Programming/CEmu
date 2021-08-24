@@ -14,26 +14,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_MEMORY_H
-#define CEMUCORE_MEMORY_H
+#ifndef CEMUCORE_OS_H
+#define CEMUCORE_OS_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdio.h>
 
-#define MEMORY_DEFAULT_FLASH_SIZE  0x400000
-#define MEMORY_MAX_FLASH_SIZE     0x1000000
-#define MEMORY_RAM_SIZE             0x65800
-
-typedef struct memory
-{
-    uint32_t flash_size;
-    uint8_t *flash, *ram;
-#ifndef CEMUCORE_NODEBUG
-    uint8_t *debug;
-#endif
-} memory_t;
-
-bool memory_init(memory_t *memory);
-void memory_destroy(memory_t *memory);
+FILE *fopen_utf8(const char *name, const char *mode);
 
 #endif
