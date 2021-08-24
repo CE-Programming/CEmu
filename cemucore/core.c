@@ -631,6 +631,10 @@ static int do_command(cemucore_t *core, const char *const *args)
 
 int cemucore_command(cemucore_t *core, const char *const *args)
 {
+    if (!core)
+    {
+        return EINVAL;
+    }
     sync_enter(&core->sync);
     int error = do_command(core, args);
     sync_leave(&core->sync);
