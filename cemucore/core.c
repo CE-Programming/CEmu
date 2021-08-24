@@ -166,6 +166,15 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
                 case CEMUCORE_PROP_DEV:
                     val = core->dev;
                     break;
+                case CEMUCORE_PROP_TRANSFER:
+                    switch (addr)
+                    {
+                        case CEMUCORE_TRANSFER_TOTAL:     val = core->usb.total;     break;
+                        case CEMUCORE_TRANSFER_PROGRESS:  val = core->usb.progress;  break;
+                        case CEMUCORE_TRANSFER_REMAINING: val = core->usb.remaining; break;
+                        case CEMUCORE_TRANSFER_ERROR:     val = core->usb.error;     break;
+                    }
+                    break;
                 case CEMUCORE_PROP_REG:
                     switch (addr)
                     {

@@ -20,6 +20,7 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
+#include <QtCore/QStringList>
 
 namespace cemucore
 {
@@ -33,6 +34,8 @@ namespace cemucore
     Q_ENUM_NS(prop)
     using dev          = cemucore_dev;
     Q_ENUM_NS(dev)
+    using transfer     = cemucore_transfer;
+    Q_ENUM_NS(transfer)
     using reg          = cemucore_reg;
     Q_ENUM_NS(reg)
     using dbg_flags    = cemucore_dbg_flags;
@@ -64,9 +67,13 @@ public:
     QByteArray get(cemucore::prop prop, qint32 addr, qint32 len) const;
     void set(cemucore::prop prop, qint32 addr, qint32 val);
     void set(cemucore::prop prop, qint32 addr, const QByteArray &data);
+    int command(const QStringList &args);
 
 signals:
-    void devChanged(cemucore::dev);
+    void devChanged(cemucore::dev dev);
+    void transferTotal(int total);
+    void transferProgress(int progress);
+    void transferComplete(int remaining, int error);
     void lcdFrame();
     void softCmd();
 

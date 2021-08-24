@@ -14,40 +14,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_CORE_H
-#define CEMUCORE_CORE_H
+#ifndef CEMUCORE_USB_H
+#define CEMUCORE_USB_H
 
-#include "cemucore.h"
-
-#include "cpu.h"
-#include "keypad.h"
-#include "memory.h"
-#include "scheduler.h"
-#include "usb/usb.h"
-
-#ifndef CEMUCORE_NOTHREADS
-# include "sync.h"
-
-# include <pthread.h>
-# include <stdatomic.h>
-#endif
-
-struct cemucore
+typedef struct usb
 {
-#ifndef CEMUCORE_NOTHREADS
-    pthread_t thread;
-    sync_t sync;
-#endif
-    cemucore_sig_handler_t sig_handler;
-    void *sig_handler_data;
-    cemucore_dev_t dev;
-    scheduler_t scheduler;
-    cpu_t cpu;
-    memory_t memory;
-    keypad_t keypad;
-    usb_t usb;
-};
-
-void core_sig(cemucore_t *core, cemucore_sig_t sig);
+    int total, progress, remaining, error;
+} usb_t;
 
 #endif

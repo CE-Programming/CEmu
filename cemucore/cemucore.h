@@ -25,6 +25,9 @@
 typedef enum cemucore_sig
 {
     CEMUCORE_SIG_DEV_CHANGED,
+    CEMUCORE_SIG_TRANSFER_TOTAL,
+    CEMUCORE_SIG_TRANSFER_PROGRESS,
+    CEMUCORE_SIG_TRANSFER_COMPLETE,
     CEMUCORE_SIG_LCD_FRAME,
     CEMUCORE_SIG_SOFT_CMD,
 } cemucore_sig_t;
@@ -53,6 +56,7 @@ typedef enum cemucore_prop
     CEMUCORE_PROP_PORT_DEBUG_FLAGS,
 #endif
     CEMUCORE_PROP_GPIO_ENABLE,
+    CEMUCORE_PROP_TRANSFER,
 } cemucore_prop_t;
 
 typedef enum cemucore_dev
@@ -64,6 +68,14 @@ typedef enum cemucore_dev
     CEMUCORE_DEV_TI84PCET,
     CEMUCORE_DEV_TI84PCETPE,
 } cemucore_dev_t;
+
+typedef enum cemucore_transfer
+{
+    CEMUCORE_TRANSFER_TOTAL,
+    CEMUCORE_TRANSFER_PROGRESS,
+    CEMUCORE_TRANSFER_REMAINING,
+    CEMUCORE_TRANSFER_ERROR,
+} cemucore_transfer_t;
 
 typedef enum cemucore_reg
 {
@@ -140,6 +152,7 @@ export void cemucore_destroy(cemucore_t *);
 
 export int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
 export void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
+export int cemucore_command(const char *const *);
 
 export bool cemucore_sleep(cemucore_t *);
 export bool cemucore_wake(cemucore_t *);

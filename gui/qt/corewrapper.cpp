@@ -16,6 +16,8 @@
 
 #include "corewrapper.h"
 
+#include <QtCore/QVarLengthArray>
+
 CoreWrapper::ScopedLock::~ScopedLock()
 {
     void(cemucore::cemucore_wake(mCore));
@@ -100,12 +102,40 @@ void CoreWrapper::set(cemucore::prop prop, qint32 addr, const QByteArray &data)
     }
 }
 
+int CoreWrapper::command(const QStringList &args)
+{
+    QVarLengthArray<QByteArray, 8> utf8Storage;
+    QVarLengthArray<const char *, 8> utf8Args;
+    utf8Storage.reserve(args.size());
+    utf8Args.reserve(args.size() + 1);
+    foreach (const QString &arg, args) {
+        utf8Storage << arg.toUtf8();
+        utf8Args << utf8Storage.back().constData();
+    }
+    utf8Args << nullptr;
+    return cemucore::cemucore_command(utf8Args.constData());
+}
+
 void CoreWrapper::signalHandler(cemucore::sig sig)
 {
     switch (sig)
     {
     case cemucore::CEMUCORE_SIG_DEV_CHANGED:
         emit devChanged(cemucore::dev(get(cemucore::CEMUCORE_PROP_DEV, 0)));
+        break;
+    case cemucore::CEMUCORE_SIG_TRANSFER_TOTAL:
+        emit transferTotal(get(cemucore::CEMUCORE_PROP_TRANSFER,
+                               cemucore::CEMUCORE_TRANSFER_TOTAL));
+        break;
+    case cemucore::CEMUCORE_SIG_TRANSFER_PROGRESS:
+        emit transferProgress(get(cemucore::CEMUCORE_PROP_TRANSFER,
+                                  cemucore::CEMUCORE_TRANSFER_PROGRESS));
+        break;
+    case cemucore::CEMUCORE_SIG_TRANSFER_COMPLETE:
+        emit transferComplete(get(cemucore::CEMUCORE_PROP_TRANSFER,
+                                  cemucore::CEMUCORE_TRANSFER_REMAINING),
+                              get(cemucore::CEMUCORE_PROP_TRANSFER,
+                                  cemucore::CEMUCORE_TRANSFER_ERROR));
         break;
     case cemucore::CEMUCORE_SIG_LCD_FRAME:
         emit lcdFrame();

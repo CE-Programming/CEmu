@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_MEM_H
-#define CEMUCORE_MEM_H
+#ifndef CEMUCORE_MEMORY_H
+#define CEMUCORE_MEMORY_H
 
 #include <stdbool.h>
 #include <stdint.h>
