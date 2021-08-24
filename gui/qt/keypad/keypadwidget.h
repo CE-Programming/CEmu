@@ -56,7 +56,6 @@ public:
 
 signals:
     void keyPressed(const QString& key);
-    void resized(QSize size);
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press);

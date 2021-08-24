@@ -377,13 +377,13 @@ KeypadWidget::~KeypadWidget()
 
 void KeypadWidget::resizeEvent(QResizeEvent *event)
 {
-    QSize size{sBaseRect.size().scaled(event->size(), Qt::KeepAspectRatio)},
-        origin{(event->size() - size) / 2};
-    mTransform.setMatrix(static_cast<qreal>(size.width()) / sBaseRect.width(), 0, 0, 0,
-                         static_cast<qreal>(size.height()) / sBaseRect.height(), 0,
-                         origin.width(), 0, 1);
+    const QSize &newSize = event->size();
+    qreal scale = qMin(qreal(newSize.width()) / sBaseRect.width(),
+                       qreal(newSize.height()) / sBaseRect.height());
+    mTransform.reset();
+    mTransform.translate(qMax(0.0, 0.5 * (newSize.width() - sBaseRect.width() * scale)), 0);
+    mTransform.scale(scale, scale);
     mInverseTransform = mTransform.inverted();
-    emit resized(size);
 }
 
 void KeypadWidget::paintEvent(QPaintEvent *event)
