@@ -105,7 +105,7 @@ void CoreWrapper::set(cemucore::prop prop, qint32 addr, const QByteArray &data)
 int CoreWrapper::command(const QStringList &args)
 {
     QVarLengthArray<QByteArray, 8> utf8Storage;
-    QVarLengthArray<const char *, 8> utf8Args;
+    QVarLengthArray<const char *, 9> utf8Args;
     utf8Storage.reserve(args.size());
     utf8Args.reserve(args.size() + 1);
     foreach (const QString &arg, args) {
