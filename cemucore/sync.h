@@ -19,8 +19,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
-struct timespec;
 #include <pthread.h>
 #include <stdatomic.h>
 
@@ -34,6 +34,7 @@ typedef enum sync_cond
 
 typedef struct sync
 {
+    clockid_t clock;
     pthread_mutex_t mutex;
     pthread_cond_t cond[SYNC_COND_COUNT];
     _Atomic uint32_t state;

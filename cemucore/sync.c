@@ -20,7 +20,6 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <time.h>
 
 enum { NSEC_PER_SEC = 1000000000 };
 void timespec_add(struct timespec *res, const struct timespec *lhs, const struct timespec *rhs)
@@ -49,10 +48,20 @@ typedef enum sync_state
 bool sync_init(sync_t *sync)
 {
     pthread_condattr_t condattr;
-    if (unlikely(pthread_condattr_init(&condattr) ||
-                 pthread_condattr_setclock(&condattr, CLOCK_MONOTONIC) ||
-                 pthread_mutex_init(&sync->mutex, NULL)))
+    if (unlikely(pthread_condattr_init(&condattr)))
     {
+        return false;
+    }
+    sync->clock = CLOCK_MONOTONIC;
+    int error = pthread_condattr_setclock(&condattr, sync->clock);
+    if (unlikely(error == EINVAL))
+    {
+        sync->clock = CLOCK_REALTIME;
+        error = pthread_condattr_setclock(&condattr, sync->clock);
+    }
+    if (unlikely(error || pthread_mutex_init(&sync->mutex, NULL)))
+    {
+        (void)pthread_condattr_destroy(&condattr);
         return false;
     }
     for (int i = 0; i != SYNC_COND_COUNT; ++i)
@@ -61,9 +70,10 @@ bool sync_init(sync_t *sync)
         {
             while (i)
             {
-                pthread_cond_destroy(&sync->cond[--i]);
+                (void)pthread_cond_destroy(&sync->cond[--i]);
             }
-            pthread_mutex_destroy(&sync->mutex);
+            (void)pthread_mutex_destroy(&sync->mutex);
+            (void)pthread_condattr_destroy(&condattr);
             return false;
         }
     }
@@ -143,7 +153,7 @@ bool sync_loop(sync_t *sync)
 bool sync_delay(sync_t *sync, const struct timespec *delay)
 {
     struct timespec abstime;
-    if (unlikely(clock_gettime(CLOCK_MONOTONIC, &abstime)))
+    if (unlikely(clock_gettime(sync->clock, &abstime)))
     {
         abort();
     }
