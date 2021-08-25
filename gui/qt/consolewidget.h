@@ -34,7 +34,8 @@ class InputThread : public QThread
     Q_OBJECT
 
 public:
-    explicit InputThread(QObject *parent = nullptr) : QThread{parent} {}
+    explicit InputThread(QObject *parent = nullptr);
+    ~InputThread() override;
 
 signals:
     void inputLine(const QString &line);

@@ -42,13 +42,26 @@ namespace readline
 }
 #endif
 
-void InputThread::run()
+InputThread::InputThread(QObject *parent)
+    : QThread{parent}
 {
 #ifdef HAS_READLINE
     readline::rl_initialize();
     readline::rl_prep_terminal(true);
-    std::atexit(&readline::rl_deprep_terminal);
-#else
+#endif
+    start();
+}
+
+InputThread::~InputThread()
+{
+#ifdef HAS_READLINE
+    readline::rl_deprep_terminal();
+#endif
+}
+
+void InputThread::run()
+{
+#ifndef HAS_READLINE
     QFile inputFile;
     if (!inputFile.open(stdin, QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -57,7 +70,7 @@ void InputThread::run()
 #endif
     while (!isInterruptionRequested())
     {
-        // FIXME: blocking call means thread can't be stopped so it leaks.
+        // FIXME: blocking calls means thread can't be stopped so it leaks.
 #ifdef HAS_READLINE
         char *line = readline::readline(nullptr);
         if (!line)
@@ -120,9 +133,8 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
         processInputLine(inputLine->text());
         inputLine->clear();
     });
-    InputThread *inputThread = new InputThread;
-    connect(inputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
-    inputThread->start();
+    static InputThread sInputThread;
+    connect(&sInputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
 
     connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
