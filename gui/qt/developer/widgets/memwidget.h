@@ -28,6 +28,7 @@ class DockWidget;
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
+class QGroupBox;
 class QLineEdit;
 class QPushButton;
 QT_END_NAMESPACE
@@ -48,14 +49,18 @@ public:
     explicit MemWidget(DockedWidget *dockedWidget, Area area = Area::Mem);
     DockedWidget *dockedWidget() const;
 
-private:
-    void showSearchDialog();
+private slots:
+    void showSearchGroup();
     void selectCharset();
     void selectArea();
+    void selectSearchType();
 
+private:
     DockedWidget *mDockedWidget;
     QPushButton *mBtnCharset;
     QPushButton *mBtnArea;
+    QPushButton *mBtnSearch;
+    QPushButton *mBtnSearchType;
     HexWidget *mView;
     QString mSearch;
     QLineEdit *mEdtAddr;
@@ -66,6 +71,9 @@ private:
     QString mAreaFlashText;
     QString mAreaMemoryText;
     QString mAreaPortsText;
+    QString mSearchHexText;
+    QString mSearchAsciiText;
+    QGroupBox *mGrpSearch;
     bool mSearchHex;
 };
 

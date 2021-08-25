@@ -46,6 +46,8 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
       mAreaFlashText{tr("Flash")},
       mAreaMemoryText{tr("Memory")},
       mAreaPortsText{tr("Ports")},
+      mSearchHexText{tr("Hex")},
+      mSearchAsciiText{tr("ASCII")},
       mSearchHex{true}
 {
     mEdtAddr = new QLineEdit;
@@ -86,12 +88,12 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     QLabel *lblByteOff = new QLabel(tr("Byte offset") + ':');
     QSpinBox *spnByteOff = new QSpinBox;
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
-    QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
+    mBtnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
 
     QHBoxLayout *hboxBtns = new QHBoxLayout;
     hboxBtns->addWidget(mEdtAddr);
     hboxBtns->addWidget(btnGoto);
-    hboxBtns->addWidget(btnSearch);
+    hboxBtns->addWidget(mBtnSearch);
     hboxBtns->addWidget(mBtnArea);
 
     QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
@@ -102,8 +104,26 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     hboxBtmBtns->addStretch();
     hboxBtmBtns->addWidget(mBtnCharset);
 
+    QLineEdit *edtSearch = new QLineEdit(mSearch);
+    QPushButton *btnNext = new QPushButton(tr("Next"));
+    QPushButton *btnPrev = new QPushButton(tr("Previous"));
+
+    mBtnSearchType = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), mSearchHexText);
+    mBtnSearch->setCheckable(true);
+
+    QHBoxLayout *searchLayout = new QHBoxLayout;
+    searchLayout->addWidget(edtSearch);
+    searchLayout->addWidget(btnNext);
+    searchLayout->addWidget(btnPrev);
+    searchLayout->addWidget(mBtnSearchType);
+
+    mGrpSearch = new QGroupBox;
+    mGrpSearch->setLayout(searchLayout);
+    mGrpSearch->setVisible(false);
+
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addLayout(hboxBtns);
+    vLayout->addWidget(mGrpSearch);
     vLayout->addWidget(mView);
     vLayout->addLayout(hboxBtmBtns);
     setLayout(vLayout);
@@ -127,7 +147,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
             break;
     }
 
-    connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSearchDialog);
+    connect(mBtnSearch, &QPushButton::clicked, this, &MemWidget::showSearchGroup);
     connect(spnNumBytes, QOverload<int>::of(&QSpinBox::valueChanged), [this, spnByteOff](int value)
     {
         mView->setBytesPerLine(value);
@@ -136,6 +156,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     connect(spnByteOff, QOverload<int>::of(&QSpinBox::valueChanged), mView, &HexWidget::setByteOff);
     connect(mBtnCharset, &QPushButton::clicked, this, &MemWidget::selectCharset);
     connect(mBtnArea, &QPushButton::clicked, this, &MemWidget::selectArea);
+    connect(mBtnSearchType, &QPushButton::clicked, this, &MemWidget::selectSearchType);
 
     connect(btnGoto, &QPushButton::clicked, [this]
     {
@@ -209,82 +230,21 @@ void MemWidget::selectArea()
     }
 }
 
-void MemWidget::showSearchDialog()
+void MemWidget::selectSearchType()
 {
-    QDialog dialog;
-    int ret;
+    QMenu menu;
+    menu.addAction(mSearchHexText);
+    menu.addAction(mSearchAsciiText);
 
-    enum Target
+    QAction *action = menu.exec(mBtnSearchType->mapToGlobal({0, mBtnSearchType->height() + 1}));
+    if (action)
     {
-        Next = 1,
-        NextNot,
-        Prev,
-        PrevNot
-    };
-
-    QLabel *lblFind = new QLabel(tr("Find") + ':');
-    QLineEdit *edtSearch = new QLineEdit(mSearch);
-    QPushButton *btnNext = new QPushButton(tr("Next"));
-    QPushButton *btnNextNot = new QPushButton(tr("Next Not"));
-    QPushButton *btnPrev = new QPushButton(tr("Prev"));
-    QPushButton *btnPrevNot = new QPushButton(tr("Prev Not"));
-    QPushButton *btnCancel = new QPushButton(QApplication::style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Cancel"));
-
-    QRadioButton *chkHex = new QRadioButton(tr("Hexadecimal"));
-    QRadioButton *chkAscii = new QRadioButton(QStringLiteral("ASCII"));
-
-    QGroupBox *grpOptions = new QGroupBox(tr("Search options"));
-
-    chkHex->setChecked(mSearchHex);
-    chkAscii->setChecked(!mSearchHex);
-
-    QGridLayout *gLayout = new QGridLayout;
-    gLayout->addWidget(btnNext, 0, 0);
-    gLayout->addWidget(btnNextNot, 0, 1);
-    gLayout->addWidget(btnPrev, 1, 0);
-    gLayout->addWidget(btnPrevNot, 1, 1);
-    gLayout->addWidget(btnCancel, 2, 1);
-
-    QHBoxLayout *hFindLayout = new QHBoxLayout;
-    hFindLayout->addWidget(lblFind);
-    hFindLayout->addWidget(edtSearch);
-
-    QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addWidget(chkHex);
-    vLayout->addWidget(chkAscii);
-    grpOptions->setLayout(vLayout);
-
-    QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addWidget(grpOptions);
-    hLayout->addLayout(gLayout);
-
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addLayout(hFindLayout);
-    mainLayout->addLayout(hLayout);
-
-    dialog.setLayout(mainLayout);
-    dialog.setWindowTitle(tr("Memory search"));
-    dialog.setWindowIcon(QIcon(QStringLiteral(":/assets/icons/search.svg")));
-
-    connect(btnCancel, &QPushButton::clicked, &dialog, &QDialog::reject);
-    connect(btnNext, &QPushButton::clicked, [&dialog]{ dialog.done(Target::Next); });
-    connect(btnNextNot, &QPushButton::clicked, [&dialog]{ dialog.done(Target::NextNot); });
-    connect(btnPrev, &QPushButton::clicked, [&dialog]{ dialog.done(Target::Prev); });
-    connect(btnPrevNot, &QPushButton::clicked, [&dialog]{ dialog.done(Target::PrevNot); });
-
-    if ((ret = dialog.exec()))
-    {
-        mSearchHex = chkHex->isChecked();
-        mSearch = edtSearch->text();
-
-        switch (ret)
-        {
-            default:
-            case Target::Next:
-            case Target::NextNot:
-            case Target::Prev:
-            case Target::PrevNot:
-                break;
-        }
+        mBtnSearchType->setText(action->text());
     }
+}
+
+void MemWidget::showSearchGroup()
+{
+    mGrpSearch->setVisible(!mGrpSearch->isVisible());
+    mBtnSearch->setChecked(mGrpSearch->isVisible());
 }
