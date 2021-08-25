@@ -6,13 +6,17 @@ TEMPLATE = app
 
 CONFIG += c++11 console no_include_pwd link_pkgconfig
 
-DEFINES += HAS_LIBUSB
+DEFINES += HAS_LIBUSB HAS_READLINE
 
 if (!win32-msvc*)
 {
     if (contains(DEFINES, HAS_LIBUSB))
     {
         PKGCONFIG += libusb-1.0
+    }
+    if (contains(DEFINES, HAS_READLINE))
+    {
+        PKGCONFIG += readline
     }
 }
 

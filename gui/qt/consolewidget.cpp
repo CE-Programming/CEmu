@@ -33,18 +33,47 @@
 #include <QtWidgets/QSpacerItem>
 
 #include <cstdio>
+#ifdef HAS_READLINE
+# include <cstdlib>
+namespace readline
+{
+# include <readline/history.h>
+# include <readline/readline.h>
+}
+#endif
 
 void InputThread::run()
 {
+#ifdef HAS_READLINE
+    readline::rl_initialize();
+    readline::rl_prep_terminal(true);
+    std::atexit(&readline::rl_deprep_terminal);
+#else
     QFile inputFile;
     if (!inputFile.open(stdin, QIODevice::ReadOnly | QIODevice::Text))
     {
         return;
     }
+#endif
     while (!isInterruptionRequested())
     {
         // FIXME: blocking call means thread can't be stopped so it leaks.
+#ifdef HAS_READLINE
+        char *line = readline::readline(nullptr);
+        if (!line)
+        {
+            break;
+        }
+        if (*line)
+        {
+            readline::add_history(line);
+        }
+        emit inputLine(QString::fromUtf8(line));
+        std::free(line);
+        line = nullptr;
+#else
         emit inputLine(QString::fromUtf8(inputFile.readLine()));
+#endif
     }
 }
 
