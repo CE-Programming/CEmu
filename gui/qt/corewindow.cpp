@@ -250,11 +250,8 @@ void CoreWindow::createDeveloperWidgets()
     connect(visualizerAction, &QAction::triggered, [this]
     {
         auto *visualizer = new VisualizerWidget{this};
-        connect(&mCore, &CoreWrapper::lcdFrame, visualizer, &VisualizerWidget::lcdFrame);
         visualizer->dock()->show();
     });
-
-    connect(console, &ConsoleWidget::inputLine, &mCore, QOverload<const QString &>::of(&CoreWrapper::command));
 }
 
 void CoreWindow::setKeymap()

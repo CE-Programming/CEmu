@@ -78,6 +78,7 @@ public slots:
 signals:
     void commandComplete(int error);
     void devChanged(cemucore::dev dev);
+    void flashSizeChanged(qint32 size);
     void transferTotal(int total);
     void transferProgress(int progress);
     void transferComplete(int remaining, int error);

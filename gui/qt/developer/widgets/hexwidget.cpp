@@ -129,10 +129,8 @@ int HexWidget::Pos::byteDiff(int off) const
     return qAbs(addr() - (off >> 1)) + 1;
 }
 
-HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
+HexWidget::HexWidget(MemWidget *parent)
     : QAbstractScrollArea{parent},
-      mProp{prop},
-      mLastPos{(len << 1) - 1},
       mStride{32},
       mOff{},
       mCharset{Charset::TIAscii},
@@ -154,7 +152,7 @@ HexWidget::HexWidget(MemWidget *parent, cemucore::prop prop, int len)
         viewport()->update();
     });
 
-    resizeEvent();
+    setProp(cemucore::CEMUCORE_PROP_MEMORY, INT32_C(1) << 24);
 }
 
 MemWidget *HexWidget::parent() const
@@ -164,7 +162,25 @@ MemWidget *HexWidget::parent() const
 
 CoreWrapper &HexWidget::core() const
 {
-    return parent()->dockedWidget()->core();
+    return parent()->core();
+}
+
+cemucore::prop HexWidget::prop() const
+{
+    return mProp;
+}
+
+int HexWidget::len() const
+{
+    return mLastPos >> 1;
+}
+
+void HexWidget::setProp(cemucore::prop prop, int len)
+{
+    mProp = prop;
+    mLastPos = (len << 1) - 1;
+    resizeEvent();
+    setCurPos({Area::Data, {}}, false);
 }
 
 int HexWidget::bytesPerLine() const

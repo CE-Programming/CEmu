@@ -96,10 +96,13 @@ public:
         TIAscii,
     };
 
-    HexWidget(MemWidget *parent, cemucore::prop prop, int len);
+    HexWidget(MemWidget *parent);
     MemWidget *parent() const;
     CoreWrapper &core() const;
 
+    cemucore::prop prop() const;
+    int len() const;
+    void setProp(cemucore::prop prop, int len);
     int bytesPerLine() const;
     void setBytesPerLine(int bytesPerLine);
     int byteOff() const;

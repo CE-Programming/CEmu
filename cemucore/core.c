@@ -24,11 +24,19 @@
 #include <string.h>
 #include <time.h>
 
-void core_sig(cemucore_t *core, cemucore_sig_t sig)
+void core_sig(cemucore_t *core, cemucore_sig_t sig, bool leave)
 {
+    if (leave)
+    {
+        sync_leave(&core->sync);
+    }
     if (core->sig_handler)
     {
         core->sig_handler(sig, core->sig_handler_data);
+    }
+    if (leave)
+    {
+        sync_enter(&core->sync);
     }
 }
 
@@ -63,7 +71,7 @@ static void *thread_start(void *data)
         }
         if (!(rand() & 7))
         {
-            core_sig(core, CEMUCORE_SIG_SOFT_CMD);
+            core_sig(core, CEMUCORE_SIG_SOFT_CMD, false);
             sync_sleep(&core->sync); // wait for response
         }
         core->cpu.regs.r += 2;
@@ -169,6 +177,9 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
                     break;
                 case CEMUCORE_PROP_DEV:
                     val = core->dev;
+                    break;
+                case CEMUCORE_PROP_FLASH_SIZE:
+                    val = core->memory.flash_size;
                     break;
                 case CEMUCORE_PROP_TRANSFER:
                     switch (addr)
@@ -349,7 +360,7 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
                     if (core->dev != (cemucore_dev_t)val)
                     {
                         core->dev = val;
-                        core_sig(core, CEMUCORE_SIG_DEV_CHANGED);
+                        core_sig(core, CEMUCORE_SIG_DEV_CHANGED, true);
                     }
                     break;
                 case CEMUCORE_PROP_REG:
@@ -520,12 +531,14 @@ static int do_command(cemucore_t *core, const char *const *args)
             if (size != core->memory.flash_size)
             {
                 core->memory.flash_size = size;
-                void *flash = realloc(core->memory.flash, core->memory.flash_size);
+                void *flash = realloc(core->memory.flash, size);
                 if (!flash)
                 {
                     goto load_rom_close_file;
                 }
+                core->memory.flash_size = size;
                 core->memory.flash = flash;
+                core_sig(core, CEMUCORE_SIG_FLASH_SIZE_CHANGED, true);
             }
             memset(core->memory.flash, 0xFF, core->memory.flash_size);
             if (fseek(file, 0, SEEK_SET) ||

@@ -16,6 +16,7 @@
 
 #include "consolewidget.h"
 
+#include "corewrapper.h"
 #include "settings.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -84,15 +85,16 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
         setAutoScroll(Qt::Unchecked);
     }
 
-    InputThread *inputThread = new InputThread;
-    connect(inputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
-    inputThread->start();
-
+    connect(this, &ConsoleWidget::inputLine, &core(), QOverload<const QString &>::of(&CoreWrapper::command));
     connect(inputLine, &QLineEdit::returnPressed, [this, inputLine]()
     {
         processInputLine(inputLine->text());
         inputLine->clear();
     });
+    InputThread *inputThread = new InputThread;
+    connect(inputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
+    inputThread->start();
+
     connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
 }

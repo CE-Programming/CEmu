@@ -37,8 +37,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-MemWidget::MemWidget(DockedWidget *parent, Area area)
-    : mDockedWidget{parent},
+MemWidget::MemWidget(DockedWidget *parent)
+    : QWidget{parent},
       mCharsetNoneText{tr("None")},
       mCharsetTiAsciiText{QStringLiteral("TI ASCII")},
       mCharsetAsciiText{QStringLiteral("ASCII")},
@@ -55,33 +55,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QString());
     mBtnArea = new QPushButton(QIcon(QStringLiteral(":/assets/icons/electronics.svg")), QString());
 
-    cemucore::prop prop;
-    qint32 len;
-    switch (area)
-    {
-        case Area::Mem:
-            prop = cemucore::CEMUCORE_PROP_MEMORY;
-            len = INT32_C(1) << 24;
-            mBtnArea->setText(mAreaMemoryText);
-            break;
-        case Area::Flash:
-            prop = cemucore::CEMUCORE_PROP_FLASH;
-            len = INT32_C(1) << 22;
-            mBtnArea->setText(mAreaFlashText);
-            break;
-        case Area::Ram:
-            prop = cemucore::CEMUCORE_PROP_RAM;
-            len = INT32_C(0x65800);
-            mBtnArea->setText(mAreaRamText);
-            break;
-        case Area::Port:
-            prop = cemucore::CEMUCORE_PROP_PORT;
-            len = INT32_C(1) << 16;
-            mBtnArea->setText(mAreaPortsText);
-            break;
-    }
-
-    mView = new HexWidget{this, prop, len};
+    mView = new HexWidget{this};
 
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
     QSpinBox *spnNumBytes = new QSpinBox;
@@ -94,7 +68,6 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     hboxBtns->addWidget(mEdtAddr);
     hboxBtns->addWidget(btnGoto);
     hboxBtns->addWidget(mBtnSearch);
-    hboxBtns->addWidget(mBtnArea);
 
     QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
     hboxBtmBtns->addWidget(lblNumBytes);
@@ -103,6 +76,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     hboxBtmBtns->addWidget(spnByteOff);
     hboxBtmBtns->addStretch();
     hboxBtmBtns->addWidget(mBtnCharset);
+    hboxBtmBtns->addWidget(mBtnArea);
 
     QLineEdit *edtSearch = new QLineEdit(mSearch);
     QPushButton *btnNext = new QPushButton(tr("Next"));
@@ -157,6 +131,13 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     connect(mBtnCharset, &QPushButton::clicked, this, &MemWidget::selectCharset);
     connect(mBtnArea, &QPushButton::clicked, this, &MemWidget::selectArea);
     connect(mBtnSearchType, &QPushButton::clicked, this, &MemWidget::selectSearchType);
+    connect(&core(), &CoreWrapper::flashSizeChanged, [this](qint32 len)
+    {
+        if (area() == Area::Flash)
+        {
+            mView->setProp(cemucore::CEMUCORE_PROP_FLASH, len);
+        }
+    });
 
     connect(btnGoto, &QPushButton::clicked, [this]
     {
@@ -168,9 +149,50 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     });
 }
 
-DockedWidget *MemWidget::dockedWidget() const
+DockedWidget *MemWidget::parent() const
 {
-    return mDockedWidget;
+    return static_cast<DockedWidget *>(QWidget::parent());
+}
+
+CoreWrapper &MemWidget::core() const
+{
+    return parent()->core();
+}
+
+auto MemWidget::area() const -> Area
+{
+    return mArea;
+}
+
+void MemWidget::setArea(Area area)
+{
+    cemucore::prop prop;
+    qint32 len;
+    switch (area)
+    {
+        case Area::Mem:
+            prop = cemucore::CEMUCORE_PROP_MEMORY;
+            len = INT32_C(1) << 24;
+            mBtnArea->setText(mAreaMemoryText);
+            break;
+        case Area::Flash:
+            prop = cemucore::CEMUCORE_PROP_FLASH;
+            len = core().get(cemucore::CEMUCORE_PROP_FLASH_SIZE, 0);
+            mBtnArea->setText(mAreaFlashText);
+            break;
+        case Area::Ram:
+            prop = cemucore::CEMUCORE_PROP_RAM;
+            len = INT32_C(0x65800);
+            mBtnArea->setText(mAreaRamText);
+            break;
+        case Area::Port:
+            prop = cemucore::CEMUCORE_PROP_PORT;
+            len = INT32_C(1) << 16;
+            mBtnArea->setText(mAreaPortsText);
+            break;
+    }
+    mView->setProp(prop, len);
+    mArea = area;
 }
 
 void MemWidget::selectCharset()
@@ -213,19 +235,19 @@ void MemWidget::selectArea()
         mBtnArea->setText(action->text());
         if (action->text() == mAreaMemoryText)
         {
-
+            setArea(Area::Mem);
         }
         else if (action->text() == mAreaRamText)
         {
-
+            setArea(Area::Ram);
         }
         else if (action->text() == mAreaFlashText)
         {
-
+            setArea(Area::Flash);
         }
         else if (action->text() == mAreaPortsText)
         {
-
+            setArea(Area::Port);
         }
     }
 }

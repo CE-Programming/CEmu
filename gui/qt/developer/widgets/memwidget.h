@@ -18,6 +18,7 @@
 #define MEMWIDGET_H
 
 class DockedWidget;
+class CoreWrapper;
 class HexWidget;
 
 namespace KDDockWidgets
@@ -46,8 +47,11 @@ public:
         Port,
     };
 
-    explicit MemWidget(DockedWidget *dockedWidget, Area area = Area::Mem);
-    DockedWidget *dockedWidget() const;
+    explicit MemWidget(DockedWidget *dockedWidget);
+    DockedWidget *parent() const;
+    CoreWrapper &core() const;
+    Area area() const;
+    void setArea(Area area);
 
 private slots:
     void showSearchGroup();
@@ -74,6 +78,7 @@ private:
     QString mSearchHexText;
     QString mSearchAsciiText;
     QGroupBox *mGrpSearch;
+    Area mArea;
     bool mSearchHex;
 };
 

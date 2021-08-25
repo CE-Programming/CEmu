@@ -32,6 +32,8 @@
 # include <stdatomic.h>
 #endif
 
+#include <stdbool.h>
+
 struct cemucore
 {
 #ifndef CEMUCORE_NOTHREADS
@@ -48,6 +50,6 @@ struct cemucore
     usb_t usb;
 };
 
-void core_sig(cemucore_t *core, cemucore_sig_t sig);
+void core_sig(cemucore_t *core, cemucore_sig_t sig, bool locked);
 
 #endif

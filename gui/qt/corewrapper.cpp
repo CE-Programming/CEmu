@@ -191,6 +191,9 @@ void CoreWrapper::signalHandler(cemucore::sig sig)
     case cemucore::CEMUCORE_SIG_DEV_CHANGED:
         emit devChanged(cemucore::dev(get(cemucore::CEMUCORE_PROP_DEV, 0)));
         break;
+    case cemucore::CEMUCORE_SIG_FLASH_SIZE_CHANGED:
+        emit flashSizeChanged(cemucore::dev(get(cemucore::CEMUCORE_PROP_FLASH_SIZE, 0)));
+        break;
     case cemucore::CEMUCORE_SIG_TRANSFER_TOTAL:
         emit transferTotal(get(cemucore::CEMUCORE_PROP_TRANSFER,
                                cemucore::CEMUCORE_TRANSFER_TOTAL));

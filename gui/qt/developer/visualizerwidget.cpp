@@ -55,6 +55,7 @@ VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWi
 
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
+    connect(&core(), &CoreWrapper::lcdFrame, this, &VisualizerWidget::lcdFrame);
 
     resetView();
 }
