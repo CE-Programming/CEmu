@@ -40,8 +40,9 @@ void InputThread::run()
     {
         return;
     }
-    while (true)
+    while (!isInterruptionRequested())
     {
+        // FIXME: blocking call means thread can't be stopped so it leaks.
         emit inputLine(QString::fromUtf8(inputFile.readLine()));
     }
 }
@@ -83,7 +84,7 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
         setAutoScroll(Qt::Unchecked);
     }
 
-    InputThread *inputThread = new InputThread{this};
+    InputThread *inputThread = new InputThread;
     connect(inputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
     inputThread->start();
 
