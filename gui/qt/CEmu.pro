@@ -90,7 +90,6 @@ HEADERS += \
     developer/cpuwidget.h \
     developer/devmiscwidget.h \
     developer/disassemblywidget.h \
-    developer/flashramwidget.h \
     developer/memorywidget.h \
     developer/osstackswidget.h \
     developer/osvarswidget.h \
@@ -149,7 +148,6 @@ SOURCES += \
     developer/cpuwidget.cpp \
     developer/devmiscwidget.cpp \
     developer/disassemblywidget.cpp \
-    developer/flashramwidget.cpp \
     developer/memorywidget.cpp \
     developer/osstackswidget.cpp \
     developer/osvarswidget.cpp \

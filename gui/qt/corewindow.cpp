@@ -26,7 +26,6 @@
 #include "developer/cpuwidget.h"
 #include "developer/devmiscwidget.h"
 #include "developer/disassemblywidget.h"
-#include "developer/flashramwidget.h"
 #include "developer/memorywidget.h"
 #include "developer/osstackswidget.h"
 #include "developer/osvarswidget.h"
@@ -212,7 +211,6 @@ void CoreWindow::createDeveloperWidgets()
     auto *cpu = new CpuWidget{this};
     auto *devMisc = new DevMiscWidget{this};
     auto *disassembly = new DisassemblyWidget{this};
-    auto *flashRam = new FlashRamWidget{this};
     auto *osStacks = new OsStacksWidget{this};
     auto *osVars = new OsVarsWidget{this};
     auto *portMonitor = new PortMonitorWidget{this, portmonitorList};
@@ -226,7 +224,6 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(cpu->dock()->toggleAction());
     mDevMenu->addAction(disassembly->dock()->toggleAction());
     mDevMenu->addAction(watchpoints->dock()->toggleAction());
-    mDevMenu->addAction(flashRam->dock()->toggleAction());
     mDevMenu->addAction(clocks->dock()->toggleAction());
     mDevMenu->addAction(portMonitor->dock()->toggleAction());
     mDevMenu->addAction(osVars->dock()->toggleAction());

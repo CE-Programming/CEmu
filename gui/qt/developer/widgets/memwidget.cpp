@@ -42,10 +42,16 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
       mCharsetNoneText{tr("None")},
       mCharsetTiAsciiText{QStringLiteral("TI ASCII")},
       mCharsetAsciiText{QStringLiteral("ASCII")},
+      mAreaRamText{tr("RAM")},
+      mAreaFlashText{tr("Flash")},
+      mAreaMemoryText{tr("Memory")},
+      mAreaPortsText{tr("Ports")},
       mSearchHex{true}
 {
     mEdtAddr = new QLineEdit;
     mEdtAddr->setFont(Util::monospaceFont());
+    mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QString());
+    mBtnArea = new QPushButton(QIcon(QStringLiteral(":/assets/icons/electronics.svg")), QString());
 
     cemucore::prop prop;
     qint32 len;
@@ -54,20 +60,25 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
         case Area::Mem:
             prop = cemucore::CEMUCORE_PROP_MEMORY;
             len = INT32_C(1) << 24;
+            mBtnArea->setText(mAreaMemoryText);
             break;
         case Area::Flash:
             prop = cemucore::CEMUCORE_PROP_FLASH;
             len = INT32_C(1) << 22;
+            mBtnArea->setText(mAreaFlashText);
             break;
         case Area::Ram:
             prop = cemucore::CEMUCORE_PROP_RAM;
             len = INT32_C(0x65800);
+            mBtnArea->setText(mAreaRamText);
             break;
         case Area::Port:
             prop = cemucore::CEMUCORE_PROP_PORT;
             len = INT32_C(1) << 16;
+            mBtnArea->setText(mAreaPortsText);
             break;
     }
+
     mView = new HexWidget{this, prop, len};
 
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
@@ -76,12 +87,12 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     QSpinBox *spnByteOff = new QSpinBox;
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
     QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
-    mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QString());
 
     QHBoxLayout *hboxBtns = new QHBoxLayout;
     hboxBtns->addWidget(mEdtAddr);
     hboxBtns->addWidget(btnGoto);
     hboxBtns->addWidget(btnSearch);
+    hboxBtns->addWidget(mBtnArea);
 
     QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
     hboxBtmBtns->addWidget(lblNumBytes);
@@ -124,6 +135,7 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     });
     connect(spnByteOff, QOverload<int>::of(&QSpinBox::valueChanged), mView, &HexWidget::setByteOff);
     connect(mBtnCharset, &QPushButton::clicked, this, &MemWidget::selectCharset);
+    connect(mBtnArea, &QPushButton::clicked, this, &MemWidget::selectArea);
 
     connect(btnGoto, &QPushButton::clicked, [this]
     {
@@ -162,6 +174,37 @@ void MemWidget::selectCharset()
         else if (action->text() == mCharsetNoneText)
         {
             mView->setCharset(HexWidget::Charset::None);
+        }
+    }
+}
+
+void MemWidget::selectArea()
+{
+    QMenu menu;
+    menu.addAction(mAreaMemoryText);
+    menu.addAction(mAreaRamText);
+    menu.addAction(mAreaFlashText);
+    menu.addAction(mAreaPortsText);
+
+    QAction *action = menu.exec(mBtnArea->mapToGlobal({0, mBtnArea->height() + 1}));
+    if (action)
+    {
+        mBtnArea->setText(action->text());
+        if (action->text() == mAreaMemoryText)
+        {
+
+        }
+        else if (action->text() == mAreaRamText)
+        {
+
+        }
+        else if (action->text() == mAreaFlashText)
+        {
+
+        }
+        else if (action->text() == mAreaPortsText)
+        {
+
         }
     }
 }

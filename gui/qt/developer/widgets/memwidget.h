@@ -51,15 +51,21 @@ public:
 private:
     void showSearchDialog();
     void selectCharset();
+    void selectArea();
 
     DockedWidget *mDockedWidget;
     QPushButton *mBtnCharset;
+    QPushButton *mBtnArea;
     HexWidget *mView;
     QString mSearch;
     QLineEdit *mEdtAddr;
     QString mCharsetNoneText;
     QString mCharsetTiAsciiText;
     QString mCharsetAsciiText;
+    QString mAreaRamText;
+    QString mAreaFlashText;
+    QString mAreaMemoryText;
+    QString mAreaPortsText;
     bool mSearchHex;
 };
 
