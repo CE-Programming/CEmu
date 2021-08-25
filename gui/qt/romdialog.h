@@ -39,7 +39,7 @@ class DropArea : public QLabel
     Q_OBJECT
 
 public:
-    DropArea(QWidget *p = Q_NULLPTR);
+    DropArea(QWidget *p = nullptr);
 
 public slots:
     void clear();

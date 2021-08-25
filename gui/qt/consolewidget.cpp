@@ -20,29 +20,50 @@
 
 #include <kddockwidgets/DockWidget.h>
 
-#include <QtWidgets/QCheckBox>
+#include <QtCore/QFile>
+#include <QtCore/QStringLiteral>
+#include <QtCore/QtGlobal>
 #include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
+
+#include <cstdio>
+
+void InputThread::run()
+{
+    QFile inputFile{this};
+    if (!inputFile.open(stdin, QIODevice::ReadOnly | QIODevice::Text))
+    {
+        return;
+    }
+    while (true)
+    {
+        emit inputLine(QString::fromUtf8(inputFile.readLine()));
+    }
+}
 
 ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")},
                    QIcon(QStringLiteral(":/assets/icons/command_line.svg")),
                    coreWindow}
 {
-    QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear"), this);
-
-    mChkAuto = new QCheckBox(tr("Autoscroll"));
     mConsole = new QPlainTextEdit;
+    QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear"), this);
+    QLineEdit *inputLine = new QLineEdit;
+    mChkAuto = new QCheckBox(tr("Autoscroll"));
 
     mConsole->setReadOnly(true);
     mConsole->setMaximumBlockCount(2500);
     mConsole->setMinimumSize(10, 100);
+    mFormat.setBackground(mConsole->palette().color(QPalette::Base));
+    mFormat.setForeground(mConsole->palette().color(QPalette::Text));
 
     QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addStretch();
+    hLayout->addWidget(inputLine);
     hLayout->addWidget(mChkAuto);
     hLayout->addWidget(btnClear);
 
@@ -62,17 +83,24 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
         setAutoScroll(Qt::Unchecked);
     }
 
+    InputThread *inputThread = new InputThread{this};
+    connect(inputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
+    inputThread->start();
+
+    connect(inputLine, &QLineEdit::returnPressed, [this, inputLine]()
+    {
+        processInputLine(inputLine->text());
+        inputLine->clear();
+    });
     connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
 }
 
-void ConsoleWidget::append(const QString &str, const QColor &colorFg, const QColor &colorBg)
+void ConsoleWidget::append(const QString &str, const QTextCharFormat &format)
 {
-    mFormat.setBackground(colorBg);
-    mFormat.setForeground(colorFg);
     QTextCursor cur(mConsole->document());
     cur.movePosition(QTextCursor::End);
-    cur.insertText(str, mFormat);
+    cur.insertText(str, format);
     if (mAutoscroll)
     {
         mConsole->setTextCursor(cur);
@@ -97,125 +125,118 @@ void ConsoleWidget::append(const char *str, int size)
         size = static_cast<int>(strlen(str));
     }
 
-    static int state = CONSOLE_ESC;
-    static QColor sColorFg = mConsole->palette().color(QPalette::Text);
-    static QColor sColorBg = mConsole->palette().color(QPalette::Base);
     const char *tok;
     static const QColor colors[8] =
     {
         Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white
     };
 
-    QColor colorFg = sColorFg;
-    QColor colorBg = sColorBg;
-    if ((tok = static_cast<const char*>(memchr(str, '\x1B', static_cast<size_t>(size)))))
+    if ((tok = static_cast<const char*>(memchr(str, '\x1B', size_t(size)))))
     {
         if (tok != str)
         {
-            append(QString::fromUtf8(str, static_cast<int>(tok - str)), sColorFg, sColorBg);
+            append(QString::fromUtf8(str, int(tok - str)), mFormat);
             size -= tok - str;
         }
         do {
             while(--size > 0)
             {
                 char x = *tok++;
-                switch (state)
+                switch (mAnsiEscapeState)
                 {
                     case CONSOLE_ESC:
                         if (x == '\x1B')
                         {
-                            state = CONSOLE_BRACKET;
+                            mAnsiEscapeState = CONSOLE_BRACKET;
                         }
                         break;
                     case CONSOLE_BRACKET:
                         if (x == '[')
                         {
-                            state = CONSOLE_PARSE;
+                            mAnsiEscapeState = CONSOLE_PARSE;
                         }
                         else
                         {
-                            state = CONSOLE_ESC;
+                            mAnsiEscapeState = CONSOLE_ESC;
                         }
                         break;
                     case CONSOLE_PARSE:
                         switch (x)
                         {
                             case '0':
-                                state = CONSOLE_ENDVAL;
-                                colorBg = mConsole->palette().color(QPalette::Base);
-                                colorFg = mConsole->palette().color(QPalette::Text);
+                                mAnsiEscapeState = CONSOLE_ENDVAL;
+                                mFormat.setBackground(mConsole->palette().color(QPalette::Base));
+                                mFormat.setForeground(mConsole->palette().color(QPalette::Text));
                                 break;
                             case '3':
-                                state = CONSOLE_FGCOLOR;
+                                mAnsiEscapeState = CONSOLE_FGCOLOR;
                                 break;
                             case '4':
-                                state = CONSOLE_BGCOLOR;
+                                mAnsiEscapeState = CONSOLE_BGCOLOR;
                                 break;
                             default:
-                                state = CONSOLE_ESC;
-                                sColorBg = mConsole->palette().color(QPalette::Base);
-                                sColorFg = mConsole->palette().color(QPalette::Text);
+                                mAnsiEscapeState = CONSOLE_ESC;
+                                mFormat.setBackground(mConsole->palette().color(QPalette::Base));
+                                mFormat.setForeground(mConsole->palette().color(QPalette::Text));
                                 break;
                         }
                         break;
                     case CONSOLE_FGCOLOR:
                         if (x >= '0' && x <= '7')
                         {
-                            state = CONSOLE_ENDVAL;
-                            colorFg = colors[x - '0'];
+                            mAnsiEscapeState = CONSOLE_ENDVAL;
+                            mFormat.setForeground(colors[x - '0']);
                         }
                         else
                         {
-                            state = CONSOLE_ESC;
+                            mAnsiEscapeState = CONSOLE_ESC;
                         }
                         break;
                     case CONSOLE_BGCOLOR:
                         if (x >= '0' && x <= '7')
                         {
-                            state = CONSOLE_ENDVAL;
-                            colorBg = colors[x - '0'];
+                            mAnsiEscapeState = CONSOLE_ENDVAL;
+                            mFormat.setBackground(colors[x - '0']);
                         }
                         else
                         {
-                            state = CONSOLE_ESC;
+                            mAnsiEscapeState = CONSOLE_ESC;
                         }
                         break;
                     case CONSOLE_ENDVAL:
                         if (x == ';')
                         {
-                            state = CONSOLE_PARSE;
+                            mAnsiEscapeState = CONSOLE_PARSE;
                         }
                         else if (x == 'm')
                         {
-                            sColorBg = colorBg;
-                            sColorFg = colorFg;
-                            state = CONSOLE_ESC;
+                            mAnsiEscapeState = CONSOLE_ESC;
                         }
                         else
                         {
-                            state = CONSOLE_ESC;
+                            mAnsiEscapeState = CONSOLE_ESC;
                         }
                         break;
                     default:
-                        state = CONSOLE_ESC;
+                        mAnsiEscapeState = CONSOLE_ESC;
                         break;
                 }
-                if (state == CONSOLE_ESC)
+                if (mAnsiEscapeState == CONSOLE_ESC)
                 {
                     break;
                 }
             }
             if (size > 0)
             {
-                const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', static_cast<size_t>(size)));
+                const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', size_t(size)));
                 if (tokn)
                 {
-                    append(QString::fromUtf8(tok, static_cast<int>(tokn - tok)), sColorFg, sColorBg);
+                    append(QString::fromUtf8(tok, int(tokn - tok)), mFormat);
                     size -= tokn - tok;
                 }
                 else
                 {
-                    append(QString::fromUtf8(tok, static_cast<int>(size)), sColorFg, sColorBg);
+                    append(QString::fromUtf8(tok, int(size)), mFormat);
                 }
                 tok = tokn;
             }
@@ -227,7 +248,7 @@ void ConsoleWidget::append(const char *str, int size)
     }
     else
     {
-        append(QString::fromUtf8(str, size), sColorFg, sColorBg);
+        append(QString::fromUtf8(str, size), mFormat);
     }
 }
 
@@ -240,4 +261,24 @@ void ConsoleWidget::setAutoScroll(int state)
                             Qt::CheckState::Unchecked);
 
     Settings::setBoolOption(Settings::ConsoleAutoScroll, mAutoscroll);
+}
+
+void ConsoleWidget::processInputLine(QString line)
+{
+    if (line.isEmpty())
+    {
+        line = mLastInputLine;
+    }
+    else
+    {
+        mLastInputLine = line;
+    }
+    if (!line.isEmpty())
+    {
+        QTextCharFormat format;
+        format.setBackground(mConsole->palette().color(QPalette::Base));
+        format.setForeground(Qt::darkGray);
+        append(QStringLiteral("> %1\n").arg(line.trimmed()), format);
+        emit inputLine(line);
+    }
 }

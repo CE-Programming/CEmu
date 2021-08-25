@@ -48,7 +48,6 @@
 
 #include <kddockwidgets/LayoutSaver.h>
 
-#include <QtCore/QDebug>
 #include <QtCore/QEvent>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
@@ -125,7 +124,6 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 
     if (!restoreLayout())
     {
-        qDebug() << "Failed to restore layout";
         QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
         resize(screenGeometry.height() * .325, screenGeometry.height() * .8);
     }
@@ -258,6 +256,8 @@ void CoreWindow::createDeveloperWidgets()
         connect(&mCore, &CoreWrapper::lcdFrame, visualizer, &VisualizerWidget::lcdFrame);
         visualizer->dock()->show();
     });
+
+    connect(console, &ConsoleWidget::inputLine, &mCore, QOverload<const QString &>::of(&CoreWrapper::command));
 }
 
 void CoreWindow::setKeymap()

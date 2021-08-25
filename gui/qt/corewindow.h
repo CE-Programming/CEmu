@@ -26,6 +26,7 @@ class QtKeypadBridge;
 #include <kddockwidgets/MainWindow.h>
 
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 QT_BEGIN_NAMESPACE
 class QCloseEvent;
 class QMenu;

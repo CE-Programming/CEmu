@@ -278,7 +278,7 @@ void VisualizerWidget::stringToView()
         }
         if (hex_reg.exactMatch(str))
         {
-            mLcdConfig.mBaseAddr = str.toUInt(Q_NULLPTR, 16);
+            mLcdConfig.mBaseAddr = str.toUInt(nullptr, 16);
         }
         if (bpp_reg.exactMatch(str))
         {

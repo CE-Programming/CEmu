@@ -6,7 +6,7 @@
 #include <QtCore/QMetaEnum>
 #include <QtCore/QSettings>
 
-QtKeypadBridge *keypadBridge = Q_NULLPTR;
+QtKeypadBridge *keypadBridge = nullptr;
 
 static const QString custom_keys[8][8] = {
     { "", "", "", "", "", "", "", "" },

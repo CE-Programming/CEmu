@@ -22,7 +22,6 @@
 #include "../../util.h"
 #include "../watchpointswidget.h"
 
-#include <QtCore/QDebug>
 #include <QtGui/QPainter>
 #include <QtGui/QWheelEvent>
 #include <QtWidgets/QApplication>

@@ -16,6 +16,13 @@
 
 #include "corewrapper.h"
 
+#include <cerrno>
+
+#include <QtCore/QChar>
+#include <QtCore/QLatin1Char>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QStringLiteral>
 #include <QtCore/QVarLengthArray>
 
 CoreWrapper::ScopedLock::~ScopedLock()
@@ -35,6 +42,8 @@ CoreWrapper::CoreWrapper(QObject *parent)
     qRegisterMetaType<cemucore::sig>();
     qRegisterMetaType<cemucore::create_flags>();
     qRegisterMetaType<cemucore::prop>();
+    qRegisterMetaType<cemucore::dev>();
+    qRegisterMetaType<cemucore::transfer>();
     qRegisterMetaType<cemucore::reg>();
     qRegisterMetaType<cemucore::dbg_flags>();
 }
@@ -80,7 +89,7 @@ QByteArray CoreWrapper::get(cemucore::prop prop, qint32 addr, qint32 len) const
     QByteArray data;
     data.reserve(len);
     auto scope = lock();
-    for (int i = 0; i < len; ++i)
+    for (int i = 0; i < len; i += 1)
     {
         data += char(get(prop, addr + i));
     }
@@ -96,7 +105,7 @@ void CoreWrapper::set(cemucore::prop prop, qint32 addr, const QByteArray &data)
 {
     // FIXME: implement in core
     auto scope = lock();
-    for (int i = 0; i < data.length(); ++i)
+    for (int i = 0; i < data.length(); i += 1)
     {
         set(prop, addr + i, data[i]);
     }
@@ -114,6 +123,65 @@ int CoreWrapper::command(const QStringList &args)
     }
     utf8Args << nullptr;
     return cemucore::cemucore_command(mCore, utf8Args.constData());
+}
+
+void CoreWrapper::command(const QString &line)
+{
+    QString arg;
+    QStringList args;
+    QChar quoteMode = QChar::Null;
+    const auto finishArg = [&arg, &args]()
+    {
+        if (!arg.isNull())
+        {
+            args << arg;
+            arg.clear();
+        }
+    };
+    for (int i = 0; i != line.length(); i += 1)
+    {
+        QChar c = line.at(i);
+        if (!quoteMode.isNull() && c == quoteMode)
+        {
+            quoteMode = QChar::Null;
+            arg += QStringLiteral("");
+        }
+        else if (quoteMode.isNull() &&
+                 (c == QLatin1Char{'\"'} || c == QLatin1Char{'\''}))
+        {
+            quoteMode = c;
+        }
+        else if (quoteMode.isNull() && c.isSpace())
+        {
+            finishArg();
+        }
+        else
+        {
+            if (quoteMode != QLatin1Char{'\''} && c == QLatin1Char{'\\'} &&
+                i != line.length() - 1)
+            {
+                i += 1;
+                c = line.at(i);
+                if (!quoteMode.isNull() &&
+                    !c.isSpace() &&
+                    c != QLatin1Char{'\''} &&
+                    c != QLatin1Char{'\"'} &&
+                    c != QLatin1Char{'\\'})
+                {
+                    i -= 1;
+                    c = line.at(i);
+                }
+            }
+            arg += c;
+        }
+    }
+    if (!quoteMode.isNull())
+    {
+        emit commandComplete(EINVAL);
+        return;
+    }
+    finishArg();
+    emit commandComplete(command(args));
 }
 
 void CoreWrapper::signalHandler(cemucore::sig sig)

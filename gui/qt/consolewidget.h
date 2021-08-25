@@ -19,6 +19,8 @@
 
 #include "dockedwidget.h"
 
+#include <QtCore/QString>
+#include <QtCore/QThread>
 #include <QtGui/QTextCharFormat>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
@@ -26,6 +28,20 @@ class QCheckBox;
 class QPlainTextEdit;
 class QRadioButton;
 QT_END_NAMESPACE
+
+class InputThread : public QThread
+{
+    Q_OBJECT
+
+public:
+    explicit InputThread(QObject *parent = nullptr) : QThread{parent} {}
+
+signals:
+    void inputLine(const QString &line);
+
+private:
+    void run() override;
+};
 
 class ConsoleWidget : public DockedWidget
 {
@@ -35,9 +51,15 @@ public:
     explicit ConsoleWidget(CoreWindow *coreWindow);
 
 public slots:
-    void append(const QString &str, const QColor &colorFg, const QColor &colorBg);
+    void append(const QString &str, const QTextCharFormat &format);
     void append(const char *str, int size);
     void setAutoScroll(int state);
+
+private slots:
+    void processInputLine(QString line);
+
+signals:
+    void inputLine(const QString &line);
 
 private:
     QCheckBox *mChkAuto;
@@ -45,7 +67,9 @@ private:
 
     bool mAutoscroll;
 
+    QString mLastInputLine;
     QTextCharFormat mFormat;
+    int mAnsiEscapeState;
 };
 
 #endif

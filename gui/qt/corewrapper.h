@@ -20,7 +20,10 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
-#include <QtCore/QStringList>
+QT_BEGIN_NAMESPACE
+class QString;
+class QStringList;
+QT_END_NAMESPACE
 
 namespace cemucore
 {
@@ -69,7 +72,11 @@ public:
     void set(cemucore::prop prop, qint32 addr, const QByteArray &data);
     int command(const QStringList &args);
 
+public slots:
+    void command(const QString &line);
+
 signals:
+    void commandComplete(int error);
     void devChanged(cemucore::dev dev);
     void transferTotal(int total);
     void transferProgress(int progress);

@@ -16,7 +16,6 @@
 
 #include "sliderpanner.h"
 
-#include <QtCore/QDebug>
 #include <QtCore/QtGlobal>
 #include <QtWidgets/QAbstractSlider>
 #include <QtWidgets/QProxyStyle>
