@@ -32,19 +32,13 @@ VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWi
 
     mConfigStr = new QLineEdit;
     mBtnLcd =  new QPushButton(QIcon(QStringLiteral(":/assets/icons/picture.svg")), tr("Presets"));
-    mBtnRefresh = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Apply"));
     mBtnConfig = new QPushButton(QIcon(QStringLiteral(":/assets/icons/support.svg")), tr("Setup"));
 
     mLcd = new VisualizerLcdWidget;
 
-    mConfigStr->setFont(Util::monospaceFont());
-    mConfigStr->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    mConfigStr->setMinimumWidth(QFontMetrics(Util::monospaceFont()).maxWidth() * 3);
-
     QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addWidget(mConfigStr);
-    hLayout->addWidget(mBtnRefresh);
     hLayout->addWidget(mBtnLcd);
+    hLayout->addStretch();
     hLayout->addWidget(mBtnConfig);
     mGroup->setLayout(hLayout);
 
@@ -54,14 +48,11 @@ VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWi
     hLcdLayout->addStretch();
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addStretch();
-    vLayout->addWidget(mGroup);
     vLayout->addLayout(hLcdLayout);
+    vLayout->addWidget(mGroup);
     vLayout->addStretch();
     setLayout(vLayout);
 
-    connect(mConfigStr, &QLineEdit::returnPressed, this, &VisualizerWidget::stringToView);
-    connect(mBtnRefresh, &QPushButton::clicked, this, &VisualizerWidget::stringToView);
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
 
