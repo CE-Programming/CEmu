@@ -35,7 +35,7 @@
 
 void InputThread::run()
 {
-    QFile inputFile{this};
+    QFile inputFile;
     if (!inputFile.open(stdin, QIODevice::ReadOnly | QIODevice::Text))
     {
         return;
