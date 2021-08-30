@@ -20,29 +20,12 @@
 #include "dockedwidget.h"
 
 #include <QtCore/QString>
-#include <QtCore/QThread>
 #include <QtGui/QTextCharFormat>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QCheckBox;
 class QPlainTextEdit;
-class QRadioButton;
 QT_END_NAMESPACE
-
-class InputThread : public QThread
-{
-    Q_OBJECT
-
-public:
-    explicit InputThread(QObject *parent = nullptr);
-    ~InputThread() override;
-
-signals:
-    void inputLine(const QString &line);
-
-private:
-    void run() override;
-};
 
 class ConsoleWidget : public DockedWidget
 {

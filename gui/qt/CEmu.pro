@@ -83,6 +83,7 @@ if(macx) {
 HEADERS += \
     calculatorwidget.h \
     capturewidget.h \
+    console.h \
     consolewidget.h \
     corewindow.h \
     corewrapper.h \
@@ -141,6 +142,7 @@ HEADERS += \
 SOURCES += \
     calculatorwidget.cpp \
     capturewidget.cpp \
+    console.cpp \
     consolewidget.cpp \
     corewindow.cpp \
     corewrapper.cpp \

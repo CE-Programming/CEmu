@@ -16,6 +16,7 @@
 
 #include "consolewidget.h"
 
+#include "console.h"
 #include "corewrapper.h"
 #include "settings.h"
 
@@ -31,64 +32,6 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
-
-#include <cstdio>
-#ifdef HAS_READLINE
-# include <cstdlib>
-namespace readline
-{
-# include <readline/history.h>
-# include <readline/readline.h>
-}
-#endif
-
-InputThread::InputThread(QObject *parent)
-    : QThread{parent}
-{
-#ifdef HAS_READLINE
-    readline::rl_initialize();
-    readline::rl_prep_terminal(true);
-#endif
-    start();
-}
-
-InputThread::~InputThread()
-{
-#ifdef HAS_READLINE
-    readline::rl_deprep_terminal();
-#endif
-}
-
-void InputThread::run()
-{
-#ifndef HAS_READLINE
-    QFile inputFile;
-    if (!inputFile.open(stdin, QIODevice::ReadOnly | QIODevice::Text))
-    {
-        return;
-    }
-#endif
-    while (!isInterruptionRequested())
-    {
-        // FIXME: blocking calls means thread can't be stopped so it leaks.
-#ifdef HAS_READLINE
-        char *line = readline::readline(nullptr);
-        if (!line)
-        {
-            break;
-        }
-        if (*line)
-        {
-            readline::add_history(line);
-        }
-        emit inputLine(QString::fromUtf8(line));
-        std::free(line);
-        line = nullptr;
-#else
-        emit inputLine(QString::fromUtf8(inputFile.readLine()));
-#endif
-    }
-}
 
 ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")},
@@ -127,14 +70,16 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
         setAutoScroll(Qt::Unchecked);
     }
 
-    connect(this, &ConsoleWidget::inputLine, &core(), QOverload<const QString &>::of(&CoreWrapper::command));
+    connect(this, &ConsoleWidget::inputLine,
+            &core(), QOverload<const QString &>::of(&CoreWrapper::command));
     connect(inputLine, &QLineEdit::returnPressed, [this, inputLine]()
     {
         processInputLine(inputLine->text());
         inputLine->clear();
     });
-    static InputThread sInputThread;
-    connect(&sInputThread, &InputThread::inputLine, this, &ConsoleWidget::processInputLine);
+    Console *console = new Console{this};
+    connect(console, &Console::inputLine, this, &ConsoleWidget::processInputLine);
+    connect(this, &ConsoleWidget::inputLine, console, &Console::addHistoryLine);
 
     connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
