@@ -44,7 +44,9 @@ void core_sig(cemucore_t *core, cemucore_sig_t sig, bool leave)
 static void *thread_start(void *data)
 {
     cemucore_t *core = data;
+#if !defined(__APPLE__)
     pthread_setname_np(core->thread, "cemucore");
+#endif
     int debug_keypad_row = 0;
     for (int i = 1; i != 256; ++i)
     {

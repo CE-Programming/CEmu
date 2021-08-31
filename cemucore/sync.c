@@ -53,12 +53,17 @@ bool sync_init(sync_t *sync)
         return false;
     }
     sync->clock = CLOCK_MONOTONIC;
-    int error = pthread_condattr_setclock(&condattr, sync->clock);
+    int error = 0;
+
+#if !defined(__APPLE__)
+    error = pthread_condattr_setclock(&condattr, sync->clock);
     if (unlikely(error == EINVAL))
     {
         sync->clock = CLOCK_REALTIME;
         error = pthread_condattr_setclock(&condattr, sync->clock);
     }
+#endif
+
     if (unlikely(error || pthread_mutex_init(&sync->mutex, NULL)))
     {
         (void)pthread_condattr_destroy(&condattr);
