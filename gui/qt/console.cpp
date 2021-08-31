@@ -16,6 +16,7 @@
 
 #include "console.h"
 
+#include <QtCore/QByteArray>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QString>
 #include <QtCore/QThread>
@@ -102,11 +103,25 @@ void readline::Worker::inputReady()
 # ifdef Q_OS_WIN
     std::array<::INPUT_RECORD, 256> events;
     ::DWORD count;
-    QByteArray output, key;
     if (!::ReadConsoleInputW(getStandard(INPUT), events.data(), events.size(), &count))
     {
         return;
     }
+    bool pending = false;
+    const auto output = [&pending](const char *s)
+    {
+        while (*s)
+        {
+            pending = true;
+            while (!readline::rl_stuff_char(quint8(*s)))
+            {
+                readline::rl_callback_read_char();
+            }
+            s += 1;
+        }
+    };
+    const char *key1;
+    QByteArray key2;
     for (::DWORD event = 0; event != count; event += 1)
     {
         if (events[event].EventType != KEY_EVENT ||
@@ -116,7 +131,7 @@ void readline::Worker::inputReady()
         }
         switch (events[event].Event.KeyEvent.wVirtualKeyCode)
         {
-#define CASE(vk, seq) case VK_##vk: key = QByteArrayLiteral(seq); break
+#define CASE(vk, seq) case VK_##vk: key1 = seq; key2.clear(); break
             CASE(RETURN,     "\n" );
             CASE(UP,     CSI "A"  );
             CASE(DOWN,   CSI "B"  );
@@ -157,27 +172,24 @@ void readline::Worker::inputReady()
                 }
                 if (events[event].Event.KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
                 {
-                    key = QByteArrayLiteral(ESC);
+                    key1 = ESC;
                 }
                 else
                 {
-                    key.clear();
+                    key1 = "";
                 }
-                key += mUtf8Codec->fromUnicode(&c, 1, &mUtf8State);
+                key2 = mUtf8Codec->fromUnicode(&c, 1, &mUtf8State);
                 break;
         }
-        output += key.repeated(events[event].Event.KeyEvent.wRepeatCount);
+        for (::WORD repeat = 0; repeat != events[event].Event.KeyEvent.wRepeatCount; repeat += 1)
+        {
+            output(key1);
+            output(key2.constData());
+        }
     }
-    if (output.isEmpty())
+    if (!pending)
     {
         return;
-    }
-    for (quint8 c : output)
-    {
-        while (!readline::rl_stuff_char(c))
-        {
-            readline::rl_callback_read_char();
-        }
     }
 # endif
     readline::rl_callback_read_char();
