@@ -28,36 +28,135 @@ VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWi
                    QIcon(QStringLiteral(":/assets/icons/add_image.svg")),
                    coreWindow}
 {
-    mGroup = new QGroupBox(tr("Settings"));
+    mGroup = new QGroupBox(tr("Visualizer"));
+    mGrpCfg = new QGroupBox(tr("Setup"));
 
     mConfigStr = new QLineEdit;
     mBtnLcd =  new QPushButton(QIcon(QStringLiteral(":/assets/icons/picture.svg")), tr("Presets"));
     mBtnConfig = new QPushButton(QIcon(QStringLiteral(":/assets/icons/support.svg")), tr("Setup"));
+    mBtnApply = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Apply"));
 
     mLcd = new VisualizerLcdWidget;
 
-    QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addWidget(mBtnLcd);
-    hLayout->addStretch();
-    hLayout->addWidget(mBtnConfig);
-    mGroup->setLayout(hLayout);
+    QGridLayout *g1 = new QGridLayout;
+    QGridLayout *g0 = new QGridLayout;
+    QHBoxLayout *h0 = new QHBoxLayout;
 
-    QHBoxLayout *hLcdLayout = new QHBoxLayout;
-    hLcdLayout->addStretch();
-    hLcdLayout->addWidget(mLcd);
-    hLcdLayout->addStretch();
+    QLabel *baseLbl = new QLabel(tr("Base Address"));
+    QLabel *fpsLbl = new QLabel(QStringLiteral("FPS"));
+    QLabel *scaleLbl = new QLabel(tr("Scale"));
+    QLabel *widthLbl = new QLabel(tr("Width"));
+    QLabel *heightLbl = new QLabel(tr("Height"));
+    QLabel *bppLbl = new QLabel(QStringLiteral("BPP"));
 
-    QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addLayout(hLcdLayout);
-    vLayout->addWidget(mGroup);
-    vLayout->addStretch();
-    setLayout(vLayout);
+    mBaseEdit = new QLineEdit(Util::int2hex(mLcdConfig.mBaseAddr, 6));
+    mFpsSpin = new QSpinBox;
+    mScaleSpin = new QSpinBox;
+    mWidthSpin = new QSpinBox;
+    mHeightSpin = new QSpinBox;
+    mBppCombo = new QComboBox;
+    mBeboChk = new QCheckBox(QStringLiteral("bebo"));
+    mBepoChk = new QCheckBox(QStringLiteral("bepo"));
+    mBgrChk = new QCheckBox(QStringLiteral("bgr"));
+    mGridChk = new QCheckBox(tr("grid"));
+
+    mFpsSpin->setRange(0, 120);
+    mFpsSpin->setValue(mFps);
+
+    mScaleSpin->setRange(0, 5000);
+    mScaleSpin->setValue(mScale);
+
+    mWidthSpin->setRange(0, 5000);
+    mWidthSpin->setValue(mLcdConfig.mWidth);
+
+    mHeightSpin->setRange(0, 5000);
+    mHeightSpin->setValue(mLcdConfig.mHeight);
+
+    mBeboChk->setChecked(mLcdConfig.mCtlReg & 0x200 ? true : false);
+    mBepoChk->setChecked(mLcdConfig.mCtlReg & 0x400 ? true : false);
+    mBgrChk->setChecked(mLcdConfig.mCtlReg & 0x100 ? true : false);
+    mGridChk->setChecked(mLcdConfig.mGrid);
+
+    mBppCombo->addItem(QStringLiteral("1"));
+    mBppCombo->addItem(QStringLiteral("2"));
+    mBppCombo->addItem(QStringLiteral("4"));
+    mBppCombo->addItem(QStringLiteral("8"));
+    mBppCombo->addItem(QStringLiteral("16"));
+    mBppCombo->addItem(QStringLiteral("24"));
+    mBppCombo->addItem(QStringLiteral("16 (5:6:5)"));
+    mBppCombo->addItem(QStringLiteral("12 (4:4:4)"));
+    mBppCombo->setCurrentIndex((mLcdConfig.mCtlReg >> 1) & 7);
+
+    g0->addWidget(baseLbl, 0, 0);
+    g0->addWidget(mBaseEdit, 0, 1);
+    g0->addWidget(fpsLbl, 1, 0);
+    g0->addWidget(mFpsSpin, 1, 1);
+    g0->addWidget(scaleLbl, 2, 0);
+    g0->addWidget(mScaleSpin, 2, 1);
+    g0->addWidget(widthLbl, 0, 2);
+    g0->addWidget(mWidthSpin, 0, 3);
+    g0->addWidget(heightLbl, 1, 2);
+    g0->addWidget(mHeightSpin, 1, 3);
+    g0->addWidget(bppLbl, 2, 2);
+    g0->addWidget(mBppCombo, 2, 3);
+
+    h0->addWidget(mBeboChk);
+    h0->addWidget(mBepoChk);
+    h0->addWidget(mBgrChk);
+    h0->addWidget(mGridChk);
+    h0->addWidget(mBtnApply);
+
+    g1->addLayout(g0, 0, 0);
+    g1->addLayout(h0, 1, 0);
+
+    mGrpCfg->setLayout(g1);
+    mGrpCfg->setVisible(false);
+
+    QHBoxLayout *h2 = new QHBoxLayout;
+    h2->addStretch();
+    h2->addWidget(mGrpCfg);
+    h2->addStretch();
+
+    QHBoxLayout *h3 = new QHBoxLayout;
+    h3->addWidget(mBtnLcd);
+    h3->addStretch();
+    h3->addWidget(mBtnConfig);
+
+    QVBoxLayout *v0 = new QVBoxLayout;
+    v0->addLayout(h3);
+    v0->addLayout(h2);
+    mGroup->setLayout(v0);
+
+    QHBoxLayout *h4 = new QHBoxLayout;
+    h4->addStretch();
+    h4->addWidget(mLcd);
+    h4->addStretch();
+
+    QVBoxLayout *v1 = new QVBoxLayout;
+    v1->addWidget(mGroup);
+    v1->addLayout(h4);
+    v1->addStretch();
+    setLayout(v1);
+
+    mBtnConfig->setCheckable(true);
+    mBtnApply->setEnabled(false);
+
+    resetView();
 
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
+    connect(mBtnApply, &QPushButton::clicked, this, &VisualizerWidget::applyConfig);
     connect(&core(), &CoreWrapper::lcdFrame, this, &VisualizerWidget::lcdFrame);
-
-    resetView();
+    connect(mBppCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this]{ mBtnApply->setEnabled(true); });
+    connect(mGridChk, &QCheckBox::clicked, [this]{ mBtnApply->setEnabled(true); });
+    connect(mBgrChk, &QCheckBox::clicked, [this]{ mBtnApply->setEnabled(true); });
+    connect(mBepoChk, &QCheckBox::clicked, [this]{ mBtnApply->setEnabled(true); });
+    connect(mBeboChk, &QCheckBox::clicked, [this]{ mBtnApply->setEnabled(true); });
+    connect(mHeightSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this]{ mBtnApply->setEnabled(true); });
+    connect(mWidthSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this]{ mBtnApply->setEnabled(true); });
+    connect(mScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this]{ mBtnApply->setEnabled(true); });
+    connect(mFpsSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this]{ mBtnApply->setEnabled(true); });
+    connect(mBaseEdit, &QLineEdit::textChanged, [this]{ mBtnApply->setEnabled(true); });
 }
 
 void VisualizerWidget::showPresets()
@@ -100,105 +199,25 @@ void VisualizerWidget::showPresets()
 
 void VisualizerWidget::showConfig()
 {
-    QDialog dialog;
+    mGrpCfg->setVisible(mBtnConfig->isChecked());
+}
 
-    QGridLayout *mlayout = new QGridLayout;
-    QGridLayout *glayout = new QGridLayout;
-    QHBoxLayout *hlayout = new QHBoxLayout;
+void VisualizerWidget::applyConfig()
+{
+    mLcdConfig.mBaseAddr = static_cast<uint32_t>(Util::hex2int(mBaseEdit->text()));
+    mLcdConfig.mCtlReg &= ~14u;
+    mLcdConfig.mCtlReg |= static_cast<unsigned int>(mBppCombo->currentIndex() << 1);
+    mFps = mFpsSpin->value();
+    mScale = mScaleSpin->value();
+    mLcdConfig.mWidth = mWidthSpin->value();
+    mLcdConfig.mHeight = mHeightSpin->value();
+    mLcdConfig.mGrid = mGridChk->isChecked();
+    SETBITS(mBeboChk->isChecked(), 0x200u, mLcdConfig.mCtlReg);
+    SETBITS(mBepoChk->isChecked(), 0x400u, mLcdConfig.mCtlReg);
+    SETBITS(mBgrChk->isChecked(), 0x100u, mLcdConfig.mCtlReg);
+    viewToString();
 
-    QLabel *baseLbl = new QLabel(tr("Base Address"));
-    QLineEdit *baseEdit = new QLineEdit(Util::int2hex(mLcdConfig.mBaseAddr, 6));
-    QLabel *fpsLbl = new QLabel(QStringLiteral("FPS"));
-    QSpinBox *fpsSpin = new QSpinBox;
-    QLabel *scaleLbl = new QLabel(tr("Scale"));
-    QSpinBox *scaleSpin = new QSpinBox;
-    QLabel *widthLbl = new QLabel(tr("Width"));
-    QSpinBox *widthSpin = new QSpinBox;
-    QLabel *heightLbl = new QLabel(tr("Height"));
-    QSpinBox *heightSpin = new QSpinBox;
-    QLabel *bppLbl = new QLabel(QStringLiteral("BPP"));
-    QComboBox *bppCombo = new QComboBox;
-    QCheckBox *beboChk = new QCheckBox(QStringLiteral("BEBO"));
-    QCheckBox *bepoChk = new QCheckBox(QStringLiteral("BEPO"));
-    QCheckBox *bgrChk = new QCheckBox(QStringLiteral("BGR"));
-    QCheckBox *gridChk = new QCheckBox(tr("Grid"));
-    QPushButton *submitBtn = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Apply"));
-
-    fpsSpin->setRange(0, 120);
-    fpsSpin->setValue(mFps);
-
-    scaleSpin->setRange(0, 5000);
-    scaleSpin->setValue(mScale);
-
-    widthSpin->setRange(0, 5000);
-    widthSpin->setValue(mLcdConfig.mWidth);
-
-    heightSpin->setRange(0, 5000);
-    heightSpin->setValue(mLcdConfig.mHeight);
-
-    bepoChk->setChecked(mLcdConfig.mCtlReg & 0x400 ? true : false);
-    beboChk->setChecked(mLcdConfig.mCtlReg & 0x200 ? true : false);
-    bgrChk->setChecked(mLcdConfig.mCtlReg & 0x100 ? true : false);
-    gridChk->setChecked(mLcdConfig.mGrid);
-
-    bppCombo->addItem(QStringLiteral("1"));
-    bppCombo->addItem(QStringLiteral("2"));
-    bppCombo->addItem(QStringLiteral("4"));
-    bppCombo->addItem(QStringLiteral("8"));
-    bppCombo->addItem(QStringLiteral("16"));
-    bppCombo->addItem(QStringLiteral("24"));
-    bppCombo->addItem(QStringLiteral("16 (5:6:5)"));
-    bppCombo->addItem(QStringLiteral("12 (4:4:4)"));
-
-    bppCombo->setCurrentIndex((mLcdConfig.mCtlReg >> 1) & 7);
-
-    glayout->addWidget(baseLbl, 0, 0);
-    glayout->addWidget(baseEdit, 0, 1);
-    glayout->addWidget(fpsLbl, 1, 0);
-    glayout->addWidget(fpsSpin, 1, 1);
-    glayout->addWidget(scaleLbl, 2, 0);
-    glayout->addWidget(scaleSpin, 2, 1);
-    glayout->addWidget(widthLbl, 0, 2);
-    glayout->addWidget(widthSpin, 0, 3);
-    glayout->addWidget(heightLbl, 1, 2);
-    glayout->addWidget(heightSpin, 1, 3);
-    glayout->addWidget(bppLbl, 2, 2);
-    glayout->addWidget(bppCombo, 2, 3);
-
-    hlayout->addWidget(beboChk);
-    hlayout->addWidget(bepoChk);
-    hlayout->addWidget(bgrChk);
-    hlayout->addWidget(gridChk);
-    hlayout->addWidget(submitBtn);
-
-    mlayout->addLayout(glayout, 0, 0);
-    mlayout->addLayout(hlayout, 1, 0);
-
-    dialog.setLayout(mlayout);
-    dialog.setWindowTitle(tr("Visualizer Setup"));
-    dialog.setWindowIcon(QIcon(QStringLiteral(":/assets/icons/support.svg")));
-
-    connect(submitBtn, &QPushButton::clicked, &dialog, &QDialog::accept);
-
-    if (dialog.exec())
-    {
-        mLcdConfig.mBaseAddr = static_cast<uint32_t>(Util::hex2int(baseEdit->text()));
-
-        mLcdConfig.mCtlReg &= ~14u;
-        mLcdConfig.mCtlReg |= static_cast<unsigned int>(bppCombo->currentIndex() << 1);
-
-        mFps = fpsSpin->value();
-        mScale = scaleSpin->value();
-        mLcdConfig.mWidth = widthSpin->value();
-        mLcdConfig.mHeight = heightSpin->value();
-        mLcdConfig.mGrid = gridChk->isChecked();
-
-        SETBITS(bepoChk->isChecked(), 0x400u, mLcdConfig.mCtlReg);
-        SETBITS(beboChk->isChecked(), 0x200u, mLcdConfig.mCtlReg);
-        SETBITS(bgrChk->isChecked(), 0x100u, mLcdConfig.mCtlReg);
-
-        viewToString();
-    }
+    mBtnApply->setEnabled(false);
 }
 
 void VisualizerWidget::closeEvent(QCloseEvent *)
