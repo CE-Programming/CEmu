@@ -568,7 +568,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
-    memset(&lcd, 0, sizeof(lcd_state_t));
+    memset(&lcd, 0, offsetof(lcd_state_t, spi));
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }
