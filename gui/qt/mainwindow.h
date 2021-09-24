@@ -25,6 +25,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QShortcut> /* Different module in Qt5 vs Qt6 */
 #include <QtCore/QSettings>
+#include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtCore/QPointer>
 #include <QtGui/QTextCursor>
@@ -33,11 +34,35 @@
 
 #include <functional>
 
+QT_BEGIN_NAMESPACE
+class QButtonGroup;
+class QLocale;
+QT_END_NAMESPACE
+
+#ifdef LIBUSB_SUPPORT
+# include <libusb.h>
+Q_DECLARE_OPAQUE_POINTER(libusb_device *)
+Q_DECLARE_METATYPE(libusb_device *)
+
+class LibusbEventThread : public QThread {
+    Q_OBJECT
+
+public:
+    explicit LibusbEventThread(libusb_context *usbContext = nullptr, QObject *parent = nullptr);
+
+protected:
+    void run() override;
+
+private:
+    libusb_context *m_usbContext;
+};
+#endif
+
 #ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {
     Q_OBJECT
 protected:
-    virtual void run() Q_DECL_OVERRIDE;
+    void run() override;
 public:
     QString m_filename;
     bool m_optimize;
@@ -52,8 +77,8 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(CEmuOpts &opts, QWidget *p = Q_NULLPTR);
-    ~MainWindow() Q_DECL_OVERRIDE;
+    explicit MainWindow(CEmuOpts &opts, QWidget *p = nullptr);
+    ~MainWindow() override;
     void setup();
     bool isInitialized();
     bool isReload();
@@ -62,15 +87,22 @@ public:
 signals:
     void setLcdFrameskip(int value);
     void setLcdResponseMode(bool state);
+#ifdef LIBUSB_SUPPORT
+    void usbHotplug(libusb_device *device, bool attached);
+    void usbUnplug();
+
+private slots:
+    void usbUnplugged();
+#endif
 
 protected:
-    virtual void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
-    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
-    virtual bool eventFilter(QObject *obj, QEvent *event) Q_DECL_OVERRIDE;
-    virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
-    virtual void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    virtual void dropEvent(QDropEvent *event) Q_DECL_OVERRIDE;
-    virtual void dragEnterEvent(QDragEnterEvent *event) Q_DECL_OVERRIDE;
+    virtual void changeEvent(QEvent* event) override;
+    virtual void closeEvent(QCloseEvent *event) override;
+    virtual bool eventFilter(QObject *obj, QEvent *event) override;
+    virtual void showEvent(QShowEvent *event) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
+    virtual void dropEvent(QDropEvent *event) override;
+    virtual void dragEnterEvent(QDragEnterEvent *event) override;
 
 private:
     typedef struct {
@@ -169,6 +201,15 @@ private:
     };
 
     enum {
+        USB_CONNECT,
+        USB_VID,
+        USB_PID,
+        USB_MANUFACTURER,
+        USB_PRODUCT,
+        USB_SERIAL_NUMBER
+    };
+
+    enum {
         TRANSLATE_INIT,
         TRANSLATE_UPDATE,
         TRANSLATE_ONLY
@@ -208,7 +249,7 @@ private:
 
     // translations
     void translateExtras(int init);
-    void translateSwitch(const QString &lang);
+    void translateSwitch(const QLocale &locale);
 
     // dark mode
     void darkModeSwitch(bool darkMode);
@@ -497,6 +538,13 @@ private:
     void autotesterLaunch();
     void autotesterRefreshCRC();
 
+#ifdef LIBUSB_SUPPORT
+    // usb devices
+    static int LIBUSB_CALL usbHotplugCallback(libusb_context *context, libusb_device *device, libusb_hotplug_event event, void *userData);
+    void usbUpdate(libusb_device *device, bool arrived = true);
+    void usbRefresh();
+#endif
+
     // keybindings
     void keymapExport();
 
@@ -580,8 +628,11 @@ private:
                            Qt::Orientation orientation);
     void raiseContainingDock(QWidget *widget);
 
+    // Semi Exclusive Buttons
+    void semiExclusiveButtonPressed();
+
     // Members
-    Ui::MainWindow *ui = Q_NULLPTR;
+    Ui::MainWindow *ui = nullptr;
     EmuThread emu;
     CEmuOpts opts;
     InterCom com;
@@ -672,7 +723,7 @@ private:
     QMenu *m_menuDocks;
     QMenu *m_menuDebug;
 
-    KeyHistoryWidget *m_windowKeys = Q_NULLPTR;
+    KeyHistoryWidget *m_windowKeys = nullptr;
 
     bool m_isSendingRom = false;
     QString m_dragRom;
@@ -705,8 +756,8 @@ private:
     QStringList m_docksVisualizer;
     QStringList m_docksVisualizerConfig;
     QList<DockWidget*> m_dockPtrs;
-    QSettings *m_config = Q_NULLPTR;
-    QPointer<HexWidget> m_memWidget = Q_NULLPTR;
+    QSettings *m_config = nullptr;
+    QPointer<HexWidget> m_memWidget = nullptr;
 
     QString m_pathRom;
     QString m_pathRam;
@@ -803,6 +854,7 @@ private:
     static const QString SETTING_KEYPAD_CUSTOM_PATH;
 
     static const QString SETTING_PREFERRED_LANG;
+    static const QString SETTING_PREFERRED_LOCALE;
     static const QString SETTING_VERSION;
 
     static const QString SETTING_DEFAULT_CONFIG_FILE;
@@ -865,10 +917,18 @@ private:
     QString ACTION_COPY_DATA;
     QString ACTION_RUN_UNTIL;
 
-    QTableWidget *m_breakpoints = Q_NULLPTR;
-    QTableWidget *m_watchpoints = Q_NULLPTR;
-    QTableWidget *m_ports = Q_NULLPTR;
-    DataWidget *m_disasm = Q_NULLPTR;
+    QTableWidget *m_breakpoints = nullptr;
+    QTableWidget *m_watchpoints = nullptr;
+    QTableWidget *m_ports = nullptr;
+    DataWidget *m_disasm = nullptr;
+
+#ifdef LIBUSB_SUPPORT
+    libusb_context *m_usbContext = nullptr;
+    libusb_hotplug_callback_handle m_usbHotplugCallbackHandle{};
+    LibusbEventThread *m_usbEventThread = nullptr;
+    uint16_t m_usbLangId = 0x0409;
+    QButtonGroup *m_usbConnectGroup = nullptr;
+#endif
 
 #ifdef _WIN32
     QAction *actionToggleConsole;

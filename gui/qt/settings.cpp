@@ -114,6 +114,7 @@ const QString MainWindow::SETTING_KEYPAD_SMARTPAD           = QStringLiteral("Sm
 const QString MainWindow::SETTING_KEYPAD_CUSTOM             = QStringLiteral("custom");
 
 const QString MainWindow::SETTING_PREFERRED_LANG            = QStringLiteral("preferred_lang");
+const QString MainWindow::SETTING_PREFERRED_LOCALE          = QStringLiteral("preferred_locale");
 const QString MainWindow::SETTING_VERSION                   = QStringLiteral("version");
 
 const QString MainWindow::SETTING_DEFAULT_CONFIG_FILE       = QStringLiteral("/cemu_config.ini");

@@ -52,6 +52,42 @@ asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, a
     return emu->handleReset(boot_ver, loaded_rev, default_rev, python);
 }
 
+namespace {
+
+class ArgList {
+public:
+    ArgList(const QStringList &args, bool nullTerminate = true);
+
+    const char *const *args();
+    std::size_t size();
+
+private:
+    QList<QByteArray> m_storage;
+    QVector<const char *> m_args;
+};
+
+ArgList::ArgList(const QStringList &args, bool nullTerminate) {
+    m_storage.reserve(args.size());
+    m_args.reserve(args.size() + nullTerminate);
+    for (const QString &arg : args) {
+        m_storage << arg.toUtf8();
+        m_args << m_storage.back().data();
+    }
+    if (nullTerminate) {
+        m_args << nullptr;
+    }
+}
+
+const char *const *ArgList::args() {
+    return m_args.data();
+}
+
+std::size_t ArgList::size() {
+    return m_storage.size();
+}
+
+}
+
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
@@ -129,48 +165,53 @@ void EmuThread::writeConsole(int console, const char *format, va_list args) {
 }
 
 void EmuThread::doStuff() {
-    while (!m_reqQueue.isEmpty()) {
-        int req = m_reqQueue.dequeue();
-        switch (+req) {
-            default:
-                break;
-            case RequestPause:
-                block(req);
-                break;
-            case RequestReset:
-                cpu_crash("user request");
-                break;
-            case RequestSend:
-                sendFiles();
-                break;
-            case RequestReceive:
-                block(req);
-                break;
-            case RequestCancelTransfer:
-                emu_cancel_transfer();
-                break;
-            case RequestDebugger:
-                debug_open(DBG_USER, 0);
-                break;
-            case RequestBasicDebugger:
+    {
+        std::unique_lock<std::mutex> requestLock{m_requestMutex};
+        while (!m_reqQueue.isEmpty()) {
+            int req = m_reqQueue.dequeue();
+            requestLock.unlock();
+            switch (+req) {
+                default:
+                    break;
+                case RequestPause:
+                    block(req);
+                    break;
+                case RequestReset:
+                    cpu_crash("user request");
+                    break;
+                case RequestSend:
+                    doSend();
+                    break;
+                case RequestReceive:
+                    block(req);
+                    break;
+                case RequestUsbPlugDevice:
+                    doUsbPlugDevice();
+                    break;
+                case RequestDebugger:
+                    debug_open(DBG_USER, 0);
+                    break;
+                case RequestBasicDebugger:
                 debug_open(DBG_BASIC_RECONFIG, 0);
-                break;
-            case RequestSave:
-                emit saved(emu_save(m_saveType, m_savePath.toStdString().c_str()));
-                break;
-            case RequestLoad:
-                emit loaded(emu_load(m_loadType, m_loadPath.toStdString().c_str()), m_loadType);
-                break;
-            case RequestAutoTester:
-                uint32_t run_rate_prev = emu_get_run_rate();
-                emu_set_run_rate(1000);
-                if (!autotester::doTestSequence()) {
-                    emit tested(1);
-                } else {
-                    emit tested(0);
-                }
-                emu_set_run_rate(run_rate_prev);
-                break;
+                    break;
+                case RequestSave:
+                    doSave();
+                    break;
+                case RequestLoad:
+                    doLoad();
+                    break;
+                case RequestAutoTester:
+                    uint32_t run_rate_prev = emu_get_run_rate();
+                    emu_set_run_rate(1000);
+                    if (!autotester::doTestSequence()) {
+                        emit tested(1);
+                    } else {
+                        emit tested(0);
+                    }
+                    emu_set_run_rate(run_rate_prev);
+                    break;
+            }
+            requestLock.lock();
         }
     }
 
@@ -226,6 +267,12 @@ void EmuThread::throttleWait() {
     emit sendSpeed(diff.count() * run_rate * (1.0 / PerfArraySize));
 }
 
+void EmuThread::block(int status) {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    emit blocked(status);
+    m_cv.wait(lock);
+}
+
 void EmuThread::unblock() {
     m_mutex.lock();
     m_cv.notify_all();
@@ -259,44 +306,88 @@ asic_rev_t EmuThread::handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRe
 }
 
 void EmuThread::reset() {
-    req(RequestReset);
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
+    m_requestQueue.enqueue(RequestReset);
 }
 
 void EmuThread::cancelTransfer() {
-    req(RequestCancelTransfer);
+    usbPlugDevice();
 }
 
 void EmuThread::receive() {
-    req(RequestReceive);
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
+    m_requestQueue.enqueue(RequestReceive);
 }
 
 void EmuThread::send(const QStringList &list, int location) {
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
     m_vars = list;
     m_sendLoc = location;
-    req(RequestSend);
+    m_requestQueue.enqueue(RequestSend);
 }
 
-void EmuThread::sendFiles() {
-    QList<QByteArray> utf8Vars;
-    QVector<const char *> args;
-    utf8Vars.reserve(m_vars.size());
-    args.reserve(m_vars.size());
-    for (const QString &string : m_vars) {
-        utf8Vars.push_back(string.toUtf8());
-        args.push_back(utf8Vars.back());
-    }
+void EmuThread::usbPlugDevice(const QStringList &args,
+                              usb_progress_handler_t usbProgressHandler,
+                              void *usbProgressContext) {
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
+    m_usbArgs = args;
+    m_usbProgressHandler = usbProgressHandler;
+    m_usbProgressContext = usbProgressContext;
+    m_requestQueue.enqueue(RequestUsbPlugDevice);
+}
+
+void EmuThread::doLoad() {
+    std::unique_lock<std::mutex> requestLock{m_requestMutex};
+    emu_data_t loadType = m_loadType;
+    QByteArray loadPath = m_loadPath.toUtf8();
+    requestLock.unlock();
+    emit loaded(emu_load(loadType, loadPath.data()), m_loadType);
+}
+
+
+void EmuThread::doSave() {
+    std::unique_lock<std::mutex> requestLock{m_requestMutex};
+    emu_data_t saveType = m_saveType;
+    QByteArray savePath = m_savePath.toUtf8();
+    requestLock.unlock();
+    emit saved(emu_save(saveType, savePath.data()));
+}
+
+void EmuThread::doSend() {
+    std::unique_lock<std::mutex> requestLock{m_requestMutex};
+    ArgList args{m_vars, false};
+    int sendLoc = m_sendLoc;
     m_backupThrottleForTransfers = m_throttle;
+    requestLock.unlock();
     setThrottle(false);
-    emu_send_variables(args.data(), args.size(), m_sendLoc, &EmuThread::progressHandler, this);
+    emu_send_variables(args.args(), args.size(), sendLoc,
+                       [](void *context, int value, int total) {
+                           EmuThread* emuThread = reinterpret_cast<EmuThread *>(context);
+                           if (value == 1 && total == 1) {
+                               emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
+                           }
+                           emit emuThread->linkProgress(value, total);
+                           return false;
+                       }, this);
 }
 
-bool EmuThread::progressHandler(void *context, int value, int total) {
-    EmuThread* emuThread = reinterpret_cast<EmuThread *>(context);
-    if (value == 1 && total == 1) {
-        emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
+void EmuThread::doUsbPlugDevice() {
+    std::unique_lock<std::mutex> requestLock{m_requestMutex};
+    ArgList args{m_usbArgs, true};
+    usb_progress_handler_t *usbProgressHandler = m_usbProgressHandler;
+    void *usbProgressContext = m_usbProgressContext;
+    requestLock.unlock();
+    if (usb_plug_device(args.size(), args.args(), usbProgressHandler, usbProgressContext) &&
+        usbProgressHandler) {
+        usbProgressHandler(usbProgressContext, 0, 0);
     }
-    emit emuThread->linkProgress(value, total);
-    return false;
+}
+
+void EmuThread::doAutotest() {
+    uint32_t saveRunRate = emu_get_run_rate();
+    emu_set_run_rate(1000);
+    emit tested(!autotester::doTestSequence());
+    emu_set_run_rate(saveRunRate);
 }
 
 void EmuThread::enqueueKeys(quint16 key1, quint16 key2, bool repeat) {
@@ -312,20 +403,22 @@ void EmuThread::enqueueKeys(quint16 key1, quint16 key2, bool repeat) {
 }
 
 void EmuThread::test(const QString &config, bool run) {
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
     m_autotesterPath = config;
     m_autotesterRun = run;
-    req(RequestAutoTester);
+    m_requestQueue.enqueue(RequestAutoTester);
 }
 
 void EmuThread::save(emu_data_t fileType, const QString &filePath) {
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
     m_savePath = filePath;
     m_saveType = fileType;
-    req(RequestSave);
+    m_requestQueue.enqueue(RequestSave);
 }
 
 void EmuThread::setSpeed(int value) {
     {
-        std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
+        std::lock_guard<std::mutex> lockSpeed(m_mutexSpeed);
         m_speed = value;
     }
     if (value) {
@@ -334,7 +427,7 @@ void EmuThread::setSpeed(int value) {
 }
 
 void EmuThread::setThrottle(bool state) {
-    std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
+    std::lock_guard<std::mutex> lockSpeed(m_mutexSpeed);
     m_throttle = state;
     if (!state) {
         m_cvSpeed.notify_one();
@@ -378,7 +471,8 @@ void EmuThread::debug(bool state, int mode) {
         resume();
     }
     if (state) {
-        req(mode);
+        std::lock_guard<std::mutex> requestLock{m_requestMutex};
+        m_requestQueue.enqueue(mode);
     }
 }
 
@@ -391,9 +485,10 @@ void EmuThread::load(emu_data_t fileType, const QString &filePath) {
 
         emit loaded(emu_load(fileType, filePath.toStdString().c_str()), fileType);
     } else if (fileType == EMU_DATA_RAM) {
+        std::lock_guard<std::mutex> requestLock{m_requestMutex};
         m_loadPath = filePath;
         m_loadType = fileType;
-        req(RequestLoad);
+        m_requestQueue.enqueue(RequestLoad);
     }
 }
 

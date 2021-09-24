@@ -138,7 +138,7 @@ void asic_init(void) {
 }
 
 void asic_free(void) {
-    usb_init_device(0, NULL, NULL, NULL);
+    usb_plug_device(0, NULL, NULL, NULL);
     lcd_free();
     mem_free();
     gui_console_printf("[CEmu] Freed ASIC.\n");

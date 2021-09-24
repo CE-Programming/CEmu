@@ -17,9 +17,9 @@ typedef struct usb_state {
     };
     uint8_t ep0_data[8]; /* 0x1d0: EP0 Setup Packet PIO Register */
     uint8_t ep0_idx;
-    uint8_t fifo_data[4][1024], cxfifo_data[64];
-    usb_event_t event;
     usb_device_t *device;
+    usb_event_t event;
+    uint8_t buffer[0x5000];
 } usb_state_t;
 
 extern usb_state_t usb;
@@ -40,7 +40,7 @@ void usb_grp1_int(uint32_t);
 void usb_grp2_int(uint16_t);
 uint8_t usb_status(void);
 
-int usb_init_device(int argc, const char *const *argv,
+int usb_plug_device(int argc, const char *const *argv,
                     usb_progress_handler_t *progress_handler, void *progress_context);
 
 #ifdef __cplusplus

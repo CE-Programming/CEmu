@@ -19,16 +19,18 @@
 #include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
 
-#include <QtCore/QFileInfo>
-#include <QtCore/QRegularExpression>
 #include <QtCore/QBuffer>
+#include <QtCore/QFileInfo>
+#include <QtCore/QLocale>
 #include <QtCore/QProcess>
+#include <QtCore/QRegularExpression>
 #include <QtGui/QFont>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
 #include <QtGui/QScreen>
 #include <QShortcut> /* Different module in Qt5 vs Qt6 */
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
@@ -40,7 +42,7 @@
 #include <cmath>
 
 #ifdef Q_OS_MACX
-    #include "os/mac/kdmactouchbar.h"
+# include "os/mac/kdmactouchbar.h"
 #endif
 
 Q_DECLARE_METATYPE(calc_var_t)
@@ -48,17 +50,17 @@ Q_DECLARE_METATYPE(emu_state_t)
 Q_DECLARE_METATYPE(emu_data_t)
 
 #ifdef _MSC_VER
-    #include <direct.h>
-    #define chdir _chdir
+# include <direct.h>
+# define chdir _chdir
 #else
-    #include <unistd.h>
+# include <unistd.h>
 #endif
 
 MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
     keypadBridge = new QtKeypadBridge(this); // This must be before setupUi for some reason >.>
 
     // setup translations
-    if (m_appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"))) {
+    if (m_appTranslator.load(QLocale::system(), QStringLiteral(":/i18n/i18n/"))) {
         qApp->installTranslator(&m_appTranslator);
     }
 
@@ -279,6 +281,33 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::autotesterUpdatePresets);
     connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::autotesterRefreshCRC);
 
+#ifdef LIBUSB_SUPPORT
+    // usb devices
+    connect(this, &MainWindow::usbUnplug, this, &MainWindow::usbUnplugged);
+    m_usbConnectGroup = new QButtonGroup{this};
+    if (!libusb_init(&m_usbContext)) {
+        if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+            connect(this, &MainWindow::usbHotplug, this, &MainWindow::usbUpdate);
+            if (libusb_hotplug_register_callback(
+                        m_usbContext,
+                        libusb_hotplug_event(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
+                                             LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+                        LIBUSB_HOTPLUG_ENUMERATE,
+                        LIBUSB_HOTPLUG_MATCH_ANY,
+                        LIBUSB_HOTPLUG_MATCH_ANY,
+                        LIBUSB_HOTPLUG_MATCH_ANY,
+                        &MainWindow::usbHotplugCallback,
+                        this, &m_usbHotplugCallbackHandle) == LIBUSB_SUCCESS) {
+                m_usbEventThread = new LibusbEventThread{m_usbContext, this};
+                m_usbEventThread->start();
+            }
+        } else {
+            usbRefresh();
+        }
+        connect(ui->buttonRefreshUSB, &QPushButton::clicked, this, &MainWindow::usbRefresh);
+    }
+#endif
+
     // menubar actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
@@ -413,11 +442,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoUpdates);
 
     // languages
-    connect(ui->actionEnglish,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("en_EN")); });
-    connect(ui->actionFran_ais, &QAction::triggered, [this]{ translateSwitch(QStringLiteral("fr_FR")); });
-    connect(ui->actionDutch,    &QAction::triggered, [this]{ translateSwitch(QStringLiteral("nl_NL")); });
-    connect(ui->actionEspanol,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("es_ES")); });
-    connect(ui->actionChinese,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("zh_CN")); });
+    connect(ui->actionEnglish,  &QAction::triggered, [this]{ translateSwitch(QLocale::English); });
+    connect(ui->actionFran_ais, &QAction::triggered, [this]{ translateSwitch(QLocale::French); });
+    connect(ui->actionDutch,    &QAction::triggered, [this]{ translateSwitch(QLocale::Dutch); });
+    connect(ui->actionEspanol,  &QAction::triggered, [this]{ translateSwitch(QLocale::Spanish); });
+    connect(ui->actionChinese,  &QAction::triggered, [this]{ translateSwitch(QLocale::Chinese); });
 
     // sending handler
     connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
@@ -683,12 +712,163 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     }
 }
 
-void MainWindow::translateSwitch(const QString& lang) {
+void MainWindow::translateSwitch(const QLocale &locale) {
+#ifdef LIBUSB_SUPPORT
+    static const QHash<QLocale, quint16> langIdMap = {
+        {QLocale::Afrikaans, 0x0436},
+        {QLocale::Albanian, 0x041c},
+        {{QLocale::Arabic, QLocale::SaudiArabia}, 0x0401},
+        {{QLocale::Arabic, QLocale::Iraq}, 0x0801},
+        {{QLocale::Arabic, QLocale::Egypt}, 0x0c01},
+        {{QLocale::Arabic, QLocale::Libya}, 0x1001},
+        {{QLocale::Arabic, QLocale::Algeria}, 0x1401},
+        {{QLocale::Arabic, QLocale::Morocco}, 0x1801},
+        {{QLocale::Arabic, QLocale::Tunisia}, 0x1c01},
+        {{QLocale::Arabic, QLocale::Oman}, 0x2001},
+        {{QLocale::Arabic, QLocale::Yemen}, 0x2401},
+        {{QLocale::Arabic, QLocale::Syria}, 0x2801},
+        {{QLocale::Arabic, QLocale::Jordan}, 0x2c01},
+        {{QLocale::Arabic, QLocale::Lebanon}, 0x3001},
+        {{QLocale::Arabic, QLocale::Kuwait}, 0x3401},
+        {{QLocale::Arabic, QLocale::UnitedArabEmirates}, 0x3801},
+        {{QLocale::Arabic, QLocale::Bahrain}, 0x3c01},
+        {{QLocale::Arabic, QLocale::Qatar}, 0x4001},
+        {QLocale::Armenian, 0x042b},
+        {QLocale::Assamese, 0x044d},
+        {{QLocale::Azerbaijani, QLocale::LatinScript, QLocale::Azerbaijan}, 0x042c},
+        {{QLocale::Azerbaijani, QLocale::CyrillicScript, QLocale::Azerbaijan}, 0x082c},
+        {QLocale::Basque, 0x042d},
+        {QLocale::Belarusian, 0x0423},
+        {QLocale::Bengali, 0x0445},
+        {QLocale::Bulgarian, 0x0402},
+        {QLocale::Burmese, 0x0455},
+        {QLocale::Catalan, 0x0403},
+        {{QLocale::Chinese, QLocale::Taiwan}, 0x0404},
+        {{QLocale::Chinese, QLocale::China}, 0x0804},
+        {{QLocale::Chinese, QLocale::HongKong}, 0x0c04},
+        {{QLocale::Chinese, QLocale::Singapore}, 0x1004},
+        {{QLocale::Chinese, QLocale::Macau}, 0x1404},
+        {QLocale::Croatian, 0x041a},
+        {QLocale::Czech, 0x0405},
+        {QLocale::Danish, 0x0406},
+        {{QLocale::Dutch, QLocale::Netherlands}, 0x0413},
+        {{QLocale::Dutch, QLocale::Belgium}, 0x0813},
+        {{QLocale::English, QLocale::UnitedStates}, 0x0409},
+        {{QLocale::English, QLocale::UnitedKingdom}, 0x0809},
+        {{QLocale::English, QLocale::Australia}, 0x0c09},
+        {{QLocale::English, QLocale::Canada}, 0x1009},
+        {{QLocale::English, QLocale::NewZealand}, 0x1409},
+        {{QLocale::English, QLocale::Ireland}, 0x1809},
+        {{QLocale::English, QLocale::SouthAfrica}, 0x1c09},
+        {{QLocale::English, QLocale::Jamaica}, 0x2009},
+        //{{QLocale::English, QLocale::Caribbean}, 0x2409},
+        {{QLocale::English, QLocale::Belize}, 0x2809},
+        {{QLocale::English, QLocale::TrinidadAndTobago}, 0x2c09},
+        {{QLocale::English, QLocale::Zimbabwe}, 0x3009},
+        {{QLocale::English, QLocale::Philippines}, 0x3409},
+        {QLocale::Estonian, 0x0425},
+        {QLocale::Faroese, 0x0438},
+        {QLocale::Persian, 0x0429},
+        {QLocale::Finnish, 0x040b},
+        {QLocale::French, 0x040c},
+        {{QLocale::French, QLocale::Belgium}, 0x080c},
+        {{QLocale::French, QLocale::Canada}, 0x0c0c},
+        {{QLocale::French, QLocale::Switzerland}, 0x100c},
+        {{QLocale::French, QLocale::Luxembourg}, 0x140c},
+        {{QLocale::French, QLocale::Monaco}, 0x180c},
+        {QLocale::Georgian, 0x0437},
+        {QLocale::German, 0x0407},
+        {{QLocale::German, QLocale::Switzerland}, 0x0807},
+        {{QLocale::German, QLocale::Austria}, 0x0c07},
+        {{QLocale::German, QLocale::Luxembourg}, 0x1007},
+        {{QLocale::German, QLocale::Liechtenstein}, 0x1407},
+        {QLocale::Greek, 0x0408},
+        {QLocale::Gujarati, 0x0447},
+        {QLocale::Hebrew, 0x040d},
+        {QLocale::Hindi, 0x0439},
+        {QLocale::Hungarian, 0x040e},
+        {QLocale::Icelandic, 0x040f},
+        {QLocale::Indonesian, 0x0421},
+        {QLocale::Italian, 0x0410},
+        {{QLocale::Italian, QLocale::Switzerland}, 0x0810},
+        {QLocale::Japanese, 0x0411},
+        {QLocale::Kannada, 0x044b},
+        {{QLocale::Kashmiri, QLocale::India}, 0x0860},
+        {QLocale::Kazakh, 0x043f},
+        {QLocale::Konkani, 0x0457},
+        {QLocale::Korean, 0x0412},
+        //{{QLocale::Korean, QLocale::Johab}, 0x0812},
+        {QLocale::Latvian, 0x0426},
+        {QLocale::Lithuanian, 0x0427},
+        //{{QLocale::Lithuanian, QLocale::Classic}, 0x0827},
+        {QLocale::Macedonian, 0x042f},
+        {{QLocale::Malay, QLocale::Malaysia}, 0x043e},
+        {{QLocale::Malay, QLocale::Brunei}, 0x083e},
+        {QLocale::Malayalam, 0x044c},
+        {QLocale::Manipuri, 0x0458},
+        {QLocale::Marathi, 0x044e},
+        {{QLocale::Nepali, QLocale::India}, 0x0861},
+        {{QLocale::NorwegianBokmal}, 0x0414},
+        {{QLocale::NorwegianNynorsk}, 0x0814},
+        {QLocale::Oriya, 0x0448},
+        {QLocale::Polish, 0x0415},
+        {{QLocale::Portuguese, QLocale::Brazil}, 0x0416},
+        {QLocale::Portuguese, 0x0816},
+        {QLocale::Punjabi, 0x0446},
+        {QLocale::Romanian, 0x0418},
+        {QLocale::Russian, 0x0419},
+        {QLocale::Sanskrit, 0x044f},
+        {{QLocale::Serbian, QLocale::CyrillicScript, QLocale::Serbia}, 0x0c1a},
+        {{QLocale::Serbian, QLocale::LatinScript, QLocale::Serbia}, 0x081a},
+        {QLocale::Sindhi, 0x0459},
+        {QLocale::Slovak, 0x041b},
+        {QLocale::Slovenian, 0x0424},
+        {QLocale::Spanish, 0x040a},
+        {{QLocale::Spanish, QLocale::Mexico}, 0x080a},
+        //{{QLocale::Spanish, QLocale::ModernSort}, 0x0c0a},
+        {{QLocale::Spanish, QLocale::Guatemala}, 0x100a},
+        {{QLocale::Spanish, QLocale::CostaRica}, 0x140a},
+        {{QLocale::Spanish, QLocale::Panama}, 0x180a},
+        {{QLocale::Spanish, QLocale::DominicanRepublic}, 0x1c0a},
+        {{QLocale::Spanish, QLocale::Venezuela}, 0x200a},
+        {{QLocale::Spanish, QLocale::Colombia}, 0x240a},
+        {{QLocale::Spanish, QLocale::Peru}, 0x280a},
+        {{QLocale::Spanish, QLocale::Argentina}, 0x2c0a},
+        {{QLocale::Spanish, QLocale::Ecuador}, 0x300a},
+        {{QLocale::Spanish, QLocale::Chile}, 0x340a},
+        {{QLocale::Spanish, QLocale::Uruguay}, 0x380a},
+        {{QLocale::Spanish, QLocale::Paraguay}, 0x3c0a},
+        {{QLocale::Spanish, QLocale::Bolivia}, 0x400a},
+        {{QLocale::Spanish, QLocale::ElSalvador}, 0x440a},
+        {{QLocale::Spanish, QLocale::Honduras}, 0x480a},
+        {{QLocale::Spanish, QLocale::Nicaragua}, 0x4c0a},
+        {{QLocale::Spanish, QLocale::PuertoRico}, 0x500a},
+        {QLocale::SouthernSotho, 0x0430},
+        {{QLocale::Swahili, QLocale::Kenya}, 0x0441},
+        {QLocale::Swedish, 0x041d},
+        {{QLocale::Swedish, QLocale::Finland}, 0x081d},
+        {QLocale::Tamil, 0x0449},
+        //{{QLocale::Tatar, QLocale::Tatarstan}, 0x0444},
+        {QLocale::Telugu, 0x044a},
+        {QLocale::Thai, 0x041e},
+        {QLocale::Turkish, 0x041f},
+        {QLocale::Ukrainian, 0x0422},
+        {{QLocale::Urdu, QLocale::Pakistan}, 0x0420},
+        {{QLocale::Urdu, QLocale::India}, 0x0820},
+        {{QLocale::Uzbek, QLocale::LatinScript, QLocale::Uzbekistan}, 0x0443},
+        {{QLocale::Uzbek, QLocale::CyrillicScript, QLocale::Uzbekistan}, 0x0843},
+        {QLocale::Vietnamese, 0x042a},
+    };
+    m_usbLangId = langIdMap.value(locale, langIdMap.value(locale.language(), 0x0409));
+    libusb_setlocale(locale.name().toUtf8().constData());
+#endif
     qApp->removeTranslator(&m_appTranslator);
     // For English, nothing to load after removing the translator.
-    if (lang == QStringLiteral("en_EN") || (m_appTranslator.load(lang, QStringLiteral(":/i18n/i18n/"))
-                                            && qApp->installTranslator(&m_appTranslator))) {
-        m_config->setValue(SETTING_PREFERRED_LANG, lang);
+    if (locale.language() == QLocale::English ||
+        (m_appTranslator.load(locale, QStringLiteral(":/i18n/i18n/")) &&
+         qApp->installTranslator(&m_appTranslator))) {
+        m_config->remove(SETTING_PREFERRED_LANG);
+        m_config->setValue(SETTING_PREFERRED_LOCALE, locale);
     } else {
         QMessageBox::warning(this, MSG_WARNING, tr("No translation available for this language :("));
     }
@@ -949,7 +1129,7 @@ void MainWindow::changeEvent(QEvent* event) {
             translateExtras(TRANSLATE_UPDATE);
         }
     } else if (eventType == QEvent::LocaleChange) {
-        translateSwitch(QLocale::system().name());
+        translateSwitch(QLocale::system());
     }
     QMainWindow::changeEvent(event);
     if (eventType == QEvent::ThemeChange) {
@@ -977,10 +1157,12 @@ DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) {
     return findSelfOrParent<DockWidget *>(child);
 }
 
-bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
-                                   Qt::CursorShape cursorShape,
-                                   int (QSize::*dimension)() const,
-                                   Qt::Orientation orientation) {
+bool MainWindow::redistributeDocks(
+        [[maybe_unused]] const QPoint &pos,
+        [[maybe_unused]] const QPoint &offset,
+        [[maybe_unused]] Qt::CursorShape cursorShape,
+        [[maybe_unused]] int (QSize::*dimension)() const,
+        [[maybe_unused]] Qt::Orientation orientation) {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     if (cursor().shape() == cursorShape) {
         if (DockWidget *before = redistributeFindDock(pos - offset)) {
@@ -993,8 +1175,6 @@ bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
             }
         }
     }
-#else
-    (void)pos; (void)offset; (void)cursorShape; (void)dimension; (void)orientation;
 #endif
     return false;
 }
@@ -1020,6 +1200,13 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
         }
     }
     QMainWindow::mouseDoubleClickEvent(event);
+}
+
+
+void MainWindow::semiExclusiveButtonPressed() {
+    auto button = static_cast<QAbstractButton *>(sender());
+    auto group = button->group();
+    group->setExclusive(group->checkedButton() != button);
 }
 
 void MainWindow::setup() {
@@ -1084,9 +1271,11 @@ void MainWindow::setup() {
         info->show();
     }
 
-    QString prefLang = m_config->value(SETTING_PREFERRED_LANG, QStringLiteral("none")).toString();
-    if (prefLang != QStringLiteral("none")) {
-        translateSwitch(prefLang);
+    QLocale prefLocale = m_config->value(
+            SETTING_PREFERRED_LOCALE,
+            QLocale{m_config->value(SETTING_PREFERRED_LANG).toString()}).toLocale();
+    if (prefLocale != QLocale::C) {
+        translateSwitch(prefLocale);
     }
 
     translateExtras(TRANSLATE_UPDATE);
@@ -1219,6 +1408,23 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
+#ifdef LIBUSB_SUPPORT
+    if (m_usbContext) {
+        if (m_usbHotplugCallbackHandle) {
+            if (m_usbEventThread) {
+                m_usbEventThread->requestInterruption();
+            }
+            libusb_hotplug_deregister_callback(m_usbContext, m_usbHotplugCallbackHandle);
+            m_usbHotplugCallbackHandle = {};
+            if (m_usbEventThread) {
+                m_usbEventThread->wait();
+                m_usbEventThread = nullptr;
+            }
+        }
+        libusb_exit(m_usbContext);
+        m_usbContext = nullptr;
+    }
+#endif
     delete m_config;
     delete ui;
 }
@@ -2462,7 +2668,7 @@ void MainWindow::disasmLine() {
     }
 
     if (disasm.highlight.pc == true) {
-        m_disasm->addHighlight(QColor(Qt::blue).lighter(180), QColor(Qt::blue).darker(160));
+        m_disasm->addHighlight(QColor{Qt::blue}.lighter(180), QColor(Qt::blue).darker(160));
     }
 }
 
@@ -2595,6 +2801,163 @@ void MainWindow::contextConsole(const QPoint &posa) {
         }
     }
 }
+
+#ifdef LIBUSB_SUPPORT
+
+// ------------------------------------------------
+// USB devices
+// ------------------------------------------------
+
+LibusbEventThread::LibusbEventThread(libusb_context *usbContext, QObject *parent)
+    : QThread{parent}
+    , m_usbContext{usbContext} {
+}
+
+void LibusbEventThread::run() {
+    while (!isInterruptionRequested()) {
+        libusb_handle_events(m_usbContext);
+    }
+}
+
+void MainWindow::usbUnplugged() {
+    if (QAbstractButton *button = m_usbConnectGroup->checkedButton()) {
+        m_usbConnectGroup->setExclusive(false);
+        button->setChecked(false);
+    }
+}
+
+int LIBUSB_CALL MainWindow::usbHotplugCallback([[maybe_unused]] libusb_context *context,
+                                               libusb_device *device,
+                                               libusb_hotplug_event event, void *userData) {
+    if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED ||
+        event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+        emit static_cast<MainWindow *>(userData)->
+            usbHotplug(device, event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED);
+    }
+    return 0;
+}
+
+void MainWindow::usbUpdate(libusb_device *device, bool attached) {
+    int row;
+    for (row = 0; row != ui->usbTable->rowCount(); ++row) {
+        if (ui->usbTable->item(row, USB_CONNECT)->data(Qt::UserRole).value<libusb_device *>() == device) {
+            break;
+        }
+    }
+    if (attached) {
+        if (row != ui->usbTable->rowCount()) {
+            return;
+        }
+
+        libusb_device_handle *handle;
+        if (libusb_open(device, &handle)) {
+            return;
+        }
+
+        libusb_device_descriptor desc;
+        libusb_get_device_descriptor(device, &desc);
+
+        unsigned char string[256];
+        quint16 langid = 0x0409; {
+            int size = libusb_get_string_descriptor(handle, 0, 0, string, sizeof(string));
+            for (int i = 2; i < size; i += 2) {
+                quint16 cur = string[i + 1] << 8 | string[i];
+                if (cur == m_usbLangId) {
+                    langid = cur;
+                    break;
+                }
+                if (i == 2 || !((cur ^ m_usbLangId) & 0x3ff)) {
+                    langid = cur;
+                }
+            }
+        }
+
+        ui->usbTable->setSortingEnabled(false);
+        int row = ui->usbTable->rowCount();
+        ui->usbTable->setRowCount(row + 1);
+
+        QToolButton *btnConnect = new QToolButton;
+        btnConnect->setCheckable(true);
+        QIcon btnIcon(QStringLiteral(":/icons/resources/icons/disconnect.png"));
+        btnIcon.addFile(QStringLiteral(":/icons/resources/icons/connect.png"), {}, QIcon::Normal, QIcon::On);
+        btnConnect->setIcon(btnIcon);
+        connect(btnConnect, &QToolButton::clicked, [this, device](bool checked) {
+            if (!checked) {
+                emu.usbPlugDevice();
+                return;
+            }
+            emu.usbPlugDevice({
+                    QStringLiteral("physical"),
+                    QStringLiteral("%0#%1")
+                        .arg(libusb_get_bus_number(device))
+                        .arg(libusb_get_device_address(device))
+                }, [](void *context, [[maybe_unused]] int value, [[maybe_unused]] int total) {
+                emit static_cast<MainWindow *>(context)->usbUnplug();
+                return false;
+            }, this);
+        });
+        m_usbConnectGroup->addButton(btnConnect);
+        connect(btnConnect, &QAbstractButton::pressed, this, &MainWindow::semiExclusiveButtonPressed);
+        ui->usbTable->setCellWidget(row, USB_CONNECT, btnConnect);
+        QTableWidgetItem *item = new QTableWidgetItem;
+        libusb_ref_device(device);
+        item->setData(Qt::UserRole, QVariant::fromValue(device));
+        ui->usbTable->setItem(row, USB_CONNECT, item);
+
+        for (int i = USB_VID; i <= USB_PID; i++) {
+            item = new QTableWidgetItem(int2hex((&desc.idVendor)[i - USB_VID], 4));
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            ui->usbTable->setItem(row, i, item);
+        }
+
+        for (int i = USB_MANUFACTURER; i <= USB_SERIAL_NUMBER; i++) {
+            if (uint8_t index = (&desc.iManufacturer)[i - USB_MANUFACTURER]) {
+                int size = libusb_get_string_descriptor(handle, index, langid, string, sizeof(string));
+                item = new QTableWidgetItem;
+                if (size >= 4) {
+                    string[0] = QChar::ByteOrderMark & 0xFF; string[1] = QChar::ByteOrderMark >> 8;
+                    item->setText(QString::fromUtf16(reinterpret_cast<const char16_t *>(string),
+                                                     size >> 1).remove(QChar::Null));
+                }
+                if (item->text().simplified().trimmed().isEmpty()) {
+                    item->setText(QStringLiteral("N/A"));
+                    item->setForeground(Qt::darkGray);
+                }
+                item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+                ui->usbTable->setItem(row, i, item);
+            }
+        }
+        ui->usbTable->setSortingEnabled(true);
+        ui->usbTable->resizeColumnsToContents();
+
+        libusb_close(handle);
+    } else if (row != ui->usbTable->rowCount()) {
+        if (static_cast<QAbstractButton *>(ui->usbTable->cellWidget(row, USB_CONNECT))->isChecked()) {
+            emu.usbPlugDevice();
+        }
+        ui->usbTable->removeRow(row);
+        ui->usbTable->resizeColumnsToContents();
+        libusb_unref_device(device);
+    }
+}
+
+void MainWindow::usbRefresh() {
+    emu.usbPlugDevice();
+    for (int row = 0; row != ui->usbTable->rowCount(); ++row) {
+        libusb_unref_device(static_cast<libusb_device *>(ui->usbTable->item(row, USB_CONNECT)->data(Qt::UserRole).value<libusb_device *>()));
+    }
+    ui->usbTable->setRowCount(0);
+    libusb_device **devices;
+    if (libusb_get_device_list(m_usbContext, &devices) < 0) {
+        return;
+    }
+    for (libusb_device **device = devices; device && *device; device++) {
+        usbUpdate(*device);
+    }
+    libusb_free_device_list(devices, false);
+}
+
+#endif
 
 // ------------------------------------------------
 // GUI IPC things

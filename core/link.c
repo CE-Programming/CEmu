@@ -48,7 +48,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
         }
         snprintf(argv[i+1], arg_size, "send%s:%s", locations[location], files[i]);
     }
-    err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
+    err = usb_plug_device(1+num, (const char *const *)argv, progress_handler, progress_context);
     if (err != 0) {
         gui_console_err_printf("[CEmu] USB transfer error code %d.\n", err);
     }
@@ -131,8 +131,4 @@ w_err:
         gui_console_err_printf("[CEmu] Transfer Error: Please contact the developers\n");
     }
     return LINK_ERR;
-}
-
-int emu_cancel_transfer(void) {
-    return usb_init_device(0, NULL, NULL, NULL);
 }

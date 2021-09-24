@@ -135,7 +135,7 @@ void *virt_mem_dup(uint32_t addr, int32_t size) {
     return virt_mem_cpy(NULL, addr, size);
 }
 
-void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
+void *mem_dma_read(void *buf, uint32_t addr, int32_t size) {
     uint8_t *dest = buf, *save_dest;
     fix_size(&addr, &size);
     if (!dest) {
@@ -160,6 +160,28 @@ void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
         }
     }
     return save_dest;
+}
+
+void mem_dma_write(const void *buf, uint32_t addr, int32_t size) {
+    const uint8_t *src = buf;
+    fix_size(&addr, &size);
+    while (size) {
+        addr &= 0x07FFFF;
+        if (addr + (unsigned int)size > addr && addr + (unsigned int)size <= SIZE_RAM) {
+            memcpy(&mem.ram.block[addr], src, (unsigned long)size);
+            break;
+        }
+        if (addr < SIZE_RAM) {
+            uint32_t temp_size = SIZE_RAM - addr;
+            memcpy(&mem.ram.block[addr], src, temp_size);
+            src += temp_size;
+            addr += temp_size;
+            size -= temp_size;
+        } else {
+            src++;
+            size--;
+        }
+    }
 }
 
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {

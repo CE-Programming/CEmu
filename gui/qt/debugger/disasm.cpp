@@ -88,10 +88,9 @@ static std::string strA(uint32_t data) {
     return std::string(tmpbuf);
 }
 
-static int disasmFetch(struct zdis_ctx *ctx, uint32_t addr) {
+static int disasmFetch([[maybe_unused]] struct zdis_ctx *ctx, uint32_t addr) {
     char tmp[3];
     uint8_t value = mem_peek_byte(addr), data;
-    (void)ctx;
     if ((data = debug.addr[addr])) {
         disasm.highlight.watchR |= data & DBG_MASK_READ ? true : false;
         disasm.highlight.watchW |= data & DBG_MASK_WRITE ? true : false;
@@ -117,9 +116,8 @@ static int disasmFetch(struct zdis_ctx *ctx, uint32_t addr) {
     return value;
 }
 
-static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il) {
+static bool disasmPut([[maybe_unused]] struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il) {
     char tmp[11], sign = '+';
-    (void)ctx;
     disasm.il = il;
     switch (kind) {
         case ZDIS_PUT_BYTE:

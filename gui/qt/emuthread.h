@@ -4,10 +4,13 @@
 #include "../../core/debug/debug.h"
 #include "../../core/emu.h"
 #include "../../core/link.h"
+#include "../../core/usb/usb.h"
 
 #include <QtCore/QMutex>
 #include <QtCore/QQueue>
 #include <QtCore/QSemaphore>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 
@@ -52,11 +55,11 @@ public:
         RequestNone,
         RequestPause,
         RequestReset,
-        RequestSave,
         RequestLoad,
+        RequestSave,
         RequestSend,
         RequestReceive,
-        RequestCancelTransfer,
+        RequestUsbPlugDevice,
         RequestAutoTester,
         RequestDebugger,
         RequestBasicDebugger
@@ -92,31 +95,27 @@ signals:
 public slots:
     void send(const QStringList &names, int location);
     void cancelTransfer();
+    void usbPlugDevice(const QStringList &args = {},
+                       usb_progress_handler_t usbProgressHandler = nullptr,
+                       void *usbProgressContext = nullptr);
     void enqueueKeys(quint16 key1, quint16 key2 = 0, bool repeat = false);
 
 protected:
-    virtual void run() Q_DECL_OVERRIDE;
+    void run() override;
 
 private:
 
-    void sendFiles();
-    static bool progressHandler(void *context, int value, int amount);
+    void doLoad();
+    void doSave();
+    void doSend();
+    void doUsbPlugDevice();
+    void doAutotest();
 
-    void req(int req) {
-        m_reqQueue.enqueue(req);
-    }
-
-    void block(int status) {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        emit blocked(status);
-        m_cv.wait(lock);
-    }
+    void block(int status);
 
     static constexpr size_t PerfArraySize = 20;
 
     QQueue<int> m_reqQueue;
-    emu_data_t m_saveType;
-    emu_data_t m_loadType;
 
     int m_speed, m_actualSpeed;
     bool m_throttle, m_backupThrottleForTransfers;
@@ -126,13 +125,25 @@ private:
 
     bool m_debug; // protected by m_mutexDebug
 
+    std::mutex m_requestMutex;
+    QQueue<int> m_requestQueue;
+
+    emu_data_t m_saveType;
+    QString m_savePath;
+
+    emu_data_t m_loadType;
+    QString m_loadPath;
+
     QString m_autotesterPath;
     bool m_autotesterRun;
 
-    QString m_savePath;
-    QString m_loadPath;
     QStringList m_vars;
     int m_sendLoc;
+
+    QStringList m_usbArgs;
+    usb_progress_handler_t *m_usbProgressHandler;
+    void *m_usbProgressContext;
+    // end requestMutex protection
 
     std::mutex m_mutex;
     std::condition_variable m_cv;

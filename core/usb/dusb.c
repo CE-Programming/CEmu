@@ -5,7 +5,6 @@
 #include "../os/os.h"
 #include "../vat.h"
 
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,64 +125,108 @@ typedef enum dusb_state {
     DUSB_INVALID_STATE,
 
     DUSB_INIT_STATE,
+    DUSB_INIT_WAIT_STATE,
+    DUSB_POWER_STATE,
+    DUSB_POWER_RECOVERY_STATE,
+    DUSB_POWER_WAIT_STATE,
     DUSB_RESET_STATE,
     DUSB_RESET_RECOVERY_STATE,
+    DUSB_RESET_WAIT_STATE,
     DUSB_SET_ADDRESS_STATE,
     DUSB_SET_CONFIG_STATE,
+    DUSB_BUF_SIZE_REQ_WAIT_STATE,
     DUSB_BUF_SIZE_REQ_STATE,
+    DUSB_BUF_SIZE_ALLOC_WAIT_STATE,
     DUSB_BUF_SIZE_ALLOC_STATE,
     DUSB_COMMAND_STATE,
     DUSB_NEXT_COMMAND_STATE,
 
-    DUSB_SOS_PING_STATE,
-    DUSB_SOS_PING_ACK_STATE,
-    DUSB_SOS_MODE_SET_STATE,
-    DUSB_SOS_MODE_SET_ACK_STATE,
-    DUSB_SOS_BEGIN_STATE,
-    DUSB_SOS_BEGIN_ACK_STATE,
-    DUSB_SOS_ACK_BEGIN_STATE,
-    DUSB_SOS_ACK_BEGIN_ACK_STATE,
-    DUSB_SOS_HEADER_STATE,
-    DUSB_SOS_HEADER_ACK_STATE,
-    DUSB_SOS_ACK_HEADER_STATE,
-    DUSB_SOS_ACK_HEADER_ACK_STATE,
-    DUSB_SOS_DATA_STATE,
-    DUSB_SOS_DATA_ACK_STATE,
-    DUSB_SOS_ACK_DATA_STATE,
-    DUSB_SOS_ACK_DATA_ACK_STATE,
-    DUSB_SOS_NEXT_DATA_STATE,
-    DUSB_SOS_EOT_STATE,
-    DUSB_SOS_EOT_ACK_STATE,
-    DUSB_SOS_ACK_EOT_STATE,
-    DUSB_SOS_ACK_EOT_ACK_STATE,
-    DUSB_SOS_DONE_STATE,
+    DUSB_OS_PING_WAIT_STATE,
+    DUSB_OS_PING_STATE,
+    DUSB_OS_PING_ACK_WAIT_STATE,
+    DUSB_OS_PING_ACK_STATE,
+    DUSB_OS_MODE_SET_WAIT_STATE,
+    DUSB_OS_MODE_SET_STATE,
+    DUSB_OS_MODE_SET_ACK_WAIT_STATE,
+    DUSB_OS_MODE_SET_ACK_STATE,
+    DUSB_OS_BEGIN_WAIT_STATE,
+    DUSB_OS_BEGIN_STATE,
+    DUSB_OS_BEGIN_ACK_WAIT_STATE,
+    DUSB_OS_BEGIN_ACK_STATE,
+    DUSB_OS_ACK_BEGIN_WAIT_STATE,
+    DUSB_OS_ACK_BEGIN_STATE,
+    DUSB_OS_ACK_BEGIN_ACK_WAIT_STATE,
+    DUSB_OS_ACK_BEGIN_ACK_STATE,
+    DUSB_OS_HEADER_WAIT_STATE,
+    DUSB_OS_HEADER_STATE,
+    DUSB_OS_HEADER_FINAL_STATE,
+    DUSB_OS_HEADER_ACK_WAIT_STATE,
+    DUSB_OS_HEADER_ACK_STATE,
+    DUSB_OS_ACK_HEADER_WAIT_STATE,
+    DUSB_OS_ACK_HEADER_STATE,
+    DUSB_OS_ACK_HEADER_ACK_WAIT_STATE,
+    DUSB_OS_ACK_HEADER_ACK_STATE,
+    DUSB_OS_DATA_WAIT_STATE,
+    DUSB_OS_DATA_STATE,
+    DUSB_OS_DATA_FINAL_STATE,
+    DUSB_OS_DATA_ACK_WAIT_STATE,
+    DUSB_OS_DATA_ACK_STATE,
+    DUSB_OS_ACK_DATA_WAIT_STATE,
+    DUSB_OS_ACK_DATA_STATE,
+    DUSB_OS_ACK_DATA_ACK_WAIT_STATE,
+    DUSB_OS_ACK_DATA_ACK_STATE,
+    DUSB_OS_NEXT_DATA_STATE,
+    DUSB_OS_EOT_WAIT_STATE,
+    DUSB_OS_EOT_STATE,
+    DUSB_OS_EOT_ACK_WAIT_STATE,
+    DUSB_OS_EOT_ACK_STATE,
+    DUSB_OS_ACK_EOT_WAIT_STATE,
+    DUSB_OS_ACK_EOT_STATE,
+    DUSB_OS_ACK_EOT_ACK_WAIT_STATE,
+    DUSB_OS_ACK_EOT_ACK_STATE,
+    DUSB_OS_DONE_STATE,
 
-    DUSB_SEND_PING_STATE,
-    DUSB_SEND_PING_ACK_STATE,
-    DUSB_SEND_MODE_SET_STATE,
-    DUSB_SEND_MODE_SET_ACK_STATE,
-    DUSB_SEND_RTS_STATE,
-    DUSB_SEND_RTS_ACK_STATE,
-    DUSB_SEND_ACK_RTS_STATE,
-    DUSB_SEND_ACK_RTS_ACK_STATE,
-    DUSB_SEND_VAR_CNTS_STATE,
-    DUSB_SEND_VAR_CNTS_ACK_STATE,
-    DUSB_SEND_NEXT_VAR_CNTS_STATE,
-    DUSB_SEND_ACK_VAR_CNTS_STATE,
-    DUSB_SEND_ACK_VAR_CNTS_ACK_STATE,
-    DUSB_SEND_EOT_STATE,
-    DUSB_SEND_EOT_ACK_STATE,
-    DUSB_SEND_NEXT_STATE,
+    DUSB_VAR_PING_WAIT_STATE,
+    DUSB_VAR_PING_STATE,
+    DUSB_VAR_PING_ACK_WAIT_STATE,
+    DUSB_VAR_PING_ACK_STATE,
+    DUSB_VAR_MODE_SET_WAIT_STATE,
+    DUSB_VAR_MODE_SET_STATE,
+    DUSB_VAR_MODE_SET_ACK_WAIT_STATE,
+    DUSB_VAR_MODE_SET_ACK_STATE,
+    DUSB_VAR_RTS_WAIT_STATE,
+    DUSB_VAR_RTS_STATE,
+    DUSB_VAR_RTS_ACK_WAIT_STATE,
+    DUSB_VAR_RTS_ACK_STATE,
+    DUSB_VAR_ACK_RTS_WAIT_STATE,
+    DUSB_VAR_ACK_RTS_STATE,
+    DUSB_VAR_ACK_RTS_ACK_WAIT_STATE,
+    DUSB_VAR_ACK_RTS_ACK_STATE,
+    DUSB_VAR_VAR_CNTS_WAIT_STATE,
+    DUSB_VAR_VAR_CNTS_STATE,
+    DUSB_VAR_VAR_CNTS_FINAL_STATE,
+    DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE,
+    DUSB_VAR_VAR_CNTS_ACK_STATE,
+    DUSB_VAR_NEXT_VAR_CNTS_STATE,
+    DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE,
+    DUSB_VAR_ACK_VAR_CNTS_STATE,
+    DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE,
+    DUSB_VAR_ACK_VAR_CNTS_ACK_STATE,
+    DUSB_VAR_EOT_WAIT_STATE,
+    DUSB_VAR_EOT_STATE,
+    DUSB_VAR_EOT_ACK_WAIT_STATE,
+    DUSB_VAR_EOT_ACK_STATE,
+    DUSB_VAR_NEXT_STATE,
 } dusb_state_t;
 
 typedef struct dusb_context {
     dusb_state_t state;
-    uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size;
+    uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size, delay;
     uint8_t version, flag, buffer[8];
     dusb_command_t *command, commands[];
 } dusb_context_t;
 
-static uint32_t min32(uint32_t x, uint32_t y) {
+static uint32_t min_u32(uint32_t x, uint32_t y) {
     return x < y ? x : y;
 }
 
@@ -422,7 +465,7 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
             !dusb_convert_varname_to_utf8(command) ||
             fseek(file, DUSB_FLASH_FILE_LENGTH_OFFSET, SEEK_SET) ||
             read_le32(&context->length, file) != 1 ||
-            fseek(file, 0, SEEK_END) || DUSB_FLASH_FILE_DATA_OFFSET + context->length != ftell(file)) {
+            fseek(file, 0, SEEK_END) || DUSB_FLASH_FILE_DATA_OFFSET + (long)context->length != ftell(file)) {
             goto invalid;
         }
         context->start = DUSB_FLASH_FILE_DATA_OFFSET;
@@ -430,12 +473,12 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
             case CALC_VAR_TYPE_OPERATING_SYSTEM:
                 gui_console_printf("[CEmu] Transferring OS: %.*s %d.%d\n",
                     context->command->varname_utf8_length, context->command->varname_utf8, magic[8], magic[9]);
-                return DUSB_SOS_PING_STATE;
+                return DUSB_OS_PING_WAIT_STATE;
             case CALC_VAR_TYPE_FLASH_APP:
                 gui_console_printf("[CEmu] Transferring application: %.*s %d.%d\n",
                     context->command->varname_utf8_length, context->command->varname_utf8, magic[8], magic[9]);
                 context->flag = DUSB_VAR_FILE_VAR_FLAG_ARCHIVED;
-                return DUSB_SEND_PING_STATE;
+                return DUSB_VAR_PING_WAIT_STATE;
             default:
                 goto invalid;
         }
@@ -450,7 +493,7 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
             goto invalid;
         }
         context->start = DUSB_VAR_FILE_DATA_OFFSET;
-        return DUSB_SEND_NEXT_STATE;
+        return DUSB_VAR_NEXT_STATE;
     }
 invalid:
     gui_console_err_printf("[CEmu] Transfer warning: file parsing failed\n");
@@ -480,132 +523,298 @@ static bool dusb_detect_var(dusb_context_t *context) {
         (context->length = data_size2) == data_size;
 }
 
+static usb_event_type_t dusb_transfer_event(dusb_state_t state) {
+    switch (state) {
+        default: abort();
+        case DUSB_SET_ADDRESS_STATE:
+        case DUSB_SET_CONFIG_STATE:
+        case DUSB_BUF_SIZE_REQ_WAIT_STATE:
+        case DUSB_BUF_SIZE_ALLOC_WAIT_STATE:
+        case DUSB_OS_PING_WAIT_STATE:
+        case DUSB_OS_PING_ACK_WAIT_STATE:
+        case DUSB_OS_MODE_SET_WAIT_STATE:
+        case DUSB_OS_MODE_SET_ACK_WAIT_STATE:
+        case DUSB_OS_BEGIN_WAIT_STATE:
+        case DUSB_OS_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_HEADER_WAIT_STATE:
+        case DUSB_OS_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_DATA_WAIT_STATE:
+        case DUSB_OS_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_EOT_WAIT_STATE:
+        case DUSB_OS_EOT_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_ACK_WAIT_STATE:
+        case DUSB_VAR_PING_WAIT_STATE:
+        case DUSB_VAR_PING_ACK_WAIT_STATE:
+        case DUSB_VAR_MODE_SET_WAIT_STATE:
+        case DUSB_VAR_MODE_SET_ACK_WAIT_STATE:
+        case DUSB_VAR_RTS_WAIT_STATE:
+        case DUSB_VAR_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_EOT_WAIT_STATE:
+        case DUSB_VAR_EOT_ACK_WAIT_STATE:
+            return USB_TRANSFER_REQUEST_EVENT;
+        case DUSB_BUF_SIZE_REQ_STATE:
+        case DUSB_BUF_SIZE_ALLOC_STATE:
+        case DUSB_OS_PING_STATE:
+        case DUSB_OS_PING_ACK_STATE:
+        case DUSB_OS_MODE_SET_STATE:
+        case DUSB_OS_MODE_SET_ACK_STATE:
+        case DUSB_OS_BEGIN_STATE:
+        case DUSB_OS_BEGIN_ACK_STATE:
+        case DUSB_OS_ACK_BEGIN_STATE:
+        case DUSB_OS_ACK_BEGIN_ACK_STATE:
+        case DUSB_OS_HEADER_STATE:
+        case DUSB_OS_HEADER_FINAL_STATE:
+        case DUSB_OS_HEADER_ACK_STATE:
+        case DUSB_OS_ACK_HEADER_STATE:
+        case DUSB_OS_ACK_HEADER_ACK_STATE:
+        case DUSB_OS_DATA_STATE:
+        case DUSB_OS_DATA_FINAL_STATE:
+        case DUSB_OS_DATA_ACK_STATE:
+        case DUSB_OS_ACK_DATA_STATE:
+        case DUSB_OS_ACK_DATA_ACK_STATE:
+        case DUSB_OS_EOT_STATE:
+        case DUSB_OS_EOT_ACK_STATE:
+        case DUSB_OS_ACK_EOT_STATE:
+        case DUSB_OS_ACK_EOT_ACK_STATE:
+        case DUSB_VAR_PING_STATE:
+        case DUSB_VAR_PING_ACK_STATE:
+        case DUSB_VAR_MODE_SET_STATE:
+        case DUSB_VAR_MODE_SET_ACK_STATE:
+        case DUSB_VAR_RTS_STATE:
+        case DUSB_VAR_RTS_ACK_STATE:
+        case DUSB_VAR_ACK_RTS_STATE:
+        case DUSB_VAR_ACK_RTS_ACK_STATE:
+        case DUSB_VAR_VAR_CNTS_STATE:
+        case DUSB_VAR_VAR_CNTS_FINAL_STATE:
+        case DUSB_VAR_VAR_CNTS_ACK_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
+        case DUSB_VAR_EOT_STATE:
+        case DUSB_VAR_EOT_ACK_STATE:
+            return USB_TRANSFER_RESPONSE_EVENT;
+    }
+}
+
 static uint8_t dusb_transfer_endpoint(dusb_state_t state) {
     switch (state) {
-        default:
-            return -1;
+        default: abort();
         case DUSB_SET_ADDRESS_STATE:
         case DUSB_SET_CONFIG_STATE:
             return DUSB_IN_DIRECTION | DUSB_CONTROL_ENDPOINT;
+        case DUSB_BUF_SIZE_ALLOC_WAIT_STATE:
         case DUSB_BUF_SIZE_ALLOC_STATE:
-        case DUSB_SOS_PING_ACK_STATE:
-        case DUSB_SOS_MODE_SET_STATE:
-        case DUSB_SOS_BEGIN_ACK_STATE:
-        case DUSB_SOS_ACK_BEGIN_STATE:
-        case DUSB_SOS_HEADER_ACK_STATE:
-        case DUSB_SOS_ACK_HEADER_STATE:
-        case DUSB_SOS_DATA_ACK_STATE:
-        case DUSB_SOS_ACK_DATA_STATE:
-        case DUSB_SOS_EOT_ACK_STATE:
-        case DUSB_SOS_ACK_EOT_STATE:
-        case DUSB_SEND_PING_ACK_STATE:
-        case DUSB_SEND_MODE_SET_STATE:
-        case DUSB_SEND_RTS_ACK_STATE:
-        case DUSB_SEND_ACK_RTS_STATE:
-        case DUSB_SEND_VAR_CNTS_ACK_STATE:
-        case DUSB_SEND_ACK_VAR_CNTS_STATE:
-        case DUSB_SEND_EOT_ACK_STATE:
+        case DUSB_OS_PING_ACK_WAIT_STATE:
+        case DUSB_OS_PING_ACK_STATE:
+        case DUSB_OS_MODE_SET_WAIT_STATE:
+        case DUSB_OS_MODE_SET_STATE:
+        case DUSB_OS_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_BEGIN_ACK_STATE:
+        case DUSB_OS_ACK_BEGIN_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_STATE:
+        case DUSB_OS_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_HEADER_ACK_STATE:
+        case DUSB_OS_ACK_HEADER_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_STATE:
+        case DUSB_OS_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_DATA_ACK_STATE:
+        case DUSB_OS_ACK_DATA_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_STATE:
+        case DUSB_OS_EOT_ACK_WAIT_STATE:
+        case DUSB_OS_EOT_ACK_STATE:
+        case DUSB_OS_ACK_EOT_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_STATE:
+        case DUSB_VAR_PING_ACK_WAIT_STATE:
+        case DUSB_VAR_PING_ACK_STATE:
+        case DUSB_VAR_MODE_SET_WAIT_STATE:
+        case DUSB_VAR_MODE_SET_STATE:
+        case DUSB_VAR_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_RTS_ACK_STATE:
+        case DUSB_VAR_ACK_RTS_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_STATE:
+        case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_ACK_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_STATE:
+        case DUSB_VAR_EOT_ACK_WAIT_STATE:
+        case DUSB_VAR_EOT_ACK_STATE:
             return DUSB_IN_DIRECTION | DUSB_IN_ENDPOINT;
+        case DUSB_BUF_SIZE_REQ_WAIT_STATE:
         case DUSB_BUF_SIZE_REQ_STATE:
-        case DUSB_SOS_PING_STATE:
-        case DUSB_SOS_MODE_SET_ACK_STATE:
-        case DUSB_SOS_BEGIN_STATE:
-        case DUSB_SOS_ACK_BEGIN_ACK_STATE:
-        case DUSB_SOS_HEADER_STATE:
-        case DUSB_SOS_ACK_HEADER_ACK_STATE:
-        case DUSB_SOS_DATA_STATE:
-        case DUSB_SOS_ACK_DATA_ACK_STATE:
-        case DUSB_SOS_EOT_STATE:
-        case DUSB_SOS_ACK_EOT_ACK_STATE:
-        case DUSB_SEND_PING_STATE:
-        case DUSB_SEND_MODE_SET_ACK_STATE:
-        case DUSB_SEND_RTS_STATE:
-        case DUSB_SEND_ACK_RTS_ACK_STATE:
-        case DUSB_SEND_VAR_CNTS_STATE:
-        case DUSB_SEND_ACK_VAR_CNTS_ACK_STATE:
-        case DUSB_SEND_EOT_STATE:
+        case DUSB_OS_PING_WAIT_STATE:
+        case DUSB_OS_PING_STATE:
+        case DUSB_OS_MODE_SET_ACK_WAIT_STATE:
+        case DUSB_OS_MODE_SET_ACK_STATE:
+        case DUSB_OS_BEGIN_WAIT_STATE:
+        case DUSB_OS_BEGIN_STATE:
+        case DUSB_OS_ACK_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_ACK_STATE:
+        case DUSB_OS_HEADER_WAIT_STATE:
+        case DUSB_OS_HEADER_FINAL_STATE:
+        case DUSB_OS_HEADER_STATE:
+        case DUSB_OS_ACK_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_ACK_STATE:
+        case DUSB_OS_DATA_WAIT_STATE:
+        case DUSB_OS_DATA_STATE:
+        case DUSB_OS_DATA_FINAL_STATE:
+        case DUSB_OS_ACK_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_ACK_STATE:
+        case DUSB_OS_EOT_WAIT_STATE:
+        case DUSB_OS_EOT_STATE:
+        case DUSB_OS_ACK_EOT_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_ACK_STATE:
+        case DUSB_VAR_PING_WAIT_STATE:
+        case DUSB_VAR_PING_STATE:
+        case DUSB_VAR_MODE_SET_ACK_WAIT_STATE:
+        case DUSB_VAR_MODE_SET_ACK_STATE:
+        case DUSB_VAR_RTS_WAIT_STATE:
+        case DUSB_VAR_RTS_STATE:
+        case DUSB_VAR_ACK_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_ACK_STATE:
+        case DUSB_VAR_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_STATE:
+        case DUSB_VAR_VAR_CNTS_FINAL_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
+        case DUSB_VAR_EOT_WAIT_STATE:
+        case DUSB_VAR_EOT_STATE:
             return DUSB_OUT_DIRECTION | DUSB_OUT_ENDPOINT;
     }
 }
 
 static uint32_t dusb_transfer_length(dusb_context_t *context) {
     switch (context->state) {
-        default:
-            return -1;
+        default: abort();
         case DUSB_SET_ADDRESS_STATE:
         case DUSB_SET_CONFIG_STATE:
             return 0;
+        case DUSB_BUF_SIZE_REQ_WAIT_STATE:
         case DUSB_BUF_SIZE_REQ_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_RPKT_BUF_SIZE_REQ_SIZE;
+        case DUSB_BUF_SIZE_ALLOC_WAIT_STATE:
         case DUSB_BUF_SIZE_ALLOC_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_RPKT_BUF_SIZE_ALLOC_SIZE;
-        case DUSB_SOS_PING_STATE:
-        case DUSB_SEND_PING_STATE:
+        case DUSB_OS_PING_WAIT_STATE:
+        case DUSB_OS_PING_STATE:
+        case DUSB_VAR_PING_WAIT_STATE:
+        case DUSB_VAR_PING_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_PING_SIZE;
-        case DUSB_SOS_PING_ACK_STATE:
-        case DUSB_SOS_MODE_SET_ACK_STATE:
-        case DUSB_SOS_BEGIN_ACK_STATE:
-        case DUSB_SOS_ACK_BEGIN_ACK_STATE:
-        case DUSB_SOS_HEADER_ACK_STATE:
-        case DUSB_SOS_ACK_HEADER_ACK_STATE:
-        case DUSB_SOS_DATA_ACK_STATE:
-        case DUSB_SOS_ACK_DATA_ACK_STATE:
-        case DUSB_SOS_EOT_ACK_STATE:
-        case DUSB_SOS_ACK_EOT_ACK_STATE:
-        case DUSB_SEND_PING_ACK_STATE:
-        case DUSB_SEND_MODE_SET_ACK_STATE:
-        case DUSB_SEND_RTS_ACK_STATE:
-        case DUSB_SEND_ACK_RTS_ACK_STATE:
-        case DUSB_SEND_VAR_CNTS_ACK_STATE:
-        case DUSB_SEND_ACK_VAR_CNTS_ACK_STATE:
-        case DUSB_SEND_EOT_ACK_STATE:
+        case DUSB_OS_PING_ACK_WAIT_STATE:
+        case DUSB_OS_PING_ACK_STATE:
+        case DUSB_OS_MODE_SET_ACK_WAIT_STATE:
+        case DUSB_OS_MODE_SET_ACK_STATE:
+        case DUSB_OS_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_BEGIN_ACK_STATE:
+        case DUSB_OS_ACK_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_ACK_STATE:
+        case DUSB_OS_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_HEADER_ACK_STATE:
+        case DUSB_OS_ACK_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_ACK_STATE:
+        case DUSB_OS_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_DATA_ACK_STATE:
+        case DUSB_OS_ACK_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_ACK_STATE:
+        case DUSB_OS_EOT_ACK_WAIT_STATE:
+        case DUSB_OS_EOT_ACK_STATE:
+        case DUSB_OS_ACK_EOT_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_ACK_STATE:
+        case DUSB_VAR_PING_ACK_WAIT_STATE:
+        case DUSB_VAR_PING_ACK_STATE:
+        case DUSB_VAR_MODE_SET_ACK_WAIT_STATE:
+        case DUSB_VAR_MODE_SET_ACK_STATE:
+        case DUSB_VAR_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_RTS_ACK_STATE:
+        case DUSB_VAR_ACK_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_ACK_STATE:
+        case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_ACK_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
+        case DUSB_VAR_EOT_ACK_WAIT_STATE:
+        case DUSB_VAR_EOT_ACK_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_RPKT_VIRT_DATA_ACK_SIZE;
-        case DUSB_SOS_MODE_SET_STATE:
-        case DUSB_SEND_MODE_SET_STATE:
+        case DUSB_OS_MODE_SET_WAIT_STATE:
+        case DUSB_OS_MODE_SET_STATE:
+        case DUSB_VAR_MODE_SET_WAIT_STATE:
+        case DUSB_VAR_MODE_SET_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_MODE_SET_SIZE;
-        case DUSB_SOS_BEGIN_STATE:
+        case DUSB_OS_BEGIN_WAIT_STATE:
+        case DUSB_OS_BEGIN_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_OS_BEGIN_SIZE;
-        case DUSB_SOS_ACK_BEGIN_STATE:
-        case DUSB_SOS_ACK_HEADER_STATE:
+        case DUSB_OS_ACK_BEGIN_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_STATE:
+        case DUSB_OS_ACK_HEADER_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_OS_ACK_SIZE;
-        case DUSB_SOS_HEADER_STATE:
+        case DUSB_OS_HEADER_WAIT_STATE:
+        case DUSB_OS_HEADER_STATE:
+        case DUSB_OS_HEADER_FINAL_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_OS_HEADER_SIZE;
-        case DUSB_SOS_DATA_STATE:
+        case DUSB_OS_DATA_WAIT_STATE:
+        case DUSB_OS_DATA_STATE:
+        case DUSB_OS_DATA_FINAL_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE +
-                min32(context->max_vpkt_size, DUSB_VPKT_OS_DATA_HEADER_SIZE +
-                      context->length - context->position);
-        case DUSB_SOS_ACK_DATA_STATE:
-        case DUSB_SEND_ACK_RTS_STATE:
-        case DUSB_SEND_ACK_VAR_CNTS_STATE:
+                min_u32(context->max_vpkt_size, DUSB_VPKT_OS_DATA_HEADER_SIZE +
+                       context->length - context->position);
+        case DUSB_OS_ACK_DATA_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_STATE:
+        case DUSB_VAR_ACK_RTS_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_DATA_ACK_SIZE;
-        case DUSB_SOS_EOT_STATE:
-        case DUSB_SEND_EOT_STATE:
+        case DUSB_OS_EOT_WAIT_STATE:
+        case DUSB_OS_EOT_STATE:
+        case DUSB_VAR_EOT_WAIT_STATE:
+        case DUSB_VAR_EOT_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_EOT_SIZE;
-        case DUSB_SOS_ACK_EOT_STATE:
+        case DUSB_OS_ACK_EOT_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_EOT_ACK_SIZE;
-        case DUSB_SEND_RTS_STATE:
+        case DUSB_VAR_RTS_WAIT_STATE:
+        case DUSB_VAR_RTS_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_RTS_SIZE +
                 context->command->varname_utf8_length +
                 DUSB_ATTR_HEADER_SIZE + DUSB_ATTR_VAR_TYPE_SIZE +
                 DUSB_ATTR_HEADER_SIZE + DUSB_ATTR_ARCHIVED_SIZE +
                 (context->command->vartype == CALC_VAR_TYPE_FLASH_APP ? 0 :
                  DUSB_ATTR_HEADER_SIZE + DUSB_ATTR_VAR_VERSION_SIZE);
-        case DUSB_SEND_VAR_CNTS_STATE:
-            return min32(context->max_rpkt_size, DUSB_RPKT_HEADER_SIZE +
-                         (context->position ? 0 : DUSB_VPKT_HEADER_SIZE) +
-                         context->length - context->position);
+        case DUSB_VAR_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_STATE:
+        case DUSB_VAR_VAR_CNTS_FINAL_STATE:
+            return min_u32(context->max_rpkt_size, DUSB_RPKT_HEADER_SIZE +
+                          (context->position ? 0 : DUSB_VPKT_HEADER_SIZE) +
+                          context->length - context->position);
     }
 }
 
 static uint32_t dusb_transfer_header_length(dusb_context_t *context) {
     switch (context->state) {
-        default:
-            return -1;
-        case DUSB_SOS_HEADER_STATE:
+        default: abort();
+        case DUSB_OS_HEADER_WAIT_STATE:
+        case DUSB_OS_HEADER_STATE:
+        case DUSB_OS_HEADER_FINAL_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE;
-        case DUSB_SOS_DATA_STATE:
+        case DUSB_OS_DATA_WAIT_STATE:
+        case DUSB_OS_DATA_STATE:
+        case DUSB_OS_DATA_FINAL_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_OS_DATA_HEADER_SIZE;
-        case DUSB_SEND_VAR_CNTS_STATE:
+        case DUSB_VAR_VAR_CNTS_WAIT_STATE:
+        case DUSB_VAR_VAR_CNTS_STATE:
+        case DUSB_VAR_VAR_CNTS_FINAL_STATE:
             return DUSB_RPKT_HEADER_SIZE + (context->position ? 0 : DUSB_VPKT_HEADER_SIZE);
     }
 }
@@ -641,62 +850,123 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
     usb_timer_info_t *timer = &event->info.timer;
     dusb_state_t original_state = context->state;
     (void)original_state;
-
     while (true) {
         switch ((context->state = state)) {
             case DUSB_INIT_STATE:
+            case DUSB_POWER_RECOVERY_STATE:
             case DUSB_RESET_RECOVERY_STATE:
                 event->type = USB_TIMER_EVENT;
                 timer->mode = USB_TIMER_ABSOLUTE_MODE;
                 timer->useconds = 10000;
+                break;
+            case DUSB_INIT_WAIT_STATE:
+            case DUSB_POWER_WAIT_STATE:
+            case DUSB_RESET_WAIT_STATE:
+                break;
+            case DUSB_POWER_STATE:
+                event->type = USB_POWER_EVENT;
                 break;
             case DUSB_RESET_STATE:
                 event->type = USB_RESET_EVENT;
                 break;
             case DUSB_SET_ADDRESS_STATE:
             case DUSB_SET_CONFIG_STATE:
-                event->type = USB_TRANSFER_EVENT;
-                memset(transfer->buffer = context->buffer, 0, transfer->length = 8);
-                context->buffer[1] = context->state == DUSB_SET_ADDRESS_STATE ? 5 : 9;
-                context->buffer[2] = 1;
-                transfer->endpoint = DUSB_CONTROL_ENDPOINT;
-                transfer->setup = true;
+                event->type = USB_TRANSFER_REQUEST_EVENT;
+                transfer->buffer = context->buffer;
+                transfer->length = 8;
+                memset(transfer->buffer, 0, transfer->length);
+                transfer->buffer[1] = context->state == DUSB_SET_ADDRESS_STATE ? 5 : 9;
+                transfer->buffer[2] = 1;
+                transfer->status = USB_TRANSFER_COMPLETED;
+                transfer->address = context->state != DUSB_SET_ADDRESS_STATE;
+                transfer->endpoint = dusb_transfer_endpoint(state);
+                transfer->type = USB_SETUP_TRANSFER;
                 transfer->direction = false;
                 break;
+            case DUSB_OS_PING_ACK_WAIT_STATE:
+            case DUSB_OS_PING_ACK_STATE:
+            case DUSB_OS_MODE_SET_WAIT_STATE:
+            case DUSB_OS_MODE_SET_STATE:
+            case DUSB_OS_BEGIN_ACK_WAIT_STATE:
+            case DUSB_OS_BEGIN_ACK_STATE:
+            case DUSB_OS_ACK_BEGIN_WAIT_STATE:
+            case DUSB_OS_ACK_BEGIN_STATE:
+            case DUSB_OS_HEADER_ACK_WAIT_STATE:
+            case DUSB_OS_HEADER_ACK_STATE:
+            case DUSB_OS_ACK_HEADER_WAIT_STATE:
+            case DUSB_OS_ACK_HEADER_STATE:
+            case DUSB_VAR_PING_ACK_WAIT_STATE:
+            case DUSB_VAR_PING_ACK_STATE:
+            case DUSB_VAR_MODE_SET_WAIT_STATE:
+            case DUSB_VAR_MODE_SET_STATE:
+                context->position = context->offset = 0;
+                fallthrough;
+            case DUSB_BUF_SIZE_REQ_WAIT_STATE:
             case DUSB_BUF_SIZE_REQ_STATE:
-            case DUSB_SOS_PING_STATE:
-            case DUSB_SOS_MODE_SET_ACK_STATE:
-            case DUSB_SOS_BEGIN_STATE:
-            case DUSB_SOS_ACK_BEGIN_ACK_STATE:
-            case DUSB_SOS_HEADER_STATE:
-            case DUSB_SOS_ACK_HEADER_ACK_STATE:
-            case DUSB_SOS_DATA_STATE:
-            case DUSB_SOS_ACK_DATA_ACK_STATE:
-            case DUSB_SOS_EOT_STATE:
-            case DUSB_SOS_ACK_EOT_ACK_STATE:
-            case DUSB_SEND_PING_STATE:
-            case DUSB_SEND_MODE_SET_ACK_STATE:
-            case DUSB_SEND_RTS_STATE:
-            case DUSB_SEND_ACK_RTS_ACK_STATE:
-            case DUSB_SEND_VAR_CNTS_STATE:
-            case DUSB_SEND_ACK_VAR_CNTS_ACK_STATE:
-            case DUSB_SEND_EOT_STATE:
-                event->type = USB_TRANSFER_EVENT;
-                transfer->length = dusb_transfer_length(context);
-                transfer->endpoint = DUSB_OUT_ENDPOINT;
-                transfer->setup = false;
-                transfer->direction = false;
-                break;
+            case DUSB_BUF_SIZE_ALLOC_WAIT_STATE:
             case DUSB_BUF_SIZE_ALLOC_STATE:
-            case DUSB_SOS_DATA_ACK_STATE:
-            case DUSB_SOS_ACK_DATA_STATE:
-            case DUSB_SOS_EOT_ACK_STATE:
-            case DUSB_SOS_ACK_EOT_STATE:
-            case DUSB_SEND_RTS_ACK_STATE:
-            case DUSB_SEND_ACK_RTS_STATE:
-            case DUSB_SEND_VAR_CNTS_ACK_STATE:
-            case DUSB_SEND_ACK_VAR_CNTS_STATE:
-            case DUSB_SEND_EOT_ACK_STATE:
+            case DUSB_OS_PING_WAIT_STATE:
+            case DUSB_OS_PING_STATE:
+            case DUSB_OS_MODE_SET_ACK_WAIT_STATE:
+            case DUSB_OS_MODE_SET_ACK_STATE:
+            case DUSB_OS_BEGIN_WAIT_STATE:
+            case DUSB_OS_BEGIN_STATE:
+            case DUSB_OS_ACK_BEGIN_ACK_WAIT_STATE:
+            case DUSB_OS_ACK_BEGIN_ACK_STATE:
+            case DUSB_OS_HEADER_WAIT_STATE:
+            case DUSB_OS_HEADER_STATE:
+            case DUSB_OS_HEADER_FINAL_STATE:
+            case DUSB_OS_ACK_HEADER_ACK_WAIT_STATE:
+            case DUSB_OS_ACK_HEADER_ACK_STATE:
+            case DUSB_OS_DATA_WAIT_STATE:
+            case DUSB_OS_DATA_STATE:
+            case DUSB_OS_DATA_FINAL_STATE:
+            case DUSB_OS_DATA_ACK_WAIT_STATE:
+            case DUSB_OS_DATA_ACK_STATE:
+            case DUSB_OS_ACK_DATA_WAIT_STATE:
+            case DUSB_OS_ACK_DATA_STATE:
+            case DUSB_OS_ACK_DATA_ACK_WAIT_STATE:
+            case DUSB_OS_ACK_DATA_ACK_STATE:
+            case DUSB_OS_EOT_WAIT_STATE:
+            case DUSB_OS_EOT_STATE:
+            case DUSB_OS_EOT_ACK_WAIT_STATE:
+            case DUSB_OS_EOT_ACK_STATE:
+            case DUSB_OS_ACK_EOT_WAIT_STATE:
+            case DUSB_OS_ACK_EOT_STATE:
+            case DUSB_OS_ACK_EOT_ACK_WAIT_STATE:
+            case DUSB_OS_ACK_EOT_ACK_STATE:
+            case DUSB_VAR_PING_WAIT_STATE:
+            case DUSB_VAR_PING_STATE:
+            case DUSB_VAR_MODE_SET_ACK_WAIT_STATE:
+            case DUSB_VAR_MODE_SET_ACK_STATE:
+            case DUSB_VAR_RTS_WAIT_STATE:
+            case DUSB_VAR_RTS_STATE:
+            case DUSB_VAR_RTS_ACK_WAIT_STATE:
+            case DUSB_VAR_RTS_ACK_STATE:
+            case DUSB_VAR_ACK_RTS_WAIT_STATE:
+            case DUSB_VAR_ACK_RTS_STATE:
+            case DUSB_VAR_ACK_RTS_ACK_WAIT_STATE:
+            case DUSB_VAR_ACK_RTS_ACK_STATE:
+            case DUSB_VAR_VAR_CNTS_WAIT_STATE:
+            case DUSB_VAR_VAR_CNTS_STATE:
+            case DUSB_VAR_VAR_CNTS_FINAL_STATE:
+            case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
+            case DUSB_VAR_VAR_CNTS_ACK_STATE:
+            case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
+            case DUSB_VAR_ACK_VAR_CNTS_STATE:
+            case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
+            case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
+            case DUSB_VAR_EOT_WAIT_STATE:
+            case DUSB_VAR_EOT_STATE:
+            case DUSB_VAR_EOT_ACK_WAIT_STATE:
+            case DUSB_VAR_EOT_ACK_STATE:
+                event->type = dusb_transfer_event(state);
+                transfer->length = dusb_transfer_length(context);
+                transfer->status = USB_TRANSFER_COMPLETED;
+                transfer->address = 1;
+                transfer->endpoint = dusb_transfer_endpoint(state);
+                transfer->type = USB_BULK_TRANSFER;
+                transfer->direction = dusb_transfer_endpoint(state) >> 7;
                 break;
             case DUSB_NEXT_COMMAND_STATE:
                 dusb_next_command(event);
@@ -724,27 +994,17 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                         continue;
                 }
                 break;
-            case DUSB_SOS_PING_ACK_STATE:
-            case DUSB_SOS_MODE_SET_STATE:
-            case DUSB_SOS_BEGIN_ACK_STATE:
-            case DUSB_SOS_ACK_BEGIN_STATE:
-            case DUSB_SOS_HEADER_ACK_STATE:
-            case DUSB_SOS_ACK_HEADER_STATE:
-            case DUSB_SEND_PING_ACK_STATE:
-            case DUSB_SEND_MODE_SET_STATE:
-                context->position = context->offset = 0;
-                break;
-            case DUSB_SOS_NEXT_DATA_STATE:
-            case DUSB_SEND_NEXT_VAR_CNTS_STATE:
+            case DUSB_OS_NEXT_DATA_STATE:
+            case DUSB_VAR_NEXT_VAR_CNTS_STATE:
                 context->position += context->offset;
                 context->offset = 0;
                 if (context->position != context->length) {
                     switch (state) {
-                        case DUSB_SOS_NEXT_DATA_STATE:
-                            state = DUSB_SOS_DATA_STATE;
+                        case DUSB_OS_NEXT_DATA_STATE:
+                            state = DUSB_OS_DATA_WAIT_STATE;
                             break;
-                        case DUSB_SEND_NEXT_VAR_CNTS_STATE:
-                            state = DUSB_SEND_VAR_CNTS_STATE;
+                        case DUSB_VAR_NEXT_VAR_CNTS_STATE:
+                            state = DUSB_VAR_VAR_CNTS_WAIT_STATE;
                             break;
                         default:
                             unreachable();
@@ -755,7 +1015,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                     ++state;
                 }
                 continue;
-            case DUSB_SOS_DONE_STATE:
+            case DUSB_OS_DONE_STATE:
                 if (context->command->type == DUSB_DONE_COMMAND) {
                     state = DUSB_NEXT_COMMAND_STATE;
                     continue;
@@ -767,7 +1027,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 timer->mode = USB_TIMER_ABSOLUTE_MODE;
                 timer->useconds = 2000000;
                 break;
-            case DUSB_SEND_NEXT_STATE:
+            case DUSB_VAR_NEXT_STATE:
                 if (context->command->vartype == CALC_VAR_TYPE_FLASH_APP || context->start == context->command->file_length - 2) {
                     state = DUSB_NEXT_COMMAND_STATE;
                 } else if (!dusb_detect_var(context)) {
@@ -775,7 +1035,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                     state = DUSB_NEXT_COMMAND_STATE;
                 } else {
                     gui_console_printf("[CEmu] Transferring variable: %.*s\n", context->command->varname_utf8_length, context->command->varname_utf8);
-                    state = DUSB_SEND_PING_STATE;
+                    state = DUSB_VAR_PING_WAIT_STATE;
                 }
                 continue;
             case DUSB_INVALID_STATE:
@@ -785,7 +1045,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
         }
         break;
     }
-    return 0;
+    return USB_SUCCESS;
 }
 
 static int parse_hex_digit(char c) {
@@ -816,13 +1076,83 @@ int usb_dusb_device(usb_event_t *event) {
     uint32_t length, transfer_length;
     uint16_t attribute_count;
     uint8_t endpoint;
-    event->type = USB_INIT_EVENT;
+    event->host = false;
+    event->speed = USB_FULL_SPEED;
+    event->type = USB_NO_EVENT;
     switch (type) {
+        case USB_NO_EVENT:
+            if (context->delay) {
+                event->type = USB_TIMER_EVENT;
+                timer->mode = USB_TIMER_ABSOLUTE_MODE;
+                timer->useconds = context->delay;
+                context->delay = 0;
+                return USB_SUCCESS;
+            }
+            switch (context->state) {
+                case DUSB_INIT_STATE:
+                case DUSB_POWER_STATE:
+                case DUSB_POWER_RECOVERY_STATE:
+                case DUSB_RESET_STATE:
+                case DUSB_RESET_RECOVERY_STATE:
+                case DUSB_BUF_SIZE_REQ_STATE:
+                case DUSB_BUF_SIZE_ALLOC_STATE:
+                case DUSB_OS_PING_STATE:
+                case DUSB_OS_PING_ACK_STATE:
+                case DUSB_OS_MODE_SET_STATE:
+                case DUSB_OS_MODE_SET_ACK_STATE:
+                case DUSB_OS_BEGIN_STATE:
+                case DUSB_OS_BEGIN_ACK_STATE:
+                case DUSB_OS_ACK_BEGIN_STATE:
+                case DUSB_OS_ACK_BEGIN_ACK_STATE:
+                case DUSB_OS_HEADER_FINAL_STATE:
+                case DUSB_OS_HEADER_ACK_STATE:
+                case DUSB_OS_ACK_HEADER_STATE:
+                case DUSB_OS_ACK_HEADER_ACK_STATE:
+                case DUSB_OS_DATA_FINAL_STATE:
+                case DUSB_OS_DATA_ACK_STATE:
+                case DUSB_OS_ACK_DATA_STATE:
+                case DUSB_OS_ACK_DATA_ACK_STATE:
+                case DUSB_OS_EOT_STATE:
+                case DUSB_OS_EOT_ACK_STATE:
+                case DUSB_OS_ACK_EOT_STATE:
+                case DUSB_OS_ACK_EOT_ACK_STATE:
+                case DUSB_VAR_PING_STATE:
+                case DUSB_VAR_PING_ACK_STATE:
+                case DUSB_VAR_MODE_SET_STATE:
+                case DUSB_VAR_MODE_SET_ACK_STATE:
+                case DUSB_VAR_RTS_STATE:
+                case DUSB_VAR_RTS_ACK_STATE:
+                case DUSB_VAR_ACK_RTS_STATE:
+                case DUSB_VAR_ACK_RTS_ACK_STATE:
+                case DUSB_VAR_VAR_CNTS_FINAL_STATE:
+                case DUSB_VAR_VAR_CNTS_ACK_STATE:
+                case DUSB_VAR_ACK_VAR_CNTS_STATE:
+                case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
+                case DUSB_VAR_EOT_STATE:
+                case DUSB_VAR_EOT_ACK_STATE:
+                    break;
+                case DUSB_OS_HEADER_STATE:
+                case DUSB_OS_DATA_STATE:
+                case DUSB_VAR_VAR_CNTS_STATE:
+                    event->type = USB_TRANSFER_REQUEST_EVENT;
+                    transfer->length = dusb_transfer_remaining(context);
+                    transfer->status = USB_TRANSFER_COMPLETED;
+                    transfer->address = 1;
+                    transfer->endpoint = DUSB_OUT_ENDPOINT;
+                    transfer->type = USB_BULK_TRANSFER;
+                    transfer->direction = false;
+                    --context->state;
+                    fallthrough;
+                default:
+                    return USB_SUCCESS;
+            }
+            break;
         case USB_INIT_EVENT:
             if (init->argc < 1) {
                 return EINVAL;
             }
-            event->context = context = calloc(1, sizeof(dusb_context_t) + sizeof(dusb_command_t) * init->argc);
+            context = calloc(1, sizeof(dusb_context_t) + sizeof(dusb_command_t) * init->argc);
+            event->context = context;
             if (!context) {
                 return ENOMEM;
             }
@@ -899,28 +1229,41 @@ int usb_dusb_device(usb_event_t *event) {
             }
             event->context = context;
             break;
-        case USB_RESET_EVENT:
-            switch (context->state) {
-                case DUSB_RESET_STATE:
-                    break;
-                default:
-                    return dusb_transition(event, DUSB_INVALID_STATE);
-            }
-            break;
-        case USB_TRANSFER_EVENT:
+        case USB_TRANSFER_REQUEST_EVENT:
+        case USB_TRANSFER_RESPONSE_EVENT:
             command = context->command;
             buffer = transfer->buffer;
             length = transfer->length;
-            if (transfer->setup) {
+            if (transfer->status != USB_TRANSFER_COMPLETED) {
                 return EINVAL;
             }
+            switch (context->state) {
+                case DUSB_SET_ADDRESS_STATE:
+                case DUSB_SET_CONFIG_STATE:
+                    if (type != USB_TRANSFER_RESPONSE_EVENT ||
+                        transfer->type != USB_CONTROL_TRANSFER) {
+                        return EINVAL;
+                    }
+                    break;
+                default:
+                    if (type != USB_TRANSFER_REQUEST_EVENT ||
+                        transfer->type != USB_BULK_TRANSFER) {
+                        return EINVAL;
+                    }
+                    break;
+            }
             if (transfer->endpoint == DUSB_IN_ENDPOINT && transfer->direction &&
-                length >= DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_DELAY_ACK_SIZE &&
+                length == DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_DELAY_ACK_SIZE &&
                 buffer[4] == DUSB_RPKT_VIRT_DATA_LAST && (buffer[9] << 8 | buffer[10] << 0) == DUSB_VPKT_DELAY_ACK) {
-                event->type = USB_TIMER_EVENT;
-                timer->mode = USB_TIMER_ABSOLUTE_MODE;
-                timer->useconds = buffer[11] << 24 | buffer[12] << 16 | buffer[13] << 8 | buffer[14] << 0;
-                return 0;
+                context->delay = buffer[11] << 24 | buffer[12] << 16 | buffer[13] << 8 | buffer[14] << 0;
+                event->type = USB_TRANSFER_RESPONSE_EVENT;
+                transfer->length = length;
+                transfer->status = USB_TRANSFER_COMPLETED;
+                transfer->address = 1;
+                transfer->endpoint = DUSB_IN_ENDPOINT;
+                transfer->type = USB_BULK_TRANSFER;
+                transfer->direction = true;
+                return USB_SUCCESS;
             }
             transfer_length = dusb_transfer_length(context);
             endpoint = dusb_transfer_endpoint(context->state);
@@ -932,7 +1275,7 @@ int usb_dusb_device(usb_event_t *event) {
                 case DUSB_SET_ADDRESS_STATE:
                 case DUSB_SET_CONFIG_STATE:
                     break;
-                case DUSB_BUF_SIZE_REQ_STATE:
+                case DUSB_BUF_SIZE_REQ_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -944,27 +1287,27 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = 4;
                     *buffer++ = 0;
                     break;
-                case DUSB_BUF_SIZE_ALLOC_STATE:
+                case DUSB_BUF_SIZE_ALLOC_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_BUF_SIZE_ALLOC) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     context->max_rpkt_size = buffer[5] << 24 | buffer[6] << 16 | buffer[7] << 8 | buffer[8] << 0;
                     break;
-                case DUSB_SOS_PING_ACK_STATE:
-                case DUSB_SOS_BEGIN_ACK_STATE:
-                case DUSB_SOS_HEADER_ACK_STATE:
-                case DUSB_SOS_DATA_ACK_STATE:
-                case DUSB_SOS_EOT_ACK_STATE:
-                case DUSB_SEND_PING_ACK_STATE:
-                case DUSB_SEND_RTS_ACK_STATE:
-                case DUSB_SEND_VAR_CNTS_ACK_STATE:
-                case DUSB_SEND_EOT_ACK_STATE:
+                case DUSB_OS_PING_ACK_WAIT_STATE:
+                case DUSB_OS_BEGIN_ACK_WAIT_STATE:
+                case DUSB_OS_HEADER_ACK_WAIT_STATE:
+                case DUSB_OS_DATA_ACK_WAIT_STATE:
+                case DUSB_OS_EOT_ACK_WAIT_STATE:
+                case DUSB_VAR_PING_ACK_WAIT_STATE:
+                case DUSB_VAR_RTS_ACK_WAIT_STATE:
+                case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
+                case DUSB_VAR_EOT_ACK_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_VIRT_DATA_ACK) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     break;
-                case DUSB_SOS_PING_STATE:
-                case DUSB_SEND_PING_STATE:
+                case DUSB_OS_PING_WAIT_STATE:
+                case DUSB_VAR_PING_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -979,30 +1322,37 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = DUSB_VPKT_PING >> 0 & 0xFF;
 
                     *buffer++ = 0;
-                    *buffer++ = context->state == DUSB_SOS_PING_STATE ? 2 : 3;
+                    *buffer++ = context->state == DUSB_OS_PING_STATE ? 2 : 3;
                     *buffer++ = 0;
                     *buffer++ = 1;
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
-                    *buffer++ = context->state == DUSB_SOS_PING_STATE ? 0x0f : 0x07;
-                    *buffer++ = context->state == DUSB_SOS_PING_STATE ? 0xa0 : 0xd0;
+                    *buffer++ = context->state == DUSB_OS_PING_STATE ? 0x0F : 0x07;
+                    *buffer++ = context->state == DUSB_OS_PING_STATE ? 0xA0 : 0xD0;
                     break;
-                case DUSB_SOS_MODE_SET_STATE:
-                    if (buffer[4] != DUSB_RPKT_VIRT_DATA_LAST || (buffer[9] << 8 | buffer[10] << 0) != DUSB_VPKT_MODE_SET ||
-                        buffer[11] || buffer[12] || buffer[13] != 0x0f || buffer[14] != 0xa0) {
-                        return dusb_transition(event, DUSB_INVALID_STATE);
+                case DUSB_OS_MODE_SET_WAIT_STATE:
+                case DUSB_VAR_MODE_SET_WAIT_STATE:
+                    if (buffer[4] == DUSB_RPKT_VIRT_DATA_LAST &&
+                        (buffer[9] << 8 | buffer[10] << 0) == DUSB_VPKT_MODE_SET) {
+                        uint32_t mode =
+                            buffer[11] << 24 | buffer[12] << 16 | buffer[13] << 8 | buffer[14] << 0;
+                        if ((mode == UINT32_C(0x000007D0) ||
+                             (context->state == DUSB_OS_MODE_SET_WAIT_STATE &&
+                              mode == UINT32_C(0x00000FA0)))) {
+                            break;
+                        }
                     }
-                    break;
-                case DUSB_SOS_MODE_SET_ACK_STATE:
-                case DUSB_SOS_ACK_BEGIN_ACK_STATE:
-                case DUSB_SOS_ACK_HEADER_ACK_STATE:
-                case DUSB_SOS_ACK_DATA_ACK_STATE:
-                case DUSB_SOS_ACK_EOT_ACK_STATE:
-                case DUSB_SEND_MODE_SET_ACK_STATE:
-                case DUSB_SEND_ACK_RTS_ACK_STATE:
-                case DUSB_SEND_ACK_VAR_CNTS_ACK_STATE:
+                    return dusb_transition(event, DUSB_INVALID_STATE);
+                case DUSB_OS_MODE_SET_ACK_WAIT_STATE:
+                case DUSB_OS_ACK_BEGIN_ACK_WAIT_STATE:
+                case DUSB_OS_ACK_HEADER_ACK_WAIT_STATE:
+                case DUSB_OS_ACK_DATA_ACK_WAIT_STATE:
+                case DUSB_OS_ACK_EOT_ACK_WAIT_STATE:
+                case DUSB_VAR_MODE_SET_ACK_WAIT_STATE:
+                case DUSB_VAR_ACK_RTS_ACK_WAIT_STATE:
+                case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1011,7 +1361,7 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = 0xE0;
                     *buffer++ = 0;
                     break;
-                case DUSB_SOS_BEGIN_STATE:
+                case DUSB_OS_BEGIN_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1035,21 +1385,19 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = context->length >>  8 & 0xFF;
                     *buffer++ = context->length >>  0 & 0xFF;
                     break;
-                case DUSB_SOS_ACK_BEGIN_STATE:
-                case DUSB_SOS_ACK_HEADER_STATE:
+                case DUSB_OS_ACK_BEGIN_WAIT_STATE:
+                case DUSB_OS_ACK_HEADER_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_VIRT_DATA_LAST || (buffer[9] << 8 | buffer[10] << 0) != DUSB_VPKT_OS_ACK) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     context->max_vpkt_size = buffer[11] << 24 | buffer[12] << 16 | buffer[13] << 8 | buffer[14] << 0;
                     break;
-                case DUSB_SOS_HEADER_STATE:
-                    if (!length) {
-                        break;
-                    }
+                case DUSB_OS_HEADER_WAIT_STATE:
                     if (!context->offset) {
                         if (length < DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE) {
                             return dusb_transition(event, DUSB_INVALID_STATE);
                         }
+
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1063,27 +1411,18 @@ int usb_dusb_device(usb_event_t *event) {
                         *buffer++ = DUSB_VPKT_OS_HEADER >> 0 & 0xFF;
                         length -= DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE;
                     }
-                    length = min32(dusb_transfer_remaining(context), length);
+                    length = min_u32(dusb_transfer_remaining(context), length);
                     if (fseek(command->file, DUSB_FLASH_FILE_DATA_OFFSET + context->offset, SEEK_SET) ||
                         fread(buffer, length, 1, command->file) != 1) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
-                    context->offset += length;
-
-                    if ((transfer->length = dusb_transfer_remaining(context)) ||
-                        !(transfer_length % transfer->max_pkt_size)) {
-                        event->type = USB_TRANSFER_EVENT;
-                        return 0;
-                    }
-                    break;
-                case DUSB_SOS_DATA_STATE:
-                    if (!length) {
-                        break;
-                    }
+                    goto handle_partial_transfer;
+                case DUSB_OS_DATA_WAIT_STATE:
                     if (!context->offset) {
                         if (length < DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_OS_DATA_HEADER_SIZE) {
                             return dusb_transition(event, DUSB_INVALID_STATE);
                         }
+
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1101,28 +1440,21 @@ int usb_dusb_device(usb_event_t *event) {
                         *buffer++ = (DUSB_OS_BASE_ADDR + context->position) >> 24 & 0xFF;
                         length -= DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_OS_DATA_HEADER_SIZE;
                     }
-                    length = min32(dusb_transfer_remaining(context), length);
+                    length = min_u32(dusb_transfer_remaining(context), length);
                     if (fseek(command->file, DUSB_FLASH_FILE_DATA_OFFSET + context->position + context->offset, SEEK_SET) ||
                         fread(buffer, length, 1, command->file) != 1) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
-                    context->offset += length;
-                    dusb_update_progress(event);
-                    if ((transfer->length = dusb_transfer_remaining(context)) ||
-                        !(transfer_length % transfer->max_pkt_size)) {
-                        event->type = USB_TRANSFER_EVENT;
-                        return 0;
-                    }
-                    break;
-                case DUSB_SOS_ACK_DATA_STATE:
-                case DUSB_SEND_ACK_RTS_STATE:
-                case DUSB_SEND_ACK_VAR_CNTS_STATE:
+                    goto handle_partial_transfer;
+                case DUSB_OS_ACK_DATA_WAIT_STATE:
+                case DUSB_VAR_ACK_RTS_WAIT_STATE:
+                case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_VIRT_DATA_LAST || (buffer[9] << 8 | buffer[10] << 0) != DUSB_VPKT_DATA_ACK) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     break;
-                case DUSB_SOS_EOT_STATE:
-                case DUSB_SEND_EOT_STATE:
+                case DUSB_OS_EOT_WAIT_STATE:
+                case DUSB_VAR_EOT_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1135,18 +1467,12 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = DUSB_VPKT_EOT >> 8 & 0xFF;
                     *buffer++ = DUSB_VPKT_EOT >> 0 & 0xFF;
                     break;
-                case DUSB_SOS_ACK_EOT_STATE:
+                case DUSB_OS_ACK_EOT_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_VIRT_DATA_LAST || (buffer[9] << 8 | buffer[10] << 0) != DUSB_VPKT_EOT_ACK) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     break;
-                case DUSB_SEND_MODE_SET_STATE:
-                    if (buffer[4] != DUSB_RPKT_VIRT_DATA_LAST || (buffer[9] << 8 | buffer[10] << 0) != DUSB_VPKT_MODE_SET ||
-                        buffer[11] || buffer[12] || buffer[13] != 0x07 || buffer[14] != 0xd0) {
-                        return dusb_transition(event, DUSB_INVALID_STATE);
-                    }
-                    break;
-                case DUSB_SEND_RTS_STATE:
+                case DUSB_VAR_RTS_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1178,8 +1504,8 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = DUSB_ATTR_VAR_TYPE >> 0 & 0xFF;
                     *buffer++ = DUSB_ATTR_VAR_TYPE_SIZE >> 8 & 0xFF;
                     *buffer++ = DUSB_ATTR_VAR_TYPE_SIZE >> 0 & 0xFF;
-                    *buffer++ = 0xf0;
-                    *buffer++ = command->vartype == CALC_VAR_TYPE_FLASH_APP ? 0x0f : 0x07;
+                    *buffer++ = 0xF0;
+                    *buffer++ = command->vartype == CALC_VAR_TYPE_FLASH_APP ? 0x0F : 0x07;
                     *buffer++ = 0;
                     *buffer++ = command->vartype;
 
@@ -1200,14 +1526,12 @@ int usb_dusb_device(usb_event_t *event) {
                         *buffer++ = context->version;
                     }
                     break;
-                case DUSB_SEND_VAR_CNTS_STATE:
-                    if (!length) {
-                        break;
-                    }
+                case DUSB_VAR_VAR_CNTS_WAIT_STATE:
                     if (!context->offset) {
                         if (length < DUSB_RPKT_HEADER_SIZE) {
                             return dusb_transition(event, DUSB_INVALID_STATE);
                         }
+
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                         *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1228,30 +1552,31 @@ int usb_dusb_device(usb_event_t *event) {
                             length -= DUSB_VPKT_HEADER_SIZE;
                         }
                     }
-                    length = min32(dusb_transfer_remaining(context), length);
-                    if (fseek(command->file, context->start + context->position + context->offset, SEEK_SET) ||
-                        fread(buffer, length, 1, command->file) != 1) {
+                    if ((length = min_u32(dusb_transfer_remaining(context), length)) &&
+                        (fseek(command->file, context->start + context->position + context->offset, SEEK_SET) ||
+                         fread(buffer, length, 1, command->file) != 1)) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
+                handle_partial_transfer:
                     context->offset += length;
                     dusb_update_progress(event);
-                    if ((transfer->length = dusb_transfer_remaining(context)) ||
-                        !(transfer_length % transfer->max_pkt_size)) {
-                        event->type = USB_TRANSFER_EVENT;
-                        return 0;
+                    if (dusb_transfer_remaining(context) ||
+                        (length && !(transfer_length % transfer->max_pkt_size))) {
+                        break;
                     }
-                    break;
+                    return dusb_transition(event, context->state + 2);
                 default:
                     return dusb_transition(event, DUSB_INVALID_STATE);
             }
             break;
         case USB_TIMER_EVENT:
             switch (context->state) {
-                case DUSB_INIT_STATE:
-                case DUSB_RESET_RECOVERY_STATE:
+                case DUSB_INIT_WAIT_STATE:
+                case DUSB_POWER_WAIT_STATE:
+                case DUSB_RESET_WAIT_STATE:
                     break;
                 default:
-                    return 0;
+                    return USB_SUCCESS;
             }
             break;
         case USB_DESTROY_EVENT:
@@ -1260,7 +1585,7 @@ int usb_dusb_device(usb_event_t *event) {
                 event->progress_handler = NULL;
             }
             if (!context) {
-                return 0;
+                return USB_SUCCESS;
             }
             for (command = context->commands; command->type != DUSB_DONE_COMMAND; ++command) {
                 if (command->file) {
@@ -1269,7 +1594,7 @@ int usb_dusb_device(usb_event_t *event) {
             }
             free(context);
             event->context = NULL;
-            return 0;
+            return USB_SUCCESS;
         default:
             return EINVAL;
     }

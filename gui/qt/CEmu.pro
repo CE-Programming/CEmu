@@ -76,7 +76,7 @@ DEFINES += DEBUG_SUPPORT
 
 # These options can be disabled / enabled depending on
 # compiler / library support for your toolchain
-DEFINES += LIB_ARCHIVE_SUPPORT PNG_SUPPORT GLOB_SUPPORT
+DEFINES += GLOB_SUPPORT LIB_ARCHIVE_SUPPORT LIBUSB_SUPPORT PNG_SUPPORT
 
 CONFIG(release, debug|release) {
     #This is a release build
@@ -98,6 +98,10 @@ if (!win32-msvc*) {
     if (contains(DEFINES, LIB_ARCHIVE_SUPPORT)) {
         CONFIG += link_pkgconfig
         PKGCONFIG += zlib libarchive
+    }
+    if (contains(DEFINES, LIBUSB_SUPPORT)) {
+        CONFIG += link_pkgconfig
+        PKGCONFIG += libusb-1.0
     }
     # You should run ./capture/get_libpng-apng.sh first!
     isEmpty(USE_LIBPNG) {
@@ -132,18 +136,27 @@ if (!win32-msvc*) {
     # Add -MP to enable speedier builds
     QMAKE_CXXFLAGS += /MP
 
+    if (contains(DEFINES, LIBUSB_SUPPORT)) {
+        equals(LIBUSB_FROM_VCPKG, 1) {
+            warning("Enabled using libusb from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libusb installed within vcpkg, the build will likely fail.")
+        } else {
+            CONFIG += link_pkgconfig
+            PKGCONFIG += libusb-1.0
+        }
+    }
+
     # Do we have a flag specifying use of libpng-apng from vcpkg?
-	equals(LIBPNG_APNG_FROM_VCPKG, 1) {
-		warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
-		# This is a bad hack, but MOC kinda needs it to work correctly...
-		QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
-	}
-	
-	# Otherwise...
+    equals(LIBPNG_APNG_FROM_VCPKG, 1) {
+        warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
+        # This is a bad hack, but MOC kinda needs it to work correctly...
+        QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
+    }
+
+    # Otherwise...
     !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
         # If we're not using vcpkg, we rely on manual variables to find needed
         # libpng-apng components.
-        # 
+        #
         # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
         # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
         # The logic below accounts for both specifying in the real shell environment,
@@ -208,6 +221,7 @@ SOURCES += \
     ../../core/timers.c \
     ../../core/usb/disconnected.c \
     ../../core/usb/dusb.c \
+    ../../core/usb/physical.c \
     ../../core/usb/usb.c \
     ../../core/sha256.c \
     ../../core/realclock.c \

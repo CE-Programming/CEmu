@@ -6750,6 +6750,92 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="usbDevices">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/disconnect.png</normaloff>:/icons/resources/icons/disconnect.png</iconset>
+       </attribute>
+       <attribute name="title">
+        <string>USB</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_usb">
+        <item>
+         <widget class="QPushButton" name="buttonRefreshUSB">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="text">
+           <string>Refresh</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/icons/resources/icons/refresh.png</normaloff>:/icons/resources/icons/refresh.png</iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="usbTable">
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="textElideMode">
+           <enum>Qt::ElideRight</enum>
+          </property>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>100</number>
+          </attribute>
+          <attribute name="horizontalHeaderMinimumSectionSize">
+           <number>30</number>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderDefaultSectionSize">
+           <number>21</number>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>Plug</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>VID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>PID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Manufacturer</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Product</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Serial Number</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
@@ -7723,9 +7809,9 @@
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(15, 15, 15); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -7764,9 +7850,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(1,1,1); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -7805,9 +7891,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton { background-color: rgb(56, 94, 157); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -7846,9 +7932,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(0, 119, 200); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -7886,9 +7972,9 @@ QPushButton:pressed {
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(0, 60, 113); border-radius:6px; }QPushButton:pressed { 
+                  <string notr="true">QPushButton {  background-color: rgb(0, 60, 113); border-radius:6px; }QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }
 </string>
                  </property>
@@ -8019,9 +8105,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: #005163; border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8151,9 +8237,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: #129688; border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8192,9 +8278,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(124, 135, 142); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8324,9 +8410,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(219, 219, 219); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8365,9 +8451,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(237, 237, 237); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8497,9 +8583,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(210, 235, 232); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8538,9 +8624,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(216, 211, 182); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8670,9 +8756,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: #AF867C; border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8802,9 +8888,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(253, 109, 153); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8843,9 +8929,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(131, 0, 101); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8884,9 +8970,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(223, 25, 149); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -8925,9 +9011,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: rgb(171, 35, 40); border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">

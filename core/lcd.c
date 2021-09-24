@@ -215,7 +215,7 @@ static uint32_t lcd_process_pixel(uint32_t ticks, uint16_t bgr565) {
 
 static inline void lcd_fill_bytes(uint8_t bytes) {
     assert((bytes % sizeof(uint32_t)) == 0);
-    mem_dma_cpy(&lcd.fifo[lcd.pos / sizeof(uint32_t)], lcd.upcurr, bytes);
+    mem_dma_read(&lcd.fifo[lcd.pos / sizeof(uint32_t)], lcd.upcurr, bytes);
     lcd.pos += bytes;
     lcd.upcurr += bytes;
 }
