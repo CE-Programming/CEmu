@@ -28,7 +28,7 @@ typedef union usb_qlink {
         usb_qtype_t type : 2;
     };
     struct {
-    uint32_t : 1;
+        uint32_t : 1;
         uint32_t nak_cnt : 4; // overlay alt
         uint32_t ptr : 27;
     };
@@ -350,6 +350,7 @@ static int usb_dispatch_event(usb_qh_t *qh) {
             case USB_TRANSFER_RESPONSE_EVENT:
                 if (usb.event.host) {
                     if (qh) {
+                        qh->overlay.alt.nak_cnt = qh->nak_rl;
                         switch (transfer->type) {
                             case USB_SETUP_TRANSFER:
                             case USB_CONTROL_TRANSFER:
@@ -407,6 +408,7 @@ static int usb_dispatch_event(usb_qh_t *qh) {
                 }
                 break;
             case USB_TIMER_EVENT:
+                //gui_console_printf("[USB] Warning: Waiting for %d us.\n", timer->useconds);
                 switch (timer->mode) {
                     case USB_TIMER_NONE:
                         sched_clear(SCHED_USB_DEVICE);
@@ -560,6 +562,17 @@ static void usb_execute_qh(usb_qh_t *qh) {
     usb_dispatch_event(qh);
 }
 
+static void usb_reclaim_event(usb_traversal_state_t *state) {
+    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+    state->fake_recl = true;
+    state->fake_recl_head = -1;
+}
+
+static void usb_start_event(usb_traversal_state_t *state) {
+    usb_reclaim_event(state);
+    state->nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
+}
+
 static bool usb_process_qh(usb_qh_t *qh, usb_traversal_state_t *state) {
     uint8_t qHTransactionCounter;
     // Fetch QH
@@ -567,6 +580,7 @@ static bool usb_process_qh(usb_qh_t *qh, usb_traversal_state_t *state) {
         if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
             return true;
         }
+        usb_reclaim_event(state);
         usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
         if (state->nak_cnt_reload_state != USB_NAK_CNT_WAIT_FOR_START_EVENT) {
             // Either WAIT_FOR_LIST_HEAD -> DO_RELOAD or DO_RELOAD -> WAIT_FOR_START_EVENT
@@ -625,11 +639,12 @@ static bool usb_process_qh(usb_qh_t *qh, usb_traversal_state_t *state) {
             return false;
         }
     }
-    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-    state->fake_recl = true;
-    state->fake_recl_head = -1;
     for (qHTransactionCounter = qh->mult; qHTransactionCounter && qh->overlay.active;
          --qHTransactionCounter) {
+        usb_reclaim_event(state);
+        if (qh->nak_rl) {
+            qh->overlay.alt.nak_cnt--;
+        }
         usb_execute_qh(qh);
     }
     return false;
@@ -726,13 +741,6 @@ int usb_plug_device(int argc, const char *const *argv,
     return error;
 }
 
-static void usb_start_event(usb_traversal_state_t *state) {
-    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-    state->nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
-    state->fake_recl = true;
-    state->fake_recl_head = -1;
-}
-
 static void usb_event(enum sched_item_id event) {
     usb_qh_t qh;
     uint8_t i = 0;
@@ -750,10 +758,10 @@ static void usb_event(enum sched_item_id event) {
         } else {
             high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
             if (usb.regs.hcor.usbcmd & USBCMD_RUN) {
-                usb_traversal_state_t state;
                 if (usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
                 }
                 if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
+                    usb_traversal_state_t state;
                     usb_start_event(&state);
                     while (true) {
                         int32_t addr = usb.regs.hcor.asynclistaddr;
@@ -765,7 +773,7 @@ static void usb_event(enum sched_item_id event) {
                         }
                         addr &= 0x7FFFF;
                         if (addr == state.fake_recl_head && (state.fake_recl ^= true)) {
-                            gui_console_printf("[USB] Warning: No reclamation head!\n");
+                            //gui_console_printf("[USB] Warning: No reclamation head!\n");
                             break;
                         }
                         if (!++i) {
@@ -779,7 +787,6 @@ static void usb_event(enum sched_item_id event) {
                         usb.regs.hcor.asynclistaddr = qh.horiz.ptr << 5;
                     }
                 }
-                usb_start_event(&state);
             }
         }
     }
