@@ -281,32 +281,30 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::autotesterUpdatePresets);
     connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::autotesterRefreshCRC);
 
-#ifdef LIBUSB_SUPPORT
     // usb devices
     connect(this, &MainWindow::usbUnplug, this, &MainWindow::usbUnplugged);
     m_usbConnectGroup = new QButtonGroup{this};
-    if (!libusb_init(&m_usbContext)) {
-        if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-            connect(this, &MainWindow::usbHotplug, this, &MainWindow::usbUpdate);
-            if (libusb_hotplug_register_callback(
-                        m_usbContext,
-                        libusb_hotplug_event(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
-                                             LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-                        LIBUSB_HOTPLUG_ENUMERATE,
-                        LIBUSB_HOTPLUG_MATCH_ANY,
-                        LIBUSB_HOTPLUG_MATCH_ANY,
-                        LIBUSB_HOTPLUG_MATCH_ANY,
-                        &MainWindow::usbHotplugCallback,
-                        this, &m_usbHotplugCallbackHandle) == LIBUSB_SUCCESS) {
-                m_usbEventThread = new LibusbEventThread{m_usbContext, this};
-                m_usbEventThread->start();
-            }
-        } else {
-            usbRefresh();
+#ifdef LIBUSB_SUPPORT
+    if (!libusb_init(&m_usbContext) && libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+        connect(this, &MainWindow::usbHotplug, this, &MainWindow::usbUpdate);
+        if (libusb_hotplug_register_callback(
+                    m_usbContext,
+                    libusb_hotplug_event(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
+                                         LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+                    0,
+                    LIBUSB_HOTPLUG_MATCH_ANY,
+                    LIBUSB_HOTPLUG_MATCH_ANY,
+                    LIBUSB_HOTPLUG_MATCH_ANY,
+                    &MainWindow::usbHotplugCallback,
+                    this, &m_usbHotplugCallbackHandle) == LIBUSB_SUCCESS) {
+            m_usbEventThread = new LibusbEventThread{m_usbContext, this};
+            m_usbEventThread->start();
         }
-        connect(ui->buttonRefreshUSB, &QPushButton::clicked, this, &MainWindow::usbRefresh);
     }
 #endif
+    usbRefresh();
+    connect(ui->buttonCreateMsd, &QPushButton::clicked, this, &MainWindow::usbCreateMsd);
+    connect(ui->buttonRefreshUsb, &QPushButton::clicked, this, &MainWindow::usbRefresh);
 
     // menubar actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
@@ -2802,11 +2800,68 @@ void MainWindow::contextConsole(const QPoint &posa) {
     }
 }
 
-#ifdef LIBUSB_SUPPORT
-
 // ------------------------------------------------
 // USB devices
 // ------------------------------------------------
+
+void MainWindow::usbConnectMsd(QVariant userData) {
+    emu.usbPlugDevice({
+            QStringLiteral("msd"),
+            userData.toString(),
+        }, &MainWindow::usbUnplugCallback, this);
+}
+
+void MainWindow::usbCreateDevice(QStringList items, QVariant userData, void (MainWindow::*connectHandler)(QVariant userData)) {
+    ui->usbTable->setSortingEnabled(false);
+    int row = ui->usbTable->rowCount();
+    ui->usbTable->setRowCount(row + 1);
+
+    QToolButton *btnConnect = new QToolButton;
+    btnConnect->setCheckable(true);
+    QIcon btnIcon(QStringLiteral(":/icons/resources/icons/disconnect.png"));
+    btnIcon.addFile(QStringLiteral(":/icons/resources/icons/connect.png"), {}, QIcon::Normal, QIcon::On);
+    btnConnect->setIcon(btnIcon);
+    connect(btnConnect, &QToolButton::clicked, [this, userData, connectHandler](bool checked) {
+        if (checked)
+            (this->*connectHandler)(userData);
+        else
+            emu.usbPlugDevice();
+    });
+    m_usbConnectGroup->addButton(btnConnect);
+    connect(btnConnect, &QAbstractButton::pressed, this, &MainWindow::semiExclusiveButtonPressed);
+    ui->usbTable->setCellWidget(row, USB_CONNECT, btnConnect);
+
+    QTableWidgetItem *item = new QTableWidgetItem;
+    item->setData(Qt::UserRole, userData);
+    ui->usbTable->setItem(row, USB_CONNECT, item);
+
+    for (int col = 1; col != USB_COLUMNS; ++col) {
+        item = new QTableWidgetItem(items.value(col - 1));
+        if (item->text().simplified().trimmed().isEmpty()) {
+            item->setText(QStringLiteral("N/A"));
+            item->setForeground(Qt::darkGray);
+        }
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+        ui->usbTable->setItem(row, col, item);
+    }
+
+    ui->usbTable->setSortingEnabled(true);
+    ui->usbTable->resizeColumnsToContents();
+}
+
+void MainWindow::usbUnplugged() {
+    if (QAbstractButton *button = m_usbConnectGroup->checkedButton()) {
+        m_usbConnectGroup->setExclusive(false);
+        button->setChecked(false);
+    }
+}
+
+bool MainWindow::usbUnplugCallback(void *context, [[maybe_unused]] int value, [[maybe_unused]] int total) {
+    emit static_cast<MainWindow *>(context)->usbUnplug();
+    return false;
+}
+
+#ifdef LIBUSB_SUPPORT
 
 LibusbEventThread::LibusbEventThread(libusb_context *usbContext, QObject *parent)
     : QThread{parent}
@@ -2819,11 +2874,14 @@ void LibusbEventThread::run() {
     }
 }
 
-void MainWindow::usbUnplugged() {
-    if (QAbstractButton *button = m_usbConnectGroup->checkedButton()) {
-        m_usbConnectGroup->setExclusive(false);
-        button->setChecked(false);
-    }
+void MainWindow::usbConnectPhysical(QVariant userData) {
+    libusb_device *device = userData.value<libusb_device *>();
+    emu.usbPlugDevice({
+            QStringLiteral("physical"),
+            QStringLiteral("%0#%1")
+            .arg(libusb_get_bus_number(device))
+            .arg(libusb_get_device_address(device))
+        }, &MainWindow::usbUnplugCallback, this);
 }
 
 int LIBUSB_CALL MainWindow::usbHotplugCallback([[maybe_unused]] libusb_context *context,
@@ -2857,8 +2915,8 @@ void MainWindow::usbUpdate(libusb_device *device, bool attached) {
         libusb_device_descriptor desc;
         libusb_get_device_descriptor(device, &desc);
 
-        unsigned char string[256];
         quint16 langid = 0x0409; {
+            unsigned char string[1 << 8];
             int size = libusb_get_string_descriptor(handle, 0, 0, string, sizeof(string));
             for (int i = 2; i < size; i += 2) {
                 quint16 cur = string[i + 1] << 8 | string[i];
@@ -2872,64 +2930,25 @@ void MainWindow::usbUpdate(libusb_device *device, bool attached) {
             }
         }
 
-        ui->usbTable->setSortingEnabled(false);
-        int row = ui->usbTable->rowCount();
-        ui->usbTable->setRowCount(row + 1);
-
-        QToolButton *btnConnect = new QToolButton;
-        btnConnect->setCheckable(true);
-        QIcon btnIcon(QStringLiteral(":/icons/resources/icons/disconnect.png"));
-        btnIcon.addFile(QStringLiteral(":/icons/resources/icons/connect.png"), {}, QIcon::Normal, QIcon::On);
-        btnConnect->setIcon(btnIcon);
-        connect(btnConnect, &QToolButton::clicked, [this, device](bool checked) {
-            if (!checked) {
-                emu.usbPlugDevice();
-                return;
+        const auto getStringDescriptor = [=](int index) -> QString {
+            if (!index) {
+                return {};
             }
-            emu.usbPlugDevice({
-                    QStringLiteral("physical"),
-                    QStringLiteral("%0#%1")
-                        .arg(libusb_get_bus_number(device))
-                        .arg(libusb_get_device_address(device))
-                }, [](void *context, [[maybe_unused]] int value, [[maybe_unused]] int total) {
-                emit static_cast<MainWindow *>(context)->usbUnplug();
-                return false;
-            }, this);
-        });
-        m_usbConnectGroup->addButton(btnConnect);
-        connect(btnConnect, &QAbstractButton::pressed, this, &MainWindow::semiExclusiveButtonPressed);
-        ui->usbTable->setCellWidget(row, USB_CONNECT, btnConnect);
-        QTableWidgetItem *item = new QTableWidgetItem;
-        libusb_ref_device(device);
-        item->setData(Qt::UserRole, QVariant::fromValue(device));
-        ui->usbTable->setItem(row, USB_CONNECT, item);
-
-        for (int i = USB_VID; i <= USB_PID; i++) {
-            item = new QTableWidgetItem(int2hex((&desc.idVendor)[i - USB_VID], 4));
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            ui->usbTable->setItem(row, i, item);
-        }
-
-        for (int i = USB_MANUFACTURER; i <= USB_SERIAL_NUMBER; i++) {
-            if (uint8_t index = (&desc.iManufacturer)[i - USB_MANUFACTURER]) {
-                int size = libusb_get_string_descriptor(handle, index, langid, string, sizeof(string));
-                item = new QTableWidgetItem;
-                if (size >= 4) {
-                    string[0] = QChar::ByteOrderMark & 0xFF; string[1] = QChar::ByteOrderMark >> 8;
-                    item->setText(QString::fromUtf16(reinterpret_cast<const char16_t *>(string),
-                                                     size >> 1).remove(QChar::Null));
-                }
-                if (item->text().simplified().trimmed().isEmpty()) {
-                    item->setText(QStringLiteral("N/A"));
-                    item->setForeground(Qt::darkGray);
-                }
-                item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-                ui->usbTable->setItem(row, i, item);
+            char16_t string[1 << 7];
+            int size = libusb_get_string_descriptor(handle, index, langid, reinterpret_cast<unsigned char *>(string), sizeof(string));
+            if (size < 4) {
+                return {};
             }
-        }
-        ui->usbTable->setSortingEnabled(true);
-        ui->usbTable->resizeColumnsToContents();
-
+            string[0] = QChar::ByteOrderMark;
+            return QString::fromUtf16(string, size >> 1).remove(QChar::Null);
+        };
+        usbCreateDevice({
+                int2hex(desc.idVendor, 4),
+                int2hex(desc.idProduct, 4),
+                getStringDescriptor(desc.iManufacturer),
+                getStringDescriptor(desc.iProduct),
+                getStringDescriptor(desc.iSerialNumber),
+            }, QVariant::fromValue(libusb_ref_device(device)), &MainWindow::usbConnectPhysical);
         libusb_close(handle);
     } else if (row != ui->usbTable->rowCount()) {
         if (static_cast<QAbstractButton *>(ui->usbTable->cellWidget(row, USB_CONNECT))->isChecked()) {
@@ -2941,23 +2960,44 @@ void MainWindow::usbUpdate(libusb_device *device, bool attached) {
     }
 }
 
-void MainWindow::usbRefresh() {
-    emu.usbPlugDevice();
-    for (int row = 0; row != ui->usbTable->rowCount(); ++row) {
-        libusb_unref_device(static_cast<libusb_device *>(ui->usbTable->item(row, USB_CONNECT)->data(Qt::UserRole).value<libusb_device *>()));
+#endif
+
+void MainWindow::usbCreateMsd() {
+    QString path = QFileDialog::getOpenFileName(this, tr("Select image"),
+                                                m_dir.absolutePath(), tr("All files (*.*)"));
+    if (path.isEmpty()) {
+        return;
     }
-    ui->usbTable->setRowCount(0);
+    usbCreateDevice({
+            QStringLiteral("CE3C"),
+            QStringLiteral("0801"),
+            QStringLiteral("CEmu"),
+            QStringLiteral("Virtual Flash Drive"),
+            QFileInfo(path).fileName(),
+        }, path, &MainWindow::usbConnectMsd);
+}
+
+void MainWindow::usbRefresh() {
+#ifdef LIBUSB_SUPPORT
+    for (int row = 0; row != ui->usbTable->rowCount(); ++row) {
+        if (libusb_device *device = ui->usbTable->item(row, USB_CONNECT)->data(Qt::UserRole).value<libusb_device *>()) {
+            libusb_unref_device(device);
+            if (static_cast<QAbstractButton *>(ui->usbTable->cellWidget(row, USB_CONNECT))->isChecked()) {
+                emu.usbPlugDevice();
+            }
+            ui->usbTable->removeRow(row--);
+        }
+    }
     libusb_device **devices;
-    if (libusb_get_device_list(m_usbContext, &devices) < 0) {
+    if (!m_usbContext || libusb_get_device_list(m_usbContext, &devices) < 0) {
         return;
     }
     for (libusb_device **device = devices; device && *device; device++) {
         usbUpdate(*device);
     }
     libusb_free_device_list(devices, false);
-}
-
 #endif
+}
 
 // ------------------------------------------------
 // GUI IPC things

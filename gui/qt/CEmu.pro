@@ -221,6 +221,7 @@ SOURCES += \
     ../../core/timers.c \
     ../../core/usb/disconnected.c \
     ../../core/usb/dusb.c \
+    ../../core/usb/msd.c \
     ../../core/usb/physical.c \
     ../../core/usb/usb.c \
     ../../core/sha256.c \

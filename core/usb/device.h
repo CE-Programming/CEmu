@@ -87,7 +87,7 @@ typedef int usb_device_t(usb_event_t *event);
 extern "C" {
 #endif
 
-usb_device_t usb_disconnected_device, usb_dusb_device, usb_physical_device;
+usb_device_t usb_disconnected_device, usb_dusb_device, usb_physical_device, usb_msd_device;
 
 #ifdef __cplusplus
 }

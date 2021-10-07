@@ -139,6 +139,7 @@ set(CEmu_Sources
     ../../core/usb/disconnected.c
     ../../core/usb/dusb.c
     ../../core/usb/fotg210.h
+    ../../core/usb/msd.c
     ../../core/usb/physical.c
     ../../core/usb/usb.c ../../core/usb/usb.h
     ../../core/vat.c ../../core/vat.h

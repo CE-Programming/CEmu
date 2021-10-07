@@ -548,7 +548,7 @@ int usb_physical_device(usb_event_t *event) {
     usb_transfer_info_t *transfer = &event->info.transfer;
     usb_timer_info_t *timer = &event->info.timer;
     device_t *device;
-    event->host = true;
+    event->host = false;
     event->speed = USB_FULL_SPEED;
     event->type = USB_INIT_EVENT;
     switch (type) {
@@ -575,6 +575,7 @@ int usb_physical_device(usb_event_t *event) {
             event->type = USB_NO_EVENT;
             break;
         case USB_INIT_EVENT:
+            event->context = NULL;
             if (init->argc != 2) {
                 return EINVAL;
             }

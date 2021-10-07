@@ -173,16 +173,16 @@ static void usb_unplug_a(void) {
 
 static void usb_plug(void) {
     if (usb.event.host) {
-        usb_plug_a();
-    } else {
         usb_plug_b();
+    } else {
+        usb_plug_a();
     }
 }
 static void usb_unplug(void) {
     if (usb.event.host) {
-        usb_unplug_a();
-    } else {
         usb_unplug_b();
+    } else {
+        usb_unplug_a();
     }
 }
 
@@ -304,7 +304,7 @@ static int usb_dispatch_event(usb_qh_t *qh) {
                 usb_grp2_int(GISR2_RESET);
                 break;
             case USB_TRANSFER_REQUEST_EVENT:
-                if (!usb.event.host) {
+                if (usb.event.host) {
                     uint8_t endpoint = transfer->endpoint;
                     if (!endpoint) {
                         if (transfer->type == USB_SETUP_TRANSFER) {
@@ -349,6 +349,14 @@ static int usb_dispatch_event(usb_qh_t *qh) {
                 break;
             case USB_TRANSFER_RESPONSE_EVENT:
                 if (usb.event.host) {
+                    if (!transfer->direction) {
+                        mem_dma_write(transfer->buffer, usb.regs.dma_addr, DMACTRL_LEN(usb.regs.dma_ctrl));
+                    }
+                    if (transfer->length) {
+                        //gui_console_printf("usb_grp2_int(%s);\n", transfer->status == USB_TRANSFER_COMPLETED ? "GISR2_DMAFIN" : "GISR2_DMAERR");
+                        usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
+                    }
+                } else {
                     if (qh) {
                         qh->overlay.alt.nak_cnt = qh->nak_rl;
                         switch (transfer->type) {
@@ -396,14 +404,6 @@ static int usb_dispatch_event(usb_qh_t *qh) {
                                 usb_qh_halted(qh);
                                 break;
                         }
-                    }
-                } else {
-                    if (!transfer->direction) {
-                        mem_dma_write(transfer->buffer, usb.regs.dma_addr, DMACTRL_LEN(usb.regs.dma_ctrl));
-                    }
-                    if (transfer->length) {
-                        //gui_console_printf("usb_grp2_int(%s);\n", transfer->status == USB_TRANSFER_COMPLETED ? "GISR2_DMAFIN" : "GISR2_DMAERR");
-                        usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
                     }
                 }
                 break;
@@ -733,6 +733,8 @@ int usb_plug_device(int argc, const char *const *argv,
         usb.device = usb_dusb_device;
     } else if (!strcasecmp(argv[0], "physical")) {
         usb.device = usb_physical_device;
+    } else if (!strcasecmp(argv[0], "msd")) {
+        usb.device = usb_msd_device;
     } else {
         return ENOEXEC;
     }

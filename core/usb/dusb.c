@@ -1076,7 +1076,7 @@ int usb_dusb_device(usb_event_t *event) {
     uint32_t length, transfer_length;
     uint16_t attribute_count;
     uint8_t endpoint;
-    event->host = false;
+    event->host = true;
     event->speed = USB_FULL_SPEED;
     event->type = USB_NO_EVENT;
     switch (type) {
@@ -1148,11 +1148,11 @@ int usb_dusb_device(usb_event_t *event) {
             }
             break;
         case USB_INIT_EVENT:
+            event->context = NULL;
             if (init->argc < 1) {
                 return EINVAL;
             }
-            context = calloc(1, sizeof(dusb_context_t) + sizeof(dusb_command_t) * init->argc);
-            event->context = context;
+            context = event->context = calloc(1, sizeof(dusb_context_t) + sizeof(dusb_command_t) * init->argc);
             if (!context) {
                 return ENOMEM;
             }
