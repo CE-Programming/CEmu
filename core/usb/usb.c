@@ -23,8 +23,9 @@ typedef enum usb_qtype {
 } usb_qtype_t;
 typedef union usb_qlink {
     uint32_t val;
+    bool term : 1;
     struct {
-        uint32_t term : 1;
+        usb_qtype_t : 1;
         usb_qtype_t type : 2;
     };
     struct {
@@ -54,6 +55,9 @@ typedef struct usb_qh {
     usb_qlink_t cur;
     usb_qtd_t overlay;
 } usb_qh_t;
+typedef struct usb_fstn {
+    usb_qlink_t normal, back;
+} usb_fstn_t;
 static_assert(sizeof(usb_qbuf_t) == 0x04, "usb_qbuf_t does not have a size of 0x04");
 static_assert(offsetof(usb_qtd_t, next) == 0x00, "Next qTD Pointer is not at offset 0x00");
 static_assert(offsetof(usb_qtd_t, alt) == 0x04, "Alternate Next qTD Pointer is not at offset 0x04");
@@ -63,15 +67,25 @@ static_assert(offsetof(usb_qh_t, horiz) == 0x00, "Queue Head Horizontal Link Poi
 static_assert(offsetof(usb_qh_t, cur) == 0x0C, "Current qTD Pointer is not at offset 0x0C");
 static_assert(offsetof(usb_qh_t, overlay) == 0x10, "Transfer Overlay is not at offset 0x10");
 static_assert(sizeof(usb_qh_t) == 0x30, "usb_qh_t does not have a size of 0x30");
+static_assert(offsetof(usb_fstn_t, normal) == 0x00, "Normal Path Link Pointer is not at offset 0x00");
+static_assert(offsetof(usb_fstn_t, back) == 0x04, "Back Path Link Pointer is not at offset 0x04");
+static_assert(sizeof(usb_fstn_t) == 0x08, "usb_fstn_t does not have a size of 0x08");
 
 typedef struct usb_traversal_state {
+    union {
+        usb_qh_t qh;
+        usb_fstn_t fstn;
+    };
+    bool dirty : 1;
     enum {
-        USB_NAK_CNT_WAIT_FOR_START_EVENT,
-        USB_NAK_CNT_DO_RELOAD,
         USB_NAK_CNT_WAIT_FOR_LIST_HEAD,
+        USB_NAK_CNT_DO_RELOAD,
+        USB_NAK_CNT_WAIT_FOR_START_EVENT,
     } nak_cnt_reload_state : 2;
     bool fake_recl : 1;
-    int32_t fake_recl_head : 29;
+    int32_t fake_recl_head : 14;
+    uint32_t fake_iter_cap : 14;
+    uint32_t bit_times_remaining;
 } usb_traversal_state_t;
 
 static void usb_set_bits(uint32_t *reg, uint32_t bits, bool val) {
@@ -194,6 +208,10 @@ static void usb_plug_complete(void) {
     }
 }
 
+static uint32_t usb_compute_packet_bit_times(uint32_t byte_count) {
+    return 76 + 88 + 67 + 88 + 67 + byte_count * 8 * 7 / 6 + 721 + 48;
+}
+
 static void usb_write_back_qtd(usb_qh_t *qh) {
     usb_qtd_t qtd;
     mem_dma_read(&qtd, qh->cur.ptr << 5, sizeof(qtd));
@@ -225,7 +243,7 @@ static void usb_qh_halted(usb_qh_t *qh) {
     usb_qh_completed(qh);
 }
 
-static bool usb_gather_qtd(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
+static bool usb_qtd_gather(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
     uint16_t block_len;
     if (qtd->total_bytes > 0x5000) {
         return true;
@@ -254,7 +272,7 @@ static bool usb_gather_qtd(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
     }
     return qtd->total_bytes;
 }
-static bool usb_scatter_qtd(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
+static bool usb_qtd_scatter(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
     uint16_t block_len;
     if (qtd->total_bytes > 0x5000) {
         return true;
@@ -283,7 +301,7 @@ static bool usb_scatter_qtd(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
     return *len;
 }
 
-static int usb_dispatch_event(usb_qh_t *qh) {
+static int usb_dispatch_event(usb_traversal_state_t *state) {
     int error = 0;
     usb_transfer_info_t *transfer = &usb.event.info.transfer;
     usb_timer_info_t *timer = &usb.event.info.timer;
@@ -357,8 +375,11 @@ static int usb_dispatch_event(usb_qh_t *qh) {
                         usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
                     }
                 } else {
-                    if (qh) {
-                        qh->overlay.alt.nak_cnt = qh->nak_rl;
+                    if (state) {
+                        state->fake_recl = true;
+                        state->fake_recl_head = -1;
+                        usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+                        state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
                         switch (transfer->type) {
                             case USB_SETUP_TRANSFER:
                             case USB_CONTROL_TRANSFER:
@@ -368,40 +389,43 @@ static int usb_dispatch_event(usb_qh_t *qh) {
                                     gui_console_printf("[USB] Error: Transfer failed: %d\n", transfer->status);
                                 }
                                 uint32_t length = transfer->length;
+                                if (transfer->direction) {
+                                    state->bit_times_remaining -= usb_compute_packet_bit_times(length);
+                                }
                                 switch (transfer->status) {
                                     case USB_TRANSFER_COMPLETED:
-                                        if (usb_scatter_qtd(&qh->overlay, transfer->buffer, &length)) {
-                                            qh->overlay.missed = true;
-                                            usb_qh_halted(qh);
+                                        if (usb_qtd_scatter(&state->qh.overlay, transfer->buffer, &length)) {
+                                            state->qh.overlay.missed = true;
+                                            usb_qh_halted(&state->qh);
                                         } else {
-                                            usb_qh_completed(qh);
+                                            usb_qh_completed(&state->qh);
                                         }
                                         break;
                                     case USB_TRANSFER_STALLED:
-                                        usb_qh_halted(qh);
+                                        usb_qh_halted(&state->qh);
                                         break;
                                     case USB_TRANSFER_OVERFLOWED:
-                                        qh->overlay.buf_err = true;
-                                        usb_qh_halted(qh);
+                                        state->qh.overlay.buf_err = true;
+                                        usb_qh_halted(&state->qh);
                                         break;
                                     case USB_TRANSFER_BABBLED:
-                                        qh->overlay.babble = true;
-                                        usb_qh_halted(qh);
+                                        state->qh.overlay.babble = true;
+                                        usb_qh_halted(&state->qh);
                                         break;
                                     case USB_TRANSFER_ERRORED:
-                                        qh->overlay.cerr = 0;
-                                        qh->overlay.xact_err = true;
-                                        usb_qh_halted(qh);
+                                        state->qh.overlay.cerr = 0;
+                                        state->qh.overlay.xact_err = true;
+                                        usb_qh_halted(&state->qh);
                                         break;
                                     default:
                                         gui_console_printf("[USB] Error: Transfer response with unexpected status %d!\n", transfer->status);
-                                        usb_qh_halted(qh);
+                                        usb_qh_halted(&state->qh);
                                         break;
                                 }
                                 break;
                             default:
                                 gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
-                                usb_qh_halted(qh);
+                                usb_qh_halted(&state->qh);
                                 break;
                         }
                     }
@@ -439,215 +463,180 @@ static void usb_host_sys_err(void) {
     gui_console_printf("[USB] Warning: Fatal host controller error!\n");
 }
 
-#define ASYNC_ITER_CAP 64
-__attribute__((unused)) static void usb_process_async(void) {
-    usb_qh_t qh;
-    usb_qlink_t link;
-    usb_qtd_t qtd;
-    enum { WAIT_FOR_LIST_QH, DO_RELOAD, WAIT_FOR_START_EVENT } nak_state = WAIT_FOR_LIST_QH;
-    enum { FETCH_QH, ADVANCE_QUEUE, EXECUTE_TRANSACTION, WRITE_BACK_QTD, FOLLOW_QH_HORIZONTAL_POINTER } host_state = FETCH_QH;
-    uint8_t qh_transaction_counter;
-    bool consider;
-    if (!(usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED)) {
+static void usb_qh_execute(usb_traversal_state_t *state) {
+    if (state->qh.i) {
+        state->qh.overlay.active = false;
+    }
+    if (!state->qh.overlay.active || state->qh.overlay.halted) {
         return;
     }
-    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-    for (int i = 0; i < ASYNC_ITER_CAP; i++) {
-        switch (host_state) {
-            case FETCH_QH:
-                mem_dma_read(&qh, usb.regs.hcor.asynclistaddr, sizeof(qh));
-                if (qh.h) {
-                    if (nak_state != WAIT_FOR_START_EVENT) {
-                        nak_state++;
-                    } if (!qh.s_mask) {
-                        if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
-                            return;
-                        }
-                        usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
-                    }
-                } if (qh.overlay.halted) {
-                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
-                } else if (qh.overlay.active) {
-                    host_state = EXECUTE_TRANSACTION;
-                } else if (qh.i) {
-                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
-                } else {
-                    host_state = ADVANCE_QUEUE;
-                }
-                break;
-            case ADVANCE_QUEUE:
-                link.term = true;
-                if (qh.overlay.total_bytes) {
-                    link = qh.overlay.alt;
-                } if (link.term) {
-                    link = qh.overlay.next;
-                } if (link.term) {
-                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
-                } else {
-                    mem_dma_read(&qtd, link.ptr << 5, sizeof(qtd));
-                    if (qtd.active) {
-                        bool dt = qh.dtc ? qtd.dt : qh.overlay.dt;
-                        bool ping = qh.eps != 2 ? qtd.ping : qh.overlay.ping;
-                        qh.cur = link;
-                        qh.overlay = qtd;
-                        qh.overlay.alt.nak_cnt = qh.nak_rl;
-                        qh.overlay.ping = ping;
-                        qh.overlay.dt = dt;
-                        qh.overlay.bufs[1].c_prog_mask = 0;
-                        qh.overlay.bufs[2].frame_tag = 0;
-                        host_state = EXECUTE_TRANSACTION;
-                    } else {
-                        host_state = FOLLOW_QH_HORIZONTAL_POINTER;
-                    }
-                }
-                break;
-            case EXECUTE_TRANSACTION:
-                if (qh.s_mask) {
-                    consider = qh.s_mask >> (usb.regs.hcor.frindex & 7) & 1;
-                } else {
-                    if (nak_state == DO_RELOAD && qh.nak_rl) {
-                        qh.overlay.alt.nak_cnt = qh.nak_rl;
-                    }
-                    consider = qh.overlay.alt.nak_cnt || !qh.nak_rl;
-                }
-                qh_transaction_counter = qh.mult;
-                if (!qh.s_mask && !qh_transaction_counter) {
-                    consider = false;
-                }
-                if (consider) {
-                    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-
-                }
-                break;
-            case WRITE_BACK_QTD:
-                break;
-            case FOLLOW_QH_HORIZONTAL_POINTER:
-                usb.regs.hcor.asynclistaddr = qh.horiz.ptr << 5;
-                return;
-        }
-    }
-}
-__attribute__((unused)) static void usb_process_period(void) {
-    uint32_t entry;
-    if (!(usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED)) {
-        return;
-    }
-    mem_dma_read(&entry, usb.regs.hcor.periodiclistbase +
-                 (usb.regs.hcor.frindex &
-                  (USBCMD_FRLIST_BYTES(usb.regs.hcor.usbcmd) - 1) << 3),
-                 sizeof(entry));
-    (void)entry;
-}
-
-static void usb_execute_qh(usb_qh_t *qh) {
-    usb_qtd_t *qtd = &qh->overlay;
-    usb_transfer_info_t *transfer = &usb.event.info.transfer;
-    uint32_t length = sizeof(usb.buffer);
-    if (qtd->pid > 1 + qh->c) {
-        return usb_host_sys_err();
-    }
-    if (usb_gather_qtd(usb.buffer, qtd, &length)) {
-        return usb_host_sys_err();
-    }
-    usb.event.type = USB_TRANSFER_REQUEST_EVENT;
-    transfer->buffer = usb.buffer;
-    transfer->length = sizeof(usb.buffer) - length;
-    transfer->max_pkt_size = qh->max_pkt_size;
-    transfer->status = USB_TRANSFER_COMPLETED;
-    transfer->address = qh->dev_addr;
-    transfer->endpoint = qh->endpt;
-    transfer->type = qh->c ? qtd->pid == 2 ? USB_SETUP_TRANSFER : USB_CONTROL_TRANSFER
-                           : qh->s_mask ? USB_INTERRUPT_TRANSFER : USB_BULK_TRANSFER;
-    transfer->direction = qtd->pid & 1;
-    usb_dispatch_event(qh);
-}
-
-static void usb_reclaim_event(usb_traversal_state_t *state) {
-    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-    state->fake_recl = true;
-    state->fake_recl_head = -1;
-}
-
-static void usb_start_event(usb_traversal_state_t *state) {
-    usb_reclaim_event(state);
-    state->nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
-}
-
-static bool usb_process_qh(usb_qh_t *qh, usb_traversal_state_t *state) {
-    uint8_t qHTransactionCounter;
-    // Fetch QH
-    if (!qh->s_mask && qh->h) {
-        if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
-            return true;
-        }
-        usb_reclaim_event(state);
-        usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
-        if (state->nak_cnt_reload_state != USB_NAK_CNT_WAIT_FOR_START_EVENT) {
-            // Either WAIT_FOR_LIST_HEAD -> DO_RELOAD or DO_RELOAD -> WAIT_FOR_START_EVENT
-            state->nak_cnt_reload_state--;
-        }
-    }
-    if (qh->overlay.halted) {
-        return false;
-    }
-    if (!qh->overlay.active) {
-        bool dt;
-        bool ping;
-        usb_qlink_t link;
-        usb_qtd_t qtd;
-        if (qh->i) {
-            return false;
-        }
-        // Advance Queue
-        link.term = true;
-        if (qh->overlay.total_bytes) {
-            link = qh->overlay.alt;
-        }
-        if (link.term) {
-            link = qh->overlay.next;
-        }
-        if (link.term) {
-            return false;
-        }
-        mem_dma_read(&qtd, link.ptr << 5, sizeof(qtd));
-        if (!qtd.active) {
-            return false;
-        }
-        dt = qh->dtc ? qtd.dt : qh->overlay.dt;
-        ping = qh->eps != 2 ? qtd.ping : qh->overlay.ping;
-        qh->cur = link;
-        qh->overlay = qtd;
-        qh->overlay.alt.nak_cnt = qh->nak_rl;
-        qh->overlay.ping = ping;
-        qh->overlay.dt = dt;
-        qh->overlay.bufs[1].c_prog_mask = 0;
-        qh->overlay.bufs[2].frame_tag = 0;
-    }
-    // Execute Transaction
-    if (qh->s_mask) {
+    if (state->qh.s_mask) {
         // Interrupt Transfer Pre-condition Criteria
-        if (!(qh->s_mask & 1 << (usb.regs.hcor.frindex & 7))) {
-            return false;
+        if (!(state->qh.s_mask & 1 << (usb.regs.hcor.frindex & 7))) {
+            return;
         }
     } else {
         // Asynchronous Transfer Pre-operations
         if (state->nak_cnt_reload_state == USB_NAK_CNT_DO_RELOAD) {
-            qh->overlay.alt.nak_cnt = qh->nak_rl;
-        }
-        // Asynchronous Transfer Pre-condition Criteria
-        if (!qh->overlay.alt.nak_cnt && qh->nak_rl) {
-            return false;
+            state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
+            state->dirty = true;
         }
     }
-    for (qHTransactionCounter = qh->mult; qHTransactionCounter && qh->overlay.active;
+    // Transfer Type Independent Pre-operations
+    uint32_t max_bit_times = usb_compute_packet_bit_times(state->qh.max_pkt_size);
+    for (uint8_t qHTransactionCounter = state->qh.mult;
+         qHTransactionCounter && state->qh.overlay.active && state->bit_times_remaining >= max_bit_times;
          --qHTransactionCounter) {
-        usb_reclaim_event(state);
-        if (qh->nak_rl) {
-            qh->overlay.alt.nak_cnt--;
+        // Asynchronous Transfer Pre-condition Criteria
+        if (state->qh.nak_rl) {
+            if (!state->qh.overlay.alt.nak_cnt) {
+                return;
+            }
+            state->qh.overlay.alt.nak_cnt--;
         }
-        usb_execute_qh(qh);
+        state->dirty = true;
+        uint32_t length = sizeof(usb.buffer);
+        if (state->qh.overlay.pid > 1 + state->qh.c ||
+            usb_qtd_gather(usb.buffer, &state->qh.overlay, &length)) {
+            state->qh.overlay.cerr = 0;
+            state->qh.overlay.xact_err = true;
+            usb_qh_halted(&state->qh);
+            return;
+        }
+        usb.event.type = USB_TRANSFER_REQUEST_EVENT;
+        usb.event.info.transfer.buffer = usb.buffer;
+        usb.event.info.transfer.length = sizeof(usb.buffer) - length;
+        usb.event.info.transfer.max_pkt_size = state->qh.max_pkt_size;
+        usb.event.info.transfer.status = USB_TRANSFER_COMPLETED;
+        usb.event.info.transfer.address = state->qh.dev_addr;
+        usb.event.info.transfer.endpoint = state->qh.endpt;
+        usb.event.info.transfer.type =
+            state->qh.c ? state->qh.overlay.pid == 2 ? USB_SETUP_TRANSFER : USB_CONTROL_TRANSFER
+                        : state->qh.s_mask ? USB_INTERRUPT_TRANSFER : USB_BULK_TRANSFER;
+        usb.event.info.transfer.direction = state->qh.overlay.pid & 1;
+        if (!usb.event.info.transfer.direction) {
+            state->bit_times_remaining -= usb_compute_packet_bit_times(usb.event.info.transfer.length);
+        }
+        usb_dispatch_event(state);
     }
-    return false;
+}
+
+static void usb_qh_advance(usb_traversal_state_t *state) {
+    if (state->qh.i || state->qh.overlay.active || state->qh.overlay.halted) {
+        return;
+    }
+    usb_qlink_t link;
+    link.term = true;
+    if (state->qh.overlay.total_bytes) {
+        link = state->qh.overlay.alt;
+    }
+    if (link.term) {
+        link = state->qh.overlay.next;
+    }
+    if (link.term) {
+        return;
+    }
+    usb_qtd_t qtd;
+    mem_dma_read(&qtd, link.ptr << 5, sizeof(qtd));
+    if (!qtd.active) {
+        return;
+    }
+    bool dt = state->qh.dtc ? qtd.dt : state->qh.overlay.dt;
+    bool ping = state->qh.eps != USB_HIGH_SPEED ? qtd.ping : state->qh.overlay.ping;
+    state->qh.cur = link;
+    state->qh.overlay = qtd;
+    state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
+    state->qh.overlay.ping = ping;
+    state->qh.overlay.dt = dt;
+    state->qh.overlay.bufs[1].c_prog_mask = 0;
+    state->qh.overlay.bufs[2].frame_tag = 0;
+    state->dirty = true;
+}
+
+static void usb_schedule_traverse(usb_qlink_t *link) {
+    // start event
+    usb_traversal_state_t state;
+    state.nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
+    state.fake_recl = true;
+    state.fake_recl_head = -1;
+    state.fake_iter_cap = 1 << 10;
+    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+    switch (usb.event.speed) {
+        case USB_FULL_SPEED:
+            state.bit_times_remaining = UINT64_C(480) * 1000u * 1000u / 8000u;
+            break;
+        case USB_LOW_SPEED:
+            state.bit_times_remaining = UINT64_C(1500) * 1000u / 1000u;
+            break;
+        case USB_HIGH_SPEED:
+            state.bit_times_remaining = UINT64_C(12) * 1000u * 1000u / 1000u;
+            break;
+        case USB_SUPER_SPEED:
+            state.bit_times_remaining = UINT64_C(5) * 1000u * 1000u * 1000u / 8000u;
+            break;
+    }
+    while (!link->term) {
+        if (!--state.fake_iter_cap) {
+            static bool warned = false;
+            if (!warned) {
+                gui_console_printf("[USB] Warning: Very long asynchronous list!\n");
+                warned = true;
+            }
+            return;
+        }
+        switch (link->type) {
+            case QTYPE_ITD:
+                return usb_host_sys_err();
+            case QTYPE_QH:
+                if (state.fake_recl_head == (link->ptr & 0x3FFF)) {
+                    static bool warned = false;
+                    if (!warned) {
+                        gui_console_printf("[USB] Warning: No reclamation head!\n");
+                        warned = true;
+                    }
+                    if (!state.fake_recl) {
+                        return;
+                    }
+                    state.fake_recl = false;
+                }
+                if (state.fake_recl_head == -1) {
+                    state.fake_recl_head = link->ptr & 0x3FFF;
+                }
+                // 4.10.1 Fetch Queue Head
+                mem_dma_read(&state.qh, link->ptr << 5, sizeof(state.qh));
+                state.dirty = false;
+                if (!state.qh.s_mask && state.qh.h) {
+                    state.fake_recl = true;
+                    state.fake_recl_head = -1;
+                    // update nak counter reload state
+                    if (state.nak_cnt_reload_state != USB_NAK_CNT_WAIT_FOR_START_EVENT) {
+                        ++state.nak_cnt_reload_state;
+                    }
+                    // empty schedule detection
+                    if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
+                        return;
+                    }
+                    // update reclamation
+                    usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
+                }
+                // 4.10.2 Advance Queue
+                usb_qh_advance(&state);
+                // 4.10.3 Execute Transaction
+                usb_qh_execute(&state);
+                // 4.10.15 Follow Queue Head Horizontal Pointer
+                if (state.dirty) {
+                    mem_dma_write(&state.qh, link->ptr << 5, sizeof(state.qh));
+                }
+                *link = state.qh.horiz;
+                break;
+            case QTYPE_SITD:
+                return usb_host_sys_err();
+            case QTYPE_FSTN:
+                mem_dma_read(&state.fstn, link->ptr << 5, sizeof(state.fstn));
+                *link = state.fstn.normal;
+                break;
+        }
+    }
 }
 
 static void usb_reset_core(void) {
@@ -744,8 +733,6 @@ int usb_plug_device(int argc, const char *const *argv,
 }
 
 static void usb_event(enum sched_item_id event) {
-    usb_qh_t qh;
-    uint8_t i = 0;
     bool high_speed = false;
     if (usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
         if (usb.regs.otgcsr & OTGCSR_ROLE_D) {
@@ -760,34 +747,20 @@ static void usb_event(enum sched_item_id event) {
         } else {
             high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
             if (usb.regs.hcor.usbcmd & USBCMD_RUN) {
+                usb_qlink_t link;
                 if (usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
+                    mem_dma_read(&link, usb.regs.hcor.periodiclistbase +
+                                 (usb.regs.hcor.frindex &
+                                  (USBCMD_FRLIST_BYTES(usb.regs.hcor.usbcmd) - 1) << 3),
+                                 sizeof(link));
+                    usb_schedule_traverse(&link);
                 }
                 if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
-                    usb_traversal_state_t state;
-                    usb_start_event(&state);
-                    while (true) {
-                        int32_t addr = usb.regs.hcor.asynclistaddr;
-                        mem_dma_read(&qh, addr, sizeof(qh));
-                        bool done = usb_process_qh(&qh, &state);
-                        mem_dma_write(&qh, addr, sizeof(qh));
-                        if (done) {
-                            break;
-                        }
-                        addr &= 0x7FFFF;
-                        if (addr == state.fake_recl_head && (state.fake_recl ^= true)) {
-                            //gui_console_printf("[USB] Warning: No reclamation head!\n");
-                            break;
-                        }
-                        if (!++i) {
-                            gui_console_printf("[USB] Warning: Very long asynchronous list!\n");
-                            break;
-                        }
-                        if (state.fake_recl_head == -1) {
-                            state.fake_recl_head = addr;
-                        }
-                        // Follow QH Horizontal Pointer
-                        usb.regs.hcor.asynclistaddr = qh.horiz.ptr << 5;
-                    }
+                    link.term = false;
+                    link.type = QTYPE_QH;
+                    link.ptr = usb.regs.hcor.asynclistaddr >> 5;
+                    usb_schedule_traverse(&link);
+                    usb.regs.hcor.asynclistaddr = link.val;
                 }
             }
         }
