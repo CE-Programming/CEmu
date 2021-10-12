@@ -1,6 +1,38 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#ifndef __has_attribute
+# define __has_attribute(x) 0
+#endif
+#ifndef __has_builtin
+# define __has_builtin(x) 0
+#endif
+
+#ifndef __cplusplus
+# if __has_attribute(fallthrough)
+#  define fallthrough __attribute__((fallthrough))
+# else
+#  define fallthrough (void)0
+# endif
+#endif
+
+#if __has_builtin(__builtin_expect)
+# define unlikely(x) __builtin_expect(x, 0)
+#else
+# define unlikely(x) (x)
+#endif
+#define likely(x) !unlikely(!(x))
+
+#if __has_builtin(__builtin_unreachable)
+# define unreachable __builtin_unreachable
+#else
+# define unreachable abort
+#endif
+
+#ifdef _MSC_VER
+# define strcasecmp _stricmp
+#endif
+
 #ifdef __EMSCRIPTEN__
 # include <emscripten.h>
 #else
@@ -13,23 +45,5 @@
 
 #define write8(data, index, value) WRITE(data, index, 8, value)
 #define read8(data, index) READFROM(data, index, 8)
-
-/* MSVC doesn't support __builtin_expect, stub it out */
-#ifndef _MSC_VER
-# ifndef __cplusplus
-#  define fallthrough __attribute__((fallthrough))
-# endif
-# define likely(x) __builtin_expect(!!(x), 1)
-# define unreachable() __builtin_unreachable()
-#else
-# ifndef __cplusplus
-#  define fallthrough (void)0
-# endif
-# define likely(x) (x)
-# define unreachable() abort()
-# define strcasecmp _stricmp
-#endif
-
-#define unlikely(x) !likely(!(x))
 
 #endif
