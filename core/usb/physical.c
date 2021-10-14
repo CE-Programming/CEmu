@@ -73,6 +73,11 @@ struct context {
     bool events_handled : 1;
 };
 
+enum {
+    USB_DT_DEVICE_QUALIFIER = 6,
+    USB_DT_OTHER_SPEED_CONFIG = 7,
+};
+
 static void node_init(node_t *node) {
     node->prev = node->next = node;
 }
@@ -198,42 +203,16 @@ static void transfer_append(transfer_t *transfer, const void *src, uint32_t leng
     libusb_transfer->actual_length += length;
 }
 
-static int device_cleanup_transfer(device_t *device, transfer_t *transfer) {
-    int error = USB_SUCCESS;
-    if (transfer->state == TRANSFER_STATE_NONE) {
-        return error;
-    }
-    struct libusb_transfer *libusb_transfer = transfer->transfer;
-    switch (libusb_transfer->type) {
-        case LIBUSB_TRANSFER_TYPE_CONTROL: {
-            struct libusb_control_setup *setup = libusb_control_transfer_get_setup(libusb_transfer);
-            switch (setup->bRequest) {
-                case LIBUSB_REQUEST_SET_ADDRESS:
-                    if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->wValue && setup->wValue < 0x80 && !setup->wIndex && !setup->wLength) {
-                        device->address = setup->wValue;
-                    }
-                    break;
-            }
-            break;
-        }
-    }
-    transfer->state = TRANSFER_STATE_NONE;
-    return error;
-}
-
-static int device_intercept_transfer(device_t *device, transfer_t *transfer) {
+static int device_intercept_control_setup(device_t *device, transfer_t *transfer) {
     enum libusb_error error;
     struct libusb_transfer *libusb_transfer = transfer->transfer;
-    if (libusb_transfer->type != LIBUSB_TRANSFER_TYPE_CONTROL) {
-        return USB_SUCCESS;
-    }
     struct libusb_device_handle *handle = libusb_transfer->dev_handle;
     enum libusb_transfer_status *status = &libusb_transfer->status;
     struct libusb_device_descriptor device_desc;
     struct libusb_config_descriptor *config_desc = NULL;
     struct libusb_control_setup *setup = libusb_control_transfer_get_setup(libusb_transfer);
     int configValueInt = 0;
-    uint8_t type = setup->wValue >> 8, index = setup->wValue, iface, alt, endpt, configValueByte;
+    uint8_t type = setup->wValue >> 8, index = setup->wValue >> 0, iface, alt, endpt, configValueByte;
     *status = LIBUSB_TRANSFER_STALL;
     switch (setup->bRequest) {
         case LIBUSB_REQUEST_SET_ADDRESS:
@@ -242,6 +221,23 @@ static int device_intercept_transfer(device_t *device, transfer_t *transfer) {
             }
             break;
         case LIBUSB_REQUEST_GET_DESCRIPTOR:
+            if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && libusb_get_device_speed(libusb_get_device(handle)) >= LIBUSB_SPEED_HIGH) {
+                switch (type) {
+                    case LIBUSB_DT_DEVICE:
+                        type = USB_DT_DEVICE_QUALIFIER;
+                        break;
+                    case LIBUSB_DT_CONFIG:
+                        type = USB_DT_OTHER_SPEED_CONFIG;
+                        break;
+                    case USB_DT_DEVICE_QUALIFIER:
+                        type = LIBUSB_DT_DEVICE;
+                        break;
+                    case USB_DT_OTHER_SPEED_CONFIG:
+                        type = LIBUSB_DT_CONFIG;
+                        break;
+                }
+                setup->wValue = type << 8 | index << 0;
+            }
             switch (type) {
                 case LIBUSB_DT_DEVICE:
                     if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !index && !setup->wIndex &&
@@ -269,6 +265,8 @@ static int device_intercept_transfer(device_t *device, transfer_t *transfer) {
                 case LIBUSB_DT_STRING:
                 case LIBUSB_DT_INTERFACE:
                 case LIBUSB_DT_ENDPOINT:
+                case USB_DT_DEVICE_QUALIFIER:
+                case USB_DT_OTHER_SPEED_CONFIG:
                 case LIBUSB_DT_BOS:
                 case LIBUSB_DT_DEVICE_CAPABILITY:
                 case LIBUSB_DT_HID:
@@ -321,6 +319,112 @@ static int device_intercept_transfer(device_t *device, transfer_t *transfer) {
     }
     libusb_free_config_descriptor(config_desc);
     libusb_transfer->callback(libusb_transfer);
+    return USB_SUCCESS;
+}
+
+static int device_intercept_control_data(device_t *device, transfer_t *transfer) {
+    struct libusb_transfer *libusb_transfer = transfer->transfer;
+    struct libusb_control_setup *setup = libusb_control_transfer_get_setup(libusb_transfer);
+    uint8_t type = setup->wValue >> 8;
+    uint8_t *buffer = libusb_control_transfer_get_data(libusb_transfer);
+    size_t actual = libusb_transfer->actual_length;
+    struct libusb_device_descriptor device_desc;
+    if (libusb_transfer->status == LIBUSB_TRANSFER_COMPLETED && setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->bRequest == LIBUSB_REQUEST_GET_DESCRIPTOR && !(actual > 1 && buffer[1] != type) && libusb_get_device_speed(libusb_get_device(device->handle)) >= LIBUSB_SPEED_HIGH) {
+        switch (type) {
+            case LIBUSB_DT_DEVICE:
+                if ((libusb_transfer->status = transfer_status_from_libusb_error(libusb_get_device_descriptor(libusb_get_device(libusb_transfer->dev_handle), &device_desc))) != LIBUSB_TRANSFER_COMPLETED) {
+                    break;
+                }
+                if (actual > 0) {
+                    buffer[0] = 10;
+                }
+                if (actual > 1) {
+                    buffer[1] = USB_DT_DEVICE_QUALIFIER;
+                }
+                if (actual > 8) {
+                    buffer[8] = device_desc.bNumConfigurations;
+                }
+                if (actual > 9) {
+                    buffer[9] = 0;
+                    libusb_transfer->actual_length = 10;
+                }
+                break;
+            case LIBUSB_DT_CONFIG:
+                if (actual > 1) {
+                    buffer[1] = USB_DT_OTHER_SPEED_CONFIG;
+                }
+                break;
+            case USB_DT_DEVICE_QUALIFIER:
+                if ((libusb_transfer->status = transfer_status_from_libusb_error(libusb_get_device_descriptor(libusb_get_device(libusb_transfer->dev_handle), &device_desc))) != LIBUSB_TRANSFER_COMPLETED) {
+                    break;
+                }
+                if (actual > 2) {
+                    device_desc.bcdUSB = (device_desc.bcdUSB & ~(0xFF << 0)) | buffer[2] << 0;
+                }
+                if (actual > 3) {
+                    device_desc.bcdUSB = buffer[3] << 8 | (device_desc.bcdUSB & ~(0xFF << 8));
+                }
+                if (actual > 4) {
+                    device_desc.bDeviceClass = buffer[4];
+                }
+                if (actual > 5) {
+                    device_desc.bDeviceSubClass = buffer[5];
+                }
+                if (actual > 6) {
+                    device_desc.bDeviceProtocol = buffer[6];
+                }
+                if (actual > 7) {
+                    device_desc.bMaxPacketSize0 = buffer[7];
+                }
+                if (actual > 8) {
+                    device_desc.bNumConfigurations = buffer[8];
+                }
+                actual = libusb_transfer->length - sizeof(struct libusb_control_setup);
+                if (actual > sizeof(struct libusb_device_descriptor)) {
+                    actual = sizeof(struct libusb_device_descriptor);
+                }
+                memcpy(buffer, &device_desc, actual);
+                libusb_transfer->actual_length = actual;
+                break;
+            case USB_DT_OTHER_SPEED_CONFIG:
+                if (actual > 1) {
+                    buffer[1] = LIBUSB_DT_CONFIG;
+                }
+                break;
+        }
+    }
+    return USB_SUCCESS;
+}
+
+static int device_intercept_control_status(device_t *device, transfer_t *transfer) {
+    struct libusb_transfer *libusb_transfer = transfer->transfer;
+    struct libusb_control_setup *setup = libusb_control_transfer_get_setup(libusb_transfer);
+    if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->bRequest == LIBUSB_REQUEST_SET_ADDRESS && setup->wValue && setup->wValue < 0x80 && !setup->wIndex && !setup->wLength) {
+        device->address = setup->wValue;
+    }
+    return USB_SUCCESS;
+}
+
+static int device_intercept_interrupt(device_t *device __attribute__((unused)), transfer_t *transfer __attribute__((unused))) {
+    return USB_SUCCESS;
+}
+
+static int device_intercept_transfer(device_t *device, transfer_t *transfer, bool data) {
+    switch (transfer->transfer->type) {
+        case LIBUSB_TRANSFER_TYPE_CONTROL:
+            switch (transfer->state) {
+                case TRANSFER_STATE_NONE:
+                    return device_intercept_control_setup(device, transfer);
+                case TRANSFER_STATE_COMPLETED:
+                    if (data) {
+                        return device_intercept_control_data(device, transfer);
+                    }
+                    return device_intercept_control_status(device, transfer);
+            }
+            break;
+        case LIBUSB_TRANSFER_TYPE_INTERRUPT:
+            return device_intercept_interrupt(device, transfer);
+    }
     return USB_SUCCESS;
 }
 
@@ -413,7 +517,7 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
         transfer_append(transfer, info->buffer, info->length);
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
-        error = device_intercept_transfer(device, transfer);
+        error = device_intercept_transfer(device, transfer, info->length);
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
         error = errno_from_libusb_error(libusb_submit_transfer(libusb_transfer));
@@ -433,11 +537,11 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
         }
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_COMPLETED) {
+        error = device_intercept_transfer(device, transfer, info->length);
+    }
+    if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_COMPLETED) {
         event->type = USB_TRANSFER_RESPONSE_EVENT;
         info->status = transfer_status_from_libusb_status(libusb_transfer->status);
-        if (info->status != USB_TRANSFER_COMPLETED) {
-            error = device_cleanup_transfer(device, transfer);
-        }
         switch (info->type) {
             case USB_SETUP_TRANSFER:
                 info->buffer = NULL;
@@ -449,7 +553,7 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
                     info->length = libusb_transfer->actual_length;
                 } else {
                     info->buffer = NULL;
-                    error = device_cleanup_transfer(device, transfer);
+                    transfer->state = TRANSFER_STATE_NONE;
                 }
                 break;
             case USB_BULK_TRANSFER:
@@ -457,8 +561,11 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
             case USB_ISOCHRONOUS_TRANSFER:
                 info->buffer = libusb_transfer->buffer;
                 info->length = libusb_transfer->actual_length;
-                error = device_cleanup_transfer(device, transfer);
+                transfer->state = TRANSFER_STATE_NONE;
                 break;
+        }
+        if (info->status != USB_TRANSFER_COMPLETED) {
+            transfer->state = TRANSFER_STATE_NONE;
         }
     } else if (error == USB_SUCCESS && info->type == USB_SETUP_TRANSFER) {
         event->type = USB_TRANSFER_RESPONSE_EVENT;
@@ -549,7 +656,6 @@ int usb_physical_device(usb_event_t *event) {
     usb_timer_info_t *timer = &event->info.timer;
     device_t *device;
     event->host = false;
-    event->speed = USB_FULL_SPEED;
     event->type = USB_INIT_EVENT;
     switch (type) {
         case USB_NO_EVENT:
@@ -661,14 +767,13 @@ int usb_physical_device(usb_event_t *event) {
                 } else {
                     error = EINVAL;
                 }
-                if (root) {
-                    error = device_attach(context, root);
-                    if (error == USB_SUCCESS) {
-                        for (libusb_device **device = devices; *device; ++device) {
-                            device_hotplugged(context->context, *device,
-                                              LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, context);
-                        }
+                if (root && (error = device_attach(context, root)) == USB_SUCCESS) {
+                    for (libusb_device **device = devices; *device; ++device) {
+                        device_hotplugged(context->context, *device,
+                                          LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, context);
                     }
+                    event->speed = libusb_get_device_speed(root) == LIBUSB_SPEED_LOW
+                        ? USB_LOW_SPEED : USB_FULL_SPEED;
                 }
                 root = NULL;
                 libusb_free_device_list(devices, true);

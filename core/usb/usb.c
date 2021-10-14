@@ -280,7 +280,7 @@ static bool usb_qtd_scatter(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
     if (!(qtd->pid & 1)) {
         return false;
     }
-    while (len && qtd->total_bytes) {
+    while (qtd->total_bytes && *len) {
         if (qtd->c_page >= 5) {
             return true;
         }
