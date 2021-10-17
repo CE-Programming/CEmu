@@ -73,6 +73,7 @@ struct fotg210_regs {
 };
 
 /* USB Command */
+#define USBCMD_ASYNC_ADV_DRBL  (1 << 6)
 #define USBCMD_ASYNC_SCHED     (1 << 5)
 #define USBCMD_PERIOD_SCHED    (1 << 4)
 #define USBCMD_FRLIST_SIZE(x)  (((x) >> 2) & 0x03)
@@ -86,7 +87,9 @@ struct fotg210_regs {
 #define USBSTS_PERIOD_SCHED    (1 << 14)
 #define USBSTS_RECLAMATION     (1 << 13)
 #define USBSTS_HCHALTED        (1 << 12)
+#define USBSTS_ASYNC_ADV       (1 << 5)
 #define USBSTS_HOST_SYS_ERR    (1 << 4)
+#define USBSTS_FRAME_LIST_OVER (1 << 3)
 #define USBSTS_PORT_CHANGE     (1 << 2)
 #define USBSTS_USBERRINT       (1 << 1)
 #define USBSTS_USBINT          (1 << 0)

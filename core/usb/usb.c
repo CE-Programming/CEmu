@@ -748,11 +748,16 @@ static void usb_event(enum sched_item_id event) {
             high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
             if (usb.regs.hcor.usbcmd & USBCMD_RUN) {
                 usb_qlink_t link;
+                usb.regs.hcor.frindex += high_speed ? 1 : 8;
+                usb.regs.hcor.frindex &= (1 << 14) - 1;
+                uint32_t frame = usb.regs.hcor.frindex >> 3 &
+                    (USBCMD_FRLIST_ELTS(usb.regs.hcor.usbcmd) - 1);
+                if (!frame) {
+                    usb_host_int(USBSTS_FRAME_LIST_OVER);
+                }
                 if (usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
-                    mem_dma_read(&link, usb.regs.hcor.periodiclistbase +
-                                 (usb.regs.hcor.frindex &
-                                  (USBCMD_FRLIST_BYTES(usb.regs.hcor.usbcmd) - 1) << 3),
-                                 sizeof(link));
+                    mem_dma_read(&link, (usb.regs.hcor.periodiclistbase & ~((1 << 12) - 1)) |
+                                 frame << 2, sizeof(link));
                     usb_schedule_traverse(&link);
                 }
                 if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
@@ -761,6 +766,10 @@ static void usb_event(enum sched_item_id event) {
                     link.ptr = usb.regs.hcor.asynclistaddr >> 5;
                     usb_schedule_traverse(&link);
                     usb.regs.hcor.asynclistaddr = link.val;
+                }
+                if (usb.regs.hcor.usbcmd & USBCMD_ASYNC_ADV_DRBL) {
+                    usb_host_int(USBSTS_ASYNC_ADV);
+                    usb.regs.hcor.usbcmd &= ~USBCMD_ASYNC_ADV_DRBL;
                 }
             }
         }
