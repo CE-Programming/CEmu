@@ -515,6 +515,7 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
             return EINVAL;
         }
         transfer_append(transfer, info->buffer, info->length);
+        transfer->state = TRANSFER_STATE_NONE;
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
         error = device_intercept_transfer(device, transfer, info->length);
