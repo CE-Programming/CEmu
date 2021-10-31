@@ -71,9 +71,9 @@ struct port {
                 uint8_t buffer[sizeof(uint16_t)];
                 uint16_t value;
                 struct {
-                    bool connect : 1, enable : 1, suspend : 1, overcurrent : 1, reset : 1;
+                    bool connection : 1, enable : 1, suspend : 1, over_current : 1, reset : 1;
                     uint8_t : 0;
-                    bool power : 1, low : 1, high : 1, test : 1, indicator : 1;
+                    bool power : 1, low_speed : 1, high_speed : 1, test : 1, indicator : 1;
                     uint8_t : 0;
                 };
             } status, change;
@@ -122,7 +122,8 @@ struct device {
 struct context {
     libusb_context *context;
     node_t devices;
-    bool events_handled : 1;
+    bool handled : 1;
+    uint16_t throttle : 15;
 };
 
 enum {
@@ -254,8 +255,8 @@ static int device_attach(context_t *context, struct libusb_device *libusb_device
     for (uint8_t index = 0; index != 0x20; ++index) {
         endpoint_init(&device->endpoints[index]);
     }
-    device->address = 0;
     device->state = DEVICE_STATE_ATTACHED;
+    device->address = 0;
     device->numPorts = hub_desc.bNbrPorts;
     if (device->numPorts) {
         device->hub->statusChange.value = 0;
@@ -274,7 +275,9 @@ static int device_attach(context_t *context, struct libusb_device *libusb_device
                 port_t *port = &parent->hub->ports[portNum - 1];
                 port->device = device;
                 if (port->status.power) {
-                    UPDATE_STATUS_CHANGE(port, connect, true);
+                    device->state = DEVICE_STATE_POWERED;
+                    device->address = 0;
+                    UPDATE_STATUS_CHANGE(port, connection, true);
                     port->status.enable = false;
                 }
             }
@@ -318,7 +321,7 @@ static device_t *device_detach(context_t *context, device_t *device) {
                         port_t *port = &parent->hub->ports[portNum - 1];
                         port->device = NULL;
                         if (port->status.power) {
-                            UPDATE_STATUS_CHANGE(port, connect, false);
+                            UPDATE_STATUS_CHANGE(port, connection, false);
                             port->status.enable = false;
                         }
                     }
@@ -420,7 +423,11 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                             port->statusChange.value &= ~(UINT32_C(1) << setup->wValue);
                             switch (setup->wValue) {
                                 case 8:
-                                    UPDATE_STATUS_CHANGE(port, connect, true);
+                                    if (port->device) {
+                                        port->device->state = DEVICE_STATE_ATTACHED;
+                                        port->device->address = 0;
+                                    }
+                                    port->statusChange.value &= ~UINT32_C(0x370617);
                                     break;
                             }
                         }
@@ -463,11 +470,13 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                     }
                                     switch (libusb_reset_device(port->device->handle)) {
                                         case LIBUSB_SUCCESS:
+                                            port->device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
+                                            port->device->address = 0;
                                             port->status.enable = true;
-                                            port->status.low = libusb_get_device_speed(
+                                            port->status.low_speed = libusb_get_device_speed(
                                                     libusb_get_device(port->device->handle))
                                                 == LIBUSB_SPEED_LOW;
-                                            port->status.high = false;
+                                            port->status.high_speed = false;
                                             port->change.reset = true;
                                             break;
                                         case LIBUSB_ERROR_NO_DEVICE:
@@ -482,7 +491,11 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                     }
                                     break;
                                 case 8:
-                                    UPDATE_STATUS_CHANGE(port, connect, true);
+                                    if (port->device && port->device->state == DEVICE_STATE_ATTACHED) {
+                                        port->device->state = DEVICE_STATE_POWERED;
+                                        port->device->address = 0;
+                                        UPDATE_STATUS_CHANGE(port, connection, true);
+                                    }
                                     break;
                             }
                         }
@@ -1016,7 +1029,11 @@ int usb_physical_device(usb_event_t *event) {
     event->type = USB_INIT_EVENT;
     switch (type) {
         case USB_NO_EVENT:
-            if (!context->events_handled) {
+            event->type = USB_NO_EVENT;
+            if (!context || !context->context) {
+                return error;
+            }
+            if (!context->handled) {
                 struct timeval tv = {
                     .tv_sec = 0,
                     .tv_usec = 0,
@@ -1028,14 +1045,30 @@ int usb_physical_device(usb_event_t *event) {
                 timer->useconds = 1000;
                 if (libusb_get_next_timeout(context->context, &tv) == 1) {
                     int64_t useconds = tv.tv_sec * INT64_C(1000000) + tv.tv_usec;
-                    if (useconds < timer->useconds) {
-                        useconds = timer->useconds;
+                    if (timer->useconds > useconds) {
+                        timer->useconds = useconds;
                     }
                 }
-                context->events_handled = true;
+                context->handled = true;
                 return error;
             }
-            event->type = USB_NO_EVENT;
+            if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG) &&
+                !NODE_EMPTY(&context->devices) &&
+                !context->throttle--) {
+                libusb_device **devices;
+                error = errno_from_libusb_error(
+                        libusb_get_device_list(context->context, &devices));
+                if (error == USB_SUCCESS) {
+                    for (libusb_device **device = devices; *device; ++device) {
+                        if (device_hotplugged(context->context, *device,
+                                              LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, context)) {
+                            break;
+                        }
+                    }
+                    libusb_free_device_list(devices, true);
+                }
+                context->throttle = 1000;
+            }
             break;
         case USB_INIT_EVENT:
             event->context = NULL;
@@ -1046,7 +1079,10 @@ int usb_physical_device(usb_event_t *event) {
             if (!context) {
                 return ENOMEM;
             }
+            context->context = NULL;
             node_init(&context->devices);
+            context->handled = false;
+            context->throttle = 1000;
             error = errno_from_libusb_error(libusb_init(&context->context));
             if (error != USB_SUCCESS) {
                 return error;
@@ -1126,8 +1162,10 @@ int usb_physical_device(usb_event_t *event) {
                 }
                 if (root && (error = device_attach(context, root)) == USB_SUCCESS) {
                     for (libusb_device **device = devices; *device; ++device) {
-                        device_hotplugged(context->context, *device,
-                                          LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, context);
+                        if (device_hotplugged(context->context, *device,
+                                              LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, context)) {
+                            break;
+                        }
                     }
                     event->speed = libusb_get_device_speed(root) == LIBUSB_SPEED_LOW
                         ? USB_LOW_SPEED : USB_FULL_SPEED;
@@ -1144,13 +1182,13 @@ int usb_physical_device(usb_event_t *event) {
                 break;
             }
             if (type == USB_POWER_EVENT) {
-                device->address = 0;
                 device->state = DEVICE_STATE_POWERED;
+                device->address = 0;
             } else if (device->state >= DEVICE_STATE_POWERED && type == USB_RESET_EVENT) {
                 error = errno_from_libusb_error(libusb_reset_device(device->handle));
                 if (error == USB_SUCCESS) {
-                    device->address = 0;
                     device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
+                    device->address = 0;
                 }
             }
             break;
@@ -1188,7 +1226,7 @@ int usb_physical_device(usb_event_t *event) {
             error = EINVAL;
             break;
     }
-    context->events_handled = false;
+    context->handled = false;
     return error;
 }
 
