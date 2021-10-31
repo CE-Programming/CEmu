@@ -1,5 +1,6 @@
 #include "device.h"
 
+#include "../defines.h"
 #include "../emu.h"
 
 #ifdef LIBUSB_SUPPORT
@@ -28,9 +29,17 @@
               ? NODE_ITEM(typeof(*(current)), next) \
               : NULL), next = next->next, (current); )
 
+#define UPDATE_STATUS_CHANGE(pointer, field, value) do { \
+        (pointer)->change.field |= \
+            (pointer)->status.field ^ (bool)(value); \
+        (pointer)->status.field = (value); \
+    } while (false)
+
 typedef struct node node_t;
 typedef struct transfer transfer_t;
 typedef struct endpoint endpoint_t;
+typedef struct port port_t;
+typedef struct hub hub_t;
 typedef struct device device_t;
 typedef struct context context_t;
 
@@ -54,17 +63,60 @@ struct endpoint {
     transfer_t transfer;
 };
 
+struct port {
+    device_t *device;
+    union {
+        struct {
+            union {
+                uint8_t buffer[sizeof(uint16_t)];
+                uint16_t value;
+                struct {
+                    bool connect : 1, enable : 1, suspend : 1, overcurrent : 1, reset : 1;
+                    uint8_t : 0;
+                    bool power : 1, low : 1, high : 1, test : 1, indicator : 1;
+                    uint8_t : 0;
+                };
+            } status, change;
+        };
+        union {
+            uint8_t buffer[sizeof(uint16_t) * 2];
+            uint32_t value;
+        } statusChange;
+    };
+};
+
+struct hub {
+    union {
+        struct {
+            union {
+                uint8_t buffer[sizeof(uint16_t)];
+                uint16_t value;
+                struct {
+                    bool power : 1, overcurrent : 1;
+                    uint8_t : 0;
+                };
+            } status, change;
+        };
+        union {
+            uint8_t buffer[sizeof(uint16_t) * 2];
+            uint32_t value;
+        } statusChange;
+    };
+    port_t ports[];
+};
+
 struct device {
     node_t node;
-    struct libusb_device_handle *handle;
+    libusb_device_handle *handle;
     endpoint_t endpoints[0x20];
-    uint8_t address : 7;
     enum device_state {
         DEVICE_STATE_ATTACHED,
         DEVICE_STATE_POWERED,
         DEVICE_STATE_DEFAULT_OR_ADDRESS,
         DEVICE_STATE_CONFIGURED,
     } state : 2;
+    uint8_t address : 7, numPorts : 7;
+    hub_t hub[];
 };
 
 struct context {
@@ -76,6 +128,12 @@ struct context {
 enum {
     USB_DT_DEVICE_QUALIFIER = 6,
     USB_DT_OTHER_SPEED_CONFIG = 7,
+};
+
+struct usb_hub_descriptor {
+    uint8_t bLength, bDescriptorType, bNbrPorts;
+    uint16_t wHubCharacteristics;
+    uint8_t bPwrOn2PwrGood, bHubContrCurrent, portInfo[];
 };
 
 static void node_init(node_t *node) {
@@ -162,24 +220,119 @@ static void endpoint_init(endpoint_t *endpoint) {
 }
 
 static int device_attach(context_t *context, struct libusb_device *libusb_device) {
-    device_t *device = malloc(sizeof(device_t));
+    struct libusb_device_descriptor dev_desc;
+    int error = errno_from_libusb_error(libusb_get_device_descriptor(libusb_device, &dev_desc));
+    libusb_device_handle *handle;
+    if (error == USB_SUCCESS) {
+        error = errno_from_libusb_error(libusb_open(libusb_device, &handle));
+    }
+    size_t size = sizeof(device_t);
+    struct usb_hub_descriptor hub_desc;
+    hub_desc.bNbrPorts = 0;
+    if (error == USB_SUCCESS && dev_desc.bDeviceClass == LIBUSB_CLASS_HUB) {
+        error = errno_from_libusb_error(libusb_control_transfer(
+                                                handle,
+                                                LIBUSB_ENDPOINT_IN
+                                                | LIBUSB_REQUEST_TYPE_CLASS
+                                                | LIBUSB_RECIPIENT_DEVICE,
+                                                LIBUSB_REQUEST_GET_DESCRIPTOR,
+                                                LIBUSB_DT_HUB << 8, 0,
+                                                (unsigned char *)&hub_desc,
+                                                offsetof(struct usb_hub_descriptor,
+                                                         wHubCharacteristics), 1000));
+        size += sizeof(hub_t) + sizeof(port_t) * hub_desc.bNbrPorts;
+    }
+    if (error != USB_SUCCESS) {
+        return error;
+    }
+    device_t *device = malloc(size);
     if (!device) {
         return ENOMEM;
     }
     node_init(&device->node);
-    int error = errno_from_libusb_error(libusb_open(libusb_device, &device->handle));
-    if (error != USB_SUCCESS) {
-        free(device);
-        device = NULL;
-        return error;
-    }
+    device->handle = handle;
     for (uint8_t index = 0; index != 0x20; ++index) {
         endpoint_init(&device->endpoints[index]);
     }
     device->address = 0;
     device->state = DEVICE_STATE_ATTACHED;
+    device->numPorts = hub_desc.bNbrPorts;
+    if (device->numPorts) {
+        device->hub->statusChange.value = 0;
+        for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
+            port_t *port = &device->hub->ports[portIdx];
+            port->device = NULL;
+            port->statusChange.value = 0;
+        }
+    }
+    struct libusb_device *libusb_parent = libusb_get_parent(libusb_device);
+    device_t *parent;
+    NODE_FOREACH(parent, &context->devices) {
+        if (parent->handle && libusb_get_device(parent->handle) == libusb_parent) {
+            uint8_t portNum = libusb_get_port_number(libusb_device);
+            if (0 < portNum && portNum <= parent->numPorts) {
+                port_t *port = &parent->hub->ports[portNum - 1];
+                port->device = device;
+                if (port->status.power) {
+                    UPDATE_STATUS_CHANGE(port, connect, true);
+                    port->status.enable = false;
+                }
+            }
+            break;
+        }
+    }
     node_add(&context->devices, &device->node);
     return error;
+}
+
+static void transfer_cleanup(context_t *context, transfer_t *transfer) {
+    if (transfer->transfer && transfer->state == TRANSFER_STATE_SUBMITTED) {
+        int error = libusb_cancel_transfer(transfer->transfer);
+        while (error == LIBUSB_SUCCESS && transfer->state == TRANSFER_STATE_SUBMITTED) {
+            error = libusb_handle_events_completed(context->context, &transfer->state);
+        }
+    }
+    transfer->alloc_length = 0;
+    transfer->state = TRANSFER_STATE_NONE;
+    libusb_free_transfer(transfer->transfer);
+    transfer->transfer = NULL;
+}
+
+static void endpoint_cleanup(context_t *context, endpoint_t *endpoint) {
+    transfer_cleanup(context, &endpoint->transfer);
+}
+
+static device_t *device_detach(context_t *context, device_t *device) {
+    if (device) {
+        for (uint8_t index = 0; index != 0x20; ++index) {
+            endpoint_cleanup(context, &device->endpoints[index]);
+        }
+        if (device->handle) {
+            struct libusb_device *libusb_device = libusb_get_device(device->handle),
+                *libusb_parent = libusb_get_parent(libusb_device);
+            device_t *parent;
+            NODE_FOREACH(parent, &context->devices) {
+                if (parent->handle && libusb_get_device(parent->handle) == libusb_parent) {
+                    uint8_t portNum = libusb_get_port_number(libusb_device);
+                    if (0 < portNum && portNum <= parent->numPorts) {
+                        port_t *port = &parent->hub->ports[portNum - 1];
+                        port->device = NULL;
+                        if (port->status.power) {
+                            UPDATE_STATUS_CHANGE(port, connect, false);
+                            port->status.enable = false;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        libusb_close(device->handle);
+        device->handle = NULL;
+        node_remove(&device->node);
+        free(device);
+        device = NULL;
+    }
+    return device;
 }
 
 static void LIBUSB_CALL transfer_completed(struct libusb_transfer *libusb_transfer) {
@@ -203,7 +356,7 @@ static void transfer_append(transfer_t *transfer, const void *src, uint32_t leng
     libusb_transfer->actual_length += length;
 }
 
-static int device_intercept_control_setup(device_t *device, transfer_t *transfer) {
+static int device_intercept_control_setup(context_t *context, device_t *device, transfer_t *transfer) {
     enum libusb_error error;
     struct libusb_transfer *libusb_transfer = transfer->transfer;
     struct libusb_device_handle *handle = libusb_transfer->dev_handle;
@@ -215,98 +368,291 @@ static int device_intercept_control_setup(device_t *device, transfer_t *transfer
     uint8_t type = setup->wValue >> 8, index = setup->wValue >> 0, iface, alt, endpt, configValueByte;
     *status = LIBUSB_TRANSFER_STALL;
     switch (setup->bRequest) {
-        case LIBUSB_REQUEST_SET_ADDRESS:
-            if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->wValue && setup->wValue < 0x80 && !setup->wIndex && !setup->wLength) {
-                *status = LIBUSB_TRANSFER_COMPLETED;
-            }
-            break;
-        case LIBUSB_REQUEST_GET_DESCRIPTOR:
-            if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && libusb_get_device_speed(libusb_get_device(handle)) >= LIBUSB_SPEED_HIGH) {
-                switch (type) {
-                    case LIBUSB_DT_DEVICE:
-                        type = USB_DT_DEVICE_QUALIFIER;
-                        break;
-                    case LIBUSB_DT_CONFIG:
-                        type = USB_DT_OTHER_SPEED_CONFIG;
-                        break;
-                    case USB_DT_DEVICE_QUALIFIER:
-                        type = LIBUSB_DT_DEVICE;
-                        break;
-                    case USB_DT_OTHER_SPEED_CONFIG:
-                        type = LIBUSB_DT_CONFIG;
-                        break;
-                }
-                setup->wValue = type << 8 | index << 0;
-            }
-            switch (type) {
-                case LIBUSB_DT_DEVICE:
-                    if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !index && !setup->wIndex &&
-                        (*status = transfer_status_from_libusb_error(libusb_get_device_descriptor(libusb_get_device(handle), &device_desc))) == LIBUSB_TRANSFER_COMPLETED) {
-                        transfer_append(transfer, &device_desc, sizeof(struct libusb_device_descriptor));
+        case LIBUSB_REQUEST_GET_STATUS:
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_DEVICE:
+                    if (!device->numPorts) {
+                        return USB_SUCCESS;
+                    }
+                    if (device->state >= DEVICE_STATE_CONFIGURED && !setup->wValue && !setup->wIndex) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                        transfer_append(transfer, &device->hub->statusChange,
+                                        sizeof(device->hub->statusChange));
                     }
                     break;
-                case LIBUSB_DT_CONFIG:
-                    if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !setup->wIndex &&
-                        (*status = transfer_status_from_libusb_error(libusb_get_config_descriptor(libusb_get_device(handle), index, &config_desc))) == LIBUSB_TRANSFER_COMPLETED) {
-                        transfer_append(transfer, config_desc, config_desc->bLength);
-                        transfer_append(transfer, config_desc->extra, config_desc->extra_length);
-                        for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                            for (alt = 0; alt != config_desc->interface[iface].num_altsetting; ++alt) {
-                                transfer_append(transfer, &config_desc->interface[iface].altsetting[alt], config_desc->interface[iface].altsetting[alt].bLength);
-                                transfer_append(transfer, config_desc->interface[iface].altsetting[alt].extra, config_desc->interface[iface].altsetting[alt].extra_length);
-                                for (endpt = 0; endpt != config_desc->interface[iface].altsetting[alt].bNumEndpoints; ++endpt) {
-                                    transfer_append(transfer, &config_desc->interface[iface].altsetting[alt].endpoint[endpt], config_desc->interface[iface].altsetting[alt].endpoint[endpt].bLength);
-                                    transfer_append(transfer, config_desc->interface[iface].altsetting[alt].endpoint[endpt].extra, config_desc->interface[iface].altsetting[alt].endpoint[endpt].extra_length);
-                                }
+                case LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_OTHER:
+                    if (!device->numPorts) {
+                        return USB_SUCCESS;
+                    }
+                    if (device->state >= DEVICE_STATE_CONFIGURED
+                        && !setup->wValue && setup->wIndex && setup->wIndex <= device->numPorts) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                        transfer_append(transfer, &device->hub->ports[setup->wIndex - 1].statusChange,
+                                        sizeof(device->hub->ports[setup->wIndex - 1].statusChange));
+                    }
+                    break;
+                default:
+                    return USB_SUCCESS;
+            }
+            break;
+        case LIBUSB_REQUEST_CLEAR_FEATURE:
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_DEVICE:
+                    if (!device->numPorts) {
+                        return USB_SUCCESS;
+                    }
+                    if (device->state >= DEVICE_STATE_CONFIGURED
+                        && setup->wValue < 2 && !setup->wIndex) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                        device->hub->change.value &= ~(UINT16_C(1) << setup->wValue);
+                    }
+                    break;
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_OTHER:
+                    if (!device->numPorts) {
+                        return USB_SUCCESS;
+                    }
+                    if (device->state >= DEVICE_STATE_CONFIGURED
+                        && setup->wValue < 32 && UINT32_C(0x5F071F) >> setup->wValue & 1
+                        && setup->wIndex && setup->wIndex <= device->numPorts) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                        if (UINT32_C(0x5F0106) >> setup->wValue & 1) {
+                            port_t *port = &device->hub->ports[setup->wIndex - 1];
+                            port->statusChange.value &= ~(UINT32_C(1) << setup->wValue);
+                            switch (setup->wValue) {
+                                case 8:
+                                    UPDATE_STATUS_CHANGE(port, connect, true);
+                                    break;
                             }
                         }
                     }
                     break;
-                case LIBUSB_DT_STRING:
-                case LIBUSB_DT_INTERFACE:
-                case LIBUSB_DT_ENDPOINT:
-                case USB_DT_DEVICE_QUALIFIER:
-                case USB_DT_OTHER_SPEED_CONFIG:
-                case LIBUSB_DT_BOS:
-                case LIBUSB_DT_DEVICE_CAPABILITY:
-                case LIBUSB_DT_HID:
-                case LIBUSB_DT_REPORT:
-                case LIBUSB_DT_PHYSICAL:
-                case LIBUSB_DT_HUB:
-                case LIBUSB_DT_SUPERSPEED_HUB:
-                case LIBUSB_DT_SS_ENDPOINT_COMPANION:
+                default:
+                    return USB_SUCCESS;
+            }
+            break;
+        case LIBUSB_REQUEST_SET_FEATURE:
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_DEVICE:
+                    if (!device->numPorts) {
+                        return USB_SUCCESS;
+                    }
+                    if (device->state >= DEVICE_STATE_CONFIGURED
+                        && setup->wValue < 2 && !setup->wIndex) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                        device->hub->change.value |= UINT16_C(1) << setup->wValue;
+                    }
+                    break;
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_OTHER:
+                    if (!device->numPorts) {
+                        return USB_SUCCESS;
+                    }
+                    if (device->state >= DEVICE_STATE_CONFIGURED
+                        && setup->wValue < 32 && UINT32_C(0x5F071D) >> setup->wValue & 1
+                        && setup->wIndex && setup->wIndex <= device->numPorts) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                        if (UINT32_C(0x7F0114) >> setup->wValue & 1) {
+                            port_t *port = &device->hub->ports[setup->wIndex - 1];
+                            port->statusChange.value |= UINT32_C(1) << setup->wValue;
+                            switch (setup->wValue) {
+                                case 4:
+                                    port->status.reset = false;
+                                    if (!port->device || !port->device->handle) {
+                                        port->status.enable = false;
+                                        port->change.enable = true;
+                                        break;
+                                    }
+                                    switch (libusb_reset_device(port->device->handle)) {
+                                        case LIBUSB_SUCCESS:
+                                            port->status.enable = true;
+                                            port->status.low = libusb_get_device_speed(
+                                                    libusb_get_device(port->device->handle))
+                                                == LIBUSB_SPEED_LOW;
+                                            port->status.high = false;
+                                            port->change.reset = true;
+                                            break;
+                                        case LIBUSB_ERROR_NO_DEVICE:
+                                            // TODO: should be silently replaced
+                                            // with new device on the same port?
+                                            device_detach(context, port->device);
+                                            fallthrough;
+                                        default:
+                                            port->status.enable = false;
+                                            port->change.enable = true;
+                                            break;
+                                    }
+                                    break;
+                                case 8:
+                                    UPDATE_STATUS_CHANGE(port, connect, true);
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    return USB_SUCCESS;
+            }
+            break;
+        case LIBUSB_REQUEST_SET_ADDRESS:
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE:
+                    if (setup->wValue && setup->wValue < 0x80 && !setup->wIndex && !setup->wLength) {
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                    }
+                    break;
+                default:
+                    return USB_SUCCESS;
+            }
+            break;
+        case LIBUSB_REQUEST_GET_DESCRIPTOR:
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE:
+                    if (libusb_get_device_speed(libusb_get_device(handle)) >= LIBUSB_SPEED_HIGH) {
+                        switch (type) {
+                            case LIBUSB_DT_DEVICE:
+                                type = USB_DT_DEVICE_QUALIFIER;
+                                break;
+                            case LIBUSB_DT_CONFIG:
+                                type = USB_DT_OTHER_SPEED_CONFIG;
+                                break;
+                            case USB_DT_DEVICE_QUALIFIER:
+                                type = LIBUSB_DT_DEVICE;
+                                break;
+                            case USB_DT_OTHER_SPEED_CONFIG:
+                                type = LIBUSB_DT_CONFIG;
+                                break;
+                        }
+                        setup->wValue = type << 8 | index << 0;
+                    }
+                    switch (type) {
+                        case LIBUSB_DT_DEVICE:
+                            if (!index
+                                && !setup->wIndex
+                                && (*status = transfer_status_from_libusb_error(
+                                            libusb_get_device_descriptor(
+                                                    libusb_get_device(handle), &device_desc)))
+                                == LIBUSB_TRANSFER_COMPLETED) {
+                                transfer_append(transfer, &device_desc,
+                                                sizeof(struct libusb_device_descriptor));
+                            }
+                            break;
+                        case LIBUSB_DT_CONFIG:
+                            if (!setup->wIndex
+                                && (*status = transfer_status_from_libusb_error(
+                                            libusb_get_config_descriptor(
+                                                    libusb_get_device(handle), index, &config_desc)))
+                                == LIBUSB_TRANSFER_COMPLETED) {
+                                transfer_append(transfer, config_desc, config_desc->bLength);
+                                transfer_append(transfer, config_desc->extra, config_desc->extra_length);
+                                for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                                    for (alt = 0; alt != config_desc->interface[iface]
+                                             .num_altsetting; ++alt) {
+                                        transfer_append(transfer,
+                                                        &config_desc->interface[iface].altsetting[alt],
+                                                        config_desc->interface[iface]
+                                                        .altsetting[alt].bLength);
+                                        transfer_append(transfer,
+                                                        config_desc->interface[iface].altsetting[alt]
+                                                        .extra,
+                                                        config_desc->interface[iface].altsetting[alt]
+                                                        .extra_length);
+                                        for (endpt = 0; endpt != config_desc->interface[iface]
+                                                 .altsetting[alt].bNumEndpoints; ++endpt) {
+                                            transfer_append(transfer,
+                                                            &config_desc->interface[iface]
+                                                            .altsetting[alt].endpoint[endpt],
+                                                            config_desc->interface[iface]
+                                                            .altsetting[alt].endpoint[endpt].bLength);
+                                            transfer_append(transfer,
+                                                            config_desc->interface[iface].altsetting[alt]
+                                                            .endpoint[endpt].extra,
+                                                            config_desc->interface[iface].altsetting[alt]
+                                                            .endpoint[endpt].extra_length);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        case LIBUSB_DT_STRING:
+                        case LIBUSB_DT_INTERFACE:
+                        case LIBUSB_DT_ENDPOINT:
+                        case USB_DT_DEVICE_QUALIFIER:
+                        case USB_DT_OTHER_SPEED_CONFIG:
+                        case LIBUSB_DT_BOS:
+                        case LIBUSB_DT_DEVICE_CAPABILITY:
+                        case LIBUSB_DT_HID:
+                        case LIBUSB_DT_REPORT:
+                        case LIBUSB_DT_PHYSICAL:
+                        case LIBUSB_DT_HUB:
+                        case LIBUSB_DT_SUPERSPEED_HUB:
+                        case LIBUSB_DT_SS_ENDPOINT_COMPANION:
+                            return USB_SUCCESS;
+                    }
+                    break;
+                default:
                     return USB_SUCCESS;
             }
             break;
         case LIBUSB_REQUEST_SET_DESCRIPTOR:
             return USB_SUCCESS;
         case LIBUSB_REQUEST_GET_CONFIGURATION:
-            if (device->state >= DEVICE_STATE_DEFAULT_OR_ADDRESS && (*status = device->state >= DEVICE_STATE_CONFIGURED ? transfer_status_from_libusb_error(libusb_get_configuration(handle, &configValueInt)) : LIBUSB_TRANSFER_COMPLETED) == LIBUSB_TRANSFER_COMPLETED) {
-                configValueByte = configValueInt;
-                transfer_append(transfer, &configValueByte, sizeof(configValueByte));
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE:
+                    if (device->state >= DEVICE_STATE_DEFAULT_OR_ADDRESS
+                        && (*status = device->state >= DEVICE_STATE_CONFIGURED
+                            ? transfer_status_from_libusb_error(
+                                    libusb_get_configuration(handle, &configValueInt))
+                            : LIBUSB_TRANSFER_COMPLETED) == LIBUSB_TRANSFER_COMPLETED) {
+                        configValueByte = configValueInt;
+                        transfer_append(transfer, &configValueByte, sizeof(configValueByte));
+                    }
+                    break;
+                default:
+                    return USB_SUCCESS;
             }
             break;
         case LIBUSB_REQUEST_SET_CONFIGURATION:
-            if (device->state >= DEVICE_STATE_DEFAULT_OR_ADDRESS && device->address && setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !type && !setup->wIndex) {
-                if (libusb_get_active_config_descriptor(libusb_get_device(handle), &config_desc) == LIBUSB_SUCCESS) {
-                    for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                        gui_console_printf("[USB] Info: Kernel driver was active on interface %u: %s!\n", iface, libusb_kernel_driver_active(handle, iface) ? "yes" : "no");
-                        libusb_detach_kernel_driver(handle, iface);
-                        libusb_release_interface(handle, iface);
+            switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE:
+                    if (device->state >= DEVICE_STATE_DEFAULT_OR_ADDRESS
+                        && device->address && !type && !setup->wIndex) {
+                        if (libusb_get_active_config_descriptor(libusb_get_device(handle), &config_desc)
+                            == LIBUSB_SUCCESS) {
+                            for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                                gui_console_printf("[USB] Info: Kernel driver was"
+                                                   " active on interface %u: %s!\n",
+                                                   iface,
+                                                   libusb_kernel_driver_active(handle, iface)
+                                                   ? "yes" : "no");
+                                libusb_detach_kernel_driver(handle, iface);
+                                libusb_release_interface(handle, iface);
+                            }
+                            libusb_free_config_descriptor(config_desc);
+                            config_desc = NULL;
+                        }
+                        if ((*status = transfer_status_from_libusb_error(
+                                     error = libusb_get_config_descriptor_by_value(
+                                             libusb_get_device(handle), index, &config_desc)))
+                            == LIBUSB_TRANSFER_COMPLETED
+                            && (*status = transfer_status_from_libusb_error(
+                                        error = libusb_set_configuration(handle, index)))
+                            == LIBUSB_TRANSFER_COMPLETED) {
+                            device->state = DEVICE_STATE_CONFIGURED;
+                            for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                                gui_console_printf("[USB] Info: Kernel driver now"
+                                                   " active on interface %u: %s!\n",
+                                                   iface,
+                                                   libusb_kernel_driver_active(handle, iface)
+                                                   ? "yes" : "no");
+                                libusb_claim_interface(handle, iface);
+                            }
+                        } else {
+                            gui_console_printf("[USB] Error: Set configuration failed: %s!\n",
+                                               libusb_error_name(error));
+                        }
                     }
-                    libusb_free_config_descriptor(config_desc);
-                    config_desc = NULL;
-                }
-                if ((*status = transfer_status_from_libusb_error(error = libusb_get_config_descriptor_by_value(libusb_get_device(handle), index, &config_desc))) == LIBUSB_TRANSFER_COMPLETED &&
-                    (*status = transfer_status_from_libusb_error(error = libusb_set_configuration(handle, index))) == LIBUSB_TRANSFER_COMPLETED) {
-                    device->state = DEVICE_STATE_CONFIGURED;
-                    for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                        gui_console_printf("[USB] Info: Kernel driver now active on interface %u: %s!\n", iface, libusb_kernel_driver_active(handle, iface) ? "yes" : "no");
-                        libusb_claim_interface(handle, iface);
-                    }
-                } else {
-                    gui_console_printf("[USB] Error: Set configuration failed: %s!\n", libusb_error_name(error));
-                }
+                    break;
+                default:
+                    return USB_SUCCESS;
             }
             break;
         case LIBUSB_REQUEST_GET_INTERFACE:
@@ -318,7 +664,9 @@ static int device_intercept_control_setup(device_t *device, transfer_t *transfer
             return USB_SUCCESS;
     }
     libusb_free_config_descriptor(config_desc);
-    libusb_transfer->callback(libusb_transfer);
+    if (libusb_transfer->callback) {
+        libusb_transfer->callback(libusb_transfer);
+    }
     return USB_SUCCESS;
 }
 
@@ -329,10 +677,18 @@ static int device_intercept_control_data(device_t *device, transfer_t *transfer)
     uint8_t *buffer = libusb_control_transfer_get_data(libusb_transfer);
     size_t actual = libusb_transfer->actual_length;
     struct libusb_device_descriptor device_desc;
-    if (libusb_transfer->status == LIBUSB_TRANSFER_COMPLETED && setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->bRequest == LIBUSB_REQUEST_GET_DESCRIPTOR && !(actual > 1 && buffer[1] != type) && libusb_get_device_speed(libusb_get_device(device->handle)) >= LIBUSB_SPEED_HIGH) {
+    if (libusb_transfer->status == LIBUSB_TRANSFER_COMPLETED
+        && setup->bmRequestType
+        == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE)
+        && setup->bRequest == LIBUSB_REQUEST_GET_DESCRIPTOR
+        && !(actual > 1 && buffer[1] != type)
+        && libusb_get_device_speed(libusb_get_device(device->handle)) >= LIBUSB_SPEED_HIGH) {
         switch (type) {
             case LIBUSB_DT_DEVICE:
-                if ((libusb_transfer->status = transfer_status_from_libusb_error(libusb_get_device_descriptor(libusb_get_device(libusb_transfer->dev_handle), &device_desc))) != LIBUSB_TRANSFER_COMPLETED) {
+                if ((libusb_transfer->status = transfer_status_from_libusb_error(
+                              libusb_get_device_descriptor(
+                                      libusb_get_device(libusb_transfer->dev_handle), &device_desc)))
+                    != LIBUSB_TRANSFER_COMPLETED) {
                     break;
                 }
                 if (actual > 0) {
@@ -355,7 +711,10 @@ static int device_intercept_control_data(device_t *device, transfer_t *transfer)
                 }
                 break;
             case USB_DT_DEVICE_QUALIFIER:
-                if ((libusb_transfer->status = transfer_status_from_libusb_error(libusb_get_device_descriptor(libusb_get_device(libusb_transfer->dev_handle), &device_desc))) != LIBUSB_TRANSFER_COMPLETED) {
+                if ((libusb_transfer->status = transfer_status_from_libusb_error(
+                             libusb_get_device_descriptor(
+                                     libusb_get_device(libusb_transfer->dev_handle), &device_desc)))
+                    != LIBUSB_TRANSFER_COMPLETED) {
                     break;
                 }
                 if (actual > 2) {
@@ -399,22 +758,52 @@ static int device_intercept_control_data(device_t *device, transfer_t *transfer)
 static int device_intercept_control_status(device_t *device, transfer_t *transfer) {
     struct libusb_transfer *libusb_transfer = transfer->transfer;
     struct libusb_control_setup *setup = libusb_control_transfer_get_setup(libusb_transfer);
-    if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->bRequest == LIBUSB_REQUEST_SET_ADDRESS && setup->wValue && setup->wValue < 0x80 && !setup->wIndex && !setup->wLength) {
+    if (setup->bmRequestType
+        == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE)
+        && setup->bRequest == LIBUSB_REQUEST_SET_ADDRESS
+        && setup->wValue
+        && setup->wValue < 0x80
+        && !setup->wIndex
+        && !setup->wLength) {
         device->address = setup->wValue;
     }
     return USB_SUCCESS;
 }
 
-static int device_intercept_interrupt(device_t *device __attribute__((unused)), transfer_t *transfer __attribute__((unused))) {
+static int device_intercept_interrupt(device_t *device, transfer_t *transfer) {
+    struct libusb_transfer *libusb_transfer = transfer->transfer;
+    if (transfer->state >= TRANSFER_STATE_PENDING && libusb_transfer->endpoint & LIBUSB_ENDPOINT_IN
+        && device->numPorts) {
+        uint8_t any = 0, byte = !!device->hub->change.value;
+        for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
+            uint8_t bit = (1 + portIdx) & 7;
+            if (!bit) {
+                transfer_append(transfer, &byte, sizeof(byte));
+                any |= byte;
+                byte = 0;
+            }
+            if (device->hub->ports[portIdx].change.value) {
+                byte |= UINT8_C(1) << bit;
+            }
+        }
+        transfer_append(transfer, &byte, sizeof(byte));
+        if (!(any | byte)) {
+            transfer->state = TRANSFER_STATE_PENDING;
+            libusb_transfer->actual_length = 0;
+        } else if (libusb_transfer->callback) {
+            libusb_transfer->callback(libusb_transfer);
+        }
+    }
     return USB_SUCCESS;
 }
 
-static int device_intercept_transfer(device_t *device, transfer_t *transfer, bool data) {
+static int device_intercept_transfer(context_t *context, device_t *device,
+                                     transfer_t *transfer, bool data) {
     switch (transfer->transfer->type) {
         case LIBUSB_TRANSFER_TYPE_CONTROL:
             switch (transfer->state) {
                 case TRANSFER_STATE_NONE:
-                    return device_intercept_control_setup(device, transfer);
+                    return device_intercept_control_setup(context, device, transfer);
                 case TRANSFER_STATE_COMPLETED:
                     if (data) {
                         return device_intercept_control_data(device, transfer);
@@ -479,7 +868,7 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
                 if (info->direction || info->length != sizeof(struct libusb_control_setup)) {
                     return EINVAL;
                 }
-                if (!(setup->bmRequestType & 1 << 7) && setup->wLength) {
+                if (!(setup->bmRequestType & UINT8_C(1) << 7) && setup->wLength) {
                     transfer->state = TRANSFER_STATE_PENDING;
                 }
                 libusb_transfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
@@ -510,15 +899,13 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
             transfer->alloc_length = libusb_transfer->length;
         }
         memcpy(libusb_transfer->buffer, info->buffer, info->length);
-    } else if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_PENDING) {
-        if (info->type != USB_CONTROL_TRANSFER) {
-            return EINVAL;
-        }
+    } else if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_PENDING
+               && info->type == USB_CONTROL_TRANSFER) {
         transfer_append(transfer, info->buffer, info->length);
         transfer->state = TRANSFER_STATE_NONE;
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
-        error = device_intercept_transfer(device, transfer, info->length);
+        error = device_intercept_transfer(context, device, transfer, info->length);
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
         error = errno_from_libusb_error(libusb_submit_transfer(libusb_transfer));
@@ -538,7 +925,7 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
         }
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_COMPLETED) {
-        error = device_intercept_transfer(device, transfer, info->length);
+        error = device_intercept_transfer(context, device, transfer, info->length);
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_COMPLETED) {
         event->type = USB_TRANSFER_RESPONSE_EVENT;
@@ -575,37 +962,6 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
         info->status = USB_TRANSFER_COMPLETED;
     }
     return error;
-}
-
-static void transfer_cleanup(context_t *context, transfer_t *transfer) {
-    if (transfer->transfer && transfer->state == TRANSFER_STATE_SUBMITTED) {
-        int error = libusb_cancel_transfer(transfer->transfer);
-        while (error == LIBUSB_SUCCESS && transfer->state == TRANSFER_STATE_SUBMITTED) {
-            error = libusb_handle_events_completed(context->context, &transfer->state);
-        }
-    }
-    transfer->alloc_length = 0;
-    transfer->state = TRANSFER_STATE_NONE;
-    libusb_free_transfer(transfer->transfer);
-    transfer->transfer = NULL;
-}
-
-static void endpoint_cleanup(context_t *context, endpoint_t *endpoint) {
-    transfer_cleanup(context, &endpoint->transfer);
-}
-
-static device_t *device_detach(context_t *context, device_t *device) {
-    if (device) {
-        for (uint8_t index = 0; index != 0x20; ++index) {
-            endpoint_cleanup(context, &device->endpoints[index]);
-        }
-        libusb_close(device->handle);
-        device->handle = NULL;
-        node_remove(&device->node);
-        free(device);
-        device = NULL;
-    }
-    return device;
 }
 
 static int LIBUSB_CALL device_hotplugged(
@@ -717,12 +1073,12 @@ int usb_physical_device(usb_event_t *event) {
                     break;
                 }
                 error = ENODEV;
-                if (sscanf(init->argv[1], "%4" SCNx16 " :%4" SCNx16 " %n", &vid, &pid, &end) == 2 &&
-                    !init->argv[1][end]) {
+                if (sscanf(init->argv[1], "%4" SCNx16 " :%4" SCNx16 " %n", &vid, &pid, &end) == 2
+                    && !init->argv[1][end]) {
                     for (libusb_device **device = devices; *device; ++device) {
                         struct libusb_device_descriptor descriptor;
-                        if (libusb_get_device_descriptor(*device, &descriptor) == LIBUSB_SUCCESS &&
-                            descriptor.idVendor == vid && descriptor.idProduct == pid) {
+                        if (libusb_get_device_descriptor(*device, &descriptor) == LIBUSB_SUCCESS
+                            && descriptor.idVendor == vid && descriptor.idProduct == pid) {
                             if (root) {
                                 root = NULL;
                                 break;
@@ -730,11 +1086,11 @@ int usb_physical_device(usb_event_t *event) {
                             root = *device;
                         }
                     }
-                } else if (sscanf(init->argv[1], "%" SCNu8 " #%" SCNu8 " %n", &bus, &addr, &end) == 2 &&
-                           !init->argv[1][end]) {
+                } else if (sscanf(init->argv[1], "%" SCNu8 " #%" SCNu8 " %n", &bus, &addr, &end) == 2
+                           && !init->argv[1][end]) {
                     for (libusb_device **device = devices; *device; ++device) {
-                        if (libusb_get_bus_number(*device) == bus &&
-                            libusb_get_device_address(*device) == addr) {
+                        if (libusb_get_bus_number(*device) == bus
+                            && libusb_get_device_address(*device) == addr) {
                             if (root) {
                                 root = NULL;
                                 break;
@@ -745,8 +1101,8 @@ int usb_physical_device(usb_event_t *event) {
                 } else if (sscanf(init->argv[1], "%" SCNu8 " %n", &bus, &end) == 1) {
                     uint8_t ports[MAX_PORT_DEPTH], num_ports = 0;
                     for (char format[] = "-%" SCNu8 " %n";
-                         i = end, num_ports != MAX_PORT_DEPTH &&
-                             sscanf(&init->argv[1][i], format, &ports[num_ports], &end) == 1;
+                         i = end, num_ports != MAX_PORT_DEPTH
+                             && sscanf(&init->argv[1][i], format, &ports[num_ports], &end) == 1;
                          format[0] = '.') {
                     }
                     if (init->argv[1][end]) {
@@ -755,8 +1111,8 @@ int usb_physical_device(usb_event_t *event) {
                         for (libusb_device **device = devices; *device; ++device) {
                             uint8_t device_ports[MAX_PORT_DEPTH];
                             if (libusb_get_port_numbers(*device, device_ports,
-                                                        MAX_PORT_DEPTH) == num_ports &&
-                                !memcmp(device_ports, ports, num_ports * sizeof(*ports))) {
+                                                        MAX_PORT_DEPTH) == num_ports
+                                && !memcmp(device_ports, ports, num_ports * sizeof(*ports))) {
                                 if (root) {
                                     root = NULL;
                                     break;

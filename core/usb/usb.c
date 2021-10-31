@@ -374,60 +374,58 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                         //gui_console_printf("usb_grp2_int(%s);\n", transfer->status == USB_TRANSFER_COMPLETED ? "GISR2_DMAFIN" : "GISR2_DMAERR");
                         usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
                     }
-                } else {
-                    if (state) {
-                        state->fake_recl = true;
-                        state->fake_recl_head = -1;
-                        usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-                        state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
-                        switch (transfer->type) {
-                            case USB_SETUP_TRANSFER:
-                            case USB_CONTROL_TRANSFER:
-                            case USB_BULK_TRANSFER:
-                            case USB_INTERRUPT_TRANSFER:
-                                if (transfer->status != USB_TRANSFER_COMPLETED) {
-                                    gui_console_printf("[USB] Error: Transfer failed: %d\n", transfer->status);
-                                }
-                                uint32_t length = transfer->length;
-                                if (transfer->direction) {
-                                    state->bit_times_remaining -= usb_compute_packet_bit_times(length);
-                                }
-                                switch (transfer->status) {
-                                    case USB_TRANSFER_COMPLETED:
-                                        if (usb_qtd_scatter(&state->qh.overlay, transfer->buffer, &length)) {
-                                            state->qh.overlay.missed = true;
-                                            usb_qh_halted(&state->qh);
-                                        } else {
-                                            usb_qh_completed(&state->qh);
-                                        }
-                                        break;
-                                    case USB_TRANSFER_STALLED:
+                } else if (state) {
+                    state->fake_recl = true;
+                    state->fake_recl_head = -1;
+                    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+                    state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
+                    switch (transfer->type) {
+                        case USB_SETUP_TRANSFER:
+                        case USB_CONTROL_TRANSFER:
+                        case USB_BULK_TRANSFER:
+                        case USB_INTERRUPT_TRANSFER:
+                            if (transfer->status != USB_TRANSFER_COMPLETED) {
+                                gui_console_printf("[USB] Error: Transfer failed: %d\n", transfer->status);
+                            }
+                            uint32_t length = transfer->length;
+                            if (transfer->direction) {
+                                state->bit_times_remaining -= usb_compute_packet_bit_times(length);
+                            }
+                            switch (transfer->status) {
+                                case USB_TRANSFER_COMPLETED:
+                                    if (usb_qtd_scatter(&state->qh.overlay, transfer->buffer, &length)) {
+                                        state->qh.overlay.missed = true;
                                         usb_qh_halted(&state->qh);
-                                        break;
-                                    case USB_TRANSFER_OVERFLOWED:
-                                        state->qh.overlay.buf_err = true;
-                                        usb_qh_halted(&state->qh);
-                                        break;
-                                    case USB_TRANSFER_BABBLED:
-                                        state->qh.overlay.babble = true;
-                                        usb_qh_halted(&state->qh);
-                                        break;
-                                    case USB_TRANSFER_ERRORED:
-                                        state->qh.overlay.cerr = 0;
-                                        state->qh.overlay.xact_err = true;
-                                        usb_qh_halted(&state->qh);
-                                        break;
-                                    default:
-                                        gui_console_printf("[USB] Error: Transfer response with unexpected status %d!\n", transfer->status);
-                                        usb_qh_halted(&state->qh);
-                                        break;
-                                }
-                                break;
-                            default:
-                                gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
-                                usb_qh_halted(&state->qh);
-                                break;
-                        }
+                                    } else {
+                                        usb_qh_completed(&state->qh);
+                                    }
+                                    break;
+                                case USB_TRANSFER_STALLED:
+                                    usb_qh_halted(&state->qh);
+                                    break;
+                                case USB_TRANSFER_OVERFLOWED:
+                                    state->qh.overlay.buf_err = true;
+                                    usb_qh_halted(&state->qh);
+                                    break;
+                                case USB_TRANSFER_BABBLED:
+                                    state->qh.overlay.babble = true;
+                                    usb_qh_halted(&state->qh);
+                                    break;
+                                case USB_TRANSFER_ERRORED:
+                                    state->qh.overlay.cerr = 0;
+                                    state->qh.overlay.xact_err = true;
+                                    usb_qh_halted(&state->qh);
+                                    break;
+                                default:
+                                    gui_console_printf("[USB] Error: Transfer response with unexpected status %d!\n", transfer->status);
+                                    usb_qh_halted(&state->qh);
+                                    break;
+                            }
+                            break;
+                        default:
+                            gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
+                            usb_qh_halted(&state->qh);
+                            break;
                     }
                 }
                 break;
