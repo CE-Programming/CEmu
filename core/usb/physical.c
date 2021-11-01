@@ -943,7 +943,7 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
         transfer_append(transfer, info->buffer, info->length);
         transfer->state = TRANSFER_STATE_NONE;
     }
-    if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
+    if (error == USB_SUCCESS && transfer->state != TRANSFER_STATE_SUBMITTED) {
         error = device_intercept_transfer(context, device, transfer, info->length);
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
@@ -962,9 +962,6 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
         if (error != USB_SUCCESS) {
             return error;
         }
-    }
-    if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_COMPLETED) {
-        error = device_intercept_transfer(context, device, transfer, info->length);
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_COMPLETED) {
         event->type = USB_TRANSFER_RESPONSE_EVENT;
