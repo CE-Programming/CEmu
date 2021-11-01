@@ -310,8 +310,9 @@ static device_t *device_detach(context_t *context, device_t *device) {
         for (uint8_t index = 0; index != 0x20; ++index) {
             endpoint_cleanup(context, &device->endpoints[index]);
         }
-        if (device->handle) {
-            struct libusb_device *libusb_device = libusb_get_device(device->handle),
+        libusb_device_handle *handle = device->handle;
+        if (handle) {
+            struct libusb_device *libusb_device = libusb_get_device(handle),
                 *libusb_parent = libusb_get_parent(libusb_device);
             device_t *parent;
             NODE_FOREACH(parent, &context->devices) {
@@ -328,9 +329,29 @@ static device_t *device_detach(context_t *context, device_t *device) {
                     break;
                 }
             }
+            if (!device->numPorts) {
+                struct libusb_config_descriptor *config_desc;
+                if (libusb_get_active_config_descriptor(libusb_device, &config_desc) == LIBUSB_SUCCESS) {
+                    for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                        gui_console_printf("[USB] Info: Kernel driver was"
+                                           " active on interface %u: %s!\n",
+                                           iface,
+                                           libusb_kernel_driver_active(handle, iface)
+                                           ? "yes" : "no");
+                        libusb_attach_kernel_driver(handle, iface);
+                        libusb_release_interface(handle, iface);
+                        gui_console_printf("[USB] Info: Kernel driver now"
+                                           " active on interface %u: %s!\n",
+                                           iface,
+                                           libusb_kernel_driver_active(handle, iface)
+                                           ? "yes" : "no");
+                    }
+                    libusb_free_config_descriptor(config_desc);
+                }
+            }
         }
-        libusb_close(device->handle);
-        device->handle = NULL;
+        libusb_close(handle);
+        handle = device->handle = NULL;
         node_remove(&device->node);
         free(device);
         device = NULL;
@@ -362,13 +383,13 @@ static void transfer_append(transfer_t *transfer, const void *src, uint32_t leng
 static int device_intercept_control_setup(context_t *context, device_t *device, transfer_t *transfer) {
     enum libusb_error error;
     struct libusb_transfer *libusb_transfer = transfer->transfer;
-    struct libusb_device_handle *handle = libusb_transfer->dev_handle;
+    libusb_device_handle *handle = libusb_transfer->dev_handle;
     enum libusb_transfer_status *status = &libusb_transfer->status;
     struct libusb_device_descriptor device_desc;
     struct libusb_config_descriptor *config_desc = NULL;
     struct libusb_control_setup *setup = libusb_control_transfer_get_setup(libusb_transfer);
     int configValueInt = 0;
-    uint8_t type = setup->wValue >> 8, index = setup->wValue >> 0, iface, alt, endpt, configValueByte;
+    uint8_t type = setup->wValue >> 8, index = setup->wValue >> 0, configValueByte;
     *status = LIBUSB_TRANSFER_STALL;
     switch (setup->bRequest) {
         case LIBUSB_REQUEST_GET_STATUS:
@@ -556,8 +577,8 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                 == LIBUSB_TRANSFER_COMPLETED) {
                                 transfer_append(transfer, config_desc, config_desc->bLength);
                                 transfer_append(transfer, config_desc->extra, config_desc->extra_length);
-                                for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                                    for (alt = 0; alt != config_desc->interface[iface]
+                                for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                                    for (uint8_t alt = 0; alt != config_desc->interface[iface]
                                              .num_altsetting; ++alt) {
                                         transfer_append(transfer,
                                                         &config_desc->interface[iface].altsetting[alt],
@@ -568,7 +589,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                                         .extra,
                                                         config_desc->interface[iface].altsetting[alt]
                                                         .extra_length);
-                                        for (endpt = 0; endpt != config_desc->interface[iface]
+                                        for (uint8_t endpt = 0; endpt != config_desc->interface[iface]
                                                  .altsetting[alt].bNumEndpoints; ++endpt) {
                                             transfer_append(transfer,
                                                             &config_desc->interface[iface]
@@ -628,9 +649,14 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                 case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE:
                     if (device->state >= DEVICE_STATE_DEFAULT_OR_ADDRESS
                         && device->address && !type && !setup->wIndex) {
+                        if (device->numPorts) {
+                            *status = LIBUSB_TRANSFER_COMPLETED;
+                            device->state = DEVICE_STATE_CONFIGURED;
+                            break;
+                        }
                         if (libusb_get_active_config_descriptor(libusb_get_device(handle), &config_desc)
                             == LIBUSB_SUCCESS) {
-                            for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                            for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
                                 gui_console_printf("[USB] Info: Kernel driver was"
                                                    " active on interface %u: %s!\n",
                                                    iface,
@@ -650,7 +676,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                         error = libusb_set_configuration(handle, index)))
                             == LIBUSB_TRANSFER_COMPLETED) {
                             device->state = DEVICE_STATE_CONFIGURED;
-                            for (iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
+                            for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
                                 gui_console_printf("[USB] Info: Kernel driver now"
                                                    " active on interface %u: %s!\n",
                                                    iface,
