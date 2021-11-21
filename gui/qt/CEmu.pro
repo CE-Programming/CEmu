@@ -77,9 +77,9 @@ CONFIG(release, debug|release) {
 
 # GCC/clang flags
 if (!win32-msvc*) {
-    GLOBAL_FLAGS    += -W -Wall -Wextra -Wunused-function -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self -Wimplicit-fallthrough
+    GLOBAL_FLAGS    += -W -Wall -Wextra -Wunused-function -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=return-type -Werror=pointer-arith -Winit-self -Wimplicit-fallthrough
     GLOBAL_FLAGS    += -ffunction-sections -fdata-sections -fno-strict-overflow
-    QMAKE_CFLAGS    += -std=gnu11
+    QMAKE_CFLAGS    += -std=gnu11 -Werror=implicit-function-declaration -Werror=missing-prototypes
     isEmpty(CI) {
         # Only enable opts for non-CI release builds
         # -flto might cause an internal compiler error on GCC in some circumstances (with -g3?)... Comment it if needed.
