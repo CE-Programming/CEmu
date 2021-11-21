@@ -201,7 +201,9 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             control.protectionStatus &= ~byte;
             break;
         default:
-            control.ports[index] = byte;
+            if (index < sizeof control.ports) {
+                control.ports[index] = byte;
+            }
             break;
     }
 }
