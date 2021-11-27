@@ -181,7 +181,7 @@ static uint8_t flash_read(const uint16_t pio, bool peek) {
             }
         }
     } else {
-        uint8_t index = pio;
+        uint8_t index = pio & 0x7F;
         switch (index) {
             case 0x00:
                 value = flash.mapped;
