@@ -487,7 +487,7 @@ static void usb_qh_execute(usb_traversal_state_t *state) {
          --qHTransactionCounter) {
         // Asynchronous Transfer Pre-condition Criteria
         if (state->qh.nak_rl) {
-            if (!state->qh.overlay.alt.nak_cnt) {
+            if (!state->qh.s_mask && !state->qh.overlay.alt.nak_cnt) {
                 return;
             }
             state->qh.overlay.alt.nak_cnt--;
