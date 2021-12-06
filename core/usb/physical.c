@@ -1208,10 +1208,19 @@ int usb_physical_device(usb_event_t *event) {
                 device->state = DEVICE_STATE_POWERED;
                 device->address = 0;
             } else if (device->state >= DEVICE_STATE_POWERED && type == USB_RESET_EVENT) {
-                error = errno_from_libusb_error(libusb_reset_device(device->handle));
-                if (error == USB_SUCCESS) {
-                    device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
-                    device->address = 0;
+                switch (libusb_reset_device(device->handle)) {
+                    case LIBUSB_SUCCESS:
+                        device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
+                        device->address = 0;
+                        break;
+                    case LIBUSB_ERROR_NO_DEVICE:
+                        // TODO: should be silently replaced
+                        // with new device on the same port?
+                        device_detach(context, device);
+                        break;
+                    default:
+                        device->state = DEVICE_STATE_POWERED;
+                        break;
                 }
             }
             break;
