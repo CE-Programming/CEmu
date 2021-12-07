@@ -36,6 +36,7 @@
     } while (false)
 
 typedef struct node node_t;
+typedef struct pending pending_t;
 typedef struct transfer transfer_t;
 typedef struct endpoint endpoint_t;
 typedef struct port port_t;
@@ -45,6 +46,11 @@ typedef struct context context_t;
 
 struct node {
     node_t *prev, *next;
+};
+
+struct pending {
+    node_t node;
+    libusb_device *device;
 };
 
 enum transfer_state {
@@ -121,6 +127,7 @@ struct device {
 
 struct context {
     libusb_context *context;
+    node_t pending;
     node_t devices;
     bool handled : 1;
     uint16_t throttle : 15;
@@ -220,12 +227,25 @@ static void endpoint_init(endpoint_t *endpoint) {
     transfer_init(&endpoint->transfer);
 }
 
-static int device_attach(context_t *context, struct libusb_device *libusb_device) {
+static void device_attach(context_t *context, struct libusb_device *libusb_device) {
+    pending_t *pending = malloc(sizeof(pending_t));
+    if (!pending) {
+        return;
+    }
+    node_init(&pending->node);
+    pending->device = libusb_ref_device(libusb_device);
+    node_add(&context->pending, &pending->node);
+}
+
+static int device_init(context_t *context, struct libusb_device *libusb_device) {
     struct libusb_device_descriptor dev_desc;
     int error = errno_from_libusb_error(libusb_get_device_descriptor(libusb_device, &dev_desc));
     libusb_device_handle *handle;
     if (error == USB_SUCCESS) {
         error = errno_from_libusb_error(libusb_open(libusb_device, &handle));
+    }
+    if (error != USB_SUCCESS) {
+        return error;
     }
     size_t size = sizeof(device_t);
     struct usb_hub_descriptor hub_desc;
@@ -244,6 +264,7 @@ static int device_attach(context_t *context, struct libusb_device *libusb_device
         size += sizeof(hub_t) + sizeof(port_t) * hub_desc.bNbrPorts;
     }
     if (error != USB_SUCCESS) {
+        libusb_close(handle);
         return error;
     }
     device_t *device = malloc(size);
@@ -1088,6 +1109,7 @@ int usb_physical_device(usb_event_t *event) {
     usb_init_info_t *init = &event->info.init;
     usb_transfer_info_t *transfer = &event->info.transfer;
     usb_timer_info_t *timer = &event->info.timer;
+    pending_t *pending;
     device_t *device;
     event->host = false;
     event->type = USB_INIT_EVENT;
@@ -1133,6 +1155,15 @@ int usb_physical_device(usb_event_t *event) {
                 }
                 context->throttle = 1000;
             }
+            NODE_FOREACH (pending, &context->pending) {
+                if (error != USB_SUCCESS) {
+                    break;
+                }
+                error = device_init(context, pending->device);
+                libusb_unref_device(pending->device);
+                node_remove(&pending->node);
+                free(pending);
+            }
             break;
         case USB_INIT_EVENT:
             event->context = NULL;
@@ -1144,6 +1175,7 @@ int usb_physical_device(usb_event_t *event) {
                 return ENOMEM;
             }
             context->context = NULL;
+            node_init(&context->pending);
             node_init(&context->devices);
             context->handled = false;
             context->throttle = 1000;
@@ -1224,7 +1256,7 @@ int usb_physical_device(usb_event_t *event) {
                 } else {
                     error = EINVAL;
                 }
-                if (root && (error = device_attach(context, root)) == USB_SUCCESS) {
+                if (root && (error = device_init(context, root)) == USB_SUCCESS) {
                     for (libusb_device **device = devices; *device; ++device) {
                         if (device_hotplugged(context->context, *device,
                                               LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, context)) {
@@ -1276,6 +1308,9 @@ int usb_physical_device(usb_event_t *event) {
             }
             if (!context) {
                 return 0;
+            }
+            NODE_FOREACH (pending, &context->pending) {
+                libusb_unref_device(pending->device);
             }
             NODE_FOREACH (device, &context->devices) {
                 device_detach(context, device);
