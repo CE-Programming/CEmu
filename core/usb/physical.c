@@ -359,6 +359,55 @@ static device_t *device_detach(context_t *context, device_t *device) {
     return device;
 }
 
+static bool device_reset(context_t *context, device_t *device) {
+    switch (libusb_reset_device(device->handle)) {
+        case LIBUSB_SUCCESS:
+            return true;
+        case LIBUSB_ERROR_NO_DEVICE:
+            break;
+        default:
+            return false;
+    }
+    uint8_t ports[MAX_PORT_DEPTH];
+    uint8_t num_ports = libusb_get_port_numbers(
+            libusb_get_device(device->handle), ports, MAX_PORT_DEPTH);
+    for (int iteration = 0; iteration != 100; ++iteration) {
+        libusb_device **devices;
+        if (errno_from_libusb_error(
+                    libusb_get_device_list(context->context, &devices)) == USB_SUCCESS) {
+            libusb_device **enumerate_device;
+            for (enumerate_device = devices; *enumerate_device; ++enumerate_device) {
+                uint8_t enumerate_ports[MAX_PORT_DEPTH];
+                if (libusb_get_port_numbers(*enumerate_device,
+                                            enumerate_ports, MAX_PORT_DEPTH) == num_ports
+                    && !memcmp(ports, enumerate_ports, num_ports)) {
+                    break;
+                }
+            }
+            if (*enumerate_device) {
+                libusb_close(device->handle);
+                device->handle = NULL;
+                if (errno_from_libusb_error(
+                            libusb_open(*enumerate_device, &device->handle)) != USB_SUCCESS) {
+                    break;
+                }
+                return true;
+            }
+            libusb_free_device_list(devices, true);
+        }
+        struct timeval tv = {
+            .tv_sec = 0,
+            .tv_usec = 1000000,
+        };
+        if (errno_from_libusb_error(
+                    libusb_handle_events_timeout(context->context, &tv)) != USB_SUCCESS) {
+            break;
+        }
+    }
+    device_detach(context, device);
+    return false;
+}
+
 static void LIBUSB_CALL transfer_completed(struct libusb_transfer *libusb_transfer) {
     transfer_t *transfer = libusb_transfer->user_data;
     transfer->state = TRANSFER_STATE_COMPLETED;
@@ -489,26 +538,18 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                         port->change.enable = true;
                                         break;
                                     }
-                                    switch (libusb_reset_device(port->device->handle)) {
-                                        case LIBUSB_SUCCESS:
-                                            port->device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
-                                            port->device->address = 0;
-                                            port->status.enable = true;
-                                            port->status.low_speed = libusb_get_device_speed(
-                                                    libusb_get_device(port->device->handle))
-                                                == LIBUSB_SPEED_LOW;
-                                            port->status.high_speed = false;
-                                            port->change.reset = true;
-                                            break;
-                                        case LIBUSB_ERROR_NO_DEVICE:
-                                            // TODO: should be silently replaced
-                                            // with new device on the same port?
-                                            device_detach(context, port->device);
-                                            fallthrough;
-                                        default:
-                                            port->status.enable = false;
-                                            port->change.enable = true;
-                                            break;
+                                    if (device_reset(context, port->device)) {
+                                        port->device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
+                                        port->device->address = 0;
+                                        port->status.enable = true;
+                                        port->status.low_speed = libusb_get_device_speed(
+                                                libusb_get_device(port->device->handle))
+                                            == LIBUSB_SPEED_LOW;
+                                        port->status.high_speed = false;
+                                        port->change.reset = true;
+                                    } else {
+                                        port->status.enable = false;
+                                        port->change.enable = true;
                                     }
                                     break;
                                 case 8:
@@ -1208,20 +1249,12 @@ int usb_physical_device(usb_event_t *event) {
                 device->state = DEVICE_STATE_POWERED;
                 device->address = 0;
             } else if (device->state >= DEVICE_STATE_POWERED && type == USB_RESET_EVENT) {
-                switch (libusb_reset_device(device->handle)) {
-                    case LIBUSB_SUCCESS:
-                        device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
-                        device->address = 0;
-                        break;
-                    case LIBUSB_ERROR_NO_DEVICE:
-                        // TODO: should be silently replaced
-                        // with new device on the same port?
-                        device_detach(context, device);
-                        break;
-                    default:
-                        device->state = DEVICE_STATE_POWERED;
-                        break;
+                device->state = DEVICE_STATE_POWERED;
+                if (device_reset(context, device)) {
+                    device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
+                    device->address = 0;
                 }
+                device = NULL;
             }
             break;
         case USB_TRANSFER_REQUEST_EVENT:
