@@ -98,7 +98,7 @@ struct hub {
                 uint8_t buffer[sizeof(uint16_t)];
                 uint16_t value;
                 struct {
-                    bool power : 1, overcurrent : 1;
+                    bool power : 1, over_current : 1;
                     uint8_t : 0;
                 };
             } status, change;
