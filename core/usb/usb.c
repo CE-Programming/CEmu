@@ -110,7 +110,9 @@ static_assert(sizeof(usb_fstn_t) == 0x08, "usb_fstn_t does not have a size of 0x
 
 typedef struct usb_traversal_state {
     union {
+        usb_itd_t itd;
         usb_qh_t qh;
+        usb_sitd_t sitd;
         usb_fstn_t fstn;
     };
     bool dirty : 1;
@@ -621,7 +623,9 @@ static void usb_schedule_traverse(usb_qlink_t *link) {
         }
         switch (link->type) {
             case QTYPE_ITD:
-                return usb_host_sys_err();
+                mem_dma_read(&state.itd, link->ptr << 5, sizeof(state.itd));
+                *link = state.itd.next;
+                break;
             case QTYPE_QH:
                 if (state.fake_recl_head == (link->ptr & 0x3FFF)) {
                     static bool warned = false;
@@ -665,7 +669,9 @@ static void usb_schedule_traverse(usb_qlink_t *link) {
                 *link = state.qh.horiz;
                 break;
             case QTYPE_SITD:
-                return usb_host_sys_err();
+                mem_dma_read(&state.sitd, link->ptr << 5, sizeof(state.sitd));
+                *link = state.sitd.next;
+                break;
             case QTYPE_FSTN:
                 mem_dma_read(&state.fstn, link->ptr << 5, sizeof(state.fstn));
                 *link = state.fstn.normal;
