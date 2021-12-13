@@ -25,7 +25,7 @@ typedef union usb_qlink {
     uint32_t val;
     bool term : 1;
     struct {
-        usb_qtype_t : 1;
+        int : 1;
         usb_qtype_t type : 2;
     };
     struct {
@@ -36,15 +36,19 @@ typedef union usb_qlink {
 } usb_qlink_t;
 typedef union usb_qbuf {
     uint32_t val;
-    struct { uint32_t off : 12, ptr : 20; };         // index 0
-    uint8_t c_prog_mask;                             // index 1
-    struct { uint32_t frame_tag : 5, s_bytes : 7; }; // index 2
+    struct { uint32_t off : 12, ptr : 20; };             // qtd/sitd index 0
+    struct { uint8_t dev_addr : 7, : 1, endpt : 4; };    //      itd index 0
+    uint8_t c_prog_mask;                                 //      qtd index 1
+    struct { uint8_t xact_count : 3, xact_pos : 2; };    //     sitd index 1
+    struct { uint16_t max_pkt_size : 11; bool io : 1; }; //      itd index 1
+    struct { uint32_t frame_tag : 5, s_bytes : 7; };     //      qtd index 2
+    uint8_t mult : 2;                                    //      itd index 2
 } usb_qbuf_t;
 typedef struct usb_qtd {
     usb_qlink_t next, alt;
     bool ping : 1, split : 1, missed : 1, xact_err : 1, babble : 1, buf_err : 1, halted : 1, active : 1;
-    uint8_t pid : 2, cerr : 2, c_page : 3, ioc : 1;
-    uint16_t total_bytes : 15, dt : 1;
+    uint8_t pid : 2, cerr : 2, page : 3, ioc : 1;
+    uint16_t length : 15, dt : 1;
     usb_qbuf_t bufs[5];
 } usb_qtd_t;
 typedef struct usb_qh {
@@ -55,20 +59,53 @@ typedef struct usb_qh {
     usb_qlink_t cur;
     usb_qtd_t overlay;
 } usb_qh_t;
+typedef struct usb_sitd {
+    usb_qlink_t next;
+    uint8_t dev_addr : 7, : 1, endpt : 4, : 4, hub_addr : 7, : 1, port_num : 7;
+    bool io : 1;
+    uint8_t s_mask, c_mask;
+    uint16_t : 16;
+    bool : 1, split : 1, missed : 1, xact_err : 1, babble : 1, buf_err : 1, err : 1, active : 1;
+    uint8_t c_prog_mask;
+    uint16_t length : 10, : 4, page : 1, ioc : 1;
+    usb_qbuf_t bufs[2];
+    usb_qlink_t back;
+} usb_sitd_t;
+typedef struct usb_itd {
+    usb_qlink_t next;
+    struct {
+        uint16_t off : 12, page : 3, ioc : 1, length : 12, xact_err : 1, babble : 1, buf_err : 1, active : 1;
+    } xacts[8];
+    usb_qbuf_t bufs[7];
+} usb_itd_t;
 typedef struct usb_fstn {
     usb_qlink_t normal, back;
 } usb_fstn_t;
+
 static_assert(sizeof(usb_qbuf_t) == 0x04, "usb_qbuf_t does not have a size of 0x04");
-static_assert(offsetof(usb_qtd_t, next) == 0x00, "Next qTD Pointer is not at offset 0x00");
-static_assert(offsetof(usb_qtd_t, alt) == 0x04, "Alternate Next qTD Pointer is not at offset 0x04");
-static_assert(offsetof(usb_qtd_t, bufs) == 0x0C, "Buffer Pointers are not at offset 0x0C");
+static_assert(offsetof(usb_qtd_t, next) == 0x00, "Next qTD Pointer is not at offset 0x00 of usb_qtd_t");
+static_assert(offsetof(usb_qtd_t, alt) == 0x04, "Alternate Next qTD Pointer is not at offset 0x04 of usb_qtd_t");
+static_assert(offsetof(usb_qtd_t, bufs) == 0x0C, "Buffer Pointers are not at offset 0x0C of usb_qtd_t");
 static_assert(sizeof(usb_qtd_t) == 0x20, "usb_qtd_t does not have a size of 0x20");
-static_assert(offsetof(usb_qh_t, horiz) == 0x00, "Queue Head Horizontal Link Pointer is not at offset 0x00");
-static_assert(offsetof(usb_qh_t, cur) == 0x0C, "Current qTD Pointer is not at offset 0x0C");
-static_assert(offsetof(usb_qh_t, overlay) == 0x10, "Transfer Overlay is not at offset 0x10");
+static_assert(offsetof(usb_qh_t, horiz) == 0x00, "Queue Head Horizontal Link Pointer is not at offset 0x00 of usb_qh_t");
+static_assert(offsetof(usb_qh_t, cur) == 0x0C, "Current qTD Pointer is not at offset 0x0C of usb_qh_t");
+static_assert(offsetof(usb_qh_t, s_mask) == 0x08, "µFrame S-mask is not at offset 0x08 of usb_qh_t");
+static_assert(offsetof(usb_qh_t, c_mask) == 0x09, "µFrame C-mask is not at offset 0x09 of usb_qh_t");
+static_assert(offsetof(usb_qh_t, overlay) == 0x10, "Transfer Overlay is not at offset 0x10 of usb_qh_t");
 static_assert(sizeof(usb_qh_t) == 0x30, "usb_qh_t does not have a size of 0x30");
-static_assert(offsetof(usb_fstn_t, normal) == 0x00, "Normal Path Link Pointer is not at offset 0x00");
-static_assert(offsetof(usb_fstn_t, back) == 0x04, "Back Path Link Pointer is not at offset 0x04");
+static_assert(offsetof(usb_sitd_t, next) == 0x00, "Next Link Pointer is not at offset 0x00 of usb_sitd_t");
+static_assert(offsetof(usb_sitd_t, s_mask) == 0x08, "µFrame S-mask is not at offset 0x08 of usb_sitd_t");
+static_assert(offsetof(usb_sitd_t, c_mask) == 0x09, "µFrame S-mask is not at offset 0x09 of usb_sitd_t");
+static_assert(offsetof(usb_sitd_t, c_prog_mask) == 0x0D, "µFrame C-prog-mask is not at offset 0x0D of usb_sitd_t");
+static_assert(offsetof(usb_sitd_t, bufs) == 0x10, "Buffer Pointers are not at offset 0x10 of usb_sitd_t");
+static_assert(offsetof(usb_sitd_t, back) == 0x18, "Back Pointer is not at offset 0x18 of usb_sitd_t");
+static_assert(sizeof(usb_sitd_t) == 0x1C, "usb_sitd_t does not have a size of 0x1C");
+static_assert(offsetof(usb_itd_t, next) == 0x00, "Next Link Pointer is not at offset 0x00 of usb_itd_t");
+static_assert(offsetof(usb_itd_t, xacts) == 0x04, "Transaction Infos are not at offset 0x04 of usb_itd_t");
+static_assert(offsetof(usb_itd_t, bufs) == 0x24, "Buffer Pointers are not at offset 0x24 of usb_itd_t");
+static_assert(sizeof(usb_itd_t) == 0x40, "usb_itd_t does not have a size of 0x40");
+static_assert(offsetof(usb_fstn_t, normal) == 0x00, "Normal Path Link Pointer is not at offset 0x00 of usb_fstn_t");
+static_assert(offsetof(usb_fstn_t, back) == 0x04, "Back Path Link Pointer is not at offset 0x04 of usb_fstn_t");
 static_assert(sizeof(usb_fstn_t) == 0x08, "usb_fstn_t does not have a size of 0x08");
 
 typedef struct usb_traversal_state {
@@ -224,7 +261,7 @@ static void usb_write_back_qtd(usb_qh_t *qh) {
     qtd.halted = qh->overlay.halted;
     qtd.active = qh->overlay.active;
     qtd.cerr = qh->overlay.cerr;
-    qtd.total_bytes = qh->overlay.total_bytes;
+    qtd.length = qh->overlay.length;
     mem_dma_write(&qtd, qh->cur.ptr << 5, sizeof(qtd));
     // TODO: defer these interrupts?
     if (qh->overlay.halted) {
@@ -245,57 +282,57 @@ static void usb_qh_halted(usb_qh_t *qh) {
 
 static bool usb_qtd_gather(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
     uint16_t block_len;
-    if (qtd->total_bytes > 0x5000) {
+    if (qtd->length > 0x5000) {
         return true;
     }
     if (qtd->pid & 1) {
-        *len -= qtd->total_bytes;
+        *len -= qtd->length;
         return false;
     }
-    while (qtd->total_bytes && *len) {
-        if (qtd->c_page >= 5) {
+    while (qtd->length && *len) {
+        if (qtd->page >= 5) {
             return true;
         }
         block_len = (1 << 12) - qtd->bufs[0].off;
-        if (block_len > qtd->total_bytes) {
-            block_len = qtd->total_bytes;
+        if (block_len > qtd->length) {
+            block_len = qtd->length;
         }
         if (block_len > *len) {
             block_len = *len;
         }
-        mem_dma_read(dst, qtd->bufs[qtd->c_page].ptr << 12 | qtd->bufs[0].off, block_len);
+        mem_dma_read(dst, qtd->bufs[qtd->page].ptr << 12 | qtd->bufs[0].off, block_len);
         dst += block_len;
         qtd->bufs[0].off += block_len;
-        qtd->c_page += !qtd->bufs[0].off;
-        qtd->total_bytes -= block_len;
+        qtd->page += !qtd->bufs[0].off;
+        qtd->length -= block_len;
         *len -= block_len;
     }
-    return qtd->total_bytes;
+    return qtd->length;
 }
 static bool usb_qtd_scatter(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
     uint16_t block_len;
-    if (qtd->total_bytes > 0x5000) {
+    if (qtd->length > 0x5000) {
         return true;
     }
     if (!(qtd->pid & 1)) {
         return false;
     }
-    while (qtd->total_bytes && *len) {
-        if (qtd->c_page >= 5) {
+    while (qtd->length && *len) {
+        if (qtd->page >= 5) {
             return true;
         }
         block_len = (1 << 12) - qtd->bufs[0].off;
-        if (block_len > qtd->total_bytes) {
-            block_len = qtd->total_bytes;
+        if (block_len > qtd->length) {
+            block_len = qtd->length;
         }
         if (block_len > *len) {
             block_len = *len;
         }
-        mem_dma_write(src, qtd->bufs[qtd->c_page].ptr << 12 | qtd->bufs[0].off, block_len);
+        mem_dma_write(src, qtd->bufs[qtd->page].ptr << 12 | qtd->bufs[0].off, block_len);
         src += block_len;
         qtd->bufs[0].off += block_len;
-        qtd->c_page += !qtd->bufs[0].off;
-        qtd->total_bytes -= block_len;
+        qtd->page += !qtd->bufs[0].off;
+        qtd->length -= block_len;
         *len -= block_len;
     }
     return *len;
@@ -525,7 +562,7 @@ static void usb_qh_advance(usb_traversal_state_t *state) {
     }
     usb_qlink_t link;
     link.term = true;
-    if (state->qh.overlay.total_bytes) {
+    if (state->qh.overlay.length) {
         link = state->qh.overlay.alt;
     }
     if (link.term) {
