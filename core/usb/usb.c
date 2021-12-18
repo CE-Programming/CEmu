@@ -71,11 +71,12 @@ typedef struct usb_sitd {
     usb_qbuf_t bufs[2];
     usb_qlink_t back;
 } usb_sitd_t;
+typedef struct usb_itd_xact {
+    uint16_t off : 12, page : 3, ioc : 1, length : 12, xact_err : 1, babble : 1, buf_err : 1, active : 1;
+} usb_itd_xact_t;
 typedef struct usb_itd {
     usb_qlink_t next;
-    struct {
-        uint16_t off : 12, page : 3, ioc : 1, length : 12, xact_err : 1, babble : 1, buf_err : 1, active : 1;
-    } xacts[8];
+    usb_itd_xact_t xacts[8];
     usb_qbuf_t bufs[7];
 } usb_itd_t;
 typedef struct usb_fstn {
@@ -109,6 +110,7 @@ static_assert(offsetof(usb_fstn_t, back) == 0x04, "Back Path Link Pointer is not
 static_assert(sizeof(usb_fstn_t) == 0x08, "usb_fstn_t does not have a size of 0x08");
 
 typedef struct usb_traversal_state {
+    usb_qlink_t link;
     union {
         usb_itd_t itd;
         usb_qh_t qh;
@@ -247,7 +249,15 @@ static void usb_plug_complete(void) {
     }
 }
 
+static void usb_host_sys_err(void) {
+    usb.regs.hcor.usbcmd &= ~USBCMD_RUN;
+    usb.regs.hcor.usbsts |= USBSTS_HCHALTED;
+    usb_host_int(USBSTS_HOST_SYS_ERR);
+    gui_console_printf("[USB] Warning: Fatal host controller error!\n");
+}
+
 static uint32_t usb_compute_packet_bit_times(uint32_t byte_count) {
+    // TODO: should take transfer type/speed into account
     return 76 + 88 + 67 + 88 + 67 + byte_count * 8 * 7 / 6 + 721 + 48;
 }
 
@@ -282,8 +292,141 @@ static void usb_qh_halted(usb_qh_t *qh) {
     usb_qh_completed(qh);
 }
 
+static void usb_itd_completed(usb_itd_xact_t *xact) {
+    usb_host_int(USBSTS_USBERRINT);
+    if (xact->ioc) {
+        usb_host_int(USBSTS_USBINT);
+    }
+}
+static void usb_itd_failed(usb_itd_xact_t *xact) {
+    xact->active = false;
+    usb_itd_completed(xact);
+}
+
+static void usb_sitd_completed(usb_sitd_t *sitd) {
+    usb_host_int(USBSTS_USBERRINT);
+    if (sitd->ioc) {
+        usb_host_int(USBSTS_USBINT);
+    }
+}
+static void usb_sitd_failed(usb_sitd_t *sitd) {
+    sitd->active = false;
+    usb_sitd_completed(sitd);
+}
+
+static bool usb_itd_gather(uint8_t *dst, usb_itd_t *itd, usb_itd_xact_t *xact, uint32_t *len) {
+    if (xact->length > 0xC00) {
+        return true;
+    }
+    if (itd->bufs[1].io) {
+        *len -= xact->length;
+        return false;
+    }
+    while (xact->length && *len) {
+        if (xact->page >= 7) {
+            return true;
+        }
+        uint16_t block_len = (1 << 12) - xact->off;
+        if (block_len > xact->length) {
+            block_len = xact->length;
+        }
+        if (block_len > *len) {
+            block_len = *len;
+        }
+        mem_dma_read(dst, itd->bufs[xact->page].ptr << 12 | xact->off, block_len);
+        dst += block_len;
+        xact->off += block_len;
+        xact->page += !xact->off;
+        xact->length -= block_len;
+        *len -= block_len;
+    }
+    return xact->length;
+}
+static bool usb_itd_scatter(usb_itd_t *itd, usb_itd_xact_t *xact, const uint8_t *src, uint32_t *len) {
+    if (xact->length >= 0x400) {
+        return true;
+    }
+    if (!itd->bufs[1].io) {
+        return false;
+    }
+    while (xact->length && *len) {
+        if (xact->page >= 7) {
+            return true;
+        }
+        uint16_t block_len = (1 << 12) - xact->off;
+        if (block_len > xact->length) {
+            block_len = xact->length;
+        }
+        if (block_len > *len) {
+            block_len = *len;
+        }
+        mem_dma_write(src, itd->bufs[xact->page].ptr << 12 | xact->off, block_len);
+        src += block_len;
+        xact->off += block_len;
+        xact->page += !xact->off;
+        xact->length -= block_len;
+        *len -= block_len;
+    }
+    return *len;
+}
+
+static bool usb_sitd_gather(uint8_t *dst, usb_sitd_t *sitd, uint32_t *len) {
+    if (sitd->length > 0xC00) {
+        return true;
+    }
+    if (sitd->io) {
+        *len -= sitd->length;
+        return false;
+    }
+    while (sitd->length && *len) {
+        if (sitd->page >= 2) {
+            return true;
+        }
+        uint16_t block_len = (1 << 12) - sitd->bufs[0].off;
+        if (block_len > sitd->length) {
+            block_len = sitd->length;
+        }
+        if (block_len > *len) {
+            block_len = *len;
+        }
+        mem_dma_read(dst, sitd->bufs[sitd->page].ptr << 12 | sitd->bufs[0].off, block_len);
+        dst += block_len;
+        sitd->bufs[0].off += block_len;
+        sitd->page += !sitd->bufs[0].off;
+        sitd->length -= block_len;
+        *len -= block_len;
+    }
+    return sitd->length;
+}
+static bool usb_sitd_scatter(usb_sitd_t *sitd, const uint8_t *src, uint32_t *len) {
+    if (sitd->length >= 0x400) {
+        return true;
+    }
+    if (!sitd->io) {
+        return false;
+    }
+    while (sitd->length && *len) {
+        if (sitd->page >= 2) {
+            return true;
+        }
+        uint16_t block_len = (1 << 12) - sitd->bufs[0].off;
+        if (block_len > sitd->length) {
+            block_len = sitd->length;
+        }
+        if (block_len > *len) {
+            block_len = *len;
+        }
+        mem_dma_write(src, sitd->bufs[sitd->page].ptr << 12 | sitd->bufs[0].off, block_len);
+        src += block_len;
+        sitd->bufs[0].off += block_len;
+        sitd->page += !sitd->bufs[0].off;
+        sitd->length -= block_len;
+        *len -= block_len;
+    }
+    return *len;
+}
+
 static bool usb_qtd_gather(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
-    uint16_t block_len;
     if (qtd->length > 0x5000) {
         return true;
     }
@@ -295,7 +438,7 @@ static bool usb_qtd_gather(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
         if (qtd->page >= 5) {
             return true;
         }
-        block_len = (1 << 12) - qtd->bufs[0].off;
+        uint16_t block_len = (1 << 12) - qtd->bufs[0].off;
         if (block_len > qtd->length) {
             block_len = qtd->length;
         }
@@ -312,7 +455,6 @@ static bool usb_qtd_gather(uint8_t *dst, usb_qtd_t *qtd, uint32_t *len) {
     return qtd->length;
 }
 static bool usb_qtd_scatter(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
-    uint16_t block_len;
     if (qtd->length > 0x5000) {
         return true;
     }
@@ -323,7 +465,7 @@ static bool usb_qtd_scatter(usb_qtd_t *qtd, const uint8_t *src, uint32_t *len) {
         if (qtd->page >= 5) {
             return true;
         }
-        block_len = (1 << 12) - qtd->bufs[0].off;
+        uint16_t block_len = (1 << 12) - qtd->bufs[0].off;
         if (block_len > qtd->length) {
             block_len = qtd->length;
         }
@@ -414,19 +556,62 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                         usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
                     }
                 } else if (state) {
-                    state->fake_recl = true;
-                    state->fake_recl_head = -1;
-                    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
-                    state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
-                    switch (transfer->type) {
-                        case USB_SETUP_TRANSFER:
-                        case USB_CONTROL_TRANSFER:
-                        case USB_BULK_TRANSFER:
-                        case USB_INTERRUPT_TRANSFER:
-                            if (transfer->status != USB_TRANSFER_COMPLETED) {
-                                gui_console_printf("[USB] Error: Transfer failed: %d\n", transfer->status);
+                    usb_itd_xact_t *xact = &state->itd.xacts[usb.regs.hcor.frindex & 7];
+                    uint32_t length = transfer->length;
+                    switch (state->link.type) {
+                        case QTYPE_ITD:
+                            if (transfer->type != USB_ISOCHRONOUS_TRANSFER) {
+                                gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
+                                usb_itd_failed(xact);
+                                break;
                             }
-                            uint32_t length = transfer->length;
+                            if (transfer->direction) {
+                                state->bit_times_remaining -= usb_compute_packet_bit_times(length);
+                            }
+                            switch (transfer->status) {
+                                case USB_TRANSFER_COMPLETED:
+                                    if (usb_itd_scatter(&state->itd, xact, transfer->buffer, &length)) {
+                                        usb_itd_failed(xact);
+                                    } else {
+                                        usb_itd_completed(xact);
+                                    }
+                                    break;
+                                case USB_TRANSFER_STALLED:
+                                    usb_itd_failed(xact);
+                                    break;
+                                case USB_TRANSFER_OVERFLOWED:
+                                    xact->buf_err = true;
+                                    usb_itd_failed(xact);
+                                    break;
+                                case USB_TRANSFER_BABBLED:
+                                    xact->babble = true;
+                                    usb_itd_failed(xact);
+                                    break;
+                                case USB_TRANSFER_ERRORED:
+                                    xact->xact_err = true;
+                                    usb_itd_failed(xact);
+                                    break;
+                                default:
+                                    gui_console_printf("[USB] Error: Transfer response with unexpected status %d!\n", transfer->status);
+                                    usb_itd_failed(xact);
+                                    break;
+                            }
+                            break;
+                        case QTYPE_QH:
+                            if (transfer->type == USB_ISOCHRONOUS_TRANSFER) {
+                                gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
+                                usb_qh_halted(&state->qh);
+                                break;
+                            }
+                            if (!state->qh.s_mask) {
+                                state->fake_recl = true;
+                                state->fake_recl_head = -1;
+                                usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+                                state->qh.overlay.alt.nak_cnt = state->qh.nak_rl;
+                            }
+                            if (transfer->status != USB_TRANSFER_COMPLETED) {
+                                gui_console_printf("[USB] Error: Transfer failed with status %d\n", transfer->status);
+                            }
                             if (transfer->direction) {
                                 state->bit_times_remaining -= usb_compute_packet_bit_times(length);
                             }
@@ -461,9 +646,47 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                                     break;
                             }
                             break;
-                        default:
-                            gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
-                            usb_qh_halted(&state->qh);
+                        case QTYPE_SITD:
+                            if (transfer->type != USB_ISOCHRONOUS_TRANSFER) {
+                                gui_console_printf("[USB] Error: Transfer response with unexpected type %d!\n", transfer->type);
+                                usb_sitd_failed(&state->sitd);
+                                break;
+                            }
+                            if (transfer->direction) {
+                                state->bit_times_remaining -= usb_compute_packet_bit_times(length);
+                            }
+                            switch (transfer->status) {
+                                case USB_TRANSFER_COMPLETED:
+                                    if (usb_sitd_scatter(&state->sitd, transfer->buffer, &length)) {
+                                        state->sitd.missed = true;
+                                        usb_sitd_failed(&state->sitd);
+                                    } else {
+                                        usb_sitd_completed(&state->sitd);
+                                    }
+                                    break;
+                                case USB_TRANSFER_STALLED:
+                                    usb_sitd_failed(&state->sitd);
+                                    break;
+                                case USB_TRANSFER_OVERFLOWED:
+                                    state->sitd.buf_err = true;
+                                    usb_sitd_failed(&state->sitd);
+                                    break;
+                                case USB_TRANSFER_BABBLED:
+                                    state->sitd.babble = true;
+                                    usb_sitd_failed(&state->sitd);
+                                    break;
+                                case USB_TRANSFER_ERRORED:
+                                    state->sitd.xact_err = true;
+                                    usb_sitd_failed(&state->sitd);
+                                    break;
+                                default:
+                                    gui_console_printf("[USB] Error: Transfer response with unexpected status %d!\n", transfer->status);
+                                    usb_sitd_failed(&state->sitd);
+                                    break;
+                            }
+                            break;
+                        case QTYPE_FSTN:
+                            usb_host_sys_err();
                             break;
                     }
                 }
@@ -493,11 +716,64 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
     return error;
 }
 
-static void usb_host_sys_err(void) {
-    usb.regs.hcor.usbcmd &= ~USBCMD_RUN;
-    usb.regs.hcor.usbsts |= USBSTS_HCHALTED;
-    usb_host_int(USBSTS_HOST_SYS_ERR);
-    gui_console_printf("[USB] Warning: Fatal host controller error!\n");
+static void usb_itd_execute(usb_traversal_state_t *state) {
+    usb_itd_xact_t *xact = &state->itd.xacts[usb.regs.hcor.frindex & 7];
+    if (!xact->active) {
+        return;
+    }
+    uint32_t max_bit_times = usb_compute_packet_bit_times(state->itd.bufs[1].max_pkt_size);
+    for (uint8_t iTDTransactionCounter = state->itd.bufs[2].mult;
+         iTDTransactionCounter && xact->active && state->bit_times_remaining >= max_bit_times;
+         --iTDTransactionCounter) {
+        state->dirty = true;
+        uint32_t length = sizeof(usb.buffer);
+        if (usb_itd_gather(usb.buffer, &state->itd, xact, &length)) {
+            usb_itd_failed(xact);
+            return;
+        }
+        usb.event.type = USB_TRANSFER_REQUEST_EVENT;
+        usb.event.info.transfer.buffer = usb.buffer;
+        usb.event.info.transfer.length = sizeof(usb.buffer) - length;
+        usb.event.info.transfer.max_pkt_size = state->sitd.length;
+        usb.event.info.transfer.status = USB_TRANSFER_COMPLETED;
+        usb.event.info.transfer.address = state->itd.bufs[0].dev_addr;
+        usb.event.info.transfer.endpoint = state->itd.bufs[0].endpt;
+        usb.event.info.transfer.type = USB_ISOCHRONOUS_TRANSFER;
+        usb.event.info.transfer.direction = state->itd.bufs[1].io;
+        if (!usb.event.info.transfer.direction) {
+            state->bit_times_remaining -= max_bit_times;
+        }
+        usb_dispatch_event(state);
+    }
+}
+
+static void usb_sitd_execute(usb_traversal_state_t *state) {
+    if (!state->sitd.active) {
+        return;
+    }
+    uint32_t max_bit_times = usb_compute_packet_bit_times(state->sitd.length);
+    if (state->bit_times_remaining < max_bit_times) {
+        return;
+    }
+    state->dirty = true;
+    uint32_t length = sizeof(usb.buffer);
+    if (usb_sitd_gather(usb.buffer, &state->sitd, &length)) {
+        usb_sitd_failed(&state->sitd);
+        return;
+    }
+    usb.event.type = USB_TRANSFER_REQUEST_EVENT;
+    usb.event.info.transfer.buffer = usb.buffer;
+    usb.event.info.transfer.length = sizeof(usb.buffer) - length;
+    usb.event.info.transfer.max_pkt_size = state->sitd.length;
+    usb.event.info.transfer.status = USB_TRANSFER_COMPLETED;
+    usb.event.info.transfer.address = state->sitd.dev_addr;
+    usb.event.info.transfer.endpoint = state->sitd.endpt;
+    usb.event.info.transfer.type = USB_ISOCHRONOUS_TRANSFER;
+    usb.event.info.transfer.direction = state->sitd.io;
+    if (!usb.event.info.transfer.direction) {
+        state->bit_times_remaining -= max_bit_times;
+    }
+    usb_dispatch_event(state);
 }
 
 static void usb_qh_execute(usb_traversal_state_t *state) {
@@ -590,66 +866,69 @@ static void usb_qh_advance(usb_traversal_state_t *state) {
     state->dirty = true;
 }
 
-static void usb_schedule_traverse(usb_qlink_t *link) {
+static void usb_schedule_traverse(usb_traversal_state_t *state) {
     // start event
-    usb_traversal_state_t state;
-    state.nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
-    state.fake_recl = true;
-    state.fake_recl_head = -1;
-    state.fake_iter_cap = 1 << 10;
+    state->nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
+    state->fake_recl = true;
+    state->fake_recl_head = -1;
+    state->fake_iter_cap = 1 << 10;
     usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
     switch (usb.event.speed) {
         case USB_FULL_SPEED:
-            state.bit_times_remaining = UINT64_C(480) * 1000u * 1000u / 8000u;
+            state->bit_times_remaining = UINT64_C(480) * 1000u * 1000u / 8000u;
             break;
         case USB_LOW_SPEED:
-            state.bit_times_remaining = UINT64_C(1500) * 1000u / 1000u;
+            state->bit_times_remaining = UINT64_C(1500) * 1000u / 1000u;
             break;
         case USB_HIGH_SPEED:
-            state.bit_times_remaining = UINT64_C(12) * 1000u * 1000u / 1000u;
+            state->bit_times_remaining = UINT64_C(12) * 1000u * 1000u / 1000u;
             break;
         case USB_SUPER_SPEED:
-            state.bit_times_remaining = UINT64_C(5) * 1000u * 1000u * 1000u / 8000u;
+            state->bit_times_remaining = UINT64_C(5) * 1000u * 1000u * 1000u / 8000u;
             break;
     }
-    while (!link->term) {
-        if (!--state.fake_iter_cap) {
+    while (!state->link.term) {
+        if (!--state->fake_iter_cap) {
             static bool warned = false;
             if (!warned) {
-                gui_console_printf("[USB] Warning: Very long asynchronous list!\n");
+                gui_console_printf("[USB] Warning: Very long schedule!\n");
                 warned = true;
             }
             return;
         }
-        switch (link->type) {
+        state->dirty = false;
+        switch (state->link.type) {
             case QTYPE_ITD:
-                mem_dma_read(&state.itd, link->ptr << 5, sizeof(state.itd));
-                *link = state.itd.next;
+                mem_dma_read(&state->itd, state->link.ptr << 5, sizeof(state->itd));
+                usb_itd_execute(state);
+                if (state->dirty) {
+                    mem_dma_write(&state->itd, state->link.ptr << 5, sizeof(state->itd));
+                }
+                state->link = state->itd.next;
                 break;
             case QTYPE_QH:
-                if (state.fake_recl_head == (link->ptr & 0x3FFF)) {
+                if (state->fake_recl_head == (state->link.ptr & 0x3FFF)) {
                     static bool warned = false;
                     if (!warned) {
                         gui_console_printf("[USB] Warning: No reclamation head!\n");
                         warned = true;
                     }
-                    if (!state.fake_recl) {
+                    if (!state->fake_recl) {
                         return;
                     }
-                    state.fake_recl = false;
+                    state->fake_recl = false;
                 }
-                if (state.fake_recl_head == -1) {
-                    state.fake_recl_head = link->ptr & 0x3FFF;
+                if (state->fake_recl_head == -1) {
+                    state->fake_recl_head = state->link.ptr & 0x3FFF;
                 }
                 // 4.10.1 Fetch Queue Head
-                mem_dma_read(&state.qh, link->ptr << 5, sizeof(state.qh));
-                state.dirty = false;
-                if (!state.qh.s_mask && state.qh.h) {
-                    state.fake_recl = true;
-                    state.fake_recl_head = -1;
+                mem_dma_read(&state->qh, state->link.ptr << 5, sizeof(state->qh));
+                if (!state->qh.s_mask && state->qh.h) {
+                    state->fake_recl = true;
+                    state->fake_recl_head = -1;
                     // update nak counter reload state
-                    if (state.nak_cnt_reload_state != USB_NAK_CNT_WAIT_FOR_START_EVENT) {
-                        ++state.nak_cnt_reload_state;
+                    if (state->nak_cnt_reload_state != USB_NAK_CNT_WAIT_FOR_START_EVENT) {
+                        ++state->nak_cnt_reload_state;
                     }
                     // empty schedule detection
                     if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
@@ -659,22 +938,26 @@ static void usb_schedule_traverse(usb_qlink_t *link) {
                     usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
                 }
                 // 4.10.2 Advance Queue
-                usb_qh_advance(&state);
+                usb_qh_advance(state);
                 // 4.10.3 Execute Transaction
-                usb_qh_execute(&state);
+                usb_qh_execute(state);
                 // 4.10.15 Follow Queue Head Horizontal Pointer
-                if (state.dirty) {
-                    mem_dma_write(&state.qh, link->ptr << 5, sizeof(state.qh));
+                if (state->dirty) {
+                    mem_dma_write(&state->qh, state->link.ptr << 5, sizeof(state->qh));
                 }
-                *link = state.qh.horiz;
+                state->link = state->qh.horiz;
                 break;
             case QTYPE_SITD:
-                mem_dma_read(&state.sitd, link->ptr << 5, sizeof(state.sitd));
-                *link = state.sitd.next;
+                mem_dma_read(&state->sitd, state->link.ptr << 5, sizeof(state->sitd));
+                usb_sitd_execute(state);
+                if (state->dirty) {
+                    mem_dma_write(&state->itd, state->link.ptr << 5, sizeof(state->sitd));
+                }
+                state->link = state->sitd.next;
                 break;
             case QTYPE_FSTN:
-                mem_dma_read(&state.fstn, link->ptr << 5, sizeof(state.fstn));
-                *link = state.fstn.normal;
+                mem_dma_read(&state->fstn, state->link.ptr << 5, sizeof(state->fstn));
+                state->link = state->fstn.normal;
                 break;
         }
     }
@@ -788,7 +1071,7 @@ static void usb_event(enum sched_item_id event) {
         } else {
             high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
             if (usb.regs.hcor.usbcmd & USBCMD_RUN) {
-                usb_qlink_t link;
+                usb_traversal_state_t state;
                 usb.regs.hcor.frindex += high_speed ? 1 : 8;
                 usb.regs.hcor.frindex &= (1 << 14) - 1;
                 uint32_t frame = usb.regs.hcor.frindex >> 3 &
@@ -797,16 +1080,16 @@ static void usb_event(enum sched_item_id event) {
                     usb_host_int(USBSTS_FRAME_LIST_OVER);
                 }
                 if (usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
-                    mem_dma_read(&link, (usb.regs.hcor.periodiclistbase & ~((1 << 12) - 1)) |
-                                 frame << 2, sizeof(link));
-                    usb_schedule_traverse(&link);
+                    mem_dma_read(&state.link, (usb.regs.hcor.periodiclistbase & ~((1 << 12) - 1)) |
+                                 frame << 2, sizeof(state.link));
+                    usb_schedule_traverse(&state);
                 }
                 if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
-                    link.term = false;
-                    link.type = QTYPE_QH;
-                    link.ptr = usb.regs.hcor.asynclistaddr >> 5;
-                    usb_schedule_traverse(&link);
-                    usb.regs.hcor.asynclistaddr = link.val;
+                    state.link.term = false;
+                    state.link.type = QTYPE_QH;
+                    state.link.ptr = usb.regs.hcor.asynclistaddr >> 5;
+                    usb_schedule_traverse(&state);
+                    usb.regs.hcor.asynclistaddr = state.link.val;
                 }
                 if (usb.regs.hcor.usbcmd & USBCMD_ASYNC_ADV_DRBL) {
                     usb_host_int(USBSTS_ASYNC_ADV);
