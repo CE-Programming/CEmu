@@ -70,14 +70,19 @@ RomDialog::RomDialog(QWidget *parent)
 {
     mBtnBox = new QDialogButtonBox(QDialogButtonBox::Cancel);
 
-    QLabel *info0 = new QLabel(tr("A ROM dumper is used to store the contents required for emulation into variables that are then combined to create a standalone ROM image. "
-                                  "Click the below button to save the ROM dumper program, and then send the program to a real calculator."));
-    QLabel *info1 = new QLabel(tr("To run the program, select Asm( from the catolog by pressing [2nd][0], and then pressing enter at the following prompt. "
-                                  "With some models, you may not need the Asm( token, and can run the program directly."));
-    QLabel *info2 = new QLabel(tr("When the program has completed, use the calculator connectivity software to store all variables prefixed with \"ROMData\" to your computer. "
-                                  "Drag and drop all the saved files into the box below."));
-    QLabel *info3 = new QLabel(tr("Once all the files have been transfered, the below button will be enabled. "
-                                  "Choose a place to save the ROM image. CEmu will use this ROM image across program runs."));
+    QLabel *info0 = new QLabel(tr("CEmu uses an assembly program that is run on a physical calculator to extract a ROM image. "
+                                  "Click the below button to save the ROM dumper program, and then send the program to a calculator."));
+    QLabel *info1 = new QLabel(tr("To run the program, select Asm( from the catolog by pressing [2nd][0], select the \"DUMP\" program using the [prgm] button, "
+                                  "and then press [enter] at the following prompt:"));
+    QLabel *info2 = new QLabel(tr("If the Asm( token is not available, you may need to use arTIfiCE in order to run assembly programs, available at the following link:"));
+    QLabel *info3 = new QLabel(tr("<a href=\"https://yvantt.github.io/arTIfiCE\">https://yvantt.github.io/arTIfiCE</a>"));
+    QLabel *info4 = new QLabel(tr("When the program has completed, send all variables prefixed with \"ROMData\" stored on the calculator to your computer. "
+                                  "Drag and drop all the saved files into the box below. "
+                                  "Once all the \"ROMData\" files have been added, the below save button will be enabled. "));
+
+    info3->setTextFormat(Qt::RichText);
+    info3->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    info3->setOpenExternalLinks(true);
 
     QImage scrn(":/assets/rom/prgm.png");
     QLabel *lblScrn = new QLabel;
@@ -87,12 +92,13 @@ RomDialog::RomDialog(QWidget *parent)
     info1->setWordWrap(true);
     info2->setWordWrap(true);
     info3->setWordWrap(true);
+    info4->setWordWrap(true);
 
     mBtnSaveDumper = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), "Save ROM dumper", this);
     mBtnSaveImage = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), "Save ROM image", this);
 
     mDropArea = new DropArea;
-    mDropArea->setText(tr("Drop ROMData files here (0/unk)"));
+    mDropArea->setText(tr("Drop ROMData files here"));
     mDropArea->setMinimumSize(scrn.width(), scrn.height() * 0.8);
 
     connect(mBtnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
@@ -106,8 +112,9 @@ RomDialog::RomDialog(QWidget *parent)
     layout->addWidget(info1, Qt::AlignCenter);
     layout->addWidget(lblScrn, Qt::AlignCenter);
     layout->addWidget(info2, Qt::AlignCenter);
-    layout->addWidget(mDropArea, Qt::AlignCenter);
     layout->addWidget(info3, Qt::AlignCenter);
+    layout->addWidget(info4, Qt::AlignCenter);
+    layout->addWidget(mDropArea, Qt::AlignCenter);
     layout->addWidget(mBtnSaveImage, Qt::AlignCenter);
     layout->addWidget(mBtnBox, Qt::AlignCenter);
 
@@ -115,7 +122,7 @@ RomDialog::RomDialog(QWidget *parent)
 
     setLayout(layout);
 
-    setWindowTitle(tr("Create ROM"));
+    setWindowTitle(tr("Create CEmu ROM"));
 
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
