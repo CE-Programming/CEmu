@@ -25,11 +25,13 @@ DEFINES += DEBUG_SUPPORT
 
 # Dependencies
 !defined(DEPLIBS, var) : DEPLIBS = STATIC # SH
+SHLIB_DIR = shared
+STATICLIB_DIR = static
 
 QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
 cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
 cemucore.outpath = $$OUT_PWD/cemucore
-cemucore.target = $$cemucore.outpath/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
+cemucore.target = $$cemucore.outpath/$$eval($${DEPLIBS}LIB_DIR)/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
 cemucore.commands = $(MAKE) -C$$shell_quote($$cemucore.path) BUILD=$$shell_quote($$cemucore.outpath) CROSS_COMPILE=$$shell_quote($$CROSS_COMPILE) CC=\"$(CC)\" CFLAGS=\"$(CFLAGS)\" LFLAGS=\"$(LFLAGS)\" $${DEPLIBS}LIB=1
 cemucore.depends = $$cemucore.path
 cemucore.clean.target = cemucore_clean

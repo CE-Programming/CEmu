@@ -50,9 +50,8 @@ ifndef STATICLIB
 SHLIB = 1
 endif
 
-TARGET = libcemucore
-$(eval $(foreach S,SH STATIC,$SLIB_TARGET = $$(BUILD)/$$(TARGET)$($SLIB_EXT)$(newline)))
-TARGETS = $(foreach S,SH STATIC,$(if $($SLIB),$($SLIB_TARGET)))
+SHLIB_DIR = shared
+STATICLIB_DIR = static
 
 HEADERS += \
 	cemucore.h \
@@ -73,22 +72,30 @@ SOURCES += \
 	scheduler.c \
 	sync.c
 
-OBJECTS = $(addprefix $(BUILD)/,$(addsuffix $(OBJECT_EXT),$(SOURCES)))
+TARGET = libcemucore
+$(eval $(foreach S,SH STATIC, \
+	$SLIB_TARGET = $$(BUILD)/$($SLIB_DIR)/$$(TARGET)$($SLIB_EXT)$(newline) \
+	$SLIB_OBJECTS = $(addprefix $(BUILD)/$($SLIB_DIR)/,$(addsuffix $(OBJECT_EXT),$(SOURCES)))$(newline)))
+TARGETS = $(foreach S,SH STATIC,$(if $($SLIB),$($SLIB_TARGET)))
+OBJECTS = $(foreach S,SH STATIC,$(if $($SLIB),$($SLIB_OBJECTS)))
 
 ARTIFACTS = $(OBJECTS) $(TARGETS)
 ARTIFACT_DIRS = $(sort $(dir $(ARTIFACTS)))
 
 all: $(TARGETS)
 
-$(SHLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
+$(SHLIB_TARGET): $(SHLIB_OBJECTS) | $(ARTIFACT_DIRS)
 	$(CC) $(ALL_LFLAGS) -shared -o $@ $^
 
-$(STATICLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
+$(STATICLIB_TARGET): $(STATICLIB_OBJECTS) | $(ARTIFACT_DIRS)
 	$(call REMOVE,$@)
 	$(AR) $@ $^
 
-$(BUILD)/%.o: % $(HEADERS) | $(ARTIFACT_DIRS)
-	$(CC) $(ALL_CFLAGS) -c -o $@ $<
+$(BUILD)/$(SHLIB_DIR)/%.o: % $(HEADERS) | $(ARTIFACT_DIRS)
+	$(CC) $(ALL_CFLAGS) -DCEMUCORE_EXPORT -c -o $@ $<
+
+$(BUILD)/$(STATICLIB_DIR)/%.o: % $(HEADERS) | $(ARTIFACT_DIRS)
+	$(CC) $(ALL_CFLAGS) -DCEMUCORE_STATIC -c -o $@ $<
 
 $(ARTIFACT_DIRS):
 	$(call MKDIR,$@)

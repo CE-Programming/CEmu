@@ -20,7 +20,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define export __attribute__((visibility("default")))
+#ifdef CEMUCORE_STATIC
+# define export
+#else
+# ifdef _WIN32
+#  ifdef CEMUCORE_EXPORT
+#   define export __declspec(dllexport)
+#  else
+#   define export __declspec(dllimport)
+#  endif
+# else
+#  define export __attribute__((visibility("default")))
+# endif
+#endif
 
 typedef enum cemucore_sig
 {
@@ -159,10 +171,10 @@ export int cemucore_command(cemucore_t *, const char *const *);
 export bool cemucore_sleep(cemucore_t *);
 export bool cemucore_wake(cemucore_t *);
 
-#undef export
-
 #ifdef __cplusplus
 }
 #endif
+
+#undef export
 
 #endif
