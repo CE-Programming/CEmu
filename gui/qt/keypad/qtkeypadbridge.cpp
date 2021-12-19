@@ -230,6 +230,7 @@ void QtKeypadBridge::updateKeymap()
     bool is83 = false;
     switch (mDev)
     {
+        case cemucore::CEMUCORE_DEV_UNKNOWN:
         case cemucore::CEMUCORE_DEV_TI84PCE:
         case cemucore::CEMUCORE_DEV_TI84PCEPE:
         case cemucore::CEMUCORE_DEV_TI84PCET:

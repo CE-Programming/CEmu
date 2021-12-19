@@ -15,3 +15,18 @@
  */
 
 #include "scheduler.h"
+
+#include <stdlib.h>
+
+bool scheduler_init(scheduler_t *scheduler)
+{
+    (void)scheduler;
+    return true;
+}
+
+void scheduler_destroy(scheduler_t *scheduler)
+{
+    free(scheduler->clocks);
+    free(scheduler->events);
+    free(scheduler->heap);
+}

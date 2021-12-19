@@ -17,11 +17,34 @@
 #ifndef CEMUCORE_SCHEDULER_H
 #define CEMUCORE_SCHEDULER_H
 
+#include <stdbool.h>
 #include <stdint.h>
+
+typedef uint8_t scheduler_clock_t;
+typedef uint8_t scheduler_event_t;
 
 typedef struct scheduler
 {
-    uint8_t count, alloc, *heap;
+    uint64_t sources;
+    struct {
+        const char *name;
+        uint64_t frequency;
+    } *clocks;
+    struct {
+        const char *name;
+        scheduler_clock_t clock;
+        uint64_t sources;
+    } *events;
+    scheduler_event_t *heap;
+    uint8_t nclocks, nevents;
 } scheduler_t;
+
+bool scheduler_init(scheduler_t *scheduler);
+void scheduler_destroy(scheduler_t *scheduler);
+void scheduler_change_sources(scheduler_t *scheduler, uint64_t sources);
+scheduler_clock_t scheduler_register_clock(scheduler_t *scheduler, const char *name, uint64_t frequency);
+scheduler_clock_t scheduler_get_clock(scheduler_t *scheduler, const char *name);
+void scheduler_change_clock_frequency(scheduler_t *scheduler, scheduler_clock_t clock, uint64_t frequency);
+scheduler_event_t scheduler_register_event(scheduler_t *scheduler, const char *name, scheduler_clock_t clock);
 
 #endif

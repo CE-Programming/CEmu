@@ -52,14 +52,16 @@ bool sync_init(sync_t *sync)
     {
         return false;
     }
-    sync->clock = CLOCK_MONOTONIC;
-    int error = 0;
 
-#if !defined(__APPLE__)
+    int error = 0;
+#ifndef __APPLE__
+    sync->clock = CLOCK_MONOTONIC;
     error = pthread_condattr_setclock(&condattr, sync->clock);
     if (unlikely(error == EINVAL))
     {
+#endif
         sync->clock = CLOCK_REALTIME;
+#ifndef __APPLE__
         error = pthread_condattr_setclock(&condattr, sync->clock);
     }
 #endif

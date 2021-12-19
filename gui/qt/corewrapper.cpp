@@ -50,7 +50,7 @@ CoreWrapper::CoreWrapper(QObject *parent)
 
 CoreWrapper::~CoreWrapper()
 {
-    cemucore::cemucore_destroy(qExchange(mCore, nullptr));
+    mCore = cemucore::cemucore_destroy(mCore);
 }
 
 cemucore::cemucore *CoreWrapper::core()
@@ -85,14 +85,9 @@ qint32 CoreWrapper::get(cemucore::prop prop, qint32 addr) const
 
 QByteArray CoreWrapper::get(cemucore::prop prop, qint32 addr, qint32 len) const
 {
-    // FIXME: implement in core, currently not atomic!
     QByteArray data;
-    data.reserve(len);
-    auto scope = lock();
-    for (int i = 0; i < len; i += 1)
-    {
-        data += char(get(prop, addr + i));
-    }
+    data.resize(len);
+    cemucore::cemucore_get_buffer(mCore, prop, addr, data.data(), data.length());
     return data;
 }
 
@@ -103,12 +98,7 @@ void CoreWrapper::set(cemucore::prop prop, qint32 addr, qint32 val)
 
 void CoreWrapper::set(cemucore::prop prop, qint32 addr, const QByteArray &data)
 {
-    // FIXME: implement in core
-    auto scope = lock();
-    for (int i = 0; i < data.length(); i += 1)
-    {
-        set(prop, addr + i, data[i]);
-    }
+    cemucore::cemucore_set_buffer(mCore, prop, addr, data.data(), data.length());
 }
 
 int CoreWrapper::command(const QStringList &args)

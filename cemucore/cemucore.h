@@ -75,6 +75,7 @@ typedef enum cemucore_prop
 
 typedef enum cemucore_dev
 {
+    CEMUCORE_DEV_UNKNOWN,
     CEMUCORE_DEV_TI84PCE,
     CEMUCORE_DEV_TI84PCEPE,
     CEMUCORE_DEV_TI83PCE,
@@ -161,15 +162,17 @@ extern "C"
 
 typedef void (*cemucore_sig_handler_t)(cemucore_sig_t, void *);
 
-export cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_sig_handler_t, void *);
-export void cemucore_destroy(cemucore_t *);
+export cemucore_t *cemucore_create(cemucore_create_flags_t create_flags, cemucore_sig_handler_t sig_handler, void *sig_handler_data);
+export cemucore_t *cemucore_destroy(cemucore_t *core);
 
-export int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
-export void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
-export int cemucore_command(cemucore_t *, const char *const *);
+export int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr);
+export void cemucore_get_buffer(cemucore_t *core, cemucore_prop_t prop, int32_t addr, void *buf, uint32_t len);
+export void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t val);
+export void cemucore_set_buffer(cemucore_t *core, cemucore_prop_t prop, int32_t addr, const void *buf, uint32_t len);
+export int cemucore_command(cemucore_t *core, const char *const *command);
 
-export bool cemucore_sleep(cemucore_t *);
-export bool cemucore_wake(cemucore_t *);
+export bool cemucore_sleep(cemucore_t *core);
+export bool cemucore_wake(cemucore_t *core);
 
 #ifdef __cplusplus
 }

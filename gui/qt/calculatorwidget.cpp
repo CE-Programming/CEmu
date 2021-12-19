@@ -107,6 +107,7 @@ void CalculatorWidget::setDev(cemucore::dev dev)
 {
     switch (dev)
     {
+        case cemucore::CEMUCORE_DEV_UNKNOWN:
         case cemucore::CEMUCORE_DEV_TI84PCE:
         case cemucore::CEMUCORE_DEV_TI84PCEPE:
         case cemucore::CEMUCORE_DEV_TI84PCET:
@@ -120,6 +121,7 @@ void CalculatorWidget::setDev(cemucore::dev dev)
     }
     switch (dev)
     {
+        case cemucore::CEMUCORE_DEV_UNKNOWN:
         case cemucore::CEMUCORE_DEV_TI84PCE:
             mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"));
             break;

@@ -15,3 +15,16 @@
  */
 
 #include "cpu.h"
+
+#include <stdlib.h>
+
+bool cpu_init(cpu_t *cpu)
+{
+    (void)cpu;
+    return true;
+}
+
+void cpu_destroy(cpu_t *cpu)
+{
+    (void)cpu;
+}
