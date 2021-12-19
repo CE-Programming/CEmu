@@ -24,11 +24,12 @@ if (!win32-msvc*)
 DEFINES += DEBUG_SUPPORT
 
 # Dependencies
-!defined(DEPLIBS, var) : DEPLIBS = STATIC # SH
+!defined(DEPLIBS, var) : DEPLIBS = SH # STATIC
 SHLIB_DIR = shared
 STATICLIB_DIR = static
 
 QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
+cemucore.defines = CEMUCORE_$${DEPLIBS}
 cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
 cemucore.outpath = $$OUT_PWD/cemucore
 cemucore.target = $$cemucore.outpath/$$eval($${DEPLIBS}LIB_DIR)/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
@@ -43,6 +44,7 @@ cemucore.distclean.commands = $$cemucore.commands distclean
 cemucore.distclean.depends = FORCE
 DISTCLEAN_DEPS += $$cemucore.distclean.target
 PRE_TARGETDEPS += $$cemucore.target
+DEFINES += $$cemucore.defines
 INCLUDEPATH += $$cemucore.path
 LIBS += $$cemucore.target
 
