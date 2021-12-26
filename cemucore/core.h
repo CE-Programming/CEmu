@@ -53,17 +53,21 @@ struct cemucore
 };
 
 void core_sig(cemucore_t *core, cemucore_sig_t sig, bool locked);
-void *core_alloc_location(size_t type_size, size_t new_count, const char *file, int line);
+
+void *core_alloc_location(size_t type_size, size_t new_count, const char *file, int line) cemucore_alloc;
 #define core_alloc_location(new_memory, new_count, file, line) ((new_memory) = core_alloc_location(sizeof(*(new_memory)), new_count, file, line))
 #define core_alloc(new_memory, new_count) core_alloc_location(new_memory, new_count, __FILE__, __LINE__)
+
 void *core_realloc_location(size_t type_size, void *old_memory, size_t old_count, size_t new_count, const char *file, int line);
 #define core_realloc_location(old_memory, old_count, new_count, file, line) ((old_memory) = core_realloc_location(sizeof(*(old_memory)), old_memory, old_count, new_count, file, line))
 #define core_realloc(old_memory, old_count, new_count) core_realloc_location(old_memory, old_count, new_count, __FILE__, __LINE__)
+
 void *core_free_location(size_t type_size, void *old_memory, size_t old_count, const char *file, int line);
 #define core_free_location(old_memory, count, file, line) ((old_memory) = core_free_location(sizeof(*(old_memory)), old_memory, count, file, line))
 #define core_free(old_memory, count) core_free_location(old_memory, count, __FILE__, __LINE__)
+
 void core_fatal_location(const char *format, ...) cemucore_noreturn;
-#define core_fatal_location(file, line, format, ...) core_fatal_location("%s:%d: fatal: ", file, line, ## __VA_ARGS__)
-#define core_fatal(format, ...) core_fatal_location(format, __FILE__, __LINE__, ## __VA_ARGS__)
+#define core_fatal_location(file, line, format, ...) core_fatal_location("%s:%d fatal: " format "\n", file, line, ## __VA_ARGS__)
+#define core_fatal(format, ...) core_fatal_location(__FILE__, __LINE__, format, ## __VA_ARGS__)
 
 #endif

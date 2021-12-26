@@ -80,45 +80,39 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
                             cemucore_sig_handler_t sig_handler,
                             void *sig_handler_data)
 {
-    cemucore_t *core = calloc(1, sizeof(cemucore_t));
-    if (core)
+    cemucore_t *core;
+    core_alloc(core, 1);
+#ifndef CEMUCORE_NOTHREADS
+    if (!sync_init(&core->sync))
     {
-#ifndef CEMUCORE_NOTHREADS
-        if (sync_init(&core->sync))
-        {
-#endif
-            core->sig_handler = sig_handler;
-            core->sig_handler_data = sig_handler_data;
-            core->dev = CEMUCORE_DEV_UNKNOWN;
-            if (scheduler_init(&core->scheduler))
-            {
-                if (cpu_init(&core->cpu))
-                {
-                    if (memory_init(&core->memory))
-                    {
-#ifndef CEMUCORE_NOTHREADS
-                        if (!(create_flags & CEMUCORE_CREATE_FLAG_THREADED))
-                        {
-                            core->thread = pthread_self();
-                            return core;
-                        }
-                        else if (!pthread_create(&core->thread, NULL, &thread_start, core))
-                        {
-                            return core;
-                        }
-#endif
-                        memory_destroy(&core->memory);
-                    }
-                    cpu_destroy(&core->cpu);
-                }
-                scheduler_destroy(&core->scheduler);
-            }
-#ifndef CEMUCORE_NOTHREADS
-            sync_destroy(&core->sync);
-        }
-#endif
-        free(core);
+        core_free(core, 1);
+        return NULL;
     }
+#endif
+    core->sig_handler = sig_handler;
+    core->sig_handler_data = sig_handler_data;
+    core->dev = CEMUCORE_DEV_UNKNOWN;
+    scheduler_init(&core->scheduler);
+    cpu_init(&core->cpu);
+    memory_init(&core->memory);
+#ifndef CEMUCORE_NOTHREADS
+    if (!(create_flags & CEMUCORE_CREATE_FLAG_THREADED))
+    {
+        core->thread = pthread_self();
+        return core;
+    }
+    else if (!pthread_create(&core->thread, NULL, &thread_start, core))
+    {
+        return core;
+    }
+#endif
+    memory_destroy(&core->memory);
+    cpu_destroy(&core->cpu);
+    scheduler_destroy(&core->scheduler);
+#ifndef CEMUCORE_NOTHREADS
+    sync_destroy(&core->sync);
+#endif
+    core_free(core, 1);
     return NULL;
 }
 
@@ -140,7 +134,7 @@ cemucore_t *cemucore_destroy(cemucore_t *core)
 #ifndef CEMUCORE_NOTHREADS
     sync_destroy(&core->sync);
 #endif
-    free(core);
+    core_free(core, 1);
     return NULL;
 }
 
@@ -156,7 +150,7 @@ static bool cemucore_prop_needs_sync(cemucore_prop_t prop)
     }
 }
 
-static int32_t cemucore_get_unsafe(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
+static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
 {
     int32_t val = -1;
     switch (prop)
@@ -327,7 +321,7 @@ int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
     {
         sync_enter(&core->sync);
     }
-    int32_t val = cemucore_get_unsafe(core, prop, addr);
+    int32_t val = do_cemucore_get(core, prop, addr);
     if (cemucore_prop_needs_sync(prop))
     {
         sync_leave(&core->sync);
@@ -422,12 +416,12 @@ void cemucore_get_buffer(cemucore_t *core, cemucore_prop_t prop, int32_t addr, v
     }
     while (remaining--)
     {
-        *dst++ = cemucore_get_unsafe(core, prop, addr++);
+        *dst++ = do_cemucore_get(core, prop, addr++);
     }
     sync_leave(&core->sync);
 }
 
-static void cemucore_set_unsafe(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t val)
+static void do_cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t val)
 {
     switch (prop)
     {
@@ -591,7 +585,7 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
     {
         sync_enter(&core->sync);
     }
-    cemucore_set_unsafe(core, prop, addr, val);
+    do_cemucore_set(core, prop, addr, val);
     if (cemucore_prop_needs_sync(prop))
     {
         sync_leave(&core->sync);
@@ -685,7 +679,7 @@ void cemucore_set_buffer(cemucore_t *core, cemucore_prop_t prop, int32_t addr, c
     }
     while (remaining--)
     {
-        cemucore_set_unsafe(core, prop, addr++, *src++);
+        do_cemucore_set(core, prop, addr++, *src++);
     }
     sync_leave(&core->sync);
 }
@@ -991,12 +985,12 @@ void *core_realloc_location(size_t type_size, void *old_memory, size_t old_count
     if (cemucore_unlikely(cemucore_mul_overflow(type_size, old_count, &old_size) ||
                           cemucore_mul_overflow(type_size, new_count, &new_size)))
     {
-        core_fatal_location("core_realloc: size overflow", file, line);
+        core_fatal_location(file, line, "core_realloc: size overflow");
     }
     char *new_memory = realloc(old_memory, new_size);
     if (cemucore_unlikely(!new_memory))
     {
-        core_fatal_location("core_realloc: out of memory", file, line);
+        core_fatal_location(file, line, "core_realloc: out of memory");
     }
     if (new_size > old_size)
     {

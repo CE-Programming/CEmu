@@ -46,7 +46,7 @@ typedef struct scheduler
     uint8_t nclocks, nslots, nevents;
 } scheduler_t;
 
-bool scheduler_init(scheduler_t *scheduler);
+void scheduler_init(scheduler_t *scheduler);
 void scheduler_destroy(scheduler_t *scheduler);
 void scheduler_change_sources(scheduler_t *scheduler, uint64_t sources);
 scheduler_clock_t scheduler_register_clock(scheduler_t *scheduler, const char *name, uint64_t frequency);

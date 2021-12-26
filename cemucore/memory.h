@@ -34,7 +34,7 @@ typedef struct memory
 #endif
 } memory_t;
 
-bool memory_init(memory_t *memory);
+void memory_init(memory_t *memory);
 void memory_destroy(memory_t *memory);
 
 #endif

@@ -65,6 +65,11 @@
 #else
 # define cemucore_noreturn
 #endif
+#if __has_attribute(__malloc__)
+# define cemucore_alloc __attribute__((__malloc__))
+#else
+# define cemucore_alloc
+#endif
 
 #ifndef CEMUCORE_BYTE_ORDER
 # ifdef __BYTE_ORDER__

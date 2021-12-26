@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-bool memory_init(memory_t *memory)
+void memory_init(memory_t *memory)
 {
     memory->flash_size = MEMORY_DEFAULT_FLASH_SIZE;
     core_alloc(memory->flash, memory->flash_size);
@@ -29,7 +29,6 @@ bool memory_init(memory_t *memory)
 #ifndef CEMUCORE_NODEBUG
     core_alloc(memory->debug, MEMORY_SPACE_SIZE);
 #endif
-    return true;
 }
 
 void memory_destroy(memory_t *memory)

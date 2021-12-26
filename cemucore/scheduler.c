@@ -18,10 +18,9 @@
 
 #include "core.h"
 
-bool scheduler_init(scheduler_t *scheduler)
+void scheduler_init(scheduler_t *scheduler)
 {
     (void)scheduler;
-    return true;
 }
 
 void scheduler_destroy(scheduler_t *scheduler)
