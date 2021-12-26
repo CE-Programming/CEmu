@@ -32,7 +32,7 @@ FIRST_EXE     = $(or $(firstword $(shell $(WHERE_IS) $1)),$(lastword $1))
 
 CC            = $(call FIRST_EXE,$(addprefix $(CROSS_COMPILE),clang gcc cc))
 ALL_CFLAGS    = -Wall -Wextra -pedantic -D_GNU_SOURCE -fPIC
-ALL_CFLAGS   += -std=c11 -fvisibility=internal
+ALL_CFLAGS   += -std=c11 -fvisibility=internal -Wno-gnu-zero-variadic-macro-arguments
 ifneq ($(NOTHREADS),)
 ALL_CFLAGS   += -DCEMUCORE_NOTHREADS
 else

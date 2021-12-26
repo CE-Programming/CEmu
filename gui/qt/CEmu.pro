@@ -30,6 +30,7 @@ STATICLIB_DIR = static
 
 QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
 cemucore.defines = CEMUCORE_$${DEPLIBS}
+!CONFIG(debug) : cemucore.defines += CEMUCORE_NOSAFEALLOC
 cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
 cemucore.outpath = $$OUT_PWD/cemucore
 cemucore.target = $$cemucore.outpath/$$eval($${DEPLIBS}LIB_DIR)/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)

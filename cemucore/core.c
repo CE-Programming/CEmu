@@ -16,29 +16,15 @@
 
 #include "core.h"
 
+#include "compiler.h"
 #include "os.h"
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-void core_sig(cemucore_t *core, cemucore_sig_t sig, bool leave)
-{
-    if (leave)
-    {
-        sync_leave(&core->sync);
-    }
-    if (core->sig_handler)
-    {
-        core->sig_handler(sig, core->sig_handler_data);
-    }
-    if (leave)
-    {
-        sync_enter(&core->sync);
-    }
-}
 
 #ifndef CEMUCORE_NOTHREADS
 static void *thread_start(void *data)
@@ -871,4 +857,169 @@ bool cemucore_sleep(cemucore_t *core)
 bool cemucore_wake(cemucore_t *core)
 {
     return core && sync_wake(&core->sync);
+}
+
+void core_sig(cemucore_t *core, cemucore_sig_t sig, bool leave)
+{
+    if (leave)
+    {
+        sync_leave(&core->sync);
+    }
+    if (core->sig_handler)
+    {
+        core->sig_handler(sig, core->sig_handler_data);
+    }
+    if (leave)
+    {
+        sync_enter(&core->sync);
+    }
+}
+
+struct core_safe_alloc_node;
+#ifndef CEMUCORE_NOSAFEALLOC
+static struct core_safe_alloc_node {
+    struct core_safe_alloc_node *next;
+    size_t type_size;
+    void *memory;
+    size_t count;
+} *core_safe_alloc_list;
+#endif
+
+static struct core_safe_alloc_node **core_record_safe_alloc(size_t type_size, void *new_memory, size_t new_count, const char *file, int line, const char *func)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    (void)type_size;
+    (void)new_memory;
+    (void)new_count;
+    (void)func;
+    (void)file;
+    (void)line;
+    return NULL;
+#else
+    struct core_safe_alloc_node *node = malloc(sizeof(struct core_safe_alloc_node));
+    if (cemucore_unlikely(!node))
+    {
+        core_fatal_location(file, line, "%s: out of safe memory", func);
+    }
+    node->next = core_safe_alloc_list;
+    node->type_size = type_size;
+    node->memory = new_memory;
+    node->count = new_count;
+    core_safe_alloc_list = node;
+    return &core_safe_alloc_list;
+#endif
+}
+
+static struct core_safe_alloc_node **core_verify_safe_alloc(size_t type_size, void *old_memory, size_t old_count, const char *file, int line, const char *func)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    (void)type_size;
+    (void)old_memory;
+    (void)old_count;
+    (void)func;
+    (void)file;
+    (void)line;
+    return NULL;
+#else
+    struct core_safe_alloc_node *node;
+    if (cemucore_unlikely(!old_memory))
+    {
+        node = *core_record_safe_alloc(type_size, old_memory, 0, file, line, func);
+    }
+    else
+    {
+        for (node = core_safe_alloc_list; node && node->memory != old_memory; node = node->next)
+        {
+        }
+    }
+    if (cemucore_unlikely(!node))
+    {
+        core_fatal_location(file, line, "%s: invalid old memory", func);
+    }
+    if (cemucore_unlikely(node->type_size != type_size))
+    {
+        core_fatal_location(file, line, "%s: invalid type size", func);
+    }
+    if (cemucore_unlikely(node->count != old_count))
+    {
+        core_fatal_location(file, line, "%s: invalid old count", func);
+    }
+    return &core_safe_alloc_list;
+#endif
+}
+
+static void core_update_safe_alloc(struct core_safe_alloc_node **node_update, void *new_memory, size_t new_count)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    (void)node_update;
+    (void)new_memory;
+    (void)new_count;
+#else
+    struct core_safe_alloc_node *node = *node_update;
+    node->memory = new_memory;
+    node->count = new_count;
+#endif
+}
+
+static void core_remove_safe_alloc(struct core_safe_alloc_node **node_update)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    (void)node_update;
+#else
+    struct core_safe_alloc_node *node = *node_update;
+    *node_update = node->next;
+    free(node);
+#endif
+}
+
+#undef core_alloc_location
+void *core_alloc_location(size_t type_size, size_t new_count, const char *file, int line)
+{
+    void *new_memory = calloc(new_count ? new_count : 1, type_size ? type_size : 1);
+    if (cemucore_unlikely(!new_memory))
+    {
+        core_fatal_location(file, line, "core_alloc: out of memory");
+    }
+    core_record_safe_alloc(type_size, new_memory, new_count, file, line, "core_alloc");
+    return new_memory;
+}
+
+#undef core_realloc_location
+void *core_realloc_location(size_t type_size, void *old_memory, size_t old_count, size_t new_count, const char *file, int line)
+{
+    size_t old_size, new_size;
+    if (cemucore_unlikely(cemucore_mul_overflow(type_size, old_count, &old_size) ||
+                          cemucore_mul_overflow(type_size, new_count, &new_size)))
+    {
+        core_fatal_location("core_realloc: size overflow", file, line);
+    }
+    char *new_memory = realloc(old_memory, new_size);
+    if (cemucore_unlikely(!new_memory))
+    {
+        core_fatal_location("core_realloc: out of memory", file, line);
+    }
+    if (new_size > old_size)
+    {
+        memset((char *)new_memory + old_size, 0, new_size - old_size);
+    }
+    core_update_safe_alloc(core_verify_safe_alloc(type_size, old_memory, old_count, file, line, "core_realloc"), new_memory, new_count);
+    return new_memory;
+}
+
+#undef core_free_location
+void *core_free_location(size_t type_size, void *old_memory, size_t old_count, const char *file, int line)
+{
+    core_remove_safe_alloc(core_verify_safe_alloc(type_size, old_memory, old_count, file, line, "core_free"));
+    free(old_memory);
+    return NULL;
+}
+
+#undef core_fatal_location
+void core_fatal_location(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    abort();
 }

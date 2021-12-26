@@ -20,23 +20,30 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef uint8_t scheduler_clock_t;
-typedef uint8_t scheduler_event_t;
+typedef struct { uint8_t handle; } scheduler_clock_t;
+typedef struct { uint8_t handle; } scheduler_slot_t;
+typedef struct { uint8_t handle; } scheduler_event_t;
 
 typedef struct scheduler
 {
-    uint64_t sources;
-    struct {
+    uint64_t slots_available, slots_enabled;
+    struct scheduler_clock
+    {
         const char *name;
         uint64_t frequency;
     } *clocks;
-    struct {
+    struct scheduler_slot
+    {
         const char *name;
+    } *slots;
+    struct scheduler_event
+    {
+        const char *name;
+        uint64_t slots;
         scheduler_clock_t clock;
-        uint64_t sources;
     } *events;
     scheduler_event_t *heap;
-    uint8_t nclocks, nevents;
+    uint8_t nclocks, nslots, nevents;
 } scheduler_t;
 
 bool scheduler_init(scheduler_t *scheduler);
@@ -44,6 +51,7 @@ void scheduler_destroy(scheduler_t *scheduler);
 void scheduler_change_sources(scheduler_t *scheduler, uint64_t sources);
 scheduler_clock_t scheduler_register_clock(scheduler_t *scheduler, const char *name, uint64_t frequency);
 scheduler_clock_t scheduler_get_clock(scheduler_t *scheduler, const char *name);
+scheduler_slot_t scheduler_register_slot(scheduler_t *scheduler, const char *name, int8_t index);
 void scheduler_change_clock_frequency(scheduler_t *scheduler, scheduler_clock_t clock, uint64_t frequency);
 scheduler_event_t scheduler_register_event(scheduler_t *scheduler, const char *name, scheduler_clock_t clock);
 

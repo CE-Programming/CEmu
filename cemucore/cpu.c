@@ -16,7 +16,7 @@
 
 #include "cpu.h"
 
-#include <stdlib.h>
+#include "core.h"
 
 bool cpu_init(cpu_t *cpu)
 {

@@ -16,7 +16,7 @@
 
 #include "scheduler.h"
 
-#include <stdlib.h>
+#include "core.h"
 
 bool scheduler_init(scheduler_t *scheduler)
 {
@@ -26,7 +26,25 @@ bool scheduler_init(scheduler_t *scheduler)
 
 void scheduler_destroy(scheduler_t *scheduler)
 {
-    free(scheduler->clocks);
-    free(scheduler->events);
-    free(scheduler->heap);
+    core_free(scheduler->heap, scheduler->nevents);
+    core_free(scheduler->events, scheduler->nevents);
+    scheduler->nevents = 0;
+    core_free(scheduler->slots, scheduler->nslots);
+    scheduler->nslots = 0;
+    core_free(scheduler->clocks, scheduler->nclocks);
+    scheduler->nclocks = 0;
+}
+
+scheduler_event_t scheduler_register_event(scheduler_t *scheduler, const char *name, scheduler_clock_t clock)
+{
+    if (scheduler->nevents == 0xFF)
+    {
+        core_fatal("too many events");
+    }
+    scheduler_event_t event = {.handle = scheduler->nevents};
+    scheduler->nevents += 1;
+    core_realloc(scheduler->events, event.handle, scheduler->nevents);
+    scheduler->events[event.handle].name = name;
+    scheduler->events[event.handle].clock = clock;
+    return event;
 }

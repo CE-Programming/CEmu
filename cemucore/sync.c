@@ -25,15 +25,15 @@ enum { NSEC_PER_SEC = 1000000000 };
 void timespec_add(struct timespec *res, const struct timespec *lhs, const struct timespec *rhs)
 {
     uint32_t nsec = lhs->tv_nsec + rhs->tv_nsec, norm;
-    bool overflow = add_overflow(nsec, (uint32_t)-NSEC_PER_SEC, &norm);
-    res->tv_nsec = unpredictable(overflow) ? norm : nsec;
+    bool overflow = cemucore_add_overflow(nsec, (uint32_t)-NSEC_PER_SEC, &norm);
+    res->tv_nsec = cemucore_unpredictable(overflow) ? norm : nsec;
     res->tv_sec = lhs->tv_sec + rhs->tv_sec + overflow;
 }
 void timespec_sub(struct timespec *res, const struct timespec *lhs, const struct timespec *rhs)
 {
     uint32_t nsec = lhs->tv_nsec - rhs->tv_nsec, norm;
-    bool overflow = add_overflow(nsec, (uint32_t)+NSEC_PER_SEC, &norm);
-    res->tv_nsec = unpredictable(overflow) ? norm : nsec;
+    bool overflow = cemucore_add_overflow(nsec, (uint32_t)+NSEC_PER_SEC, &norm);
+    res->tv_nsec = cemucore_unpredictable(overflow) ? norm : nsec;
     res->tv_sec = lhs->tv_sec - rhs->tv_sec - overflow;
 }
 
@@ -48,7 +48,7 @@ typedef enum sync_state
 bool sync_init(sync_t *sync)
 {
     pthread_condattr_t condattr;
-    if (unlikely(pthread_condattr_init(&condattr)))
+    if (cemucore_unlikely(pthread_condattr_init(&condattr)))
     {
         return false;
     }
@@ -57,7 +57,7 @@ bool sync_init(sync_t *sync)
 #ifndef __APPLE__
     sync->clock = CLOCK_MONOTONIC;
     error = pthread_condattr_setclock(&condattr, sync->clock);
-    if (unlikely(error == EINVAL))
+    if (cemucore_unlikely(error == EINVAL))
     {
 #endif
         sync->clock = CLOCK_REALTIME;
@@ -66,14 +66,14 @@ bool sync_init(sync_t *sync)
     }
 #endif
 
-    if (unlikely(error || pthread_mutex_init(&sync->mutex, NULL)))
+    if (cemucore_unlikely(error || pthread_mutex_init(&sync->mutex, NULL)))
     {
         (void)pthread_condattr_destroy(&condattr);
         return false;
     }
     for (int i = 0; i != SYNC_COND_COUNT; ++i)
     {
-        if (unlikely(pthread_cond_init(&sync->cond[i], &condattr)))
+        if (cemucore_unlikely(pthread_cond_init(&sync->cond[i], &condattr)))
         {
             while (i)
             {
@@ -84,7 +84,7 @@ bool sync_init(sync_t *sync)
             return false;
         }
     }
-    if (unlikely(pthread_condattr_destroy(&condattr)))
+    if (cemucore_unlikely(pthread_condattr_destroy(&condattr)))
     {
         sync_destroy(sync);
         return false;
@@ -97,12 +97,12 @@ void sync_destroy(sync_t *sync)
 {
     for (int i = SYNC_COND_COUNT; i; )
     {
-        if (unlikely(pthread_cond_destroy(&sync->cond[--i])))
+        if (cemucore_unlikely(pthread_cond_destroy(&sync->cond[--i])))
         {
             abort();
         }
     }
-    if (unlikely(pthread_mutex_destroy(&sync->mutex)))
+    if (cemucore_unlikely(pthread_mutex_destroy(&sync->mutex)))
     {
         abort();
     }
@@ -110,7 +110,7 @@ void sync_destroy(sync_t *sync)
 
 void sync_lock(sync_t *sync)
 {
-    if (unlikely(pthread_mutex_lock(&sync->mutex)))
+    if (cemucore_unlikely(pthread_mutex_lock(&sync->mutex)))
     {
         abort();
     }
@@ -118,7 +118,7 @@ void sync_lock(sync_t *sync)
 
 void sync_unlock(sync_t *sync)
 {
-    if (unlikely(pthread_mutex_unlock(&sync->mutex)))
+    if (cemucore_unlikely(pthread_mutex_unlock(&sync->mutex)))
     {
         abort();
     }
@@ -129,7 +129,7 @@ static bool sync_leave_mask(sync_t *sync, uint32_t mask)
     bool stopping = atomic_fetch_and_explicit(&sync->state, ~mask,
                                               memory_order_relaxed) & SYNC_STATE_STOPPING;
     sync_unlock(sync);
-    if (unlikely(pthread_cond_broadcast(&sync->cond[SYNC_COND_WAIT_RUN])))
+    if (cemucore_unlikely(pthread_cond_broadcast(&sync->cond[SYNC_COND_WAIT_RUN])))
     {
         abort();
     }
@@ -138,17 +138,17 @@ static bool sync_leave_mask(sync_t *sync, uint32_t mask)
 
 bool sync_loop(sync_t *sync)
 {
-    if (likely(!(atomic_load_explicit(&sync->state, memory_order_relaxed) / SYNC_STATE_COUNTER)))
+    if (cemucore_likely(!(atomic_load_explicit(&sync->state, memory_order_relaxed) / SYNC_STATE_COUNTER)))
     {
         return true;
     }
     sync_lock(sync);
     uint32_t state = atomic_fetch_or_explicit(&sync->state, SYNC_STATE_SYNCED,
                                               memory_order_relaxed);
-    while (unlikely(state / SYNC_STATE_COUNTER && !(state & SYNC_STATE_STOPPING)))
+    while (cemucore_unlikely(state / SYNC_STATE_COUNTER && !(state & SYNC_STATE_STOPPING)))
     {
-        if (unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_WAIT_SYNCED]) ||
-                     pthread_cond_wait(&sync->cond[SYNC_COND_SYNCED], &sync->mutex)))
+        if (cemucore_unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_WAIT_SYNCED]) ||
+                              pthread_cond_wait(&sync->cond[SYNC_COND_SYNCED], &sync->mutex)))
         {
             abort();
         }
@@ -160,7 +160,7 @@ bool sync_loop(sync_t *sync)
 bool sync_delay(sync_t *sync, const struct timespec *delay)
 {
     struct timespec abstime;
-    if (unlikely(clock_gettime(sync->clock, &abstime)))
+    if (cemucore_unlikely(clock_gettime(sync->clock, &abstime)))
     {
         abort();
     }
@@ -169,13 +169,13 @@ bool sync_delay(sync_t *sync, const struct timespec *delay)
     bool timedout = false,
         stopping = atomic_fetch_or_explicit(&sync->state, SYNC_STATE_SYNCED,
                                             memory_order_relaxed) & SYNC_STATE_STOPPING;
-    while (unlikely(!timedout && !stopping))
+    while (cemucore_unlikely(!timedout && !stopping))
     {
         int status;
-        if (unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_WAIT_SYNCED]) ||
-                     (((timedout = status = pthread_cond_timedwait(&sync->cond[SYNC_COND_SYNCED],
-                                                                   &sync->mutex, &abstime))) &&
-                      status != ETIMEDOUT)))
+        if (cemucore_unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_WAIT_SYNCED]) ||
+                              (((timedout = status = pthread_cond_timedwait(&sync->cond[SYNC_COND_SYNCED],
+                                                                            &sync->mutex, &abstime))) &&
+                               status != ETIMEDOUT)))
         {
             abort();
         }
@@ -187,9 +187,9 @@ bool sync_delay(sync_t *sync, const struct timespec *delay)
 static uint32_t sync_inc(sync_t *sync)
 {
     uint32_t state;
-    if (unlikely(add_overflow(atomic_fetch_add_explicit(&sync->state, SYNC_STATE_COUNTER,
-                                                        memory_order_relaxed),
-                              (uint32_t)SYNC_STATE_COUNTER, &state)))
+    if (cemucore_unlikely(cemucore_add_overflow(atomic_fetch_add_explicit(&sync->state, SYNC_STATE_COUNTER,
+                                                                          memory_order_relaxed),
+                                                (uint32_t)SYNC_STATE_COUNTER, &state)))
     {
         abort();
     }
@@ -199,18 +199,18 @@ static uint32_t sync_inc(sync_t *sync)
 static uint32_t sync_dec(sync_t *sync, bool unlock)
 {
     uint32_t state;
-    if (unlikely(sub_overflow(atomic_fetch_sub_explicit(&sync->state, SYNC_STATE_COUNTER,
-                                                        memory_order_relaxed),
-                              (uint32_t)SYNC_STATE_COUNTER, &state)))
+    if (cemucore_unlikely(cemucore_sub_overflow(atomic_fetch_sub_explicit(&sync->state, SYNC_STATE_COUNTER,
+                                                                          memory_order_relaxed),
+                                                (uint32_t)SYNC_STATE_COUNTER, &state)))
     {
         abort();
     }
-    if (likely(unlock))
+    if (cemucore_likely(unlock))
     {
         sync_unlock(sync);
     }
-    if (unlikely(pthread_cond_signal(&sync->cond[state / SYNC_STATE_COUNTER ? SYNC_COND_WAIT_SYNCED
-                                                                            : SYNC_COND_SYNCED])))
+    if (cemucore_unlikely(pthread_cond_signal(&sync->cond[state / SYNC_STATE_COUNTER ? SYNC_COND_WAIT_SYNCED
+                                                                                     : SYNC_COND_SYNCED])))
     {
         abort();
     }
@@ -220,9 +220,9 @@ static uint32_t sync_dec(sync_t *sync, bool unlock)
 static uint32_t sync_wait_synced(sync_t *sync)
 {
     uint32_t state = sync_inc(sync);
-    while (unlikely(!(state & SYNC_STATE_SYNCED)))
+    while (cemucore_unlikely(!(state & SYNC_STATE_SYNCED)))
     {
-        if (unlikely(pthread_cond_wait(&sync->cond[SYNC_COND_WAIT_SYNCED], &sync->mutex)))
+        if (cemucore_unlikely(pthread_cond_wait(&sync->cond[SYNC_COND_WAIT_SYNCED], &sync->mutex)))
         {
             abort();
         }
@@ -234,9 +234,9 @@ static uint32_t sync_wait_synced(sync_t *sync)
 static uint32_t sync_wait_run(sync_t *sync)
 {
     uint32_t state = sync_dec(sync, false);
-    while (unlikely(state / SYNC_STATE_COUNTER || state & SYNC_STATE_SYNCED))
+    while (cemucore_unlikely(state / SYNC_STATE_COUNTER || state & SYNC_STATE_SYNCED))
     {
-        if (unlikely(pthread_cond_wait(&sync->cond[SYNC_COND_WAIT_RUN], &sync->mutex)))
+        if (cemucore_unlikely(pthread_cond_wait(&sync->cond[SYNC_COND_WAIT_RUN], &sync->mutex)))
         {
             abort();
         }
@@ -248,7 +248,7 @@ static uint32_t sync_wait_run(sync_t *sync)
 static uint32_t sync_sleep_mask(sync_t *sync, uint32_t mask)
 {
     uint32_t state = atomic_fetch_and_explicit(&sync->state, ~mask, memory_order_relaxed);
-    if (likely(state & SYNC_STATE_RUNNING))
+    if (cemucore_likely(state & SYNC_STATE_RUNNING))
     {
         (void)sync_inc(sync);
     }
@@ -258,7 +258,7 @@ static uint32_t sync_sleep_mask(sync_t *sync, uint32_t mask)
 static uint32_t sync_wake_mask(sync_t *sync, uint32_t mask)
 {
     uint32_t state = atomic_fetch_or_explicit(&sync->state, mask, memory_order_relaxed);
-    if (likely(!(state & SYNC_STATE_RUNNING)))
+    if (cemucore_likely(!(state & SYNC_STATE_RUNNING)))
     {
         (void)sync_dec(sync, false);
     }
@@ -304,8 +304,8 @@ void sync_stop(sync_t *sync)
     sync_wake_mask(sync, SYNC_STATE_RUNNING | SYNC_STATE_STOPPING);
     do
     {
-        if (unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_SYNCED]) ||
-                     pthread_cond_wait(&sync->cond[SYNC_COND_WAIT_RUN], &sync->mutex)))
+        if (cemucore_unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_SYNCED]) ||
+                              pthread_cond_wait(&sync->cond[SYNC_COND_WAIT_RUN], &sync->mutex)))
         {
             abort();
         }

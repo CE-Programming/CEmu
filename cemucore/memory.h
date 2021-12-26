@@ -23,6 +23,7 @@
 #define MEMORY_DEFAULT_FLASH_SIZE  0x400000
 #define MEMORY_MAX_FLASH_SIZE     0x1000000
 #define MEMORY_RAM_SIZE             0x65800
+#define MEMORY_SPACE_SIZE         0x1000000
 
 typedef struct memory
 {

@@ -21,32 +21,49 @@
 # define __has_builtin(x) 0
 #endif
 
+#ifndef __has_attribute
+# define __has_attribute(x) 0
+#endif
+
 #if __has_builtin(__builtin_expect)
-# define unlikely(x) __builtin_expect(x, 0)
-# define   likely(x) (!unlikely(!(x)))
+# define cemucore_unlikely(x) (__builtin_expect(x, 0))
+# define cemucore_likely(x) (!cemucore_unlikely(!(x)))
 #else
-# define unlikely(x) (x)
-# define   likely(x) (x)
+# define cemucore_unlikely
+# define cemucore_likely
 #endif
 #if __has_builtin(__builtin_unpredictable)
-# define unpredictable __builtin_unpredictable
+# define cemucore_unpredictable __builtin_unpredictable
 #else
-# define unpredictable
+# define cemucore_unpredictable
 #endif
 
 #if __has_builtin(__builtin_add_overflow)
-#define add_overflow __builtin_add_overflow
+# define cemucore_add_overflow __builtin_add_overflow
 #else
-#define add_overflow(lhs, rhs, res)                     \
-    (*(res) = (uintmax_t)(lhs) + (uintmax_t)(rhs),      \
+# define cemucore_add_overflow(lhs, rhs, res)           \
+    (*(res) = ((typeof(*(res))))(lhs) + (rhs),          \
      (rhs) < 0 ? *(res) > (lhs) : *(res) < (lhs))
 #endif
 #if __has_builtin(__builtin_sub_overflow)
-#define sub_overflow __builtin_sub_overflow
+# define cemucore_sub_overflow __builtin_sub_overflow
 #else
-#define sub_overflow(lhs, rhs, res)                     \
-    (*(res) = (uintmax_t)(lhs) - (uintmax_t)(rhs),      \
+# define cemucore_sub_overflow(lhs, rhs, res)           \
+    (*(res) = (typeof(*(res)))(lhs) - (rhs),            \
      (rhs) < 0 ? *(res) < (lhs) : *(res) > (lhs))
+#endif
+#if __has_builtin(__builtin_mul_overflow)
+# define cemucore_mul_overflow __builtin_mul_overflow
+#else
+# define cemucore_mul_overflow(lhs, rhs, res)          \
+    (*(res) = (typeof(*(res)))(lhs) * (rhs),           \
+
+#endif
+
+#if __has_attribute(__noreturn__)
+# define cemucore_noreturn __attribute__((__noreturn__))
+#else
+# define cemucore_noreturn
 #endif
 
 #ifndef CEMUCORE_BYTE_ORDER

@@ -16,37 +16,27 @@
 
 #include "memory.h"
 
-#include <stdlib.h>
+#include "core.h"
+
 #include <string.h>
 
 bool memory_init(memory_t *memory)
 {
     memory->flash_size = MEMORY_DEFAULT_FLASH_SIZE;
-    if (memory && (memory->flash = malloc(memory->flash_size)))
-    {
-        memset(memory->flash, 0xFF, memory->flash_size);
-        if ((memory->ram = calloc(MEMORY_RAM_SIZE, sizeof(uint8_t))))
-        {
-#ifdef CEMUCORE_NODEBUG
-            return true;
-#else
-            if ((memory->debug = calloc(0x1000000, sizeof(uint8_t))))
-            {
-                return true;
-            }
-            free(memory->ram);
+    core_alloc(memory->flash, memory->flash_size);
+    memset(memory->flash, 0xFF, memory->flash_size);
+    core_alloc(memory->ram, MEMORY_RAM_SIZE);
+#ifndef CEMUCORE_NODEBUG
+    core_alloc(memory->debug, MEMORY_SPACE_SIZE);
 #endif
-        }
-        free(memory->flash);
-    }
-    return false;
+    return true;
 }
 
 void memory_destroy(memory_t *memory)
 {
 #ifndef CEMUCORE_NODEBUG
-    free(memory->debug);
+    core_free(memory->debug, MEMORY_SPACE_SIZE);
 #endif
-    free(memory->ram);
-    free(memory->flash);
+    core_free(memory->ram, MEMORY_RAM_SIZE);
+    core_free(memory->flash, memory->flash_size);
 }
