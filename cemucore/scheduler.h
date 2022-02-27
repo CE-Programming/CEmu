@@ -29,16 +29,16 @@ typedef struct scheduler
     uint64_t slots_available, slots_enabled;
     struct scheduler_clock
     {
-        const char *name;
+        char *name;
         uint64_t frequency;
     } *clocks;
     struct scheduler_slot
     {
-        const char *name;
+        char *name;
     } *slots;
     struct scheduler_event
     {
-        const char *name;
+        char *name;
         uint64_t slots;
         scheduler_clock_t clock;
     } *events;
@@ -51,7 +51,7 @@ void scheduler_destroy(scheduler_t *scheduler);
 void scheduler_change_sources(scheduler_t *scheduler, uint64_t sources);
 scheduler_clock_t scheduler_register_clock(scheduler_t *scheduler, const char *name, uint64_t frequency);
 scheduler_clock_t scheduler_get_clock(scheduler_t *scheduler, const char *name);
-scheduler_slot_t scheduler_register_slot(scheduler_t *scheduler, const char *name, int8_t index);
+scheduler_slot_t scheduler_register_slot(scheduler_t *scheduler, const char *name, uint8_t index);
 void scheduler_change_clock_frequency(scheduler_t *scheduler, scheduler_clock_t clock, uint64_t frequency);
 scheduler_event_t scheduler_register_event(scheduler_t *scheduler, const char *name, scheduler_clock_t clock);
 

@@ -47,9 +47,7 @@ typedef enum cemucore_sig
 
 typedef enum cemucore_create_flags
 {
-#ifndef CEMUCORE_NOTHREADS
     CEMUCORE_CREATE_FLAG_THREADED = 1 << 0,
-#endif
 } cemucore_create_flags_t;
 
 typedef enum cemucore_prop

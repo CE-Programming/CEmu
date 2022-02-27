@@ -26,6 +26,155 @@
 #include <string.h>
 #include <time.h>
 
+struct core_safe_alloc_node;
+#ifndef CEMUCORE_NOSAFEALLOC
+cemucore_maybe_mutex core_safe_alloc_mutex = CEMUCORE_MAYBE_MUTEX_INITIALIZER;
+CEMUCORE_MAYBE_ATOMIC(size_t) core_safe_alloc_count;
+static struct core_safe_alloc_node {
+    struct core_safe_alloc_node *next;
+    size_t type_size;
+    void *memory;
+    size_t count;
+    const char *file;
+    int line;
+} *core_safe_alloc_list;
+#endif
+
+static void core_lock_safe_alloc(void)
+{
+#ifndef CEMUCORE_NOSAFEALLOC
+    cemucore_maybe_mutex_lock(&core_safe_alloc_mutex);
+#endif
+}
+
+static void core_unlock_safe_alloc(void)
+{
+#ifndef CEMUCORE_NOSAFEALLOC
+    cemucore_maybe_mutex_unlock(&core_safe_alloc_mutex);
+#endif
+}
+
+static struct core_safe_alloc_node **core_record_safe_alloc(size_t type_size, void *new_memory, size_t new_count, const char *file, int line, const char *func)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    cemucore_unused(type_size);
+    cemucore_unused(new_memory);
+    cemucore_unused(new_count);
+    cemucore_unused(func);
+    cemucore_unused(file);
+    cemucore_unused(line);
+    return NULL;
+#else
+    struct core_safe_alloc_node *node = malloc(sizeof(struct core_safe_alloc_node));
+    if (cemucore_unlikely(!node))
+    {
+        core_fatal_location(file, line, "%s: out of safe memory", func);
+    }
+    node->next = core_safe_alloc_list;
+    node->type_size = type_size;
+    node->memory = new_memory;
+    node->count = new_count;
+    node->file = file;
+    node->line = line;
+    core_safe_alloc_list = node;
+    return &core_safe_alloc_list;
+#endif
+}
+
+static struct core_safe_alloc_node **core_verify_safe_alloc(size_t type_size, void *old_memory, size_t old_count, const char *file, int line, const char *func)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    cemucore_unused(type_size);
+    cemucore_unused(old_memory);
+    cemucore_unused(old_count);
+    cemucore_unused(func);
+    cemucore_unused(file);
+    cemucore_unused(line);
+    return NULL;
+#else
+    struct core_safe_alloc_node **node_update, *node;
+    if (cemucore_unlikely(!old_memory))
+    {
+        node_update = core_record_safe_alloc(type_size, old_memory, 0, file, line, func);
+        node = *node_update;
+    }
+    else
+    {
+        for (node_update = &core_safe_alloc_list; (node = *node_update) && node->memory != old_memory; node_update = &node->next)
+        {
+        }
+    }
+    if (cemucore_unlikely(!node))
+    {
+        core_fatal_location(file, line, "%s: invalid old memory", func);
+    }
+    if (cemucore_unlikely(node->type_size != type_size))
+    {
+        core_fatal_location(file, line, "%s: invalid type size", func);
+    }
+    if (cemucore_unlikely(node->count != old_count))
+    {
+        core_fatal_location(file, line, "%s: invalid old count", func);
+    }
+    return node_update;
+#endif
+}
+
+static void core_update_safe_alloc(struct core_safe_alloc_node **node_update, void *new_memory, size_t new_count, const char *new_file, int new_line)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    cemucore_unused(node_update);
+    cemucore_unused(new_memory);
+    cemucore_unused(new_count);
+#else
+    struct core_safe_alloc_node *node = *node_update;
+    node->memory = new_memory;
+    node->count = new_count;
+    node->file = new_file;
+    node->line = new_line;
+#endif
+}
+
+static void core_remove_safe_alloc(struct core_safe_alloc_node **node_update)
+{
+#ifdef CEMUCORE_NOSAFEALLOC
+    cemucore_unused(node_update);
+#else
+    struct core_safe_alloc_node *node = *node_update;
+    *node_update = node->next;
+    free(node);
+#endif
+}
+
+static void core_done_safe_alloc(void)
+{
+#ifndef CEMUCORE_NOSAFEALLOC
+    size_t count = cemucore_maybe_atomic_fetch_sub_explicit(&core_safe_alloc_count, 1, memory_order_relaxed);
+    if (cemucore_unlikely(count == 0))
+    {
+        core_fatal("too many cores destroyed");
+    }
+    if (cemucore_likely(count != 1))
+    {
+        return;
+    }
+    core_lock_safe_alloc();
+    if (cemucore_maybe_atomic_load_explicit(&core_safe_alloc_count, memory_order_relaxed) == 0)
+    {
+        struct core_safe_alloc_node *node = core_safe_alloc_list;
+        if (node)
+        {
+            for (; node; node = node->next)
+            {
+                fprintf(stderr, "%s:%d leak: allocation %p of %zu %zu-byte sized object%s was never freed\n", node->file, node->line, node->memory, node->count, node->type_size, node->count == 1 ? "" : "s");
+            }
+            core_fatal("leaks detected");
+        }
+    }
+    core_unlock_safe_alloc();
+#endif
+}
+
 #ifndef CEMUCORE_NOTHREADS
 static void *thread_start(void *data)
 {
@@ -41,8 +190,8 @@ static void *thread_start(void *data)
     while (sync_loop(&core->sync))
     {
         {
-            uint16_t events = atomic_exchange_explicit(&core->keypad.events[debug_keypad_row], 0,
-                                                       memory_order_acquire);
+            uint16_t events = cemucore_maybe_atomic_exchange_explicit(&core->keypad.events[debug_keypad_row], 0,
+                                                                      memory_order_relaxed);
             for (int press = 0; press <= 8; press += 8)
             {
                 for (int col = 0; col != 8; ++col)
@@ -60,7 +209,7 @@ static void *thread_start(void *data)
         if (!(rand() & 7))
         {
             core_sig(core, CEMUCORE_SIG_SOFT_CMD, false);
-            sync_sleep(&core->sync); // wait for response
+            cemucore_unused(sync_sleep(&core->sync)); // wait for response
         }
         core->cpu.regs.r += 2;
         {
@@ -81,39 +230,44 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
                             void *sig_handler_data)
 {
     cemucore_t *core;
+#ifndef CEMUCORE_NOSAFEALLOC
+    cemucore_unused(cemucore_maybe_atomic_fetch_add_explicit(&core_safe_alloc_count, 1, memory_order_relaxed));
+#endif
     core_alloc(core, 1);
-#ifndef CEMUCORE_NOTHREADS
     if (!sync_init(&core->sync))
     {
         core_free(core, 1);
+        core_done_safe_alloc();
         return NULL;
     }
-#endif
     core->sig_handler = sig_handler;
     core->sig_handler_data = sig_handler_data;
     core->dev = CEMUCORE_DEV_UNKNOWN;
     scheduler_init(&core->scheduler);
     cpu_init(&core->cpu);
     memory_init(&core->memory);
-#ifndef CEMUCORE_NOTHREADS
     if (!(create_flags & CEMUCORE_CREATE_FLAG_THREADED))
     {
+#ifndef CEMUCORE_NOTHREADS
         core->thread = pthread_self();
+#endif
         return core;
     }
-    else if (!pthread_create(&core->thread, NULL, &thread_start, core))
+#ifndef CEMUCORE_NOTHREADS
+    if (!pthread_create(&core->thread, NULL, &thread_start, core))
     {
         return core;
     }
-#endif
     memory_destroy(&core->memory);
     cpu_destroy(&core->cpu);
     scheduler_destroy(&core->scheduler);
-#ifndef CEMUCORE_NOTHREADS
     sync_destroy(&core->sync);
-#endif
     core_free(core, 1);
+    core_done_safe_alloc();
     return NULL;
+#else
+    core_fatal("cemucore_create: CEMUCORE_CREATE_FLAG_THREADED requested but cemucore was not compiled with threading support");
+#endif
 }
 
 cemucore_t *cemucore_destroy(cemucore_t *core)
@@ -131,10 +285,9 @@ cemucore_t *cemucore_destroy(cemucore_t *core)
     memory_destroy(&core->memory);
     cpu_destroy(&core->cpu);
     scheduler_destroy(&core->scheduler);
-#ifndef CEMUCORE_NOTHREADS
     sync_destroy(&core->sync);
-#endif
     core_free(core, 1);
+    core_done_safe_alloc();
     return NULL;
 }
 
@@ -156,15 +309,15 @@ static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t a
     switch (prop)
     {
         case CEMUCORE_PROP_KEY:
-            (void)cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
-                                                          UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
-                                                          memory_order_release);
+            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
+                                                                    UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
+                                                                    memory_order_relaxed));
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_GPIO_ENABLE:
-            (void)cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
-                                                          UINT32_C(1) << (addr & 15),
-                                                          memory_order_release);
+            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
+                                                                    UINT32_C(1) << (addr & 15),
+                                                                    memory_order_relaxed));
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_DEV:
@@ -426,15 +579,15 @@ static void do_cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr
     switch (prop)
     {
         case CEMUCORE_PROP_KEY:
-            (void)cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
-                                                          UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
-                                                          memory_order_release);
+            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
+                                                                    UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
+                                                                    memory_order_relaxed));
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_GPIO_ENABLE:
-            (void)cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
-                                                          UINT32_C(1) << (addr & 15),
-                                                          memory_order_release);
+            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
+                                                                    UINT32_C(1) << (addr & 15),
+                                                                    memory_order_relaxed));
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_DEV:
@@ -869,101 +1022,18 @@ void core_sig(cemucore_t *core, cemucore_sig_t sig, bool leave)
     }
 }
 
-struct core_safe_alloc_node;
-#ifndef CEMUCORE_NOSAFEALLOC
-static struct core_safe_alloc_node {
-    struct core_safe_alloc_node *next;
-    size_t type_size;
-    void *memory;
-    size_t count;
-} *core_safe_alloc_list;
-#endif
-
-static struct core_safe_alloc_node **core_record_safe_alloc(size_t type_size, void *new_memory, size_t new_count, const char *file, int line, const char *func)
+char *core_duplicate_string_location(const char *old_string, const char *file, int line)
 {
-#ifdef CEMUCORE_NOSAFEALLOC
-    (void)type_size;
-    (void)new_memory;
-    (void)new_count;
-    (void)func;
-    (void)file;
-    (void)line;
-    return NULL;
-#else
-    struct core_safe_alloc_node *node = malloc(sizeof(struct core_safe_alloc_node));
-    if (cemucore_unlikely(!node))
-    {
-        core_fatal_location(file, line, "%s: out of safe memory", func);
-    }
-    node->next = core_safe_alloc_list;
-    node->type_size = type_size;
-    node->memory = new_memory;
-    node->count = new_count;
-    core_safe_alloc_list = node;
-    return &core_safe_alloc_list;
-#endif
+    char *new_string;
+    size_t length = strlen(old_string);
+    core_alloc_location(new_string, length + 1, file, line);
+    memcpy(new_string, old_string, length);
+    return new_string;
 }
 
-static struct core_safe_alloc_node **core_verify_safe_alloc(size_t type_size, void *old_memory, size_t old_count, const char *file, int line, const char *func)
+char *core_free_string_location(char *old_string, const char *file, int line)
 {
-#ifdef CEMUCORE_NOSAFEALLOC
-    (void)type_size;
-    (void)old_memory;
-    (void)old_count;
-    (void)func;
-    (void)file;
-    (void)line;
-    return NULL;
-#else
-    struct core_safe_alloc_node *node;
-    if (cemucore_unlikely(!old_memory))
-    {
-        node = *core_record_safe_alloc(type_size, old_memory, 0, file, line, func);
-    }
-    else
-    {
-        for (node = core_safe_alloc_list; node && node->memory != old_memory; node = node->next)
-        {
-        }
-    }
-    if (cemucore_unlikely(!node))
-    {
-        core_fatal_location(file, line, "%s: invalid old memory", func);
-    }
-    if (cemucore_unlikely(node->type_size != type_size))
-    {
-        core_fatal_location(file, line, "%s: invalid type size", func);
-    }
-    if (cemucore_unlikely(node->count != old_count))
-    {
-        core_fatal_location(file, line, "%s: invalid old count", func);
-    }
-    return &core_safe_alloc_list;
-#endif
-}
-
-static void core_update_safe_alloc(struct core_safe_alloc_node **node_update, void *new_memory, size_t new_count)
-{
-#ifdef CEMUCORE_NOSAFEALLOC
-    (void)node_update;
-    (void)new_memory;
-    (void)new_count;
-#else
-    struct core_safe_alloc_node *node = *node_update;
-    node->memory = new_memory;
-    node->count = new_count;
-#endif
-}
-
-static void core_remove_safe_alloc(struct core_safe_alloc_node **node_update)
-{
-#ifdef CEMUCORE_NOSAFEALLOC
-    (void)node_update;
-#else
-    struct core_safe_alloc_node *node = *node_update;
-    *node_update = node->next;
-    free(node);
-#endif
+    return core_free_location(old_string, strlen(old_string) + 1, file, line);
 }
 
 #undef core_alloc_location
@@ -974,7 +1044,9 @@ void *core_alloc_location(size_t type_size, size_t new_count, const char *file, 
     {
         core_fatal_location(file, line, "core_alloc: out of memory");
     }
+    core_lock_safe_alloc();
     core_record_safe_alloc(type_size, new_memory, new_count, file, line, "core_alloc");
+    core_unlock_safe_alloc();
     return new_memory;
 }
 
@@ -996,14 +1068,18 @@ void *core_realloc_location(size_t type_size, void *old_memory, size_t old_count
     {
         memset((char *)new_memory + old_size, 0, new_size - old_size);
     }
-    core_update_safe_alloc(core_verify_safe_alloc(type_size, old_memory, old_count, file, line, "core_realloc"), new_memory, new_count);
+    core_lock_safe_alloc();
+    core_update_safe_alloc(core_verify_safe_alloc(type_size, old_memory, old_count, file, line, "core_realloc"), new_memory, new_count, file, line);
+    core_unlock_safe_alloc();
     return new_memory;
 }
 
 #undef core_free_location
 void *core_free_location(size_t type_size, void *old_memory, size_t old_count, const char *file, int line)
 {
+    core_lock_safe_alloc();
     core_remove_safe_alloc(core_verify_safe_alloc(type_size, old_memory, old_count, file, line, "core_free"));
+    core_unlock_safe_alloc();
     free(old_memory);
     return NULL;
 }

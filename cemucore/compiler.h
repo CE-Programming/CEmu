@@ -71,6 +71,12 @@
 # define cemucore_alloc
 #endif
 
+#ifdef __cplusplus
+#define cemucore_unused(variable) (static_cast<void>(variable))
+#else
+#define cemucore_unused(variable) ((void)(variable))
+#endif
+
 #ifndef CEMUCORE_BYTE_ORDER
 # ifdef __BYTE_ORDER__
 #  define CEMUCORE_ORDER_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
@@ -87,21 +93,43 @@
 # define CEMUCORE_MAYBE_ATOMIC(type) type
 # define cemucore_maybe_atomic_load_explicit(obj, order) (*(obj))
 # define cemucore_maybe_atomic_store_explicit(obj, desired, order) (*(obj) = (desired))
-# define cemucore_maybe_atomic_exchange_explicit(obj, desired, order)   \
-    ({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj);             \
-        *(obj) = (desired);                                             \
-        cemucore_maybe_atomic_value })
-# define cemucore_maybe_atomic_fetch_or_explicit(obj, arg, order)       \
-    ({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj);             \
-        *(obj) |= (arg);                                                \
-        cemucore_maybe_atomic_value })
+# define cemucore_maybe_atomic_exchange_explicit(obj, desired, order)    \
+    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
+                    *(obj) = (desired);                                  \
+                    cemucore_maybe_atomic_value; })
+# define cemucore_maybe_atomic_fetch_add_explicit(obj, arg, order)       \
+    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
+                    *(obj) += (arg);                                     \
+                    cemucore_maybe_atomic_value; })
+# define cemucore_maybe_atomic_fetch_sub_explicit(obj, arg, order)       \
+    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
+                    *(obj) -= (arg);                                     \
+                    cemucore_maybe_atomic_value; })
+# define cemucore_maybe_atomic_fetch_or_explicit(obj, arg, order)        \
+    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
+                    *(obj) |= (arg);                                     \
+                    cemucore_maybe_atomic_value; })
+
+# define cemucore_maybe_mutex char
+#define CEMUCORE_MAYBE_MUTEX_INITIALIZER 0
+# define cemucore_maybe_mutex_lock(maybe_mutex) cemucore_unused(maybe_mutex)
+# define cemucore_maybe_mutex_unlock(maybe_mutex) cemucore_unused(maybe_mutex)
 #else
+# include <pthread.h>
 # include <stdatomic.h>
+
 # define CEMUCORE_MAYBE_ATOMIC(type) _Atomic(type)
 # define cemucore_maybe_atomic_load_explicit atomic_load_explicit
 # define cemucore_maybe_atomic_store_explicit atomic_store_explicit
 # define cemucore_maybe_atomic_exchange_explicit atomic_exchange_explicit
+# define cemucore_maybe_atomic_fetch_add_explicit atomic_fetch_add_explicit
+# define cemucore_maybe_atomic_fetch_sub_explicit atomic_fetch_sub_explicit
 # define cemucore_maybe_atomic_fetch_or_explicit atomic_fetch_or_explicit
+
+# define cemucore_maybe_mutex pthread_mutex_t
+# define CEMUCORE_MAYBE_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+# define cemucore_maybe_mutex_lock pthread_mutex_lock
+# define cemucore_maybe_mutex_unlock pthread_mutex_unlock
 #endif
 
 #endif

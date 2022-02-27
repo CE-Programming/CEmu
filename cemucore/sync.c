@@ -68,7 +68,7 @@ bool sync_init(sync_t *sync)
 
     if (cemucore_unlikely(error || pthread_mutex_init(&sync->mutex, NULL)))
     {
-        (void)pthread_condattr_destroy(&condattr);
+        cemucore_unused(pthread_condattr_destroy(&condattr));
         return false;
     }
     for (int i = 0; i != SYNC_COND_COUNT; ++i)
@@ -77,10 +77,10 @@ bool sync_init(sync_t *sync)
         {
             while (i)
             {
-                (void)pthread_cond_destroy(&sync->cond[--i]);
+                cemucore_unused(pthread_cond_destroy(&sync->cond[--i]));
             }
-            (void)pthread_mutex_destroy(&sync->mutex);
-            (void)pthread_condattr_destroy(&condattr);
+            cemucore_unused(pthread_mutex_destroy(&sync->mutex));
+            cemucore_unused(pthread_condattr_destroy(&condattr));
             return false;
         }
     }
@@ -250,7 +250,7 @@ static uint32_t sync_sleep_mask(sync_t *sync, uint32_t mask)
     uint32_t state = atomic_fetch_and_explicit(&sync->state, ~mask, memory_order_relaxed);
     if (cemucore_likely(state & SYNC_STATE_RUNNING))
     {
-        (void)sync_inc(sync);
+        cemucore_unused(sync_inc(sync));
     }
     return state;
 }
@@ -260,7 +260,7 @@ static uint32_t sync_wake_mask(sync_t *sync, uint32_t mask)
     uint32_t state = atomic_fetch_or_explicit(&sync->state, mask, memory_order_relaxed);
     if (cemucore_likely(!(state & SYNC_STATE_RUNNING)))
     {
-        (void)sync_dec(sync, false);
+        cemucore_unused(sync_dec(sync, false));
     }
     return state;
 }
@@ -278,23 +278,23 @@ bool sync_wake(sync_t *sync)
 void sync_enter(sync_t *sync)
 {
     sync_lock(sync);
-    (void)sync_wait_synced(sync);
+    cemucore_unused(sync_wait_synced(sync));
 }
 
 void sync_run(sync_t *sync)
 {
-    (void)sync_wait_run(sync);
-    (void)sync_wait_synced(sync);
+    cemucore_unused(sync_wait_run(sync));
+    cemucore_unused(sync_wait_synced(sync));
 }
 
 void sync_leave(sync_t *sync)
 {
-    (void)sync_dec(sync, true);
+    cemucore_unused(sync_dec(sync, true));
 }
 
 void sync_run_leave(sync_t *sync)
 {
-    (void)sync_wait_run(sync);
+    cemucore_unused(sync_wait_run(sync));
     sync_unlock(sync);
 }
 

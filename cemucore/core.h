@@ -31,6 +31,13 @@
 
 # include <pthread.h>
 # include <stdatomic.h>
+#else
+#define sync_init(sync)  (true)
+#define sync_destroy(sync)
+#define sync_sleep(sync) (false)
+#define sync_wake(sync)  (false)
+#define sync_enter(sync) cemucore_unused(0)
+#define sync_leave(sync) cemucore_unused(0)
 #endif
 
 #include <stdbool.h>
@@ -53,6 +60,12 @@ struct cemucore
 };
 
 void core_sig(cemucore_t *core, cemucore_sig_t sig, bool locked);
+
+char *core_duplicate_string_location(const char *old_string, const char *file, int line) cemucore_alloc;
+#define core_duplicate_string(old_string) core_duplicate_string_location(old_string, __FILE__, __LINE__)
+
+char *core_free_string_location(char *old_string, const char *file, int line);
+#define core_free_string(old_string) ((old_string) = core_free_string_location(old_string, __FILE__, __LINE__))
 
 void *core_alloc_location(size_t type_size, size_t new_count, const char *file, int line) cemucore_alloc;
 #define core_alloc_location(new_memory, new_count, file, line) ((new_memory) = core_alloc_location(sizeof(*(new_memory)), new_count, file, line))

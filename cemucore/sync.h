@@ -17,12 +17,11 @@
 #ifndef SYNC_H
 #define SYNC_H
 
+#include <pthread.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
-
-#include <pthread.h>
-#include <stdatomic.h>
 
 typedef enum sync_cond
 {

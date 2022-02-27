@@ -16,14 +16,15 @@
 
 #include "cpu.h"
 
+#include "compiler.h"
 #include "core.h"
 
 void cpu_init(cpu_t *cpu)
 {
-    (void)cpu;
+    cemucore_unused(cpu);
 }
 
 void cpu_destroy(cpu_t *cpu)
 {
-    (void)cpu;
+    cemucore_unused(cpu);
 }
