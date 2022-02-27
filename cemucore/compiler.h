@@ -91,45 +91,59 @@
 
 #ifdef CEMUCORE_NOTHREADS
 # define CEMUCORE_MAYBE_ATOMIC(type) type
-# define cemucore_maybe_atomic_load_explicit(obj, order) (*(obj))
-# define cemucore_maybe_atomic_store_explicit(obj, desired, order) (*(obj) = (desired))
-# define cemucore_maybe_atomic_exchange_explicit(obj, desired, order)    \
-    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
-                    *(obj) = (desired);                                  \
-                    cemucore_maybe_atomic_value; })
-# define cemucore_maybe_atomic_fetch_add_explicit(obj, arg, order)       \
-    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
-                    *(obj) += (arg);                                     \
-                    cemucore_maybe_atomic_value; })
-# define cemucore_maybe_atomic_fetch_sub_explicit(obj, arg, order)       \
-    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
-                    *(obj) -= (arg);                                     \
-                    cemucore_maybe_atomic_value; })
-# define cemucore_maybe_atomic_fetch_or_explicit(obj, arg, order)        \
-    __extension__({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj); \
-                    *(obj) |= (arg);                                     \
-                    cemucore_maybe_atomic_value; })
+
+# define cemucore_maybe_atomic_load(res, obj, order) cemucore_unused((res) = (obj))
+# define cemucore_maybe_atomic_store(obj, desired, order) cemucore_unused((obj) = (desired))
+# define cemucore_maybe_atomic_exchange(res, obj, desired, order) cemucore_unused(((res) = (obj), (obj) = (desired)))
+# define cemucore_maybe_atomic_add(obj, arg, order) cemucore_unused((obj) += (arg))
+# define cemucore_maybe_atomic_fetch_add(res, obj, arg, order) cemucore_unused(((res) = (obj), (obj) += (arg)))
+# define cemucore_maybe_atomic_add_fetch(res, obj, arg, order) cemucore_unused((res) = (obj) += (arg))
+# define cemucore_maybe_atomic_sub(obj, arg, order) cemucore_unused((obj) -= (arg))
+# define cemucore_maybe_atomic_fetch_sub(res, obj, arg, order) cemucore_unused(((res) = (obj), (obj) -= (arg)))
+# define cemucore_maybe_atomic_sub_fetch(res, obj, arg, order) cemucore_unused((res) = (obj) -= (arg))
+# define cemucore_maybe_atomic_or(obj, arg, order) cemucore_unused((obj) |= (arg))
+# define cemucore_maybe_atomic_fetch_or(res, obj, arg, order) cemucore_unused(((res) = (obj), (obj) |= (arg)))
+# define cemucore_maybe_atomic_or_fetch(res, obj, arg, order) cemucore_unused((res) = (obj) |= (arg))
+# define cemucore_maybe_atomic_xor(obj, arg, order) cemucore_unused((obj) ^= (arg))
+# define cemucore_maybe_atomic_fetch_xor(res, obj, arg, order) cemucore_unused(((res) = (obj), (obj) ^= (arg)))
+# define cemucore_maybe_atomic_xor_fetch(res, obj, arg, order) cemucore_unused((res) = (obj) ^= (arg))
+# define cemucore_maybe_atomic_and(obj, arg, order) cemucore_unused((obj) &= (arg))
+# define cemucore_maybe_atomic_fetch_and(res, obj, arg, order) cemucore_unused(((res) = (obj), (obj) &= (arg)))
+# define cemucore_maybe_atomic_and_fetch(res, obj, arg, order) cemucore_unused((res) = (obj) &= (arg))
 
 # define cemucore_maybe_mutex char
 #define CEMUCORE_MAYBE_MUTEX_INITIALIZER 0
-# define cemucore_maybe_mutex_lock(maybe_mutex) cemucore_unused(maybe_mutex)
-# define cemucore_maybe_mutex_unlock(maybe_mutex) cemucore_unused(maybe_mutex)
+# define cemucore_maybe_mutex_lock(obj) (cemucore_unused(&(obj)), 0)
+# define cemucore_maybe_mutex_unlock(obj) (cemucore_unused(&(obj)), 0)
 #else
 # include <pthread.h>
 # include <stdatomic.h>
 
 # define CEMUCORE_MAYBE_ATOMIC(type) _Atomic(type)
-# define cemucore_maybe_atomic_load_explicit atomic_load_explicit
-# define cemucore_maybe_atomic_store_explicit atomic_store_explicit
-# define cemucore_maybe_atomic_exchange_explicit atomic_exchange_explicit
-# define cemucore_maybe_atomic_fetch_add_explicit atomic_fetch_add_explicit
-# define cemucore_maybe_atomic_fetch_sub_explicit atomic_fetch_sub_explicit
-# define cemucore_maybe_atomic_fetch_or_explicit atomic_fetch_or_explicit
+
+# define cemucore_maybe_atomic_load(res, obj, order) cemucore_unused((res) = atomic_load_explicit(&(obj), memory_order_##order))
+# define cemucore_maybe_atomic_store(obj, desired, order) cemucore_unused(atomic_store_explicit(&(obj), (desired), memory_order_##order))
+# define cemucore_maybe_atomic_exchange(res, obj, desired, order) cemucore_unused((res) = atomic_exchange_explicit(&(obj), (desired), memory_order_##order))
+# define cemucore_maybe_atomic_add(obj, arg, order) cemucore_unused(atomic_fetch_add_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_fetch_add(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_add_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_add_fetch(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_add_explicit(&(obj), (arg), memory_order_##order) + (arg))
+# define cemucore_maybe_atomic_sub(obj, arg, order) cemucore_unused(atomic_fetch_sub_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_fetch_sub(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_sub_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_sub_fetch(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_sub_explicit(&(obj), (arg), memory_order_##order) - (arg))
+# define cemucore_maybe_atomic_or(obj, arg, order) cemucore_unused(atomic_fetch_or_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_fetch_or(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_or_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_or_fetch(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_or_explicit(&(obj), (arg), memory_order_##order) | (arg))
+# define cemucore_maybe_atomic_xor(obj, arg, order) cemucore_unused(atomic_fetch_xor_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_fetch_xor(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_xor_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_xor_fetch(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_xor_explicit(&(obj), (arg), memory_order_##order) ^ (arg))
+# define cemucore_maybe_atomic_and(obj, arg, order) cemucore_unused(atomic_fetch_and_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_fetch_and(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_and_explicit(&(obj), (arg), memory_order_##order))
+# define cemucore_maybe_atomic_and_fetch(res, obj, arg, order) cemucore_unused((res) = atomic_fetch_and_explicit(&(obj), (arg), memory_order_##order) & (arg))
 
 # define cemucore_maybe_mutex pthread_mutex_t
 # define CEMUCORE_MAYBE_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-# define cemucore_maybe_mutex_lock pthread_mutex_lock
-# define cemucore_maybe_mutex_unlock pthread_mutex_unlock
+# define cemucore_maybe_mutex_lock(obj) pthread_mutex_lock(&(obj))
+# define cemucore_maybe_mutex_unlock(obj) pthread_mutex_unlock(&(obj))
 #endif
 
 #endif

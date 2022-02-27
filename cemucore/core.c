@@ -43,14 +43,14 @@ static struct core_safe_alloc_node {
 static void core_lock_safe_alloc(void)
 {
 #ifndef CEMUCORE_NOSAFEALLOC
-    cemucore_maybe_mutex_lock(&core_safe_alloc_mutex);
+    cemucore_maybe_mutex_lock(core_safe_alloc_mutex);
 #endif
 }
 
 static void core_unlock_safe_alloc(void)
 {
 #ifndef CEMUCORE_NOSAFEALLOC
-    cemucore_maybe_mutex_unlock(&core_safe_alloc_mutex);
+    cemucore_maybe_mutex_unlock(core_safe_alloc_mutex);
 #endif
 }
 
@@ -149,7 +149,8 @@ static void core_remove_safe_alloc(struct core_safe_alloc_node **node_update)
 static void core_done_safe_alloc(void)
 {
 #ifndef CEMUCORE_NOSAFEALLOC
-    size_t count = cemucore_maybe_atomic_fetch_sub_explicit(&core_safe_alloc_count, 1, memory_order_relaxed);
+    size_t count;
+    cemucore_maybe_atomic_fetch_sub(count, core_safe_alloc_count, 1, relaxed);
     if (cemucore_unlikely(count == 0))
     {
         core_fatal("too many cores destroyed");
@@ -159,7 +160,8 @@ static void core_done_safe_alloc(void)
         return;
     }
     core_lock_safe_alloc();
-    if (cemucore_maybe_atomic_load_explicit(&core_safe_alloc_count, memory_order_relaxed) == 0)
+    cemucore_maybe_atomic_load(count, core_safe_alloc_count, relaxed);
+    if (count == 0)
     {
         struct core_safe_alloc_node *node = core_safe_alloc_list;
         if (node)
@@ -190,8 +192,8 @@ static void *thread_start(void *data)
     while (sync_loop(&core->sync))
     {
         {
-            uint16_t events = cemucore_maybe_atomic_exchange_explicit(&core->keypad.events[debug_keypad_row], 0,
-                                                                      memory_order_relaxed);
+            uint16_t events;
+            cemucore_maybe_atomic_exchange(events, core->keypad.events[debug_keypad_row], 0, relaxed);
             for (int press = 0; press <= 8; press += 8)
             {
                 for (int col = 0; col != 8; ++col)
@@ -231,7 +233,7 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
 {
     cemucore_t *core;
 #ifndef CEMUCORE_NOSAFEALLOC
-    cemucore_unused(cemucore_maybe_atomic_fetch_add_explicit(&core_safe_alloc_count, 1, memory_order_relaxed));
+    cemucore_maybe_atomic_add(core_safe_alloc_count, 1, relaxed);
 #endif
     core_alloc(core, 1);
     if (!sync_init(&core->sync))
@@ -309,15 +311,11 @@ static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t a
     switch (prop)
     {
         case CEMUCORE_PROP_KEY:
-            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
-                                                                    UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
-                                                                    memory_order_relaxed));
+            cemucore_maybe_atomic_or(core->keypad.events[addr >> 3 & 7], UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)), relaxed);
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_GPIO_ENABLE:
-            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
-                                                                    UINT32_C(1) << (addr & 15),
-                                                                    memory_order_relaxed));
+            cemucore_maybe_atomic_or(core->keypad.gpio_enable, UINT32_C(1) << (addr & 15), relaxed);
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_DEV:
@@ -579,15 +577,11 @@ static void do_cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr
     switch (prop)
     {
         case CEMUCORE_PROP_KEY:
-            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
-                                                                    UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
-                                                                    memory_order_relaxed));
+            cemucore_maybe_atomic_or(core->keypad.events[addr >> 3 & 7], UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)), relaxed);
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_GPIO_ENABLE:
-            cemucore_unused(cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
-                                                                    UINT32_C(1) << (addr & 15),
-                                                                    memory_order_relaxed));
+            cemucore_maybe_atomic_or(core->keypad.gpio_enable, UINT32_C(1) << (addr & 15), relaxed);
             // handle keypad_intrpt_check?
             break;
         case CEMUCORE_PROP_DEV:
