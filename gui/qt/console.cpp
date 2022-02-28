@@ -120,8 +120,7 @@ void readline::Worker::inputReady()
             s += 1;
         }
     };
-    const char *key1;
-    QByteArray key2;
+    QByteArray utf8;
     for (::DWORD event = 0; event != count; event += 1)
     {
         if (events[event].EventType != KEY_EVENT ||
@@ -131,7 +130,7 @@ void readline::Worker::inputReady()
         }
         switch (events[event].Event.KeyEvent.wVirtualKeyCode)
         {
-#define CASE(vk, seq) case VK_##vk: key1 = seq; key2.clear(); break
+#define CASE(vk, seq) case VK_##vk: utf8 = seq; break
             CASE(RETURN,     "\n" );
             CASE(UP,     CSI "A"  );
             CASE(DOWN,   CSI "B"  );
@@ -170,21 +169,17 @@ void readline::Worker::inputReady()
                 {
                     continue;
                 }
-                if (events[event].Event.KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
-                {
-                    key1 = ESC;
-                }
-                else
-                {
-                    key1 = "";
-                }
-                key2 = mUtf8Codec->fromUnicode(&c, 1, &mUtf8State);
+                utf8 = mUtf8Codec->fromUnicode(&c, 1, &mUtf8State);
                 break;
         }
         for (::WORD repeat = 0; repeat != events[event].Event.KeyEvent.wRepeatCount; repeat += 1)
         {
-            output(key1);
-            output(key2.constData());
+            if (events[event].Event.KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED) &&
+                qint8(utf8.constData()[0]) > 0)
+            {
+                output(ESC);
+            }
+            output(utf8.constData());
         }
     }
     if (!pending)
