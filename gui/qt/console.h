@@ -113,8 +113,8 @@ private slots:
     void connection();
 
 private:
-    QLocalServer mServer;
     readline::Controller mReadline;
+    QLocalServer mServer;
 };
 
 #endif

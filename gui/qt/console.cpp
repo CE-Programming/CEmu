@@ -282,8 +282,8 @@ void Connection::readyRead()
 
 Console::Console(QObject *parent)
     : QObject{parent}
-    , mServer{this}
     , mReadline{this}
+    , mServer{this}
 {
     qRegisterMetaType<QAbstractSocket::SocketState>(); // qt hack
     connect(&mReadline, &readline::Controller::inputLine, this, &Console::inputLine);

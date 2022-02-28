@@ -20,6 +20,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <time.h>
 
 enum { NSEC_PER_SEC = 1000000000 };
 void timespec_add(struct timespec *res, const struct timespec *lhs, const struct timespec *rhs)
@@ -173,8 +174,8 @@ bool sync_delay(sync_t *sync, const struct timespec *delay)
     {
         int status;
         if (cemucore_unlikely(pthread_cond_signal(&sync->cond[SYNC_COND_WAIT_SYNCED]) ||
-                              (((timedout = status = pthread_cond_timedwait(&sync->cond[SYNC_COND_SYNCED],
-                                                                            &sync->mutex, &abstime))) &&
+                              (((timedout = (status = pthread_cond_timedwait(&sync->cond[SYNC_COND_SYNCED],
+                                                                             &sync->mutex, &abstime)))) &&
                                status != ETIMEDOUT)))
         {
             abort();
