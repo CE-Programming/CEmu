@@ -239,11 +239,18 @@ void EmuThread::sendFiles() {
         utf8Vars.push_back(string.toUtf8());
         args.push_back(utf8Vars.back());
     }
+    m_backupThrottleForTransfers = m_throttle;
+    setThrottle(false);
     emu_send_variables(args.data(), args.size(), m_sendLoc, &EmuThread::progressHandler, this);
 }
 
 bool EmuThread::progressHandler(void *context, int value, int total) {
-    emit reinterpret_cast<EmuThread *>(context)->linkProgress(value, total);
+    EmuThread* emuThread = reinterpret_cast<EmuThread *>(context);
+    if (value == 1 && total == 1) {
+        emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
+        gui_console_printf("[CEmu] USB transfer(s) completed succesfully.\n");
+    }
+    emit emuThread->linkProgress(value, total);
     return false;
 }
 
