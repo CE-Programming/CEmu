@@ -41,8 +41,8 @@ namespace cemucore
     Q_ENUM_NS(transfer)
     using reg          = cemucore_reg;
     Q_ENUM_NS(reg)
-    using debug_flags  = cemucore_debug_flags;
-    Q_FLAG_NS(debug_flags)
+    using watch_flags  = cemucore_watch_flags;
+    Q_FLAG_NS(watch_flags)
 }
 
 class CoreWrapper : public QObject

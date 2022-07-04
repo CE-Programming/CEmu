@@ -71,7 +71,7 @@ int Disassembler::zdisRead(uint32_t addr)
     {
         return EOF;
     }
-    int data = mCore->get(cemucore::CEMUCORE_PROP_MEMORY, addr);
+    int data = mCore->get(cemucore::CEMUCORE_PROP_MEM_ADL, addr);
     mData += Util::int2hex(data, 2);
     return data;
 }

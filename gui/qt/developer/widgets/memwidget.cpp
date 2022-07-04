@@ -44,7 +44,8 @@ MemWidget::MemWidget(DockedWidget *parent)
       mCharsetAsciiText{QStringLiteral("ASCII")},
       mAreaRamText{tr("RAM")},
       mAreaFlashText{tr("Flash")},
-      mAreaMemoryText{tr("Memory")},
+      mAreaMemZ80Text{tr("Z80 Memory")},
+      mAreaMemADLText{tr("ADL Memory")},
       mAreaPortsText{tr("Ports")},
       mSearchHexText{tr("Hex")},
       mSearchAsciiText{tr("ASCII")},
@@ -147,6 +148,8 @@ MemWidget::MemWidget(DockedWidget *parent)
     {
         mView->gotoAddr(Util::hex2int(mEdtAddr->text()));
     });
+
+    setArea(Area::MemADL);
 }
 
 DockedWidget *MemWidget::parent() const
@@ -170,10 +173,15 @@ void MemWidget::setArea(Area area)
     qint32 len;
     switch (area)
     {
-        case Area::Mem:
-            prop = cemucore::CEMUCORE_PROP_MEMORY;
+        case Area::MemZ80:
+            prop = cemucore::CEMUCORE_PROP_MEM_Z80;
+            len = INT32_C(1) << 16;
+            mBtnArea->setText(mAreaMemZ80Text);
+            break;
+        case Area::MemADL:
+            prop = cemucore::CEMUCORE_PROP_MEM_ADL;
             len = INT32_C(1) << 24;
-            mBtnArea->setText(mAreaMemoryText);
+            mBtnArea->setText(mAreaMemADLText);
             break;
         case Area::Flash:
             prop = cemucore::CEMUCORE_PROP_FLASH;
@@ -224,7 +232,8 @@ void MemWidget::selectCharset()
 void MemWidget::selectArea()
 {
     QMenu menu;
-    menu.addAction(mAreaMemoryText);
+    menu.addAction(mAreaMemZ80Text);
+    menu.addAction(mAreaMemADLText);
     menu.addAction(mAreaRamText);
     menu.addAction(mAreaFlashText);
     menu.addAction(mAreaPortsText);
@@ -233,9 +242,13 @@ void MemWidget::selectArea()
     if (action)
     {
         mBtnArea->setText(action->text());
-        if (action->text() == mAreaMemoryText)
+        if (action->text() == mAreaMemZ80Text)
         {
-            setArea(Area::Mem);
+            setArea(Area::MemZ80);
+        }
+        else if (action->text() == mAreaMemADLText)
+        {
+            setArea(Area::MemADL);
         }
         else if (action->text() == mAreaRamText)
         {

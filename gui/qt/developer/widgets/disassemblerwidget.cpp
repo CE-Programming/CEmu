@@ -83,21 +83,21 @@ void DisassemblerWidget::mousePressEvent(QMouseEvent *event)
         auto it = mBreakpoints.find(watchpoint.addr);
         if (it == mBreakpoints.end())
         {
-            int id = parent()->core().get(cemucore::CEMUCORE_PROP_DEBUG_WATCH, -1);
+            int id = parent()->core().get(cemucore::CEMUCORE_PROP_WATCH, -1);
             if (id != -1)
             {
                 mBreakpoints.insert(watchpoint.addr, id);
-                parent()->core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_ADDR, id, watchpoint.addr);
-                parent()->core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_FLAGS, id,
-                                     cemucore::CEMUCORE_DEBUG_WATCH_MEMORY |
-                                     cemucore::CEMUCORE_DEBUG_WATCH_ANY |
-                                     cemucore::CEMUCORE_DEBUG_WATCH_EXECUTE |
-                                     cemucore::CEMUCORE_DEBUG_WATCH_ENABLE);
+                parent()->core().set(cemucore::CEMUCORE_PROP_WATCH_ADDR, id, watchpoint.addr);
+                parent()->core().set(cemucore::CEMUCORE_PROP_WATCH_FLAGS, id,
+                                     cemucore::CEMUCORE_WATCH_AREA_MEM |
+                                     cemucore::CEMUCORE_WATCH_MODE_ANY |
+                                     cemucore::CEMUCORE_WATCH_TYPE_EXECUTE |
+                                     cemucore::CEMUCORE_WATCH_ENABLE);
             }
         }
         else
         {
-            parent()->core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH, *it, -1);
+            parent()->core().set(cemucore::CEMUCORE_PROP_WATCH, *it, -1);
             mBreakpoints.erase(it);
         }
     }
@@ -430,7 +430,7 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
 
     const DisassemblerWidget *disasm = static_cast<const DisassemblerWidget *>(widget);
     int addr = disasm->item(index.row(), DisassemblerWidget::Column::Address)->text().toUInt(nullptr, 16);
-    int flags = disasm->parent()->core().get(cemucore::CEMUCORE_PROP_MEMORY_DEBUG_FLAGS, addr);
+    int flags = disasm->parent()->core().get(cemucore::CEMUCORE_PROP_MEM_ADL_WATCH_FLAGS, addr);
 
     if (index.column() == DisassemblerWidget::Address)
     {
@@ -440,7 +440,7 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
         painter->fillRect(rect, option.palette.window().color());
         opt.rect.moveRight(opt.rect.right() + rect.width());
 
-        if (flags & cemucore::CEMUCORE_DEBUG_WATCH_EXECUTE)
+        if (flags & cemucore::CEMUCORE_WATCH_TYPE_EXECUTE)
         {
             painter->drawPixmap(rect, QPixmap(QStringLiteral(":/assets/icons/breakpoint.svg")));
         }
@@ -448,11 +448,11 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
 
     if (!(option.state & QStyle::State_Selected))
     {
-        if (flags & cemucore::CEMUCORE_DEBUG_WATCH_READ)
+        if (flags & cemucore::CEMUCORE_WATCH_TYPE_READ)
         {
             painter->fillRect(opt.rect, {200, 255, 235});
         }
-        if (flags & cemucore::CEMUCORE_DEBUG_WATCH_WRITE)
+        if (flags & cemucore::CEMUCORE_WATCH_TYPE_WRITE)
         {
             painter->fillRect(opt.rect, {200, 235, 255});
         }

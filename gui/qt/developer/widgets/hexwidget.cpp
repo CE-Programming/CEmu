@@ -152,7 +152,7 @@ HexWidget::HexWidget(MemWidget *parent)
         viewport()->update();
     });
 
-    setProp(cemucore::CEMUCORE_PROP_MEMORY, INT32_C(1) << 24);
+    setProp(cemucore::CEMUCORE_PROP_MEM_ADL, INT32_C(1) << 24);
 }
 
 MemWidget *HexWidget::parent() const

@@ -39,8 +39,8 @@ int32_t debug_watch_get_addr(debug_t *debug, int32_t id);
 void debug_watch_set_addr(debug_t *debug, int32_t id, int32_t addr);
 int32_t debug_watch_get_size(debug_t *debug, int32_t id);
 void debug_watch_set_size(debug_t *debug, int32_t id, int32_t size);
-cemucore_debug_flags_t debug_watch_get_flags(debug_t *debug, int32_t id);
-void debug_watch_set_flags(debug_t *debug, int32_t id, cemucore_debug_flags_t flags);
-bool debug_has_watch(debug_t *debug, int32_t addr, cemucore_debug_flags_t flags);
+cemucore_watch_flags_t debug_watch_get_flags(debug_t *debug, int32_t id);
+void debug_watch_set_flags(debug_t *debug, int32_t id, cemucore_watch_flags_t flags);
+bool debug_has_watch(debug_t *debug, int32_t addr, cemucore_watch_flags_t flags);
 
 #endif

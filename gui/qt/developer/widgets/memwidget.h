@@ -41,7 +41,8 @@ class MemWidget : public QWidget
 public:
     enum class Area
     {
-        Mem,
+        MemZ80,
+        MemADL,
         Flash,
         Ram,
         Port,
@@ -73,7 +74,8 @@ private:
     QString mCharsetAsciiText;
     QString mAreaRamText;
     QString mAreaFlashText;
-    QString mAreaMemoryText;
+    QString mAreaMemZ80Text;
+    QString mAreaMemADLText;
     QString mAreaPortsText;
     QString mSearchHexText;
     QString mSearchAsciiText;

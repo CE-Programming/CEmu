@@ -95,7 +95,7 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
 
 void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit)
 {
-    int id = core().get(cemucore::CEMUCORE_PROP_DEBUG_WATCH, -1);
+    int id = core().get(cemucore::CEMUCORE_PROP_WATCH, -1);
     if (id == -1)
     {
         return;
@@ -156,7 +156,7 @@ void PortMonitorWidget::setPortMonitorMode(int row, int mode)
     QString portStr = mTbl->item(row, Column::Port)->text();
     if (Util::isHexPort(portStr))
     {
-        core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_ADDR, id, Util::hex2int(portStr));
+        core().set(cemucore::CEMUCORE_PROP_WATCH_ADDR, id, Util::hex2int(portStr));
     }
 
     mTbl->item(row, Column::Enabled)->setText(space);
@@ -164,25 +164,25 @@ void PortMonitorWidget::setPortMonitorMode(int row, int mode)
     mTbl->item(row, Column::Write)->setText(space);
     mTbl->item(row, Column::Enabled)->setData(Role::Mode, mode);
 
-    QFlags<cemucore::debug_flags> flags;
-    flags |= cemucore::CEMUCORE_DEBUG_WATCH_PORT;
-    flags |= cemucore::CEMUCORE_DEBUG_WATCH_ANY;
+    QFlags<cemucore::watch_flags> flags;
+    flags |= cemucore::CEMUCORE_WATCH_AREA_PORT;
+    flags |= cemucore::CEMUCORE_WATCH_MODE_PORT;
     if (mode & PortMonitor::Mode::E)
     {
         mTbl->item(row, Column::Enabled)->setText(QStringLiteral("e"));
-        flags |= cemucore::CEMUCORE_DEBUG_WATCH_ENABLE;
+        flags |= cemucore::CEMUCORE_WATCH_ENABLE;
     }
     if (mode & PortMonitor::Mode::R)
     {
         mTbl->item(row, Column::Read)->setText(QStringLiteral("r"));
-        flags |= cemucore::CEMUCORE_DEBUG_WATCH_READ;
+        flags |= cemucore::CEMUCORE_WATCH_TYPE_READ;
     }
     if (mode & PortMonitor::Mode::W)
     {
         mTbl->item(row, Column::Write)->setText(QStringLiteral("w"));
-        flags |= cemucore::CEMUCORE_DEBUG_WATCH_WRITE;
+        flags |= cemucore::CEMUCORE_WATCH_TYPE_WRITE;
     }
-    core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_FLAGS, id, flags);
+    core().set(cemucore::CEMUCORE_PROP_WATCH_FLAGS, id, flags);
 }
 
 void PortMonitorWidget::removeSelected()
@@ -194,7 +194,7 @@ void PortMonitorWidget::removeSelected()
         if (mTbl->item(i, Column::Port)->isSelected())
         {
             int id = mTbl->item(i, Column::Enabled)->data(Role::Id).toInt();
-            core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH, id, -1);
+            core().set(cemucore::CEMUCORE_PROP_WATCH, id, -1);
             mTbl->removeRow(i);
         }
     }

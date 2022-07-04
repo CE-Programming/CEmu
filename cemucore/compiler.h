@@ -60,6 +60,11 @@
 
 #endif
 
+#if __has_attribute(__fallthrough__)
+# define cemucore_fallthrough __attribute__((__fallthrough__))
+#else
+# define cemucore_fallthrough (void)0
+#endif
 #if __has_attribute(__noreturn__)
 # define cemucore_noreturn __attribute__((__noreturn__))
 #else
