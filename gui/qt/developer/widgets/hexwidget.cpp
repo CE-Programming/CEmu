@@ -183,6 +183,13 @@ void HexWidget::setProp(cemucore::prop prop, int len)
     setCurPos({Area::Data, {}}, false);
 }
 
+int HexWidget::addrBytes() const
+{
+    int bytes;
+    for (bytes = 1; (uint32_t)mLastPos > (((UINT32_C(1) << 8 * bytes) - 1) << 1 | 1); ++bytes);
+    return bytes;
+}
+
 int HexWidget::bytesPerLine() const
 {
     return mStride >> 1;
@@ -463,10 +470,10 @@ QRect HexWidget::posToCell(Pos pos) const
             x = 1;
             break;
         case Area::Data:
-            x = (x * 3 >> 1) + 8;
+            x = 1 + (addrBytes() << 1) + 1 + (x * 3 >> 1);
             break;
         case Area::Char:
-            x = ((mStride * 3 + x) >> 1) + 8;
+            x = 1 + (addrBytes() << 1) + 1 + ((mStride * 3 + x) >> 1);
             break;
     }
     return {{x * size.width() - (size.width() >> 1), visOff / mStride * size.height()}, size};
@@ -478,13 +485,16 @@ auto HexWidget::absToPos(QPoint abs) const -> Pos
     int x = (abs.x() << 1) / size.width() + 1;
     int hexWidth = mStride * 3 >> 1;
     int visOff = abs.y() / size.height() * mStride - mOff;
-    if (mCharset != Charset::None && x >> 1 >= hexWidth + 8 && x >> 1 < (mStride << 1) + 8)
+    if (mCharset != Charset::None &&
+        x >> 1 >= 1 + (addrBytes() << 1) + 1 + hexWidth &&
+        x >> 1 < 1 + (addrBytes() << 1) + 1 + (mStride << 1))
     {
-        return {Area::Char, visOff + x - (hexWidth << 1) - 16};
+        return {Area::Char, visOff + x - ((1 + (addrBytes() << 1) + 1 + hexWidth) << 1)};
     }
-    if (x >= 15 && x < (hexWidth << 1) + 15)
+    if (x >= ((1 + (addrBytes() << 1) + 1) << 1) - 1 &&
+        x < ((1 + (addrBytes() << 1) + 1 + hexWidth) << 1) - 1)
     {
-        return {Area::Data, visOff + x / 3 - 5};
+        return {Area::Data, visOff + x / 3 - 1 - addrBytes() - 1};
     }
     return {Area::Addr, visOff};
 }
@@ -861,7 +871,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
          line += 1, linePos += mStride, startIndex += mStride - startCol, startCol = 0)
     {
         drawText({Area::Addr, pos + linePos}, QStringLiteral("%1")
-                 .arg(QString::number(qMax(0, pos + linePos) >> 1, 16).toUpper(), 6, QLatin1Char{'0'}));
+                 .arg(QString::number(qMax(0, pos + linePos) >> 1, 16).toUpper(), addrBytes() * 2, QLatin1Char{'0'}));
         for (int colPos = startCol, index = startIndex;
              colPos < mStride && index < hex.length(); colPos += 1, index += 1)
         {

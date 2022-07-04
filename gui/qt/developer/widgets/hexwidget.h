@@ -103,6 +103,7 @@ public:
     cemucore::prop prop() const;
     int len() const;
     void setProp(cemucore::prop prop, int len);
+    int addrBytes() const;
     int bytesPerLine() const;
     void setBytesPerLine(int bytesPerLine);
     int byteOff() const;
