@@ -53,8 +53,7 @@ scheduler_event_t scheduler_register_event(scheduler_t *scheduler, const char *n
         core_fatal("too many events");
     }
     scheduler_event_t event = {.handle = scheduler->nevents};
-    scheduler->nevents += 1;
-    core_realloc(scheduler->events, event.handle, scheduler->nevents);
+    core_realloc(scheduler->events, scheduler->nevents, event.handle + 1);
     scheduler->events[event.handle].name = core_duplicate_string(name);
     scheduler->events[event.handle].clock = clock;
     return event;
@@ -70,7 +69,6 @@ scheduler_slot_t scheduler_register_slot(scheduler_t *scheduler, const char *nam
     if (scheduler->nslots <= index)
     {
         core_realloc(scheduler->slots, scheduler->nslots, index + 1);
-        scheduler->nslots = index + 1;
     }
     scheduler->slots[index].name = core_duplicate_string(name);
     return slot;

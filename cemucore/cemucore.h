@@ -61,14 +61,18 @@ typedef enum cemucore_prop
     CEMUCORE_PROP_FLASH,
     CEMUCORE_PROP_RAM,
     CEMUCORE_PROP_PORT,
+    CEMUCORE_PROP_GPIO_ENABLE,
+    CEMUCORE_PROP_TRANSFER,
 #ifndef CEMUCORE_NODEBUG
+    CEMUCORE_PROP_DEBUG_WATCH,
+    CEMUCORE_PROP_DEBUG_WATCH_ADDR,
+    CEMUCORE_PROP_DEBUG_WATCH_SIZE,
+    CEMUCORE_PROP_DEBUG_WATCH_FLAGS,
     CEMUCORE_PROP_MEMORY_DEBUG_FLAGS,
     CEMUCORE_PROP_FLASH_DEBUG_FLAGS,
     CEMUCORE_PROP_RAM_DEBUG_FLAGS,
     CEMUCORE_PROP_PORT_DEBUG_FLAGS,
 #endif
-    CEMUCORE_PROP_GPIO_ENABLE,
-    CEMUCORE_PROP_TRANSFER,
 } cemucore_prop_t;
 
 typedef enum cemucore_dev
@@ -144,18 +148,34 @@ typedef enum cemucore_reg
     CEMUCORE_REG_RPC,
 } cemucore_reg_t;
 
-typedef enum cemucore_dbg_flags
-{
-    CEMUCORE_DEBUG_WATCH_READ  = 1 << 0,
-    CEMUCORE_DEBUG_WATCH_WRITE = 1 << 1,
-    CEMUCORE_DEBUG_WATCH_EXEC  = 1 << 2,
-} cemucore_dbg_flags_t;
-
 typedef struct cemucore cemucore_t;
 
 #ifdef __cplusplus
 extern "C"
 {
+#endif
+
+#ifndef CEMUCORE_NODEBUG
+typedef enum cemucore_debug_flags
+{
+    CEMUCORE_DEBUG_WATCH_MEMORY  = 0 << 0,
+    CEMUCORE_DEBUG_WATCH_FLASH   = 1 << 0,
+    CEMUCORE_DEBUG_WATCH_RAM     = 2 << 0,
+    CEMUCORE_DEBUG_WATCH_PORT    = 3 << 0,
+    CEMUCORE_DEBUG_WATCH_AREA    = 3 << 0,
+
+    CEMUCORE_DEBUG_WATCH_Z80     = 1 << 2,
+    CEMUCORE_DEBUG_WATCH_ADL     = 2 << 2,
+    CEMUCORE_DEBUG_WATCH_ANY     = 3 << 2,
+    CEMUCORE_DEBUG_WATCH_MODE    = 3 << 2,
+
+    CEMUCORE_DEBUG_WATCH_READ    = 1 << 4,
+    CEMUCORE_DEBUG_WATCH_WRITE   = 1 << 5,
+    CEMUCORE_DEBUG_WATCH_EXECUTE = 1 << 6,
+    CEMUCORE_DEBUG_WATCH_TYPE    = 7 << 4,
+
+    CEMUCORE_DEBUG_WATCH_ENABLE  = 1 << 7,
+} cemucore_debug_flags_t;
 #endif
 
 typedef void (*cemucore_sig_handler_t)(cemucore_sig_t, void *);

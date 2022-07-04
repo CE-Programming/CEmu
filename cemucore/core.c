@@ -248,6 +248,7 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
     scheduler_init(&core->scheduler);
     cpu_init(&core->cpu);
     memory_init(&core->memory);
+    debug_init(&core->debug);
     if (!(create_flags & CEMUCORE_CREATE_FLAG_THREADED))
     {
 #ifndef CEMUCORE_NOTHREADS
@@ -260,6 +261,9 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
     {
         return core;
     }
+#ifndef CEMUCORE_NODEBUG
+    debug_destroy(&core->debug);
+#endif
     memory_destroy(&core->memory);
     cpu_destroy(&core->cpu);
     scheduler_destroy(&core->scheduler);
@@ -284,6 +288,9 @@ cemucore_t *cemucore_destroy(cemucore_t *core)
     pthread_join(core->thread, NULL);
 #endif
 
+#ifndef CEMUCORE_NODEBUG
+    debug_destroy(&core->debug);
+#endif
     memory_destroy(&core->memory);
     cpu_destroy(&core->cpu);
     scheduler_destroy(&core->scheduler);
@@ -303,6 +310,21 @@ static bool cemucore_prop_needs_sync(cemucore_prop_t prop)
         default:
             return true;
     }
+}
+
+static cemucore_debug_flags_t do_debug_flags_helper(debug_t *debug, int32_t addr, cemucore_debug_flags_t flags, cemucore_debug_flags_t flag)
+{
+    return debug_has_watch(debug, addr, flags | flag) ? flag : 0;
+}
+
+static cemucore_debug_flags_t do_debug_flags(cemucore_t *core, int32_t addr, cemucore_debug_flags_t flags)
+{
+    flags |= core->cpu.regs.adl ? CEMUCORE_DEBUG_WATCH_ADL : CEMUCORE_DEBUG_WATCH_Z80;
+    flags |= CEMUCORE_DEBUG_WATCH_ENABLE;
+    return flags |
+        do_debug_flags_helper(&core->debug, addr, flags, CEMUCORE_DEBUG_WATCH_READ) |
+        do_debug_flags_helper(&core->debug, addr, flags, CEMUCORE_DEBUG_WATCH_WRITE) |
+        do_debug_flags_helper(&core->debug, addr, flags, CEMUCORE_DEBUG_WATCH_EXECUTE);
 }
 
 static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
@@ -441,19 +463,33 @@ static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t a
         case CEMUCORE_PROP_PORT:
             break;
 #ifndef CEMUCORE_NODEBUG
-        case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
-            val = core->memory.debug[addr & 0xFFFFFF];
-            break;
-        case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
-            val = core->memory.debug[addr & (core->memory.flash_size - 1)];
-            break;
-        case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
-            if ((addr &= 0x7FFFF) < 0x65800)
+        case CEMUCORE_PROP_DEBUG_WATCH:
+            val = debug_watch_create(&core->debug);
+            if (addr != -1)
             {
-                val = core->memory.debug[0xD00000 + addr];
+                debug_watch_copy(&core->debug, val, addr);
             }
             break;
+        case CEMUCORE_PROP_DEBUG_WATCH_ADDR:
+            val = debug_watch_get_addr(&core->debug, addr);
+            break;
+        case CEMUCORE_PROP_DEBUG_WATCH_SIZE:
+            val = debug_watch_get_size(&core->debug, addr);
+            break;
+        case CEMUCORE_PROP_DEBUG_WATCH_FLAGS:
+            val = debug_watch_get_flags(&core->debug, addr);
+            break;
+        case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
+            val = do_debug_flags(core, addr, CEMUCORE_DEBUG_WATCH_MEMORY);
+            break;
+        case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
+            val = do_debug_flags(core, addr & (core->memory.flash_size - 1), CEMUCORE_DEBUG_WATCH_FLASH);
+            break;
+        case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
+            val = do_debug_flags(core, 0xD00000 | (addr & 0x7FFFF), CEMUCORE_DEBUG_WATCH_RAM);
+            break;
         case CEMUCORE_PROP_PORT_DEBUG_FLAGS:
+            val = do_debug_flags(core, addr & 0xFFFF, CEMUCORE_DEBUG_WATCH_PORT);
             break;
 #endif
         default:
@@ -523,45 +559,6 @@ void cemucore_get_buffer(cemucore_t *core, cemucore_prop_t prop, int32_t addr, v
             break;
         case CEMUCORE_PROP_PORT:
             break;
-#ifndef CEMUCORE_NODEBUG
-        case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
-            addr &= 0xFFFFFF;
-            if (remaining > 0x1000000 - addr)
-            {
-                remaining = 0x1000000 - addr;
-            }
-            memcpy(dst, &core->memory.debug[addr], remaining);
-            addr += remaining;
-            dst += remaining;
-            remaining = len -= remaining;
-            break;
-        case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
-            addr &= core->memory.flash_size - 1;
-            if (remaining > core->memory.flash_size - addr)
-            {
-                remaining = core->memory.flash_size - addr;
-            }
-            memcpy(dst, &core->memory.debug[addr], remaining);
-            addr += remaining;
-            dst += remaining;
-            remaining = len -= remaining;
-            break;
-        case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
-            if ((addr &= 0x7FFFF) < 0x65800)
-            {
-                if (remaining > 0x65800 - addr)
-                {
-                    remaining = 0x65800 - addr;
-                }
-                memcpy(dst, &core->memory.debug[0xD00000 + addr], remaining);
-                addr += remaining;
-                dst += remaining;
-                remaining = len -= remaining;
-            }
-            break;
-        case CEMUCORE_PROP_PORT_DEBUG_FLAGS:
-            break;
-#endif
         default:
             break;
     }
@@ -702,19 +699,17 @@ static void do_cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr
         case CEMUCORE_PROP_PORT:
             break;
 #ifndef CEMUCORE_NODEBUG
-        case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
-            core->memory.debug[addr & INT32_C(0xFFFFFF)] = val;
+        case CEMUCORE_PROP_DEBUG_WATCH:
+            debug_watch_copy(&core->debug, addr, val);
             break;
-        case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
-            core->memory.debug[addr & INT32_C(0x3FFFFF)] = val;
+        case CEMUCORE_PROP_DEBUG_WATCH_ADDR:
+            debug_watch_set_addr(&core->debug, addr, val);
             break;
-        case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
-            if ((addr &= INT32_C(0x7FFFF)) < INT32_C(0x65800))
-            {
-                core->memory.debug[INT32_C(0xD00000) + addr] = val;
-            }
+        case CEMUCORE_PROP_DEBUG_WATCH_SIZE:
+            debug_watch_set_size(&core->debug, addr, val);
             break;
-        case CEMUCORE_PROP_PORT_DEBUG_FLAGS:
+        case CEMUCORE_PROP_DEBUG_WATCH_FLAGS:
+            debug_watch_set_flags(&core->debug, addr, val);
             break;
 #endif
         default:
@@ -782,45 +777,6 @@ void cemucore_set_buffer(cemucore_t *core, cemucore_prop_t prop, int32_t addr, c
             break;
         case CEMUCORE_PROP_PORT:
             break;
-#ifndef CEMUCORE_NODEBUG
-        case CEMUCORE_PROP_MEMORY_DEBUG_FLAGS:
-            addr &= 0xFFFFFF;
-            if (remaining > 0x1000000 - addr)
-            {
-                remaining = 0x1000000 - addr;
-            }
-            memcpy(&core->memory.debug[addr], src, remaining);
-            addr += remaining;
-            src += remaining;
-            remaining = len -= remaining;
-            break;
-        case CEMUCORE_PROP_FLASH_DEBUG_FLAGS:
-            addr &= core->memory.flash_size - 1;
-            if (remaining > core->memory.flash_size - addr)
-            {
-                remaining = core->memory.flash_size - addr;
-            }
-            memcpy(&core->memory.debug[addr], src, remaining);
-            addr += remaining;
-            src += remaining;
-            remaining = len -= remaining;
-            break;
-        case CEMUCORE_PROP_RAM_DEBUG_FLAGS:
-            if ((addr &= 0x7FFFF) < 0x65800)
-            {
-                if (remaining > 0x65800 - addr)
-                {
-                    remaining = 0x65800 - addr;
-                }
-                memcpy(&core->memory.debug[0xD00000 + addr], src, remaining);
-                addr += remaining;
-                src += remaining;
-                remaining = len -= remaining;
-            }
-            break;
-        case CEMUCORE_PROP_PORT_DEBUG_FLAGS:
-            break;
-#endif
         default:
             break;
     }

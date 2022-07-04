@@ -68,9 +68,11 @@ private:
         Port,
         Data,
     };
-
-    void clrCorePortMonitor(const QString &portStr);
-    void setCorePortMonitor(const QString &portStr, int mode);
+    enum Role
+    {
+        Id = Qt::UserRole,
+        Mode,
+    };
 
     TableWidget *mTbl;
 

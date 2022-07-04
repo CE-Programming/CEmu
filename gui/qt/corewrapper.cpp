@@ -45,7 +45,7 @@ CoreWrapper::CoreWrapper(QObject *parent)
     qRegisterMetaType<cemucore::dev>();
     qRegisterMetaType<cemucore::transfer>();
     qRegisterMetaType<cemucore::reg>();
-    qRegisterMetaType<cemucore::dbg_flags>();
+    qRegisterMetaType<cemucore::debug_flags>();
 }
 
 CoreWrapper::~CoreWrapper()

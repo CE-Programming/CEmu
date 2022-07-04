@@ -21,6 +21,7 @@
 
 #include "compiler.h"
 #include "cpu.h"
+#include "debug.h"
 #include "keypad.h"
 #include "memory.h"
 #include "scheduler.h"
@@ -57,6 +58,9 @@ struct cemucore
     memory_t memory;
     keypad_t keypad;
     usb_t usb;
+#ifndef CEMUCORE_NODEBUG
+    debug_t debug;
+#endif
 };
 
 void core_sig(cemucore_t *core, cemucore_sig_t sig, bool locked);
@@ -72,7 +76,7 @@ void *core_alloc_location(size_t type_size, size_t new_count, const char *file, 
 #define core_alloc(new_memory, new_count) core_alloc_location(new_memory, new_count, __FILE__, __LINE__)
 
 void *core_realloc_location(size_t type_size, void *old_memory, size_t old_count, size_t new_count, const char *file, int line);
-#define core_realloc_location(old_memory, old_count, new_count, file, line) ((old_memory) = core_realloc_location(sizeof(*(old_memory)), old_memory, old_count, new_count, file, line))
+#define core_realloc_location(old_memory, old_count, new_count, file, line) ((old_memory) = core_realloc_location(sizeof(*(old_memory)), old_memory, old_count, new_count, file, line), (old_count) = (new_count))
 #define core_realloc(old_memory, old_count, new_count) core_realloc_location(old_memory, old_count, new_count, __FILE__, __LINE__)
 
 void *core_free_location(size_t type_size, void *old_memory, size_t old_count, const char *file, int line);

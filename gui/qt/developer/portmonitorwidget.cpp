@@ -95,6 +95,12 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
 
 void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit)
 {
+    int id = core().get(cemucore::CEMUCORE_PROP_DEBUG_WATCH, -1);
+    if (id == -1)
+    {
+        return;
+    }
+
     QString portStr = Util::int2hex(portmonitor.port, Util::portByteWidth);
 
     QTableWidgetItem *e = new QTableWidgetItem;
@@ -102,6 +108,8 @@ void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit
     QTableWidgetItem *w = new QTableWidgetItem;
     QTableWidgetItem *port = new QTableWidgetItem(portStr);
     QTableWidgetItem *data = new QTableWidgetItem;
+
+    e->setData(Role::Id, id);
 
     e->setFlags(e->flags() & ~Qt::ItemIsEditable);
     r->setFlags(r->flags() & ~Qt::ItemIsEditable);
@@ -137,32 +145,44 @@ void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit
 
 int PortMonitorWidget::getPortMonitorMode(int row)
 {
-    return mTbl->item(row, Column::Enabled)->data(Qt::UserRole).toInt();
+    return mTbl->item(row, Column::Enabled)->data(Role::Mode).toInt();
 }
 
 void PortMonitorWidget::setPortMonitorMode(int row, int mode)
 {
     const QString space = QStringLiteral(" ");
+    int id = mTbl->item(row, Column::Enabled)->data(Role::Id).toInt();
+
+    QString portStr = mTbl->item(row, Column::Port)->text();
+    if (Util::isHexPort(portStr))
+    {
+        core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_ADDR, id, Util::hex2int(portStr));
+    }
 
     mTbl->item(row, Column::Enabled)->setText(space);
     mTbl->item(row, Column::Read)->setText(space);
     mTbl->item(row, Column::Write)->setText(space);
-    mTbl->item(row, Column::Enabled)->setData(Qt::UserRole, mode);
+    mTbl->item(row, Column::Enabled)->setData(Role::Mode, mode);
 
+    QFlags<cemucore::debug_flags> flags;
+    flags |= cemucore::CEMUCORE_DEBUG_WATCH_PORT;
+    flags |= cemucore::CEMUCORE_DEBUG_WATCH_ANY;
     if (mode & PortMonitor::Mode::E)
     {
         mTbl->item(row, Column::Enabled)->setText(QStringLiteral("e"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_ENABLE;
     }
     if (mode & PortMonitor::Mode::R)
     {
         mTbl->item(row, Column::Read)->setText(QStringLiteral("r"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_READ;
     }
     if (mode & PortMonitor::Mode::W)
     {
         mTbl->item(row, Column::Write)->setText(QStringLiteral("w"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_WRITE;
     }
-
-    setCorePortMonitor(mTbl->item(row, Column::Port)->text(), mode);
+    core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_FLAGS, id, flags);
 }
 
 void PortMonitorWidget::removeSelected()
@@ -173,7 +193,8 @@ void PortMonitorWidget::removeSelected()
     {
         if (mTbl->item(i, Column::Port)->isSelected())
         {
-            clrCorePortMonitor(mTbl->item(i, Column::Port)->text());
+            int id = mTbl->item(i, Column::Enabled)->data(Role::Id).toInt();
+            core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH, id, -1);
             mTbl->removeRow(i);
         }
     }
@@ -248,7 +269,6 @@ void PortMonitorWidget::itemChanged(QTableWidgetItem *item)
             break;
         case Column::Port:
             mTbl->blockSignals(true);
-            clrCorePortMonitor(portItem->data(Qt::UserRole).toString());
             if (Util::isHexPort(portItem->text()))
             {
                 uint32_t port = Util::hex2int(portItem->text());
@@ -271,7 +291,6 @@ void PortMonitorWidget::itemChanged(QTableWidgetItem *item)
                 dataItem->setText(QString());
                 dataItem->setFlags(dataItem->flags() & ~Qt::ItemIsEnabled);
             }
-            portItem->setData(Qt::UserRole, portItem->text());
             mTbl->blockSignals(false);
             break;
         case Column::Data:
@@ -283,33 +302,6 @@ void PortMonitorWidget::itemChanged(QTableWidgetItem *item)
             dataItem->setBackground(Util::isHexString(dataItem->text(), 0, 255) ? mNormalBackground :
                                                                                   invalidItemBrush);
             break;
-    }
-}
-
-void PortMonitorWidget::clrCorePortMonitor(const QString &portStr)
-{
-    if (Util::isHexPort(portStr))
-    {
-        core().set(cemucore::CEMUCORE_PROP_PORT_DEBUG_FLAGS, Util::hex2int(portStr), 0);
-    }
-}
-
-void PortMonitorWidget::setCorePortMonitor(const QString &portStr, int mode)
-{
-    if (!(mode & PortMonitor::Mode::E))
-    {
-        clrCorePortMonitor(portStr);
-        return;
-    }
-
-    if (Util::isHexPort(portStr))
-    {
-        uint32_t port = Util::hex2int(portStr);
-
-        int flags = (mode & PortMonitor::Mode::R ? cemucore::CEMUCORE_DEBUG_WATCH_READ : 0) |
-                    (mode & PortMonitor::Mode::W ? cemucore::CEMUCORE_DEBUG_WATCH_WRITE : 0);
-
-        core().set(cemucore::CEMUCORE_PROP_PORT_DEBUG_FLAGS, port, flags);
     }
 }
 

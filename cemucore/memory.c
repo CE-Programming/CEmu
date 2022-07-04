@@ -26,16 +26,10 @@ void memory_init(memory_t *memory)
     core_alloc(memory->flash, memory->flash_size);
     memset(memory->flash, 0xFF, memory->flash_size);
     core_alloc(memory->ram, MEMORY_RAM_SIZE);
-#ifndef CEMUCORE_NODEBUG
-    core_alloc(memory->debug, MEMORY_SPACE_SIZE);
-#endif
 }
 
 void memory_destroy(memory_t *memory)
 {
-#ifndef CEMUCORE_NODEBUG
-    core_free(memory->debug, MEMORY_SPACE_SIZE);
-#endif
     core_free(memory->ram, MEMORY_RAM_SIZE);
     core_free(memory->flash, memory->flash_size);
 }

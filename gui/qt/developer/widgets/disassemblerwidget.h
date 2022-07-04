@@ -21,6 +21,7 @@
 #include "../watchpointswidget.h"
 class DisassemblyWidget;
 
+#include <QtCore/QHash>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QStyledItemDelegate>
 
@@ -94,6 +95,8 @@ private:
 
     DisassemblerWidgetDelegate *mDelegate;
     QFont mBoldFont;
+
+    QHash<int, int> mBreakpoints;
 };
 
 #endif

@@ -71,9 +71,11 @@ private:
         Size,
         Name,
     };
-
-    void clrCoreWatchpoint(const QString &addrStr, const QString &sizeStr);
-    void setCoreWatchpoint(const QString &addrStr, const QString &sizeStr, int mode);
+    enum Role
+    {
+        Id = Qt::UserRole,
+        Mode,
+    };
 
     int mWpNum;
     int mDefaultMode;

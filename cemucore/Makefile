@@ -58,6 +58,7 @@ HEADERS += \
 	compiler.h \
 	core.h \
 	cpu.h \
+	debug.h \
 	memory.h \
 	os.h \
 	scheduler.h \
@@ -67,6 +68,7 @@ HEADERS += \
 SOURCES += \
 	core.c \
 	cpu.c \
+	debug.c \
 	memory.c \
 	os.c \
 	scheduler.c \

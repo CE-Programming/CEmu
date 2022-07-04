@@ -80,8 +80,26 @@ void DisassemblerWidget::mousePressEvent(QMouseEvent *event)
 
         emit toggleWatchpoint(watchpoint);
 
-        // temporary
-        parent()->core().set(cemucore::CEMUCORE_PROP_MEMORY_DEBUG_FLAGS, watchpoint.addr, cemucore::CEMUCORE_DEBUG_WATCH_EXEC);
+        auto it = mBreakpoints.find(watchpoint.addr);
+        if (it == mBreakpoints.end())
+        {
+            int id = parent()->core().get(cemucore::CEMUCORE_PROP_DEBUG_WATCH, -1);
+            if (id != -1)
+            {
+                mBreakpoints.insert(watchpoint.addr, id);
+                parent()->core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_ADDR, id, watchpoint.addr);
+                parent()->core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_FLAGS, id,
+                                     cemucore::CEMUCORE_DEBUG_WATCH_MEMORY |
+                                     cemucore::CEMUCORE_DEBUG_WATCH_ANY |
+                                     cemucore::CEMUCORE_DEBUG_WATCH_EXECUTE |
+                                     cemucore::CEMUCORE_DEBUG_WATCH_ENABLE);
+            }
+        }
+        else
+        {
+            parent()->core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH, *it, -1);
+            mBreakpoints.erase(it);
+        }
     }
 
     QTableWidget::mousePressEvent(event);
@@ -422,7 +440,7 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
         painter->fillRect(rect, option.palette.window().color());
         opt.rect.moveRight(opt.rect.right() + rect.width());
 
-        if (flags & cemucore::CEMUCORE_DEBUG_WATCH_EXEC)
+        if (flags & cemucore::CEMUCORE_DEBUG_WATCH_EXECUTE)
         {
             painter->drawPixmap(rect, QPixmap(QStringLiteral(":/assets/icons/breakpoint.svg")));
         }

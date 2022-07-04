@@ -29,9 +29,6 @@ typedef struct memory
 {
     int32_t flash_size;
     uint8_t *flash, *ram;
-#ifndef CEMUCORE_NODEBUG
-    uint8_t *debug;
-#endif
 } memory_t;
 
 void memory_init(memory_t *memory);

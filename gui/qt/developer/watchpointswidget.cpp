@@ -122,6 +122,12 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
 
 void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 {
+    int id = core().get(cemucore::CEMUCORE_PROP_DEBUG_WATCH, -1);
+    if (id == -1)
+    {
+        return;
+    }
+
     QString addrStr = Util::int2hex(watchpoint.addr, Util::addrByteWidth);
     QString sizeStr = QString::number(watchpoint.size);
 
@@ -132,6 +138,8 @@ void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
     QTableWidgetItem *addr = new QTableWidgetItem(addrStr);
     QTableWidgetItem *size = new QTableWidgetItem(sizeStr);
     QTableWidgetItem *name = new QTableWidgetItem(watchpoint.name);
+
+    e->setData(Role::Id, id);
 
     e->setFlags(e->flags() & ~Qt::ItemIsEditable);
     r->setFlags(r->flags() & ~Qt::ItemIsEditable);
@@ -175,39 +183,72 @@ void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 
 int WatchpointsWidget::getWatchpointMode(int row)
 {
-    return mTbl->item(row, Column::Enabled)->data(Qt::UserRole).toInt();
+    return mTbl->item(row, Column::Enabled)->data(Role::Mode).toInt();
 }
 
 void WatchpointsWidget::setWatchpointMode(int row, int mode)
 {
     const QString space = QStringLiteral(" ");
+    int id = mTbl->item(row, Column::Enabled)->data(Role::Id).toInt();
 
-    mTbl->item(row, Column::Enabled)->setText(space);
-    mTbl->item(row, Column::Read)->setText(space);
-    mTbl->item(row, Column::Write)->setText(space);
-    mTbl->item(row, Column::Execute)->setText(space);
-    mTbl->item(row, Column::Enabled)->setData(Qt::UserRole, mode);
+    QString addrStr = mTbl->item(row, Column::Address)->text();
+    if (Util::isHexAddress(addrStr))
+    {
+        core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_ADDR, id, Util::hex2int(addrStr));
+    }
+
+    QString sizeStr = mTbl->item(row, Column::Size)->text();
+    if (Util::isDecString(sizeStr, 1, sMaxSize))
+    {
+        core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_SIZE, id, sizeStr.toUInt());
+    }
+
+    QFlags<cemucore::debug_flags> flags;
+    flags |= cemucore::CEMUCORE_DEBUG_WATCH_MEMORY;
+    flags |= cemucore::CEMUCORE_DEBUG_WATCH_ANY;
 
     if (mode & Watchpoint::Mode::E)
     {
         mTbl->item(row, Column::Enabled)->setText(QStringLiteral("e"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_ENABLE;
     }
+    else
+    {
+        mTbl->item(row, Column::Enabled)->setText(space);
+    }
+
     if (mode & Watchpoint::Mode::R)
     {
         mTbl->item(row, Column::Read)->setText(QStringLiteral("r"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_READ;
     }
+    else
+    {
+        mTbl->item(row, Column::Read)->setText(space);
+    }
+
     if (mode & Watchpoint::Mode::W)
     {
         mTbl->item(row, Column::Write)->setText(QStringLiteral("w"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_WRITE;
     }
+    else
+    {
+        mTbl->item(row, Column::Write)->setText(space);
+    }
+
     if (mode & Watchpoint::Mode::X)
     {
         mTbl->item(row, Column::Execute)->setText(QStringLiteral("x"));
+        flags |= cemucore::CEMUCORE_DEBUG_WATCH_EXECUTE;
+    }
+    else
+    {
+        mTbl->item(row, Column::Execute)->setText(space);
     }
 
-    setCoreWatchpoint(mTbl->item(row, Column::Address)->text(),
-                      mTbl->item(row, Column::Size)->text(),
-                      mode);
+    mTbl->item(row, Column::Enabled)->setData(Role::Mode, mode);
+    core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH_FLAGS, id, flags);
 }
 
 void WatchpointsWidget::removeSelected()
@@ -218,8 +259,8 @@ void WatchpointsWidget::removeSelected()
     {
         if (mTbl->item(i, Column::Address)->isSelected())
         {
-            clrCoreWatchpoint(mTbl->item(i, Column::Address)->text(),
-                              mTbl->item(i, Column::Size)->text());
+            int id = mTbl->item(i, Column::Enabled)->data(Role::Id).toInt();
+            core().set(cemucore::CEMUCORE_PROP_DEBUG_WATCH, id, -1);
             mTbl->removeRow(i);
         }
     }
@@ -294,8 +335,6 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
             break;
         case Column::Address:
             mTbl->blockSignals(true);
-            clrCoreWatchpoint(mTbl->item(row, Column::Address)->data(Qt::UserRole).toString(),
-                              mTbl->item(row, Column::Size)->text());
             if (Util::isHexAddress(item->text()))
             {
                 item->setBackground(mNormalBackground);
@@ -312,13 +351,10 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
                 mTbl->item(row, Column::Address)->setBackground(invalidItemBrush);
                 mTbl->item(row, Column::Enabled)->setBackground(invalidItemBrush);
             }
-            item->setData(Qt::UserRole, item->text());
             mTbl->blockSignals(false);
             break;
         case Column::Size:
             mTbl->blockSignals(true);
-            clrCoreWatchpoint(mTbl->item(row, Column::Address)->text(),
-                              mTbl->item(row, Column::Size)->data(Qt::UserRole).toString());
             if (Util::isDecString(item->text(), 1, sMaxSize))
             {
                 item->setBackground(mNormalBackground);
@@ -334,57 +370,7 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
                 mTbl->item(row, Column::Size)->setBackground(invalidItemBrush);
                 mTbl->item(row, Column::Enabled)->setBackground(invalidItemBrush);
             }
-            item->setData(Qt::UserRole, item->text());
             mTbl->blockSignals(false);
             break;
-    }
-}
-
-void WatchpointsWidget::clrCoreWatchpoint(const QString &addrStr, const QString &sizeStr)
-{
-    if (Util::isHexAddress(addrStr) && Util::isDecString(sizeStr, 1, sMaxSize))
-    {
-        uint32_t addr = Util::hex2int(addrStr);
-        uint32_t size = sizeStr.toUInt();
-
-        for (uint32_t i = 0; i < size; ++i)
-        {
-            if (addr + i > sMaxAddr)
-            {
-                break;
-            }
-
-            core().set(cemucore::CEMUCORE_PROP_MEMORY_DEBUG_FLAGS, addr + i, 0);
-        }
-    }
-}
-
-void WatchpointsWidget::setCoreWatchpoint(const QString &addrStr, const QString &sizeStr, int mode)
-{
-    if (!(mode & Watchpoint::Mode::E))
-    {
-        clrCoreWatchpoint(addrStr, sizeStr);
-        return;
-    }
-
-    if (Util::isHexAddress(addrStr) && Util::isDecString(sizeStr, 1, sMaxSize))
-    {
-        uint32_t addr = Util::hex2int(addrStr);
-        uint32_t size = sizeStr.toUInt();
-        int flags = 0;
-
-        flags |= mode & Watchpoint::Mode::R ? cemucore::CEMUCORE_DEBUG_WATCH_READ : 0;
-        flags |= mode & Watchpoint::Mode::W ? cemucore::CEMUCORE_DEBUG_WATCH_WRITE : 0;
-        flags |= mode & Watchpoint::Mode::X ? cemucore::CEMUCORE_DEBUG_WATCH_EXEC : 0;
-
-        for (uint32_t i = 0; i < size; ++i)
-        {
-            if (addr + i > sMaxAddr)
-            {
-                break;
-            }
-
-            core().set(cemucore::CEMUCORE_PROP_MEMORY_DEBUG_FLAGS, addr + i, flags);
-        }
     }
 }
