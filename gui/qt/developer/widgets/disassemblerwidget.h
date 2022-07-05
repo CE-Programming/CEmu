@@ -65,6 +65,12 @@ public:
         Mnemonic,
         Count
     };
+    enum Role
+    {
+        Breakpoint = Qt::UserRole,
+        ReadWatchpoint,
+        WriteWatchpoint,
+    };
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -81,6 +87,7 @@ private:
     void prepend();
     void scrollAction(int);
     void insertDisasmRow(int, uint32_t, const QString &, const QString &);
+    void updateRow(int row);
 
     int selectedAddress();
     QPair<QString, QString> disassemble(uint32_t &);

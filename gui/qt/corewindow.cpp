@@ -190,17 +190,17 @@ void CoreWindow::createDeveloperWidgets()
 {
     QList<Watchpoint> watchpointList =
     {
-        {Watchpoint::Mode::R, 10, 5, "test"},
-        {Watchpoint::Mode::W, 20, 15, "test2"},
-        {Watchpoint::Mode::R, 30, 25, "test3"},
-        {Watchpoint::Mode::X, 40, 35, "test4"}
+        {Watchpoint::Mode::E | Watchpoint::Mode::R, 10, 5, "test"},
+        {Watchpoint::Mode::E | Watchpoint::Mode::W, 20, 15, "test2"},
+        {Watchpoint::Mode::E | Watchpoint::Mode::R, 30, 25, "test3"},
+        {Watchpoint::Mode::E | Watchpoint::Mode::X, 40, 35, "test4"}
     };
     QList<PortMonitor> portmonitorList =
     {
-        {PortMonitor::Mode::R, 10 },
-        {PortMonitor::Mode::W, 20 },
-        {PortMonitor::Mode::W | PortMonitor::Mode::R, 30 },
-        {PortMonitor::Mode::R, 40 }
+        {PortMonitor::Mode::E | PortMonitor::Mode::R, 10 },
+        {PortMonitor::Mode::E | PortMonitor::Mode::W, 20 },
+        {PortMonitor::Mode::E | PortMonitor::Mode::W | PortMonitor::Mode::R, 30 },
+        {PortMonitor::Mode::E | PortMonitor::Mode::R, 40 }
     };
 
     auto *console = new ConsoleWidget{this};

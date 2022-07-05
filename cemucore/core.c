@@ -312,21 +312,6 @@ static bool cemucore_prop_needs_sync(cemucore_prop_t prop)
     }
 }
 
-static cemucore_watch_flags_t do_watch_flags_helper(debug_t *debug, int32_t addr, cemucore_watch_flags_t flags, cemucore_watch_flags_t flag)
-{
-    return debug_has_watch(debug, addr, flags | flag) ? flag : 0;
-}
-
-static cemucore_watch_flags_t do_watch_flags(cemucore_t *core, int32_t addr, cemucore_watch_flags_t flags)
-{
-    flags |= core->cpu.regs.adl ? CEMUCORE_WATCH_MODE_ADL : CEMUCORE_WATCH_MODE_Z80;
-    flags |= CEMUCORE_WATCH_ENABLE;
-    return flags |
-        do_watch_flags_helper(&core->debug, addr, flags, CEMUCORE_WATCH_TYPE_READ) |
-        do_watch_flags_helper(&core->debug, addr, flags, CEMUCORE_WATCH_TYPE_WRITE) |
-        do_watch_flags_helper(&core->debug, addr, flags, CEMUCORE_WATCH_TYPE_EXECUTE);
-}
-
 static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
 {
     int32_t val = -1;
@@ -483,24 +468,29 @@ static int32_t do_cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t a
             val = debug_watch_get_flags(&core->debug, addr);
             break;
         case CEMUCORE_PROP_MEM_Z80_WATCH_FLAGS:
-            val = do_watch_flags(core, core->cpu.regs.mb << 16 | (addr & 0xFFFF),
-                                 CEMUCORE_WATCH_AREA_MEM | CEMUCORE_WATCH_MODE_Z80);
+            val = debug_get_watch_flags(
+                    &core->debug, core->cpu.regs.mb << 16 | (addr & 0xFFFF),
+                    CEMUCORE_WATCH_AREA_MEM | CEMUCORE_WATCH_MODE_Z80 | CEMUCORE_WATCH_TYPE_ALL);
             break;
         case CEMUCORE_PROP_MEM_ADL_WATCH_FLAGS:
-            val = do_watch_flags(core, addr,
-                                 CEMUCORE_WATCH_AREA_MEM | CEMUCORE_WATCH_MODE_ADL);
+            val = debug_get_watch_flags(
+                    &core->debug, addr,
+                    CEMUCORE_WATCH_AREA_MEM | CEMUCORE_WATCH_MODE_ADL | CEMUCORE_WATCH_TYPE_ALL);
             break;
         case CEMUCORE_PROP_FLASH_WATCH_FLAGS:
-            val = do_watch_flags(core, addr & (core->memory.flash_size - 1),
-                                 CEMUCORE_WATCH_AREA_FLASH | CEMUCORE_WATCH_MODE_ANY);
+            val = debug_get_watch_flags(
+                    &core->debug, addr & (core->memory.flash_size - 1),
+                    CEMUCORE_WATCH_AREA_FLASH | CEMUCORE_WATCH_MODE_ANY | CEMUCORE_WATCH_TYPE_ALL);
             break;
         case CEMUCORE_PROP_RAM_WATCH_FLAGS:
-            val = do_watch_flags(core, 0xD00000 | (addr & 0x7FFFF),
-                                 CEMUCORE_WATCH_AREA_RAM | CEMUCORE_WATCH_MODE_ANY);
+            val = debug_get_watch_flags(
+                    &core->debug, 0xD00000 | (addr & 0x7FFFF),
+                    CEMUCORE_WATCH_AREA_RAM | CEMUCORE_WATCH_MODE_ANY | CEMUCORE_WATCH_TYPE_ALL);
             break;
         case CEMUCORE_PROP_PORT_WATCH_FLAGS:
-            val = do_watch_flags(core, addr & 0xFFFF,
-                                 CEMUCORE_WATCH_AREA_PORT | CEMUCORE_WATCH_MODE_PORT);
+            val = debug_get_watch_flags(
+                    &core->debug, addr & 0xFFFF,
+                    CEMUCORE_WATCH_AREA_PORT | CEMUCORE_WATCH_MODE_PORT | CEMUCORE_WATCH_TYPE_ALL);
             break;
 #endif
         default:
