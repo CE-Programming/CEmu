@@ -22,6 +22,8 @@
 #include "../../util.h"
 #include "../watchpointswidget.h"
 
+#include <QtCore/QMimeData>
+#include <QtGui/QClipboard>
 #include <QtGui/QPainter>
 #include <QtGui/QWheelEvent>
 #include <QtWidgets/QApplication>
@@ -50,8 +52,8 @@ DisassemblerWidget::DisassemblerWidget(DisassemblyWidget *parent)
     setFont(Util::monospaceFont());
     setShowGrid(false);
 
-    verticalHeader()->setMinimumSectionSize(fontMetrics().ascent());
-    verticalHeader()->setDefaultSectionSize(fontMetrics().ascent());
+    verticalHeader()->setMinimumSectionSize(fontMetrics().ascent() * 1.25);
+    verticalHeader()->setDefaultSectionSize(fontMetrics().ascent() * 1.25);
     verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     mDelegate->setOptionWidth(verticalHeader()->defaultSectionSize());
@@ -265,8 +267,66 @@ int DisassemblerWidget::selectedAddress()
     return Util::hex2int(item(currentRow(), Column::Address)->text());
 }
 
+void DisassemblerWidget::copy()
+{
+    QItemSelectionModel * selection = selectionModel();
+    QModelIndexList indexes = selection->selectedIndexes();
+
+    if (indexes.size() < 1)
+    {
+        return;
+    }
+
+    std::sort(indexes.begin(), indexes.end());
+
+    QModelIndex previous = indexes.first();
+    indexes.removeFirst();
+
+    QString selected_text_as_html;
+    QString selected_text;
+    selected_text_as_html.prepend("<html><style>br{mso-data-placement:same-cell;}</style><table><tr><td>");
+
+    QModelIndex current;
+    Q_FOREACH(current, indexes)
+    {
+        QVariant data = model()->data(previous);
+        QString text = data.toString();
+        selected_text.append(text);
+        text.replace("\n", "<br>");
+        selected_text_as_html.append(text);
+
+        if (current.row() != previous.row())
+        {
+            selected_text_as_html.append("</td></tr><tr><td>");
+            selected_text.append(QLatin1Char('\n'));
+        }
+        else
+        {
+            selected_text_as_html.append("</td><td>");
+            selected_text.append(QLatin1Char('\t'));
+        }
+
+        previous = current;
+    }
+
+    selected_text_as_html.append(model()->data(current).toString());
+    selected_text.append(model()->data(current).toString());
+    selected_text_as_html.append("</td></tr>");
+
+    QMimeData *md = new QMimeData;
+    md->setHtml(selected_text_as_html);
+    md->setText(selected_text);
+    qApp->clipboard()->setMimeData(md);
+}
+
 void DisassemblerWidget::keyPressEvent(QKeyEvent *event)
 {
+    if (event->matches(QKeySequence::Copy))
+    {
+        copy();
+        return;
+    }
+
     switch (event->key())
     {
         default:
@@ -404,15 +464,12 @@ void DisassemblerWidgetDelegate::initStyleOption(QStyleOptionViewItem *option, c
 QWidget *DisassemblerWidgetDelegate::createEditor(QWidget *parent,
                                     const QStyleOptionViewItem &option,
                                     const QModelIndex &index) const
-
 {
     Q_UNUSED(option);
+    Q_UNUSED(parent);
     Q_ASSERT(index.isValid());
 
-    QLineEdit *editor = new QLineEdit{parent};
-    editor->setReadOnly(true);
-
-    return editor;
+    return Q_NULLPTR;
 }
 
 void DisassemblerWidgetDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,

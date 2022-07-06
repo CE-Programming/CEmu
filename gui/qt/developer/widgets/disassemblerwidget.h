@@ -83,6 +83,7 @@ signals:
 private:
     bool isAtTop();
     bool isAtBottom();
+    void copy();
     void append();
     void prepend();
     void scrollAction(int);
