@@ -193,6 +193,14 @@ static uint32_t cpu_read_index(void) {
 static void cpu_write_index(uint32_t value) {
     cpu.registers.index[cpu.PREFIX].hl = value;
 }
+static void cpu_write_index_partial_mode(uint32_t value) {
+    value = cpu_mask_mode(value, cpu.L);
+    if (cpu.L) {
+        cpu.registers.index[cpu.PREFIX].hl = value;
+    } else {
+        cpu.registers.index[cpu.PREFIX].hls = value;
+    }
+}
 
 static uint32_t cpu_read_other_index(void) {
     return cpu.registers.index[cpu.PREFIX ^ 1].hl;
@@ -240,9 +248,9 @@ static void cpu_write_reg(int i, uint8_t value) {
 static void cpu_read_write_reg(int read, int write) {
     uint8_t value;
     int old_prefix = cpu.PREFIX;
-    cpu.PREFIX = (write != 6) ? old_prefix : 0;
+    cpu.PREFIX = write != 6 ? old_prefix : 0;
     value = cpu_read_reg(read);
-    cpu.PREFIX = (read != 6) ? old_prefix : 0;
+    cpu.PREFIX = read  != 6 ? old_prefix : 0;
     cpu_write_reg(write, value);
 }
 
@@ -390,12 +398,18 @@ static void cpu_call(uint32_t address, bool mixed) {
 #endif
     if (mixed) {
         bool stack = cpu.IL || (cpu.L && !cpu.ADL);
+        cpu.registers.R += cpu.IL << 1;
         if (cpu.ADL) {
             cpu_push_byte_mode(cpu.registers.PCU, true);
+            if (!cpu.IL) {
+                cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
+            }
         }
         cpu_push_byte_mode(cpu.registers.PCH, stack);
         cpu_push_byte_mode(cpu.registers.PCL, stack);
-        cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
+        if (cpu.IL || !cpu.ADL) {
+            cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
+        }
     } else {
         cpu_push_word(cpu.registers.PC);
     }
@@ -508,6 +522,7 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
     uint8_t old_0 = (value & 0x01) != 0;
     uint8_t old_c = r->flags.C;
     uint8_t new_c;
+    cpu.cycles += z == 6;
     switch (y) {
         case 0: /* RLC value[z] */
             value <<= 1;
@@ -753,6 +768,20 @@ static void cpu_execute_bli() {
         /* All block instructions */
         r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
+        if (repeat) {
+            switch (cpu.context.opcode) {
+                default:
+                    r->R += 4;
+                    break;
+                case 0x92: /* INIMR */
+                case 0x9A: /* INDMR */
+                case 0x9C: /* IND2R */
+                case 0xBA: /* INDR  */
+                case 0xCA: /* INDRX */
+                    r->R += 2;
+                    break;
+            }
+        }
     } while ((cpu.inBlock = repeat) && cpu.cycles < cpu.next);
 }
 
@@ -1011,8 +1040,9 @@ void cpu_execute(void) {
                                 cpu_trap();
                                 break;
                             }
-                            w = (context.y == 6) ? cpu_index_address() : 0;
+                            w = context.y == 6 ? cpu_index_address() : 0;
                             old = cpu_read_reg_prefetched(context.y, w);
+                            cpu.cycles += context.y == 6;
                             new = old + 1;
                             cpu_write_reg_prefetched(context.y, w, new);
                             r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(new) | cpuflag_zero(new)
@@ -1024,8 +1054,9 @@ void cpu_execute(void) {
                                 cpu_trap();
                                 break;
                             }
-                            w = (context.y == 6) ? cpu_index_address() : 0;
+                            w = context.y == 6 ? cpu_index_address() : 0;
                             old = cpu_read_reg_prefetched(context.y, w);
+                            cpu.cycles += context.y == 6;
                             new = old - 1;
                             cpu_write_reg_prefetched(context.y, w, new);
                             r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(new) | cpuflag_zero(new)
@@ -1105,6 +1136,7 @@ void cpu_execute(void) {
                         case 0: /* RET cc[y] */
                             cpu.cycles++;
                             if (cpu_read_cc(context.y)) {
+                                r->R += 2;
                                 cpu_return();
                             }
                             break;
@@ -1207,7 +1239,7 @@ void cpu_execute(void) {
                                     w = cpu_read_sp();
                                     old_word = cpu_read_word(w);
                                     new_word = cpu_read_index();
-                                    cpu_write_index(old_word);
+                                    cpu_write_index_partial_mode(old_word);
                                     cpu_write_word(w, new_word);
                                     break;
                                 case 5: /* EX DE, HL */
@@ -1228,7 +1260,9 @@ void cpu_execute(void) {
                             break;
                         case 4: /* CALL cc[y], nn */
                             if (cpu_read_cc(context.y)) {
-                                cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
+                                w = cpu_fetch_word_no_prefetch();
+                                cpu.cycles += !cpu.SUFFIX && !cpu.ADL;
+                                cpu_call(w, cpu.SUFFIX);
                             } else {
                                 cpu_fetch_word();
                             }
@@ -1240,6 +1274,7 @@ void cpu_execute(void) {
                             }
                             switch (context.q) {
                                 case 0: /* PUSH r2p[p] */
+                                    r->R += (!cpu.PREFIX && cpu.L) << 1;
                                     cpu_push_word(cpu_read_rp2(context.p));
                                     break;
                                 case 1:
@@ -1466,6 +1501,7 @@ void cpu_execute(void) {
                                                                 case 4: /* RRD */
                                                                     old = r->A;
                                                                     new = cpu_read_byte(r->HL);
+                                                                    cpu.cycles++;
                                                                     r->A &= 0xF0;
                                                                     r->A |= new & 0x0F;
                                                                     new >>= 4;
@@ -1477,6 +1513,7 @@ void cpu_execute(void) {
                                                                 case 5: /* RLD */
                                                                     old = r->A;
                                                                     new = cpu_read_byte(r->HL);
+                                                                    cpu.cycles++;
                                                                     r->A &= 0xF0;
                                                                     r->A |= new >> 4;
                                                                     new <<= 4;
@@ -1493,6 +1530,12 @@ void cpu_execute(void) {
                                                     }
                                                     break;
                                                 case 2:
+                                                    switch (context.opcode) {
+                                                        case 0x92: /* INIMR */
+                                                        case 0x9A: /* INDMR */
+                                                            r->R -= 2; // I guess the cpu forgot to increment, so undo
+                                                            break;
+                                                    }
                                                 cpu_execute_bli_start:
                                                     r->PC = cpu_address_mode(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                     cpu.context = context;
