@@ -392,7 +392,28 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
-static void cpu_call(uint32_t address, bool mixed) {
+static void cpu_rst(uint32_t address) {
+#ifdef DEBUG_SUPPORT
+    debug_record_call(cpu.registers.PC, cpu.L);
+#endif
+    cpu.cycles++;
+    if (cpu.SUFFIX) {
+        if (cpu.ADL) {
+            cpu_push_byte_mode(cpu.registers.PCU, true);
+            cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
+        }
+        cpu_push_byte_mode(cpu.registers.PCH, cpu.L);
+        cpu_push_byte_mode(cpu.registers.PCL, cpu.L);
+        if (!cpu.ADL) {
+            cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
+        }
+    } else {
+        cpu_push_word(cpu.registers.PC);
+    }
+    cpu_prefetch(address, cpu.L);
+}
+
+static void cpu_call(uint32_t address, bool mode, bool mixed) {
 #ifdef DEBUG_SUPPORT
     debug_record_call(cpu.registers.PC, cpu.L);
 #endif
@@ -413,7 +434,11 @@ static void cpu_call(uint32_t address, bool mixed) {
     } else {
         cpu_push_word(cpu.registers.PC);
     }
-    cpu_prefetch(address, cpu.IL);
+    cpu_prefetch(address, mode);
+}
+
+static void cpu_interrupt(uint32_t address) {
+    cpu_call(address, cpu.ADL, cpu.MADL);
 }
 
 static void cpu_trap_rewind(uint_fast8_t rewind) {
@@ -422,7 +447,7 @@ static void cpu_trap_rewind(uint_fast8_t rewind) {
     cpu.cycles++;
     r->PC = cpu_mask_mode(r->PC - rewind, cpu.ADL);
     cpu_clear_context();
-    cpu_call(0x00, cpu.MADL);
+    cpu_interrupt(0x00);
 }
 
 static void cpu_trap(void) {
@@ -442,7 +467,7 @@ static void cpu_return(void) {
     cpu.cycles++;
     if (cpu.SUFFIX) {
         mode = cpu_pop_byte_mode(true) & 1;
-        address  = cpu_pop_byte_mode(cpu.ADL);
+        address = cpu_pop_byte_mode(cpu.ADL);
         address |= cpu_pop_byte_mode(cpu.ADL) << 8;
         if (mode) {
             address |= cpu_mask_mode(cpu_pop_byte_mode(true) << 16, cpu.ADL || cpu.L);
@@ -886,17 +911,17 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.halted = cpu.inBlock = false;
             if (cpu.NMI) {
                 cpu.NMI = false;
-                cpu_call(0x66, cpu.MADL);
+                cpu_interrupt(0x66);
             } else {
                 cpu.IEF2 = false;
                 if (cpu.IM == 2) {
-                    cpu_call(0x38, cpu.MADL);
+                    cpu_interrupt(0x38);
                 } else {
                     if (cpu.preI && cpu.IM == 3) {
                         cpu.cycles++;
-                        cpu_call(cpu_read_word(r->I << 8 | (bus_rand() & 0xFF)), cpu.MADL);
+                        cpu_interrupt(cpu_read_word(r->I << 8 | (bus_rand() & 0xFF)));
                     } else {
-                        cpu_call(bus_rand() & 0x38, cpu.MADL);
+                        cpu_interrupt(bus_rand() & 0x38);
                     }
                 }
             }
@@ -1262,7 +1287,7 @@ void cpu_execute(void) {
                             if (cpu_read_cc(context.y)) {
                                 w = cpu_fetch_word_no_prefetch();
                                 cpu.cycles += !cpu.SUFFIX && !cpu.ADL;
-                                cpu_call(w, cpu.SUFFIX);
+                                cpu_call(w, cpu.IL, cpu.SUFFIX);
                             } else {
                                 cpu_fetch_word();
                             }
@@ -1280,7 +1305,7 @@ void cpu_execute(void) {
                                 case 1:
                                     switch (context.p) {
                                         case 0: /* CALL nn */
-                                            cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
+                                            cpu_call(cpu_fetch_word_no_prefetch(), cpu.IL, cpu.SUFFIX);
                                             break;
                                         case 1: /* 0xDD prefixed opcodes */
                                             if (cpu.PREFIX) {
@@ -1590,8 +1615,7 @@ void cpu_execute(void) {
                                 cpu_trap();
                                 break;
                             }
-                            cpu.cycles++;
-                            cpu_call(context.y << 3, cpu.SUFFIX);
+                            cpu_rst(context.y << 3);
                             break;
                     }
                     break;
