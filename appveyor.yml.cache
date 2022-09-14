@@ -1,4 +1,0 @@
-# This file is used as a handy way to clear the VCPkg cache on appveyor.
-# Touch or update this file in a commit to do so.
-
-# 20200808.1 - bump vcpkg version to 2020.06
