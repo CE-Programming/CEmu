@@ -578,9 +578,6 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
             value |= old_7 << 7;
             new_c = old_0;
             break;
-        case 6: /* OPCODETRAP */
-            cpu_trap_rewind(1 + (cpu.PREFIX != 0));
-            return;
         case 7: /* SRL value[z] */
             value >>= 1;
             new_c = old_0;
@@ -1229,6 +1226,10 @@ void cpu_execute(void) {
                                     r->R += ~cpu.PREFIX & 2;
                                     if (cpu.PREFIX && context.z != 6) { /* OPCODETRAP */
                                         cpu_trap_rewind(2);
+                                        break;
+                                    }
+                                    if (context.x == 0 && context.y == 6) { /* OPCODETRAP */
+                                        cpu_trap_rewind(1 + (cpu.PREFIX != 0));
                                         break;
                                     }
                                     old = cpu_read_reg_prefetched(context.z, w);
