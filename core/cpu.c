@@ -392,25 +392,25 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
-static void cpu_rst(uint32_t address) {
+static void cpu_rst(uint32_t address, bool stack, bool mode, bool mixed) {
 #ifdef DEBUG_SUPPORT
     debug_record_call(cpu.registers.PC, cpu.L);
 #endif
     cpu.cycles++;
-    if (cpu.SUFFIX) {
+    if (mixed) {
         if (cpu.ADL) {
             cpu_push_byte_mode(cpu.registers.PCU, true);
             cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
         }
-        cpu_push_byte_mode(cpu.registers.PCH, cpu.L);
-        cpu_push_byte_mode(cpu.registers.PCL, cpu.L);
+        cpu_push_byte_mode(cpu.registers.PCH, stack);
+        cpu_push_byte_mode(cpu.registers.PCL, stack);
         if (!cpu.ADL) {
             cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
         }
     } else {
         cpu_push_word(cpu.registers.PC);
     }
-    cpu_prefetch(address, cpu.L);
+    cpu_prefetch(address, mode);
 }
 
 static void cpu_call(uint32_t address, bool mode, bool mixed) {
@@ -438,7 +438,7 @@ static void cpu_call(uint32_t address, bool mode, bool mixed) {
 }
 
 static void cpu_interrupt(uint32_t address) {
-    cpu_call(address, cpu.ADL, cpu.MADL);
+    cpu_rst(address, cpu.ADL, cpu.ADL | cpu.MADL, cpu.MADL);
 }
 
 static void cpu_trap_rewind(uint_fast8_t rewind) {
@@ -1615,7 +1615,7 @@ void cpu_execute(void) {
                                 cpu_trap();
                                 break;
                             }
-                            cpu_rst(context.y << 3);
+                            cpu_rst(context.y << 3, cpu.L, cpu.L, cpu.SUFFIX);
                             break;
                     }
                     break;
