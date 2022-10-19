@@ -7,6 +7,7 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QSpinBox>
+#include <QtWidgets/QCheckBox>
 
 class KeyHistoryWidget : public QWidget {
     Q_OBJECT
@@ -23,6 +24,7 @@ signals:
     void fontSizeChanged();
 
 private:
+    QString getText(const QString &entry);
     void setFontSize(int size);
 
     QLabel *m_label;
@@ -30,6 +32,7 @@ private:
     QSpacerItem *m_spacer;
     QPlainTextEdit *m_view;
     QPushButton *m_btnClear;
+    QCheckBox *m_chkBoxVertical;
 };
 
 #endif
