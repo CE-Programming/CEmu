@@ -2,7 +2,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QtWidgets/QAction>
+#include <QAction>
 #include <QtWidgets/QMessageBox>
 #include <windows.h>
 
