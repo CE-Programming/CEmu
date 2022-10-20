@@ -37,20 +37,9 @@ KeyHistoryWidget::KeyHistoryWidget(QWidget *parent, int size) : QWidget{parent} 
 KeyHistoryWidget::~KeyHistoryWidget() = default;
 
 void KeyHistoryWidget::add(const QString &entry) {
-    QString key = getText(entry);
     m_view->moveCursor(QTextCursor::End);
-    m_view->insertPlainText(key);
+    m_view->insertPlainText(entry + (m_chkBoxVertical->isChecked() ? "\n" : ""));
     m_view->moveCursor(QTextCursor::End);
-}
-
-QString KeyHistoryWidget::getText(const QString &entry){
-    QString output = "";
-    QString verticalOption = "";
-    if (m_chkBoxVertical->checkState() == Qt::CheckState::Checked) {
-        verticalOption = "\n";
-    }
-    output = verticalOption + entry;
-    return output;
 }
 
 void KeyHistoryWidget::setFontSize(int size) {

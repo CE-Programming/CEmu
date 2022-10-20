@@ -24,7 +24,6 @@ signals:
     void fontSizeChanged();
 
 private:
-    QString getText(const QString &entry);
     void setFontSize(int size);
 
     QLabel *m_label;
