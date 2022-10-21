@@ -26,8 +26,7 @@
 // Alt+Ctrl+Win+Shift
 #define ACWS(code) { Qt::Key_##code, 0, 0, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
 
-
-//This applies the final key to calc conversion
+//This applies the final key to calc conversion for the following macros
 #define HK(code, nativeCode, nativeMask, modifier, mask) { Qt::Key_##code, nativeCode, nativeMask, Qt::modifier##Modifier, Qt::mask##Modifier, QStringLiteral(#code) }
 // NoRMal ignores modifiers
 #define NRM(code) HK(code, 0, 0, No, No)
@@ -36,10 +35,8 @@
 //MODifiers supports checking a single modifier for being pressed (Shift, Shift) or not being pressed (No, Shift)
 #define MOD(code, modifier, mask) HK(code, 0, 0, modifier, mask)
 
-
-
 //Note:
-//{ <key> , <key2>}
+//{ <key> , <key2> , none}
 //This is an OR statement. Valid if <key> OR <key2> is pressed.
 
 static HostKey none = { Qt::Key(0), 0, 0, Qt::NoModifier, Qt::NoModifier, {} };
@@ -313,7 +310,7 @@ const KEYMAP(_84pce);
 // ------------
 #define KEY(key) smartpad_k##key
 
-static const HostKey KEY(enter)[] = { NRM(Enter), none };
+static const HostKey KEY(enter)[] = { NRM(Enter), NRM(Return), none };
 static const HostKey KEY(2nd)[]   = { CW(F6), none };
 static const HostKey KEY(alpha)[] = { CW(F7), none };
 static const HostKey KEY(sto)[]   = { ACW(F4), none };
