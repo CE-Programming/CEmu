@@ -17,47 +17,47 @@ _Note that Release builds have an update checking feature, which is disabled in 
 ## Features
 ### _Standard features_
 * Built-in ROM dump wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader: a ROM from your own calculator is required. CEmu makes it very easy to get it.
-* Accurate and fast emulation (you can also customize the speed and even toggle throttling)
-* Resizable calculator screen
-* "Always-on-top" window option
-* Screen capture, copy, and drag'n'drop (PNG)
-* Screen recording (animated PNG)
-* USB emulation for transfers (including for Apps and OSes)
-* Customizable keybindings with multiple presets
-* Keypress recording and history
-* Full screen modes (F11 key)
-* Emulation states for efficient saving / restoring
-* CE skins (colors like the real devices)
-* Available in English, French, Spanish, and Dutch
+* Accurate and fast emulation (you can also customize the speed and even toggle throttling).
+* Resizable calculator screen.
+* "Always-on-top" window option.
+* Screen capture, copy, and drag'n'drop (PNG).
+* Screen recording (animated PNG).
+* USB emulation for transfers (including for Apps and OSes).
+* Customizable keybindings with multiple presets.
+* Keypress recording and history.
+* Full screen modes (F11 key).
+* Emulation states for efficient saving / restoring.
+* CE skins (colors like the real devices).
+* Available in English, French, Spanish, and Dutch.
 
 ### _Developer features_
-* Main options available via CLI arguments
-* IPC features when launching several CEmu processes
+* Main options available via CLI arguments.
+* IPC features when launching several CEmu processes.
 * Import/Export RAM, ROM, images...
-* Custom display refresh rate, FPS indicator
-* Custom emulation speed/throttling
-* Rich text console for easier logging/debugging
+* Custom display refresh rate, FPS indicator.
+* Custom emulation speed/throttling.
+* Rich text console for easier logging/debugging.
 * Code stepping, jumping...
-* R/W/X breakpoints, watchpoints
-* eZ80 disassembler (with equates support)
-* Port monitor/editor
-* General Timer monitor/editor
-* Memory viewer/editor
-* CPU state/registers viewer/editor
-* LCD state/parameters viewer/editor
-* Memory visualizer (as fully customizable virtual LCDs)
-* Stack viewer
-* OP1-7 viewer
-* FP and OP stacks viewer/editor
-* Variable Allocation Table (VAT) viewer
-* Variable list with preview and program launcher
-* TI-Basic program viewer with syntax-highlight and reformatting
-* Recent files list with ability to quickly resend
-* Cycle counter for benchmarking/profiling
-* Emulation of DMA and SPI (for optimal accuracy)
-* Misc. emulation (backlight, battery...)
-* Pre-I HW Rev. emulation toggle (IM 2 compatibility)
-* "Autotester" (automated unit testing, light scripting)
+* R/W/X breakpoints, watchpoints.
+* eZ80 disassembler (with equates support).
+* Port monitor/editor.
+* General Timer monitor/editor.
+* Memory viewer/editor.
+* CPU state/registers viewer/editor.
+* LCD state/parameters viewer/editor.
+* Memory visualizer (as fully customizable virtual LCDs).
+* Stack viewer.
+* OP1-7 viewer.
+* FP and OP stacks viewer/editor.
+* Variable Allocation Table (VAT) viewer.
+* Variable list with preview and program launcher.
+* TI-Basic program viewer with syntax-highlight and reformatting.
+* Recent files list with ability to quickly resend.
+* Cycle counter for benchmarking/profiling.
+* Emulation of DMA and SPI (for optimal accuracy).
+* Misc. emulation (backlight, battery...).
+* Pre-I HW Rev. emulation toggle (IM 2 compatibility).
+* "Autotester" (automated unit testing, light scripting).
 
 ## How to build
 You can find information for building CEmu yourself from the source on [this](https://github.com/CE-Programming/CEmu/wiki/Building-CEmu) wiki page. If you encounter any problems, feel free to open an [issue](https://github.com/CE-Programming/CEmu/issues)!
