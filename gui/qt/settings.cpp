@@ -99,7 +99,7 @@ const QString MainWindow::SETTING_KEYPAD_CEMU               = QStringLiteral("ce
 const QString MainWindow::SETTING_KEYPAD_TILEM              = QStringLiteral("tilem");
 const QString MainWindow::SETTING_KEYPAD_WABBITEMU          = QStringLiteral("wabbitemu");
 const QString MainWindow::SETTING_KEYPAD_JSTIFIED           = QStringLiteral("jsTIfied");
-const QString MainWindow::SETTING_KEYPAD_SMARTPAD               = QStringLiteral("SmartPad");
+const QString MainWindow::SETTING_KEYPAD_SMARTPAD           = QStringLiteral("SmartPad");
 const QString MainWindow::SETTING_KEYPAD_CUSTOM             = QStringLiteral("custom");
 
 const QString MainWindow::SETTING_PREFERRED_LANG            = QStringLiteral("preferred_lang");
