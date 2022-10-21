@@ -8,9 +8,9 @@ CEmu works natively on Windows, macOS, and Linux. For performance and portabilit
 _Note: CEmu is not a TI product nor is it TI-endorsed/affiliated. If you need an official TI CE emulator, TI-SmartView™ CE is for you._
 
 ## Downloads
-Development builds are available here: https://ce-programming.github.io/CEmu/download
+Development builds are available here: https://ce-programming.github.io/CEmu/download.
 
-Official stable releases are available here: https://github.com/CE-Programming/CEmu/releases
+Official stable releases are available here: https://github.com/CE-Programming/CEmu/releases.
 
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
