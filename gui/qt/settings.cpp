@@ -99,6 +99,7 @@ const QString MainWindow::SETTING_KEYPAD_CEMU               = QStringLiteral("ce
 const QString MainWindow::SETTING_KEYPAD_TILEM              = QStringLiteral("tilem");
 const QString MainWindow::SETTING_KEYPAD_WABBITEMU          = QStringLiteral("wabbitemu");
 const QString MainWindow::SETTING_KEYPAD_JSTIFIED           = QStringLiteral("jsTIfied");
+const QString MainWindow::SETTING_KEYPAD_SMARTPAD               = QStringLiteral("SmartPad");
 const QString MainWindow::SETTING_KEYPAD_CUSTOM             = QStringLiteral("custom");
 
 const QString MainWindow::SETTING_PREFERRED_LANG            = QStringLiteral("preferred_lang");
@@ -804,6 +805,8 @@ void MainWindow::keymapChanged() {
         setKeymap(SETTING_KEYPAD_WABBITEMU);
     } else if (ui->radiojsTIfiedKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_JSTIFIED);
+    } else if (ui->radioSmartPadKeys->isChecked()) {
+        setKeymap(SETTING_KEYPAD_SMARTPAD);
     } else if (ui->radioCustomKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_CUSTOM);
     }
@@ -831,6 +834,8 @@ void MainWindow::setKeymap(const QString &value) {
         mode = QtKeypadBridge::KEYMAP_WABBITEMU;
     } else if (!SETTING_KEYPAD_JSTIFIED.compare(map, Qt::CaseInsensitive)) {
         mode = QtKeypadBridge::KEYMAP_JSTIFIED;
+    } else if (!SETTING_KEYPAD_SMARTPAD.compare(map, Qt::CaseInsensitive)) {
+        mode = QtKeypadBridge::KEYMAP_SMARTPAD;
     } else {
         mode = QtKeypadBridge::KEYMAP_CUSTOM;
     }
@@ -853,6 +858,8 @@ void MainWindow::keymapLoad() {
         ui->radioWabbitemuKeys->setChecked(true);
     } else if (!SETTING_KEYPAD_JSTIFIED.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radiojsTIfiedKeys->setChecked(true);
+    } else if (!SETTING_KEYPAD_SMARTPAD.compare(currKeyMap, Qt::CaseInsensitive)) {
+        ui->radioSmartPadKeys->setChecked(true);
     } else if (!SETTING_KEYPAD_CUSTOM.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radioCustomKeys->setChecked(true);
     }

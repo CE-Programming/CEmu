@@ -39,6 +39,9 @@ bool QtKeypadBridge::setKeymap(KeymapMode map) {
         case KEYMAP_JSTIFIED:
             keymap = get_device_type() == TI84PCE ? jstified_keymap_84pce : jstified_keymap_83pce;
             break;
+        case KEYMAP_SMARTPAD:
+            keymap = get_device_type() == TI84PCE ? smartpad_keymap_84pce : smartpad_keymap_83pce;
+            break;
         case KEYMAP_CUSTOM:
             keymap = custom_keymap;
             break;

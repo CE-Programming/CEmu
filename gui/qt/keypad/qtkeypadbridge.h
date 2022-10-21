@@ -21,6 +21,7 @@ public:
         KEYMAP_TILEM,
         KEYMAP_WABBITEMU,
         KEYMAP_JSTIFIED,
+        KEYMAP_SMARTPAD,
         KEYMAP_CUSTOM,
     } KeymapMode;
 
