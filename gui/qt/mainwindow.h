@@ -791,6 +791,7 @@ private:
     static const QString SETTING_KEYPAD_TILEM;
     static const QString SETTING_KEYPAD_WABBITEMU;
     static const QString SETTING_KEYPAD_JSTIFIED;
+    static const QString SETTING_KEYPAD_SMARTPAD;
     static const QString SETTING_KEYPAD_CUSTOM;
     static const QString SETTING_KEYPAD_CUSTOM_PATH;
 

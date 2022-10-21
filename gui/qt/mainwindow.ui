@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1004</width>
+    <width>1050</width>
     <height>1005</height>
    </rect>
   </property>
@@ -9117,6 +9117,16 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item>
+                <widget class="QRadioButton" name="radioSmartPadKeys">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>SmartPad</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QRadioButton" name="radioCustomKeys">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -10219,8 +10229,8 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1004</width>
-     <height>22</height>
+     <width>1050</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">

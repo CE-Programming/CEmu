@@ -431,6 +431,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->radioTilEmKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioWabbitemuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radiojsTIfiedKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioSmartPadKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioCustomKeys, &QRadioButton::clicked, this, &MainWindow::keymapCustomSelected);
 
     // keypad
