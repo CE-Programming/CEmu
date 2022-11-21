@@ -10226,7 +10226,7 @@ QPushButton:pressed {
     <string>简体中文</string>
    </property>
    <property name="toolTip">
-    <string>Simplified Chinnese</string>
+    <string>Simplified Chinese</string>
    </property>
   </action>
  </widget>
