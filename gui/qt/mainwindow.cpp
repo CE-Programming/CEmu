@@ -397,6 +397,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionFran_ais, &QAction::triggered, [this]{ translateSwitch(QStringLiteral("fr_FR")); });
     connect(ui->actionDutch,    &QAction::triggered, [this]{ translateSwitch(QStringLiteral("nl_NL")); });
     connect(ui->actionEspanol,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("es_ES")); });
+    connect(ui->actionChinese,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("zh_CN")); });
 
     // sending handler
     connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
@@ -1708,12 +1709,12 @@ void MainWindow::showAbout() {
                                              "Albert Huang (<a href='https://github.com/alberthdev'>alberthdev</a>)<br>"
                                              "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
                                              "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"),
-                              QStringLiteral("Matt Waltz (ES), Adrien Bertrand (FR), Stephan Paternotte &amp; Peter Tillema (NL)<br>"),
+                              QStringLiteral("Matt Waltz (ES), Adrien Bertrand (FR), Stephan Paternotte &amp; Peter Tillema (NL), Jerry23011 (ZH)<br>"),
                               QStringLiteral("<a href='https://github.com/KnightOS/z80e'>z80e</a>, "
                                              "<a href='https://github.com/nspire-emus/firebird'>Firebird Emu</a>, "
                                              "<a href='https://github.com/debrouxl/tilibs'>tilibs</a>, "
                                              "<a href='https://github.com/adriweb/tivars_lib_cpp'>tivars_lib_cpp</a>."),
-                              QStringLiteral("<a href='http://www.fatcow.com/free-icons'>FatCow's 'Farm-Fresh Web Icons'</a>"),
+                              QStringLiteral("<a href='https://www.fatcow.com/free-icons'>FatCow's 'Farm-Fresh Web Icons'</a>"),
                               QStringLiteral("<a href='https://www.gnu.org/licenses/gpl-3.0.html'>GPLv3</a>")
                           ));
 

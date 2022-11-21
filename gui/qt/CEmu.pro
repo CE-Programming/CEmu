@@ -53,7 +53,7 @@ TARGET = $$TARGET_NAME
 TEMPLATE = app
 
 # Localization
-TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
+TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts i18n/zh_CN.ts
 
 CONFIG += c++11 console
 

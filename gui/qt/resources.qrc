@@ -85,6 +85,7 @@
         <file>i18n/es_ES.qm</file>
         <file>i18n/fr_FR.qm</file>
         <file>i18n/nl_NL.qm</file>
+        <file>i18n/zh_CN.qm</file>
     </qresource>
     <qresource prefix="/"/>
 </RCC>
