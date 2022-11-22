@@ -12,17 +12,20 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Highlight</source>
-        <translation>高亮</translation>
+        <translatorcomment>&quot;Syntax Highlight&quot;</translatorcomment>
+        <translation type="unfinished">代码高亮</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="75"/>
         <source>Wrap lines</source>
-        <translation>文本调整</translation>
+        <translatorcomment>&quot;auto line wrapping&quot;</translatorcomment>
+        <translation type="unfinished">自动换行</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="98"/>
         <source>Reformat</source>
-        <translation>重新编订</translation>
+        <translatorcomment>&quot;Reformat code&quot;</translatorcomment>
+        <translation type="unfinished">格式化代码</translation>
     </message>
 </context>
 <context>
@@ -48,7 +51,7 @@
     <message>
         <location filename="../lcdwidget.cpp" line="47"/>
         <source>LCD OFF</source>
-        <translation>LCD显示关闭</translation>
+        <translation type="unfinished">LCD关闭</translation>
     </message>
     <message>
         <location filename="../lcdwidget.cpp" line="57"/>
@@ -67,13 +70,14 @@
         <location filename="../mainwindow.ui" line="9640"/>
         <location filename="../mainwindow.cpp" line="697"/>
         <source>Keypad</source>
-        <translation>键盘映射</translation>
+        <translatorcomment>&quot;Virtual keypad&quot;</translatorcomment>
+        <translation type="unfinished">虚拟键盘</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6342"/>
         <location filename="../mainwindow.cpp" line="694"/>
         <source>Variables</source>
-        <translation>可更改文件</translation>
+        <translation type="unfinished">变量</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4272"/>
@@ -92,22 +96,22 @@
         <location filename="../mainwindow.ui" line="4588"/>
         <location filename="../mainwindow.cpp" line="707"/>
         <source>OS Variables</source>
-        <translation>OS 可更改文件</translation>
+        <translation type="unfinished">系统变量</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4853"/>
         <source> Change Calculator Certificate ID</source>
-        <translation> 更改计算器许可ID</translation>
+        <translation type="unfinished"> 更改计算器许可ID</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6686"/>
         <source>Resend selected</source>
-        <translation>将选中的内容重新发送</translation>
+        <translation type="unfinished">重新发送选中的内容</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6722"/>
         <source>Save transferred file paths on exit</source>
-        <translation>在退出时保存传输文件路径</translation>
+        <translation type="unfinished">在退出时保存传输文件路径</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6737"/>
@@ -137,17 +141,17 @@
     <message>
         <location filename="../mainwindow.ui" line="8485"/>
         <source>Automatically save and restore state</source>
-        <translation>自动保存并恢复状态</translation>
+        <translation type="unfinished">自动保存和恢复状态</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8849"/>
         <source>ROM Image</source>
-        <translation>ROM镜像 ROM</translation>
+        <translation type="unfinished">ROM镜像</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="672"/>
         <source>Debug</source>
-        <translation>故障排除</translation>
+        <translation type="unfinished">调试</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="449"/>
@@ -168,7 +172,8 @@
     <message>
         <location filename="../debugger.cpp" line="2750"/>
         <source>Cannot locate calculator ID in the certificate. This is usually due to an improper ROM dump. Please try another ROM dump using a physical calculator.</source>
-        <translation>在许可证书中找不到计算器ID，这通常是由于不正确的ROM镜像转存，请使用实体计算器尝试另一个ROM镜像转存。</translation>
+        <translatorcomment>&quot;Can&apos;t find calculator ID in certificate, this is usually caused by an incorrect ROM dump, please try to get another ROM image from physical calculator.&quot;</translatorcomment>
+        <translation type="unfinished">在许可证书中找不到计算器ID，这通常是由于ROM镜像不正确。请尝试从实体计算器中重新获取ROM镜像。</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2757"/>
@@ -183,32 +188,32 @@
     <message>
         <location filename="../debugger.cpp" line="263"/>
         <source>Debugging Info (*.ini)</source>
-        <translation>故障排除信息 (*.ini)</translation>
+        <translation type="unfinished">调试信息 (*.ini)</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="124"/>
         <source>Invalid Configuration</source>
-        <translation>无效的配置</translation>
+        <translation type="unfinished">无效的配置</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="125"/>
         <source>The debugging configuration is incompatible with CEmu</source>
-        <translation>故障排除信息和CEmu不匹配</translation>
+        <translation type="unfinished">调试配置和CEmu不匹配</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="264"/>
         <source>Debugger Import</source>
-        <translation>导入故障排除信息</translation>
+        <translation type="unfinished">导入调试信息</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="264"/>
         <source>Debugger Export</source>
-        <translation>导出故障排除信息</translation>
+        <translation type="unfinished">导出调试信息</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="412"/>
         <source>Hit breakpoint </source>
-        <translation>点按断点 </translation>
+        <translation type="unfinished">命中断点 </translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="418"/>
@@ -224,13 +229,13 @@
         <location filename="../debugger.cpp" line="419"/>
         <location filename="../debugger.cpp" line="435"/>
         <source>Hit </source>
-        <translation>点按 </translation>
+        <translation type="unfinished">命中</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="419"/>
         <location filename="../debugger.cpp" line="435"/>
         <source> watchpoint </source>
-        <translation> 观察点 </translation>
+        <translation type="unfinished">监视点</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4397"/>
@@ -252,7 +257,7 @@
     <message>
         <location filename="../debugger.cpp" line="446"/>
         <source>NMI triggered</source>
-        <translation>NMI 已激活</translation>
+        <translation type="unfinished">NMI 被触发</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="541"/>
@@ -262,7 +267,8 @@
     <message>
         <location filename="../debugger.cpp" line="1750"/>
         <source>Equate files (*.inc *.lab *.map)</source>
-        <translation>映射文件 (*.inc *.lab *.map)</translation>
+        <translatorcomment>&quot;ASM header file&quot;</translatorcomment>
+        <translation type="unfinished">汇编头文件 (*.inc *.lab *.map)</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="1751"/>
@@ -273,12 +279,12 @@
         <location filename="../debugger.cpp" line="2445"/>
         <location filename="../memorywidget.cpp" line="261"/>
         <source>Copy Address</source>
-        <translation>拷贝地址</translation>
+        <translation type="unfinished">复制地址</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2446"/>
         <source>Copy Data</source>
-        <translation>拷贝数据</translation>
+        <translation type="unfinished">复制数据</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2479"/>
@@ -288,45 +294,46 @@
     <message>
         <location filename="../debugger.cpp" line="2480"/>
         <source>Goto Disasm View</source>
-        <translation>转到Disasm视图</translation>
+        <translation type="unfinished">转到反汇编视图</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2382"/>
         <location filename="../mainwindow.cpp" line="2479"/>
         <location filename="../memorywidget.cpp" line="262"/>
         <source>Toggle Breakpoint</source>
-        <translation>切换断点</translation>
+        <translation type="unfinished">切换断点</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2383"/>
         <location filename="../mainwindow.cpp" line="2480"/>
         <location filename="../memorywidget.cpp" line="263"/>
         <source>Toggle Write Watchpoint</source>
-        <translation>切换写入观察点</translation>
+        <translation type="unfinished">切换写入监视点</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2384"/>
         <location filename="../mainwindow.cpp" line="2481"/>
         <location filename="../memorywidget.cpp" line="264"/>
         <source>Toggle Read Watchpoint</source>
-        <translation>切换读取观察点</translation>
+        <translation type="unfinished">切换读取监视点</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2385"/>
         <location filename="../mainwindow.cpp" line="2482"/>
         <location filename="../memorywidget.cpp" line="265"/>
         <source>Toggle Read/Write Watchpoint</source>
-        <translation>切换读取/写入观察点</translation>
+        <translation type="unfinished">切换读取/写入监视点</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="147"/>
         <source>Step</source>
-        <translation>步骤</translation>
+        <translation type="unfinished">单步运行</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="170"/>
         <source>Step Over</source>
-        <translation>跳过</translation>
+        <translatorcomment>&quot;run until next instruction&quot;</translatorcomment>
+        <translation type="unfinished">运行到下一条指令</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3332"/>
@@ -343,7 +350,7 @@
         <location filename="../mainwindow.ui" line="9212"/>
         <location filename="../mainwindow.cpp" line="701"/>
         <source>Disassembly</source>
-        <translation>拆解</translation>
+        <translation type="unfinished">反汇编</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6548"/>
@@ -353,7 +360,8 @@
     <message>
         <location filename="../mainwindow.ui" line="8511"/>
         <source>Always show on top of other windows</source>
-        <translation>始终将窗口保持置顶</translation>
+        <translatorcomment>&quot;Always show on top of other windows&quot;</translatorcomment>
+        <translation type="unfinished">始终在其他窗口之上显示</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8677"/>
@@ -378,17 +386,18 @@
     <message>
         <location filename="../mainwindow.ui" line="7151"/>
         <source>Keypad Skin Color</source>
-        <translation>键盘映射外观颜色</translation>
+        <translation type="unfinished">键盘外观颜色</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="193"/>
         <source>Step Next</source>
-        <translation>下一步</translation>
+        <translatorcomment>&quot;run until next line of disassembly&quot;</translatorcomment>
+        <translation type="unfinished">运行到下一行反汇编</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3372"/>
         <source>Equates:</source>
-        <translation>映射：</translation>
+        <translation type="unfinished">汇编定义:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3379"/>
@@ -409,7 +418,8 @@
     <message>
         <location filename="../mainwindow.ui" line="3469"/>
         <source>Open debugger to view disassembly...</source>
-        <translation>打开故障排除来查看问题…</translation>
+        <translatorcomment>&quot;Open debugger and view disassembly&quot;</translatorcomment>
+        <translation type="unfinished">打开调试器并查看反汇编…</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3876"/>
@@ -464,7 +474,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9343"/>
         <source>dock</source>
-        <translation>项目</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9356"/>
@@ -479,17 +489,17 @@
     <message>
         <location filename="../mainwindow.ui" line="2711"/>
         <source>Zero</source>
-        <translation>零</translation>
+        <translation type="unfinished">清零</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4130"/>
         <source>Add Breakpoint</source>
-        <translation>添加断电</translation>
+        <translation type="unfinished">添加断点</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4287"/>
         <source>Add Watchpoint</source>
-        <translation>添加观察点</translation>
+        <translation type="unfinished">添加监视点</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4402"/>
@@ -500,12 +510,14 @@
     <message>
         <location filename="../mainwindow.ui" line="4407"/>
         <source>Low</source>
-        <translation>低</translation>
+        <translatorcomment>&quot;lower bound&quot; (of watchpoint range)</translatorcomment>
+        <translation type="unfinished">下限</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4412"/>
         <source>High</source>
-        <translation>高</translation>
+        <translatorcomment>&quot;upper bound&quot; (of watchpoint range)</translatorcomment>
+        <translation type="unfinished">上限</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4445"/>
@@ -525,7 +537,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5600"/>
         <source>Base</source>
-        <translation>底</translation>
+        <translation type="unfinished">基</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5644"/>
@@ -545,12 +557,13 @@
     <message>
         <location filename="../mainwindow.ui" line="6021"/>
         <source>Reset before test</source>
-        <translation>在测试前重设</translation>
+        <translation type="unfinished">在测试前重置</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6031"/>
         <source>[Clear] before test</source>
-        <translation>[清除]在测试之前</translation>
+        <translatorcomment>&quot;automatically press [clear] before test&quot;</translatorcomment>
+        <translation type="unfinished">在测试之前自动按[clear]</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6070"/>
@@ -560,7 +573,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6092"/>
         <source>Start (address):</source>
-        <translation>开始（地址）：</translation>
+        <translation type="unfinished">起始地址：</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6109"/>
@@ -595,47 +608,47 @@
     <message>
         <location filename="../mainwindow.ui" line="6161"/>
         <source>textShadow</source>
-        <translation>文字阴影</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6166"/>
         <source>cmdShadow</source>
-        <translation>cmd阴影</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6171"/>
         <source>pixelShadow</source>
-        <translation>像素阴影</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6176"/>
         <source>pixelShadow2</source>
-        <translation>像素阴影2</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6181"/>
         <source>cmdPixelShadow2</source>
-        <translation>cmd像素阴影2</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6186"/>
         <source>plotSScreen</source>
-        <translation>绘制S屏幕</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6191"/>
         <source>saveSScreen</source>
-        <translation>保存S屏幕</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6196"/>
         <source>lcdPalette</source>
-        <translation>LCD调色板</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6201"/>
         <source>cursorImage</source>
-        <translation>光标图像</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6206"/>
@@ -670,22 +683,24 @@
     <message>
         <location filename="../mainwindow.ui" line="10221"/>
         <source>Change Instance ID</source>
-        <translation>更改实体ID</translation>
+        <translation type="unfinished">更改实例ID</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9066"/>
         <source>Emulate physical LCD SPI drawing</source>
-        <translation>模拟实体计算器LCD SPI绘图</translation>
+        <translatorcomment>&quot;Emulate physical LCD SPI drawing process&quot;</translatorcomment>
+        <translation type="unfinished">模拟实体计算器LCD SPI绘制过程</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9202"/>
         <source>Auto. save and restore debug state</source>
-        <translation>自动保存并恢复故障排除状态</translation>
+        <translation type="unfinished">自动保存并恢复调试状态</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9162"/>
         <source>Emulate Pre-Revision I (IM 2)</source>
-        <translation>模拟Pre-Revision I (IM 2)</translation>
+        <translatorcomment>&quot;Emulate Pre-Revision I hardware (IM 2)&quot;</translatorcomment>
+        <translation type="unfinished">模拟Revision I之前的硬件 (IM 2)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9939"/>
@@ -695,12 +710,12 @@
     <message>
         <location filename="../mainwindow.ui" line="9945"/>
         <source>Ctrl+Shift+X</source>
-        <translation>Ctrl+Shift+X</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9975"/>
         <source>Reset calculator</source>
-        <translation>重设计算器</translation>
+        <translation type="unfinished">重置计算器</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9996"/>
@@ -710,7 +725,7 @@
     <message>
         <location filename="../mainwindow.ui" line="10005"/>
         <source>Restore state</source>
-        <translation>重设状态</translation>
+        <translation type="unfinished">恢复状态</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10014"/>
@@ -749,7 +764,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9192"/>
         <source>Open debugger on reset or nmi</source>
-        <translation>在重置或nmi时打开故障排除</translation>
+        <translation type="unfinished">在重置或NMI时打开调试器</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9172"/>
@@ -760,7 +775,7 @@
         <location filename="../mainwindow.ui" line="7113"/>
         <location filename="../mainwindow.ui" line="8941"/>
         <source>%</source>
-        <translation>%</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8785"/>
@@ -771,7 +786,8 @@
     <message>
         <location filename="../mainwindow.ui" line="8763"/>
         <source>Saved Debug</source>
-        <translation>保存的故障排除信息</translation>
+        <translatorcomment>&quot;saved debug sessions&quot;</translatorcomment>
+        <translation type="unfinished">保存的调试会话</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4115"/>
@@ -788,18 +804,18 @@
         <location filename="../mainwindow.ui" line="828"/>
         <location filename="../mainwindow.ui" line="5483"/>
         <source>Registers</source>
-        <translation>注册</translation>
+        <translation type="unfinished">寄存器</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="410"/>
         <source>Flags</source>
-        <translation>旗标</translation>
+        <translation type="unfinished">标志位</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6854"/>
         <location filename="../mainwindow.ui" line="8963"/>
         <source>Frame skip:</source>
-        <translation>跳过帧：</translation>
+        <translation type="unfinished">跳帧：</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5705"/>
@@ -842,7 +858,8 @@
     <message>
         <location filename="../mainwindow.ui" line="8894"/>
         <source>Throttle:</source>
-        <translation>节流:</translation>
+        <translatorcomment>&quot;(emulation) speed limit&quot;</translatorcomment>
+        <translation type="unfinished">限速:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9137"/>
@@ -857,7 +874,8 @@
     <message>
         <location filename="../mainwindow.ui" line="216"/>
         <source>Step Out</source>
-        <translation>开始</translation>
+        <translatorcomment>&quot;run until function returns&quot;</translatorcomment>
+        <translation type="unfinished">运行到函数返回</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2380"/>
@@ -934,7 +952,7 @@
         <location filename="../mainwindow.ui" line="6528"/>
         <location filename="../mainwindow.ui" line="9544"/>
         <source>Name</source>
-        <translation>名字</translation>
+        <translation type="unfinished">名称</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6538"/>
@@ -987,7 +1005,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3613"/>
         <source>RAM</source>
-        <translation>RAM</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="680"/>
@@ -1023,7 +1041,7 @@
         <location filename="../mainwindow.ui" line="88"/>
         <location filename="../mainwindow.cpp" line="699"/>
         <source>Debug Control</source>
-        <translation>故障排除控制</translation>
+        <translation type="unfinished">调试控制</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="292"/>
@@ -1034,7 +1052,8 @@
     <message>
         <location filename="../mainwindow.ui" line="333"/>
         <source>Debug Trigger</source>
-        <translation>故障排除触发</translation>
+        <translatorcomment>&quot;Debug event trigger&quot;</translatorcomment>
+        <translation type="unfinished">调试事件触发器</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2820"/>
@@ -1050,7 +1069,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3421"/>
         <source>Autoloads any .inc, .map, or .lab found when transferring files </source>
-        <translation>自动加载任何.inc, .map或者找到的.lab文件 </translation>
+        <translation type="unfinished">传输文件时自动加载任何找到的.inc, .map或者.lab文件 </translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3424"/>
@@ -1066,7 +1085,7 @@
         <location filename="../mainwindow.ui" line="3738"/>
         <location filename="../mainwindow.cpp" line="703"/>
         <source>Timers</source>
-        <translation>计时器</translation>
+        <translation type="unfinished">定时器</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3753"/>
@@ -1081,7 +1100,8 @@
     <message>
         <location filename="../mainwindow.ui" line="3836"/>
         <source>Reload Value</source>
-        <translation>重新恢复数值</translation>
+        <translatorcomment>&quot;reset value&quot;</translatorcomment>
+        <translation type="unfinished">重置值</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3843"/>
@@ -1096,7 +1116,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3934"/>
         <source>Real Time Clock</source>
-        <translation>实时时钟</translation>
+        <translation type="unfinished">实时时钟(RTC)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4065"/>
@@ -1121,7 +1141,7 @@
     <message>
         <location filename="../mainwindow.ui" line="4818"/>
         <source>OP Number</source>
-        <translation>OP数</translation>
+        <translation type="unfinished">OP编号</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4693"/>
@@ -1141,7 +1161,7 @@
     <message>
         <location filename="../mainwindow.ui" line="4725"/>
         <source>OP Variables</source>
-        <translation>OP可更改文件</translation>
+        <translation type="unfinished">OP变量</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4828"/>
@@ -1153,7 +1173,7 @@
         <location filename="../mainwindow.ui" line="4869"/>
         <location filename="../mainwindow.cpp" line="708"/>
         <source>OS Stacks</source>
-        <translation>OS栈</translation>
+        <translation type="unfinished">系统栈</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4881"/>
@@ -1163,13 +1183,13 @@
     <message>
         <location filename="../mainwindow.ui" line="4991"/>
         <source>FP Stack</source>
-        <translation>FP栈</translation>
+        <translation type="unfinished">浮点栈</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5110"/>
         <location filename="../mainwindow.cpp" line="709"/>
         <source>Miscellaneous</source>
-        <translation>其他项目</translation>
+        <translation type="unfinished">杂项</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5688"/>
@@ -1220,7 +1240,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5915"/>
         <source>Launch Test Configuration</source>
-        <translation>启动测试配置</translation>
+        <translation type="unfinished">运行测试配置</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5966"/>
@@ -1230,7 +1250,8 @@
     <message>
         <location filename="../mainwindow.ui" line="6360"/>
         <source>Calculator Receive</source>
-        <translation>计算器接收</translation>
+        <translatorcomment>&quot;Receive from calculator&quot;</translatorcomment>
+        <translation type="unfinished">从计算器接收</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1854"/>
@@ -1240,7 +1261,8 @@
     <message>
         <location filename="../mainwindow.ui" line="6448"/>
         <source>Save group</source>
-        <translation>保存组</translation>
+        <translatorcomment>&quot;save as group&quot;</translatorcomment>
+        <translation type="unfinished">保存为组</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6533"/>
@@ -1250,7 +1272,8 @@
     <message>
         <location filename="../mainwindow.ui" line="6559"/>
         <source>Calculator Send</source>
-        <translation>计算器发送</translation>
+        <translatorcomment>&quot;Send to calculator&quot;</translatorcomment>
+        <translation type="unfinished">发送至计算器</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6637"/>
@@ -1270,7 +1293,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6806"/>
         <source>Copy PNG</source>
-        <translation>拷贝PNG</translation>
+        <translation type="unfinished">复制PNG</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6822"/>
@@ -1346,7 +1369,8 @@
     <message>
         <location filename="../mainwindow.ui" line="9179"/>
         <source>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</source>
-        <translation>一些故障排除视图只有在操作系统正常运行的情况下才有意义（例如在一些ASM程序运行时就可能没有意义)</translation>
+        <translatorcomment>&quot;Some of the debugging views only make sense when TIOS is running normally (when some assembly programs are running, it may not make sense, for instance)&quot;</translatorcomment>
+        <translation type="unfinished">一些调试器视图仅在TIOS正常运行的情况下才有意义（例如在一些汇编语言程序运行时就可能没有意义)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9182"/>
@@ -1362,7 +1386,8 @@
     <message>
         <location filename="../mainwindow.ui" line="9231"/>
         <source>Use implicit mode</source>
-        <translation>使用隐藏模式</translation>
+        <translatorcomment>&quot;omit implicit operands&quot;</translatorcomment>
+        <translation type="unfinished">省略隐含的操作数</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9241"/>
@@ -1382,7 +1407,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9262"/>
         <source>Bold disassembly symbols</source>
-        <translation>为拆解标识使用粗体</translation>
+        <translation type="unfinished">为汇编符号使用粗体</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9424"/>
@@ -1439,12 +1464,12 @@
     <message>
         <location filename="../mainwindow.ui" line="9870"/>
         <source>Ctrl+Shift+O</source>
-        <translation>Ctrl+Shift+O</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9882"/>
         <source>Ctrl+Shift+Q</source>
-        <translation>Ctrl+Shift+Q</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9906"/>
@@ -1467,17 +1492,17 @@
         <location filename="../mainwindow.ui" line="10050"/>
         <location filename="../mainwindow.ui" line="10062"/>
         <source>Debug state</source>
-        <translation>故障排除状态</translation>
+        <translation type="unfinished">调试状态</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10071"/>
         <source>New CEmu instance</source>
-        <translation>新建CEmu</translation>
+        <translation type="unfinished">新建CEmu实例</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10083"/>
         <source>Show key history</source>
-        <translation>显示键盘历史记录</translation>
+        <translation type="unfinished">显示按键历史记录</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10092"/>
@@ -1497,17 +1522,17 @@
     <message>
         <location filename="../mainwindow.ui" line="10112"/>
         <source>Ctrl+Shift+C</source>
-        <translation>Ctrl+Shift+C</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10121"/>
         <source>Reset GUI docks</source>
-        <translation>重设界面项目</translation>
+        <translation type="unfinished">重置界面项目</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10130"/>
         <source>Reset CEmu</source>
-        <translation>重设CEmu</translation>
+        <translation type="unfinished">重置CEmu</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10135"/>
@@ -1538,7 +1563,7 @@
     <message>
         <location filename="../mainwindow.ui" line="10177"/>
         <source>Report a bug / give feedback</source>
-        <translation>反馈bug/提出意见</translation>
+        <translation type="unfinished">报告漏洞/反馈意见</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10185"/>
@@ -1589,7 +1614,7 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
         <location filename="../mainwindow.cpp" line="1213"/>
         <location filename="../settings.cpp" line="1188"/>
         <source>Select saved image to restore from</source>
-        <translation>设置保存的镜像的恢复位置</translation>
+        <translation type="unfinished">选择用于恢复的已保存的镜像</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1215"/>
@@ -1636,17 +1661,17 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
     <message>
         <location filename="../mainwindow.cpp" line="1643"/>
         <source>Stop Recording</source>
-        <translation>停止记录</translation>
+        <translation type="unfinished">停止录制</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1887"/>
         <source>Can&apos;t preview this OS variable</source>
-        <translation>无法预览该OS文件</translation>
+        <translation type="unfinished">无法预览该系统变量</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1981"/>
         <source>Select at least one file to transfer</source>
-        <translation>选择至少一个文件传输</translation>
+        <translation type="unfinished">选择至少一个文件以传输</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1505"/>
@@ -1686,22 +1711,22 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
     <message>
         <location filename="../mainwindow.cpp" line="1607"/>
         <source>Saving Recording...</source>
-        <translation>保存录制文件...</translation>
+        <translation type="unfinished">保存录制文件...</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1617"/>
         <source>Save Recorded PNG</source>
-        <translation>保存记录的PNG</translation>
+        <translation type="unfinished">保存录制的PNG</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1633"/>
         <source>A failure occured during PNG recording.</source>
-        <translation>PNG录制的时候出现了错误。</translation>
+        <translation type="unfinished">PNG录制时出现了错误。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1644"/>
         <source>Stop Recording...</source>
-        <translation>停止记录…</translation>
+        <translation type="unfinished">停止录制…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1651"/>
@@ -1721,12 +1746,12 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
     <message>
         <location filename="../mainwindow.cpp" line="1688"/>
         <source>Copy version</source>
-        <translation>拷贝版本</translation>
+        <translation type="unfinished">复制版本</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1696"/>
         <source>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;%3&lt;br&gt;Other contributors include:&lt;br&gt;%4&lt;br&gt;Translations provided by:&lt;br&gt;%5&lt;br&gt;Many thanks to the following projects: %6&lt;br&gt;In-program icons are courtesy of %7.&lt;br&gt;&lt;br&gt;CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.&lt;br&gt;&lt;br&gt;</source>
-        <translation>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;在 GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;主要作者:&lt;br&gt;%3&lt;br&gt;其他贡献者包括&lt;br&gt;%4&lt;br&gt;翻译:&lt;br&gt;%5&lt;br&gt;感谢一下项目: %6&lt;br&gt;应用内图标由 %7.&lt;br&gt;&lt;br&gt;, CEmu在%8下而且不是一个德州仪器的产品也不隶属于德州仪器.&lt;br&gt;&lt;br&gt;</translation>
+        <translation type="unfinished">%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;在 GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;主要作者:&lt;br&gt;%3&lt;br&gt;其他贡献者包括&lt;br&gt;%4&lt;br&gt;翻译:&lt;br&gt;%5&lt;br&gt;感谢以下项目: %6&lt;br&gt;应用内图标由 %7.&lt;br&gt;&lt;br&gt;, CEmu在%8下而且不是一个德州仪器的产品，也不隶属于德州仪器。&lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1743"/>
@@ -1746,7 +1771,7 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
         <location filename="../mainwindow.cpp" line="1884"/>
         <location filename="../mainwindow.cpp" line="1897"/>
         <source>Can&apos;t preview this</source>
-        <translation>无法预览</translation>
+        <translation type="unfinished">无法预览</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1909"/>
@@ -1756,12 +1781,12 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
     <message>
         <location filename="../mainwindow.cpp" line="1952"/>
         <source>Select at least two files to group</source>
-        <translation>选择至少两个文件到组</translation>
+        <translation type="unfinished">选择至少两个文件以组合</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1954"/>
         <source>TI Group (*.8cg);;All Files (*.*)</source>
-        <translation>TI 组 (*.8cg);;Todos los archivos (*.*)</translation>
+        <translation type="unfinished">TI Group (*.8cg);;所有文件 (*.*)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1957"/>
@@ -1790,17 +1815,18 @@ File: </source>
     <message>
         <location filename="../mainwindow.cpp" line="2036"/>
         <source>Error. Unknown one - wat?</source>
-        <translation>未知错误，哼？</translation>
+        <translation type="unfinished">未知错误—啥？</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2076"/>
         <source>See the test config file format and make sure values are correct and referenced files are there.</source>
-        <translation>参见测试文件的格式并确认数值都是正确的且参考文件都在那里。</translation>
+        <translatorcomment>&quot;Please see the test config file format and check if all values are correct and referenced files exist.&quot;</translatorcomment>
+        <translation type="unfinished">请参见测试配置文件的格式并确认数值都是正确的且被引用的文件均存在。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2181"/>
         <source>Make sure you have entered a valid start/size pair or preset.</source>
-        <translation>确定你已经输入有效的启动/大小组或预设。</translation>
+        <translation type="unfinished">确定你已经输入有效的开始/大小值或预设。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2190"/>
@@ -1830,7 +1856,7 @@ File: </source>
     <message>
         <location filename="../mainwindow.cpp" line="2478"/>
         <source>Goto Disassembly View</source>
-        <translation>查看拆解视图</translation>
+        <translation type="unfinished">查看反汇编视图</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2748"/>
@@ -1855,19 +1881,19 @@ File: </source>
     <message>
         <location filename="../mainwindow.cpp" line="677"/>
         <source>Add memory visualizer</source>
-        <translation>添加内存可视化</translation>
+        <translation type="unfinished">添加内存可视化器</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="681"/>
         <source>Memory Visualizer</source>
-        <translation>内存可视化</translation>
+        <translation type="unfinished">内存可视化器</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1016"/>
         <source>CEmu was not able to write to the standard settings location.
 Portable mode has been activated.</source>
-        <translation>CEmu无法写入到标准设置位置
-便携式模式已触发。</translation>
+        <translation type="unfinished">CEmu无法写入到标准设置位置
+便携式模式已启用。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1233"/>
@@ -1897,7 +1923,7 @@ Portable mode has been activated.</source>
     <message>
         <location filename="../mainwindow.cpp" line="1257"/>
         <source>RAM images (*.ram);;All files (*.*)</source>
-        <translation>RAM镜像 (*.ram);;Todos los archivos (*.*)</translation>
+        <translation type="unfinished">RAM镜像 (*.ram);;所有文件 (*.*)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1286"/>
@@ -1934,7 +1960,7 @@ Portable mode has been activated.</source>
         <source>Out of %2 tests attempted:
 %4 passed
 %6 failed</source>
-        <translation>%2 次尝试中:
+        <translation type="unfinished">%2 次测试中:
 %4 通过
 %6 失败</translation>
     </message>
@@ -1969,12 +1995,12 @@ Portable mode has been activated.</source>
     <message>
         <location filename="../settings.cpp" line="488"/>
         <source>Set debugging information path</source>
-        <translation>设置故障排除信息路径</translation>
+        <translation type="unfinished">设置调试信息路径</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="490"/>
         <source>Debugging information (*.ini);;All files (*.*)</source>
-        <translation>故障排除信息 (* .ini);;所有文件 (*. *)</translation>
+        <translation type="unfinished">调试信息 (* .ini);;所有文件 (*. *)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="678"/>
@@ -1991,9 +2017,9 @@ Portable mode has been activated.</source>
         <source>A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup.
 
 The bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, the boot image will be loaded automatically and then removed for convience.</source>
-        <translation>可启动镜像可用于通过预设配置启动 CEmu，而无需任何额外的设置。
+        <translation type="unfinished">可启动镜像可用于通过预设配置启动 CEmu，而无需任何额外的设置。
 
-可启动镜像应放置在与 CEmu 可执行文件相同的目录中。当 CEmu 启动时将自动加载启动镜像，方便后期移除以方便使用。</translation>
+可启动镜像应放置在与 CEmu 可执行文件相同的目录中。当 CEmu 启动时将自动加载并移除启动镜像以方便使用。</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="251"/>
@@ -2003,7 +2029,7 @@ The bootable image should be placed in the same directory as the CEmu executable
     <message>
         <location filename="../settings.cpp" line="253"/>
         <source>Bootable CEmu images (*.cemu);</source>
-        <translation>可启用的CEmu镜像 (* .cemu);</translation>
+        <translation type="unfinished">可启动的CEmu镜像 (* .cemu);</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="635"/>
@@ -2043,7 +2069,8 @@ The bootable image should be placed in the same directory as the CEmu executable
     <message>
         <location filename="../settings.cpp" line="1106"/>
         <source>This version of CEmu is not compatible with your settings, probably made by an older version. Would you like to erase them to prevent any unexpected behavior?</source>
-        <translation>该CEmu版本和您的设置不匹配, 这可能是一个老旧版本造成的 您愿意抹除它们以防止意外情况发生吗？</translation>
+        <translatorcomment>&quot;This version of CEmu does not match with your settings, it&apos;s probably from an older version. Would you like to delete them to prevent unexpected things to happen?&quot;</translatorcomment>
+        <translation type="unfinished">该CEmu版本和您的设置不匹配，其可能来源于一个历史版本。您愿意删除它们以防止意外情况发生吗？</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="1159"/>
@@ -2083,17 +2110,18 @@ The bootable image should be placed in the same directory as the CEmu executable
     <message>
         <location filename="../memorywidget.cpp" line="30"/>
         <source>Input Address (Or Equate):</source>
-        <translation>输入地址 (或者映射):</translation>
+        <translatorcomment>&quot;Input address (or ASM symbol definition)&quot;</translatorcomment>
+        <translation type="unfinished">输入地址 (或者ASM符号定义):</translation>
     </message>
     <message>
         <location filename="../memorywidget.cpp" line="155"/>
         <source>Error when reading input string</source>
-        <translation>在读取输入字符时出现错误</translation>
+        <translation type="unfinished">在读取输入字符串时出现错误</translation>
     </message>
     <message>
         <location filename="../memorywidget.cpp" line="178"/>
         <source>String not found.</source>
-        <translation>没有找到字符。</translation>
+        <translation type="unfinished">没有找到字符串。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="675"/>
@@ -2138,7 +2166,7 @@ File: </source>
     <message>
         <location filename="../sendinghandler.cpp" line="169"/>
         <source>Transfer issue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">传输问题</translation>
     </message>
     <message>
         <location filename="../sendinghandler.cpp" line="169"/>
@@ -2161,7 +2189,7 @@ File: </source>
     <message>
         <location filename="../romselection.ui" line="386"/>
         <source>Using your computer&apos;s calculator connectivity software, copy all the variables prefixed with &quot;ROMData&quot; to your computer. Drag and drop all of them into the box below.</source>
-        <translation>使用您电脑上的计算机连接软件, 将所有前缀为 &quot;ROMData&quot; 的复制到您的电脑上 把所有显示的文件拖到下方的框中。</translation>
+        <translation type="unfinished">使用您电脑上的计算器连接软件, 将所有前缀为 &quot;ROMData&quot; 的复制到您的电脑上 并把它们拖到下方的框中。</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="411"/>
@@ -2208,7 +2236,7 @@ File: </source>
     <message>
         <location filename="../romselection.ui" line="284"/>
         <source>To run the program, select Asm( from the catalog by pressing [2nd][0], and then pressing enter at the following prompt.</source>
-        <translation>要运行该程序，请选择 Asm (用 [2nd][0] 开启目录，选择 Asm)，然后按下 Enter 键。</translation>
+        <translation type="unfinished">要运行该程序，请用 [2nd][0] 打开目录并选择 Asm(，然后在屏幕上显示如下内容时按下 Enter 键。</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="335"/>
@@ -2249,7 +2277,7 @@ File: </source>
     <message>
         <location filename="../romselection.cpp" line="80"/>
         <source>ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)</source>
-        <translation>ROM镜像 (* .rom * .Rom * .ROM);;Todos archivos (*.*)</translation>
+        <translation type="unfinished">ROM镜像 (* .rom * .Rom * .ROM);;所有文件 (*.*)</translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="185"/>
@@ -2260,7 +2288,7 @@ File: </source>
         <location filename="../romselection.cpp" line="185"/>
         <source>Invalid ROM segment
 </source>
-        <translation>无效的ROM镜像
+        <translation type="unfinished">无效的ROM镜像片段
 </translation>
     </message>
     <message>
@@ -2271,7 +2299,7 @@ File: </source>
     <message>
         <location filename="../romselection.cpp" line="195"/>
         <source>ROM Dumper (*.8xp)</source>
-        <translation>ROM转存文件 (*.8xp)</translation>
+        <translation type="unfinished">ROM转存程序 (*.8xp)</translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="221"/>
@@ -2309,7 +2337,7 @@ File: </source>
     <message>
         <location filename="../debugger/visualizerdisplaywidget.cpp" line="118"/>
         <source>Copy Address</source>
-        <translation>拷贝地址</translation>
+        <translation type="unfinished">复制地址</translation>
     </message>
 </context>
 <context>
@@ -2317,72 +2345,72 @@ File: </source>
     <message>
         <location filename="../visualizerwidget.cpp" line="67"/>
         <source>Settings</source>
-        <translation>Ajustes</translation>
+        <translation type="unfinished">设置</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="69"/>
         <source>Apply changes</source>
-        <translation>Aplicar cambios</translation>
+        <translation type="unfinished">应用更改</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="68"/>
         <source>Preset Configurations</source>
-        <translation>Configuraciones preestablecidas</translation>
+        <translation type="unfinished">预设</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="70"/>
         <source>Change Configuration</source>
-        <translation>Cambiar configuración</translation>
+        <translation type="unfinished">调整配置</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="74"/>
         <source>Current LCD State</source>
-        <translation>Estado actual del LCD</translation>
+        <translation type="unfinished">当前LCD状态</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="75"/>
         <source>8bpp Buffer 1</source>
-        <translation></translation>
+        <translation type="unfinished">8bpp缓冲区1</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="76"/>
         <source>8bpp Buffer 2</source>
-        <translation></translation>
+        <translation type="unfinished">8bpp缓冲区2</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="77"/>
         <source>Palette View</source>
-        <translation>Vista de la paleta</translation>
+        <translation type="unfinished">调色板视图</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="112"/>
         <source>Base Address</source>
-        <translation>Dirección</translation>
+        <translation type="unfinished">基址</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="116"/>
         <source>Scale</source>
-        <translation>Amplitud</translation>
+        <translation type="unfinished">缩放</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="118"/>
         <source>Width</source>
-        <translation>Anchura</translation>
+        <translation type="unfinished">宽度</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="120"/>
         <source>Height</source>
-        <translation>Altura</translation>
+        <translation type="unfinished">高度</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="127"/>
         <source>Grid</source>
-        <translation>Cuadrícula</translation>
+        <translation type="unfinished">网格</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="128"/>
         <source>Submit</source>
-        <translation>Enviar</translation>
+        <translation type="unfinished">提交</translation>
     </message>
 </context>
 <context>
@@ -2442,7 +2470,7 @@ File: </source>
     <message>
         <location filename="../main.cpp" line="77"/>
         <source>Hides test complete dialog</source>
-        <translation>隐藏完成测试对话</translation>
+        <translation type="unfinished">隐藏测试完成对话框</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="82"/>
@@ -2457,7 +2485,7 @@ File: </source>
     <message>
         <location filename="../main.cpp" line="88"/>
         <source>Load &lt;Image&gt; into emulator</source>
-        <translation>将 &lt;图像&gt; 加载到模拟器中</translation>
+        <translation type="unfinished">将 &lt;镜像&gt; 加载到模拟器中</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="89"/>
@@ -2467,17 +2495,17 @@ File: </source>
     <message>
         <location filename="../main.cpp" line="94"/>
         <source>Load &lt;DebugInfo&gt; as the setup</source>
-        <translation>将 &lt;故障排除信息&gt; 作为启动设置加载</translation>
+        <translation type="unfinished">将 &lt;调试信息&gt; 作为启动设置加载</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="95"/>
         <source>DebugInfo</source>
-        <translation>故障排除信息</translation>
+        <translation type="unfinished">调试信息</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="99"/>
         <source>Send commands to &lt;id&gt; if it exists, otherwise creates it</source>
-        <translation>将命令发送到 &lt;ID&gt; 如果其已经存在，如果没有会自动创建一个</translation>
+        <translation type="unfinished">将命令发送到 &lt;ID&gt; 如果其已经存在，没有则自动创建一个</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="100"/>
@@ -2487,7 +2515,7 @@ File: </source>
     <message>
         <location filename="../main.cpp" line="104"/>
         <source>Does not reset when sending</source>
-        <translation>在发送中不重置</translation>
+        <translation type="unfinished">在发送时不重置</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="108"/>
@@ -2532,7 +2560,7 @@ File: </source>
     <message>
         <location filename="../main.cpp" line="131"/>
         <source>Reset CEmu completely and delete configuration files</source>
-        <translation>将CEmu完全重设并删除配置文件</translation>
+        <translation type="unfinished">将CEmu完全重置并删除配置文件</translation>
     </message>
 </context>
 <context>
@@ -2565,7 +2593,8 @@ File: </source>
     <message>
         <location filename="../searchwidget.ui" line="72"/>
         <source>Prev Not</source>
-        <translation>另外 上一个</translation>
+        <translatorcomment>&quot;Previous unmatching item&quot;</translatorcomment>
+        <translation type="unfinished">上一个不匹配项</translation>
     </message>
     <message>
         <location filename="../searchwidget.ui" line="85"/>
@@ -2575,7 +2604,8 @@ File: </source>
     <message>
         <location filename="../searchwidget.ui" line="92"/>
         <source>Next Not</source>
-        <translation>另外 下一个</translation>
+        <translatorcomment>&quot;Next unmatching item&quot;</translatorcomment>
+        <translation type="unfinished">下一个不匹配项</translation>
     </message>
     <message>
         <location filename="../searchwidget.ui" line="99"/>
@@ -2585,7 +2615,7 @@ File: </source>
     <message>
         <location filename="../searchwidget.ui" line="110"/>
         <source>Input search string:</source>
-        <translation>输入搜索字符：</translation>
+        <translation type="unfinished">输入要搜索的字符串：</translation>
     </message>
 </context>
 </TS>
