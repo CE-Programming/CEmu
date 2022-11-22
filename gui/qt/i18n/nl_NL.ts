@@ -1357,7 +1357,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="10229"/>
-        <source>Simplified Chinnese</source>
+        <source>Simplified Chinese</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
