@@ -261,7 +261,7 @@ QString MainWindow::debugGetFile(bool save) {
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setDirectory(m_dir);
     dialog.setNameFilter(tr("Debugging Info (*.ini)"));
-    dialog.setWindowTitle(save ? tr("Debugger Import") : tr("Debugger Export"));
+    dialog.setWindowTitle(save ? tr("Debugger Export") : tr("Debugger Import"));
     dialog.setDefaultSuffix(QStringLiteral("ini"));
     dialog.exec();
 
