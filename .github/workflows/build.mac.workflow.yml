@@ -1,0 +1,100 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [ master, features/github-actions ]
+  pull_request:
+    branches: [ master, features/github-actions ]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: "Build: ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest]
+
+    steps:
+    - name: Checkout Git Repo
+      uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: Install dependencies
+      run: |
+        set -e
+        brew install libarchive libpng zlib
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+          target: desktop
+          setup-python: false
+
+    - name: Build CEmu Qt on macOS
+      run: |
+        set -e
+        export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig:$PKG_CONFIG_PATH"
+        cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
+        mkdir build
+        cd build
+        qmake ../gui/qt && make -j4
+        macdeployqt CEmu.app
+        mkdir -p /tmp/CEmu_mac_master/
+        mv CEmu.app /tmp/CEmu_mac_master/
+
+    - name: "Codesign CEmu.app"
+      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' # don't run on forks, since they don't have secrets
+      env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
+          MACOS_CODESIGN_IDENT: ${{ secrets.MACOS_CODESIGN_IDENT }}
+      run: |
+          echo $MACOS_CERTIFICATE | base64 -d > certificate.p12
+          security create-keychain -p $MACOS_KEYCHAIN_PWD build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p $MACOS_KEYCHAIN_PWD build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MACOS_KEYCHAIN_PWD build.keychain
+          /usr/bin/codesign --deep --force --verify --verbose --sign "$MACOS_CODESIGN_IDENT" --timestamp --options runtime /tmp/CEmu_mac_master/CEmu.app
+
+    - name: "Create the DMG"
+      run: |
+          brew install create-dmg || brew install create-dmg; # we try twice because sometimes it fails...
+          # The codesign variable may be empty (for forks) but that's fine, create-dmg only does code-signing if it's not empty.
+          createDmgArgs="--codesign '${{ secrets.MACOS_CODESIGN_IDENT }}' \
+              --volname 'CEmu_mac_master' \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 64 \
+              --icon 'CEmu.app' 125 200 \
+              --app-drop-link 400 200 \
+              'CEmu_mac_master.dmg' \
+              '/tmp/CEmu_mac_master/'"
+          eval "create-dmg $createDmgArgs" || eval "create-dmg $createDmgArgs" # We also retry just in case...
+
+    - name: "Notarize DMG"
+      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' # don't run on forks, since they don't have secrets
+      uses: adriweb/xcode-notarize-please@v1.1
+      with:
+          product-path: CEmu_mac_master.dmg
+          appstore-connect-username: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
+          appstore-connect-password: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+          primary-bundle-id: 'com.adriweb.CEmu'
+
+    - name: "Staple DMG"
+      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' # don't run on forks, since they don't have secrets
+      uses: devbotsxyz/xcode-staple@v1.0.0
+      with:
+          product-path: CEmu_mac_master.dmg
+
+    - name: Upload dmg
+      uses: actions/upload-artifact@v2
+      with:
+          name: CEmu_mac_master
+          path: CEmu_mac_master.dmg
+
