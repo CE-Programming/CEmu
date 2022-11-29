@@ -1752,7 +1752,7 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
     <message>
         <location filename="../mainwindow.cpp" line="1696"/>
         <source>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;%3&lt;br&gt;Other contributors include:&lt;br&gt;%4&lt;br&gt;Translations provided by:&lt;br&gt;%5&lt;br&gt;Many thanks to the following projects: %6&lt;br&gt;In-program icons are courtesy of %7.&lt;br&gt;&lt;br&gt;CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.&lt;br&gt;&lt;br&gt;</source>
-        <translation>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;在 GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;主要作者:&lt;br&gt;%3&lt;br&gt;其他贡献者包括&lt;br&gt;%4&lt;br&gt;翻译:&lt;br&gt;%5&lt;br&gt;感谢以下项目: %6&lt;br&gt;应用内图标由 %7.&lt;br&gt;&lt;br&gt;, CEmu在%8下而且不是一个德州仪器的产品，也不隶属于德州仪器。&lt;br&gt;&lt;br&gt;</translation>
+        <translation>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;GitHub 主页&lt;/a&gt;&lt;br&gt;&lt;br&gt;主要作者:&lt;br&gt;%3&lt;br&gt;其他贡献者:&lt;br&gt;%4&lt;br&gt;翻译:&lt;br&gt;%5&lt;br&gt;感谢以下项目: %6&lt;br&gt;应用内图标由 %7 提供&lt;br&gt;&lt;br&gt;CEmu遵循%8协议，且不是一个德州仪器的产品，同时也不隶属于德州仪器&lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1743"/>
