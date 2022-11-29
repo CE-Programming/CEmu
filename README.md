@@ -1,4 +1,4 @@
-# CEmu [![Build Linux](https://github.com/CE-Programming/CEmu/workflows/Build%20Linux/badge.svg)](https://github.com/CE-Programming/CEmu/actions?query=workflow%3A%22Build+Linux%22) [![Build/Deploy MSVC Windows](https://github.com/CE-Programming/CEmu/workflows/Build/Deploy%20MSVC%20Windows/badge.svg)](https://github.com/CE-Programming/CEmu/actions?query=workflow%3A%22Build%2FDeploy+MSVC+Windows%22) [![Build Status](https://ci.appveyor.com/api/projects/status/github/CE-Programming/CEmu?branch=master&svg=true)](https://ci.appveyor.com/project/alberthdev/cemu-q0nl8) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/ce-programming-cemu) [![IRC badge](https://img.shields.io/badge/IRC%20channel-%23cemu--dev%20on%20EFNet-blue.svg)](http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev)
+# CEmu [![Build macOS](https://github.com/CE-Programming/CEmu/actions/workflows/build.mac.workflow.yml/badge.svg)](https://github.com/CE-Programming/CEmu/actions/workflows/build.mac.workflow.yml) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/ce-programming-cemu) [![Discord Chat Link](https://img.shields.io/discord/432891584451706892?logo=discord)](https://discord.gg/CyUmEx9zmQ)
 
 CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
 CEmu works natively on Windows, macOS, and Linux. For performance and portability, the core is programmed in C and its customizable GUI in C++ with Qt.
@@ -60,11 +60,20 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * "Autotester" (automated unit testing, light scripting)
 
 ## How to build
+
 You can find information for building CEmu yourself from the source on [this](https://github.com/CE-Programming/CEmu/wiki/Building-CEmu) wiki page. If you encounter any problems, feel free to open an [issue](https://github.com/CE-Programming/CEmu/issues)!
+
+## Getting Help
+
+You can join us on the `CE Programming` Discord server in the `#cemu-dev` channel: [Discord Chat Link](https://discord.gg/CyUmEx9zmQ).\
+If you prefer IRC, the chat is also bridged to the EFNet `#cemu-dev` channel (you can use a web client like [IRCCloud](https://www.irccloud.com/irc/efnet/channel/ez80-dev), if you don't want to use a local application).
+
+Depending on how active the channel is you might not get a response.\
+In that case, post your questions [here](https://github.com/CE-Programming/toolchain/discussions) or [here](https://github.com/CE-Programming/toolchain/issues), and we will get back to you as soon as possible.
 
 ## Contributing
 
-You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, in addition to any [feature requests](https://github.com/CE-Programming/CEmu/issues) you may have. If you want to help, [tell us](http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev), or send patches / pull requests!
+You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, in addition to any [feature requests](https://github.com/CE-Programming/CEmu/issues) you may have. If you want to help, tell us, or send patches / pull requests!
 
 If you'd like to contribute code, please consider using [Artistic Style](http://astyle.sourceforge.net/) with the settings specified in the `.astylerc` file to format your code. Qt Creator can [format code with Artistic Style](http://doc.qt.io/qtcreator/creator-beautifier.html) with minimal setup.  
 We also welcome more translations. Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5/linguist-manager.html)).
