@@ -66,10 +66,10 @@ You can find information for building CEmu yourself from the source on [this](ht
 ## Getting Help
 
 You can join us on the `CE Programming` Discord server in the `#cemu-dev` channel: [Discord Chat Link](https://discord.gg/CyUmEx9zmQ).\
-If you prefer IRC, the chat is also bridged to the EFNet `#cemu-dev` channel (you can use a web client like [IRCCloud](https://www.irccloud.com/irc/efnet/channel/ez80-dev), if you don't want to use a local application).
+If you prefer IRC, the chat is also bridged to the EFNet `#cemu-dev` channel (you can use a web client like [IRCCloud](https://www.irccloud.com/irc/efnet/channel/cemu-dev), if you don't want to use a local application).
 
 Depending on how active the channel is you might not get a response.\
-In that case, post your questions [here](https://github.com/CE-Programming/toolchain/discussions) or [here](https://github.com/CE-Programming/toolchain/issues), and we will get back to you as soon as possible.
+In that case, post your questions [here](https://github.com/CE-Programming/CEmu/issues), and we will get back to you as soon as possible.
 
 ## Contributing
 
