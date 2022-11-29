@@ -10,7 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
+    - name: Install Linux dependencies (Ubuntu 18.04+)
+      run: |
+        set -e
+        sudo apt-get update
+        sudo apt-get install qt5-default qtbase5-dev libgl1-mesa-dev libarchive-dev
+        
+    - name: Prepare build
+      run: |
+        set -e
+        cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
+        mkdir build
+        cd build
+        qmake ../gui/qt 
+    
     - uses: vapier/coverity-scan-action@v1
       with:
         email: ${{ secrets.COVERITY_SCAN_EMAIL }}
         token: ${{ secrets.COVERITY_SCAN_TOKEN }}
+        working-directory: "${{ github.workspace }}/build"
+
