@@ -47,12 +47,13 @@ jobs:
         mv CEmu.app /tmp/CEmu_mac_master/
 
     - name: "Codesign CEmu.app"
-      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' # don't run on forks, since they don't have secrets
       env:
+          HAVE_SECRETS: ${{ secrets.MACOS_CERTIFICATE_PWD != '' }}
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
           MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
           MACOS_CODESIGN_IDENT: ${{ secrets.MACOS_CODESIGN_IDENT }}
+      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
       run: |
           echo $MACOS_CERTIFICATE | base64 -d > certificate.p12
           security create-keychain -p $MACOS_KEYCHAIN_PWD build.keychain
@@ -78,7 +79,9 @@ jobs:
           eval "create-dmg $createDmgArgs" || eval "create-dmg $createDmgArgs" # We also retry just in case...
 
     - name: "Notarize DMG"
-      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' # don't run on forks, since they don't have secrets
+      env:
+        HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
+      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
       uses: adriweb/xcode-notarize-please@v1.1
       with:
           product-path: CEmu_mac_master.dmg
@@ -87,7 +90,9 @@ jobs:
           primary-bundle-id: 'com.adriweb.CEmu'
 
     - name: "Staple DMG"
-      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' # don't run on forks, since they don't have secrets
+      env:
+        HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
+      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
       uses: devbotsxyz/xcode-staple@v1.0.0
       with:
           product-path: CEmu_mac_master.dmg
