@@ -1933,6 +1933,11 @@ Portable mode has been activated.</source>
         <translation>保存失败，请检查写入权限设置.</translation>
     </message>
     <message>
+        <location filename="../mainwindow.cpp" line="1691"/>
+        <source>Version copied!</source>
+        <translation>已拷贝版本信息!</translation>
+    </message>
+    <message>
         <location filename="../mainwindow.cpp" line="1782"/>
         <source>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8eu *.8pu *.b84 *.b83);;All Files (*.*)</source>
         <translation>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8eu *.8pu *.b84 *.b83);;All Files (*.*)</translation>

@@ -1688,7 +1688,7 @@ void MainWindow::showAbout() {
     QAbstractButton *buttonCopyVersion = aboutBox->addButton(tr("Copy version"), QMessageBox::ActionRole);
     // Needed to prevent the button from closing the dialog
     buttonCopyVersion->disconnect();
-    connect(buttonCopyVersion, &QAbstractButton::clicked, this, [=](){ QApplication::clipboard()->setText("CEmu " CEMU_VERSION " (git: " CEMU_GIT_SHA ")", QClipboard::Clipboard); buttonCopyVersion->setEnabled(false); buttonCopyVersion->setText("Version copied!"); });
+    connect(buttonCopyVersion, &QAbstractButton::clicked, this, [=](){ QApplication::clipboard()->setText("CEmu " CEMU_VERSION " (git: " CEMU_GIT_SHA ")", QClipboard::Clipboard); buttonCopyVersion->setEnabled(false); buttonCopyVersion->setText(tr("Version copied!")); });
 
     QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();

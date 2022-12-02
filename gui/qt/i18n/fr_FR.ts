@@ -1806,6 +1806,11 @@ Le mode portable a été activé.</translation>
         <translation>Copier la version</translation>
     </message>
     <message>
+        <location filename="../mainwindow.cpp" line="1691"/>
+        <source>Version copied!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../mainwindow.cpp" line="1743"/>
         <source>[CEmu] Dock output redirected to stdout. Use the radio button to enable dock.</source>
         <translation>[CEmu] Sortie vers le dock redirigée vers stdout. Utilisez le bouton radio pour l&apos;activer.</translation>
