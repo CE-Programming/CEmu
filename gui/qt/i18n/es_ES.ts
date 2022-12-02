@@ -1905,6 +1905,11 @@ El modo portátil ha sido activado.</translation>
         <translation>Error de guardado.</translation>
     </message>
     <message>
+        <location filename="../mainwindow.cpp" line="1691"/>
+        <source>Version copied!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../mainwindow.cpp" line="1782"/>
         <source>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8eu *.8pu *.b84 *.b83);;All Files (*.*)</source>
         <translation type="unfinished"></translation>
