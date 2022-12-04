@@ -29,7 +29,7 @@ jobs:
         brew install libarchive libpng zlib
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
       with:
           target: desktop
           setup-python: false
@@ -82,7 +82,7 @@ jobs:
       env:
         HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
       if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
-      uses: adriweb/xcode-notarize-please@v1.1
+      uses: adriweb/xcode-notarize-please@77452e14fadc0b5629870193e273c99623a1b320 # v1.2
       with:
           product-path: CEmu_mac_master.dmg
           appstore-connect-username: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
@@ -93,12 +93,12 @@ jobs:
       env:
         HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
       if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
-      uses: devbotsxyz/xcode-staple@v1.0.0
+      uses: adriweb/xcode-staple@2114e06658d8492882b252406aaa7fee3e75ed85 # v1.0.0
       with:
           product-path: CEmu_mac_master.dmg
 
     - name: Upload dmg
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
           name: CEmu_mac_master
           path: CEmu_mac_master.dmg
