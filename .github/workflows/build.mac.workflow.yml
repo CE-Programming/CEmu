@@ -33,6 +33,7 @@ jobs:
       with:
           target: desktop
           setup-python: false
+          cache: true
 
     - name: Build CEmu Qt on macOS
       run: |
@@ -53,7 +54,7 @@ jobs:
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
           MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
           MACOS_CODESIGN_IDENT: ${{ secrets.MACOS_CODESIGN_IDENT }}
-      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
+      if: ${{ runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && env.HAVE_SECRETS == 'true' }}
       run: |
           echo $MACOS_CERTIFICATE | base64 -d > certificate.p12
           security create-keychain -p $MACOS_KEYCHAIN_PWD build.keychain
@@ -81,7 +82,7 @@ jobs:
     - name: "Notarize DMG"
       env:
         HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
-      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
+      if: ${{ runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && env.HAVE_SECRETS == 'true' }}
       uses: adriweb/xcode-notarize-please@77452e14fadc0b5629870193e273c99623a1b320 # v1.2
       with:
           product-path: CEmu_mac_master.dmg
@@ -92,7 +93,7 @@ jobs:
     - name: "Staple DMG"
       env:
         HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
-      if: runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && ${{ env.HAVE_SECRETS == 'true' }}
+      if: ${{ runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && env.HAVE_SECRETS == 'true' }}
       uses: adriweb/xcode-staple@2114e06658d8492882b252406aaa7fee3e75ed85 # v1.0.0
       with:
           product-path: CEmu_mac_master.dmg
