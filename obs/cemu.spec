@@ -98,6 +98,12 @@ test -x "$(type -p gcc-8)"   && export CC=gcc-8
 test -x "$(type -p g++-8)"   && export CXX=g++-8
 test -x "$(type -p gcc-9)"   && export CC=gcc-9
 test -x "$(type -p g++-9)"   && export CXX=g++-9
+test -x "$(type -p gcc-10)"   && export CC=gcc-10
+test -x "$(type -p g++-10)"   && export CXX=g++-10
+test -x "$(type -p gcc-11)"   && export CC=gcc-11
+test -x "$(type -p g++-11)"   && export CXX=g++-11
+test -x "$(type -p gcc-12)"   && export CC=gcc-12
+test -x "$(type -p g++-12)"   && export CXX=g++-12
 cd gui/qt/capture/libpng-apng && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../..
 qmake-qt5 QMAKE_CC="$CC" QMAKE_CXX="$CXX" QMAKE_LINK="$CXX" gui/qt/CEmu.pro CEMU_VERSION=v1.3 USE_LIBPNG=internal TARGET_NAME=cemu
 make %{?_smp_mflags}
