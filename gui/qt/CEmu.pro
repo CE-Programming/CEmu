@@ -178,7 +178,7 @@ QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
 
 if(macx) {
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
     ICON = resources/icons/icon.icns
     LIBS += -framework Cocoa
 }
