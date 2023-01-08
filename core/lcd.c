@@ -60,7 +60,7 @@ void emu_lcd_drawframe(void *output) {
 }
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int use_spi) {
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size, int use_spi) {
     bool bebo;
     uint_fast8_t mode;
     uint32_t word, color;
@@ -74,9 +74,9 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control,
         return;
     }
 
-    _rgb = control & (1 << 8);
-    bebo = control & (1 << 9);
-    mode = control >> 1 & 7;
+    _rgb = lcd_control & (1 << 8);
+    bebo = lcd_control & (1 << 9);
+    mode = lcd_control >> 1 & 7;
     out = output;
     out_end = out + size;
     dat = data;
@@ -89,7 +89,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control,
         uint_fast8_t bpp = 1u << mode;
         uint32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
-        bool bepo = control & (1 << 10);
+        bool bepo = lcd_control & (1 << 10);
         if (!bepo) { bi ^= 8 - bpp; }
         do {
             uint_fast8_t bitpos = 32;
@@ -428,8 +428,8 @@ void lcd_update(void) {
     emu_set_lcd_ptrs(&lcd.data, &lcd.data_end, LCD_WIDTH, LCD_HEIGHT, lcd.upbase, lcd.control, true);
 }
 
-void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask) {
-    uint8_t mode = control >> 1 & 7;
+void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t lcd_control, bool mask) {
+    uint8_t mode = lcd_control >> 1 & 7;
     uint8_t *data_start, *data_end, *mem_end;
     int length = 0;
     int size;

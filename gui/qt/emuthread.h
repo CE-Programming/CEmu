@@ -33,9 +33,9 @@ public:
     void setThrottle(bool state);
     void writeConsole(int console, const char *format, va_list args);
     void debugOpen(int reason, uint32_t addr);
-    void save(emu_data_t type, const QString &path);
+    void save(emu_data_t fileType, const QString &filePath);
     void setRam(const QString &path);
-    void load(emu_data_t type, const QString &path);
+    void load(emu_data_t fileType, const QString &filePath);
     void test(const QString &config, bool run);
 
     enum {

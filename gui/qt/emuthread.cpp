@@ -272,9 +272,9 @@ void EmuThread::test(const QString &config, bool run) {
     req(RequestAutoTester);
 }
 
-void EmuThread::save(emu_data_t type, const QString &path) {
-    m_savePath = path;
-    m_saveType = type;
+void EmuThread::save(emu_data_t fileType, const QString &filePath) {
+    m_savePath = filePath;
+    m_saveType = fileType;
     req(RequestSave);
 }
 
@@ -322,17 +322,17 @@ void EmuThread::debug(bool state) {
     }
 }
 
-void EmuThread::load(emu_data_t type, const QString &path) {
+void EmuThread::load(emu_data_t fileType, const QString &filePath) {
 
     /* if loading an image or rom, we need to restart emulation */
-    if (type == EMU_DATA_IMAGE || type == EMU_DATA_ROM) {
+    if (fileType == EMU_DATA_IMAGE || fileType == EMU_DATA_ROM) {
         setTerminationEnabled();
         stop();
 
-        emit loaded(emu_load(type, path.toStdString().c_str()), type);
-    } else if (type == EMU_DATA_RAM) {
-        m_loadPath = path;
-        m_loadType = type;
+        emit loaded(emu_load(fileType, filePath.toStdString().c_str()), fileType);
+    } else if (fileType == EMU_DATA_RAM) {
+        m_loadPath = filePath;
+        m_loadType = fileType;
         req(RequestLoad);
     }
 }

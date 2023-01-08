@@ -827,11 +827,11 @@ int usb_dusb_device(usb_event_t *event) {
                     ++arg;
                 }
                 while (*arg == ',') {
-                    int type = parse_hex_digits(++arg);
-                    if (type < 0) {
+                    const int vartype = parse_hex_digits(++arg);
+                    if (vartype < 0) {
                         return EINVAL;
                     }
-                    command->vartype = type;
+                    command->vartype = vartype;
                     do {
                         int c = parse_hex_digits(arg += 2);
                         if (c < 0) {
@@ -848,13 +848,13 @@ int usb_dusb_device(usb_event_t *event) {
                     return errno;
                 }
                 if (command->type == DUSB_SEND_COMMAND) {
-                    long length;
+                    long file_length;
                     if (fseek(command->file, 0, SEEK_END) ||
-                        (length = ftell(command->file)) < 0) {
+                        (file_length = ftell(command->file)) < 0) {
                         return errno;
                     }
-                    command->file_length = length;
-                    context->total += length;
+                    command->file_length = file_length;
+                    context->total += file_length;
                 }
             }
             event->context = context;

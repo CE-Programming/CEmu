@@ -515,9 +515,9 @@ void MainWindow::setUIDocks() {
         DockWidget *dw = new DockWidget(ui->tabWidget, this);
 
         // Fill "Docks" menu
-        QAction *action = dw->toggleViewAction();
-        action->setIcon(dw->windowIcon());
-        m_menuDocks->addAction(action);
+        QAction *tvAction = dw->toggleViewAction();
+        tvAction->setIcon(dw->windowIcon());
+        m_menuDocks->addAction(tvAction);
 
         dw->setState(m_uiEditMode);
         addDockWidget(Qt::RightDockWidgetArea, dw);
@@ -539,9 +539,9 @@ void MainWindow::setUIDocks() {
         DockWidget *dw = new DockWidget(ui->tabDebug, this);
 
         // Fill "Docks" menu
-        QAction *action = dw->toggleViewAction();
-        action->setIcon(dw->windowIcon());
-        m_menuDebug->addAction(action);
+        QAction *tvAction = dw->toggleViewAction();
+        tvAction->setIcon(dw->windowIcon());
+        m_menuDebug->addAction(tvAction);
 
         dw->setState(m_uiEditMode);
         addDockWidget(Qt::RightDockWidgetArea, dw);

@@ -500,13 +500,13 @@ public:
             item.popoverTouchBar.delegate = delegate;
             // Add ordered items array
             NSMutableArray *array = [[NSMutableArray alloc] init];
-            for (auto action : action->menu()->actions()) {
-                if (action->isVisible()) {
-                    [self addItem:action];
-                    if (action->isSeparator() && action->text().isEmpty())
+            for (auto menuAction : action->menu()->actions()) {
+                if (menuAction->isVisible()) {
+                    [self addItem:menuAction];
+                    if (menuAction->isSeparator() && menuAction->text().isEmpty())
                         [array addObject:NSTouchBarItemIdentifierFixedSpaceLarge];
                     else
-                        [array addObject:identifierForAction(action).toNSString()];
+                        [array addObject:identifierForAction(menuAction).toNSString()];
                 }
             }
             item.popoverTouchBar.defaultItemIdentifiers = array;

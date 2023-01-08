@@ -2608,8 +2608,8 @@ void MainWindow::ipcCloseConnected() {
             } else {
                 if (opts.pidString != pid) {
                     QByteArray byteArray;
-                    QDataStream stream(&byteArray, QIODevice::WriteOnly);
-                    stream.setVersion(QDataStream::Qt_5_5);
+                    QDataStream dataStream(&byteArray, QIODevice::WriteOnly);
+                    dataStream.setVersion(QDataStream::Qt_5_5);
                     unsigned int type = IPC_CLOSE;
                     stream << type;
 

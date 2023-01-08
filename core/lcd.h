@@ -86,8 +86,8 @@ void emu_set_lcd_callback(void (*callback)(void*), void *data);
 void emu_set_lcd_spi(int enable);
 
 /* advanced api functions */
-void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask);
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi);
+void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t lcd_control, bool mask);
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size, int spi);
 
 #ifdef __cplusplus
 }

@@ -176,8 +176,8 @@ error:
 
     disasm.map.clear();
     disasm.reverse.clear();
-    for (QString &file : m_equateFiles) {
-        equatesAddFile(file);
+    for (QString &equFile : m_equateFiles) {
+        equatesAddFile(equFile);
     }
 }
 
@@ -1588,8 +1588,8 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
             uint32_t low = static_cast<uint32_t>(hex2int(m_prevWatchLow));
             uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
-            for (uint32_t addr = low; addr <= high; addr++) {
-                debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+            for (uint32_t watch_addr = low; watch_addr <= high; watch_addr++) {
+                debug_watch(watch_addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
             }
         }
 
@@ -1639,8 +1639,8 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
             uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
             uint32_t high = static_cast<uint32_t>(hex2int(m_prevWatchHigh));
 
-            for (uint32_t addr = low; addr <= high; addr++) {
-                debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+            for (uint32_t watch_addr = low; watch_addr <= high; watch_addr++) {
+                debug_watch(watch_addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
             }
         }
 

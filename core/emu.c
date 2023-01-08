@@ -100,7 +100,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         const uint8_t *data;
         uint32_t outer_field_size;
         uint32_t data_field_size;
-        ti_device_t type = TI84PCE;
+        ti_device_t device_type = TI84PCE;
         uint32_t offset;
         size_t size;
 
@@ -174,7 +174,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             if (field_type != 0x80C2) break;
 
             if (data[1] != 0 && data[1] != 1) break;
-            type = (ti_device_t)(data[1]);
+            device_type = (ti_device_t)(data[1]);
 
             /* If we come here, we've found something. */
             gotType = true;
@@ -186,10 +186,10 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         state = EMU_STATE_VALID;
 
         if (gotType) {
-            set_device_type(type);
+            set_device_type(device_type);
         } else {
             set_device_type(TI84PCE);
-            gui_console_printf("[CEmu] Could not determine device type.\n");
+            gui_console_printf("[CEmu] Could not determine device device_type.\n");
             state = EMU_STATE_NOT_A_CE;
         }
 
