@@ -1,6 +1,8 @@
 ﻿#ifndef LCD_H
 #define LCD_H
 
+#include "defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

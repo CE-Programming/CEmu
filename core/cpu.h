@@ -21,6 +21,7 @@
 #define CPU_H
 
 #include "atomics.h"
+#include "defines.h"
 
 #ifdef __cplusplus
 extern "C" {

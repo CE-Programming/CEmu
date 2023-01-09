@@ -1,6 +1,8 @@
 #ifndef KEYPAD_H
 #define KEYPAD_H
 
+#include "defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

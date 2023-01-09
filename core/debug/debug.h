@@ -4,12 +4,12 @@
 #define DEBUG_H
 
 #include "../atomics.h"
+#include "../defines.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "../defines.h"
 #include <stdint.h>
 #include <stdbool.h>
 

@@ -13,6 +13,8 @@
 #include <unordered_map>
 
 #include "../../core/atomics.h"
+#include "../../core/defines.h"
+
 namespace cemucore
 {
     extern "C" {

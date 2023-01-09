@@ -1,11 +1,12 @@
 #ifndef PORT_H
 #define PORT_H
 
+#include "defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "defines.h"
 #include <stdint.h>
 #include <stdbool.h>
 
