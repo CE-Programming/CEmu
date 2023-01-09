@@ -11,7 +11,10 @@ endif()
 
 option(TRY_STATIC_LIBS "Build using as many static libs as possible" OFF)
 if (VCPKG_TARGET_TRIPLET MATCHES "-static(-md)?$")
-    set(TRY_STATIC_LIBS ON)
+    if(NOT TRY_STATIC_LIBS)
+        message(WARNING "Setting TRY_STATIC_LIBS to ON anyway due to static vcpkg target")
+        set(TRY_STATIC_LIBS ON)
+    endif()
 endif()
 
 if(TRY_STATIC_LIBS)
@@ -250,6 +253,7 @@ endif()
 target_link_libraries(CEmu PRIVATE
     Qt::Core
     Qt::Gui
+    Qt::DBus # needed at runtime by QtGui for some reason...?
     Qt::Network
     Qt::Widgets
 )
