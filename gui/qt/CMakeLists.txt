@@ -312,8 +312,14 @@ qt_add_resources(CEmu "resources5"
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL Release OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    message(STATUS "Will try to enable LTO")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT supported OUTPUT error)
+    if(supported)
+        message(STATUS "IPO/LTO enabled")
+        set_property(TARGET CEmu PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(STATUS "IPO/LTO not supported: <${error}>")
+    endif()
     target_compile_definitions(CEmu PRIVATE QT_NO_DEBUG_OUTPUT)
 endif()
 
