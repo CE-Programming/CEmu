@@ -10,19 +10,25 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
 endif()
 
 option(TRY_STATIC_LIBS "Build using as many static libs as possible" OFF)
+if (VCPKG_TARGET_TRIPLET MATCHES "-static(-md)?$")
+    set(TRY_STATIC_LIBS ON)
+endif()
+
 if(TRY_STATIC_LIBS)
     include("${CMAKE_CURRENT_SOURCE_DIR}/.cmake/try_static_libs.cmake")
     message("Will try to build as statically as possible...")
     if(WIN32)
-        set(VCPKG_CRT_LINKAGE static)
         set(VCPKG_LIBRARY_LINKAGE static)
         set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+        if (NOT VCPKG_TARGET_TRIPLET MATCHES "-static-md$")
+            message("Using static MSVC runtime...")
+            set(VCPKG_CRT_LINKAGE static)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        endif()
     else()
         set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
     endif()
 endif()
-
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
