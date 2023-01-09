@@ -42,7 +42,7 @@ moc_*.cpp
 *.autosave
 *~
 \#*\#
-cmake-build-debug/
+cmake-build-*/
 
 # Windows and Mac crap
 Thumbs.db
@@ -62,3 +62,4 @@ gui/qt/capture/libpng*
 
 # more build stuff
 gui/qt/CEmu.build/
+gui/qt/cmake-build-*/
