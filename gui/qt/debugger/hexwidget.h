@@ -22,13 +22,13 @@ public:
     void setOffset(int addr);
     void prependData(const QByteArray &ba);
     void appendData(const QByteArray &ba);
-    int getBase() { return m_base; }
-    int getOffset() { return m_cursorOffset / 2; }
-    int getCursorOffset() { return m_cursorOffset; }
-    bool getAsciiArea() { return m_asciiArea; }
-    bool getScrolled() { return m_scrolled; }
-    int getSize() { return m_size; }
-    int modifiedCount() { return m_modified.count(); }
+    int getBase() const { return m_base; }
+    int getOffset() const { return m_cursorOffset / 2; }
+    int getCursorOffset() const { return m_cursorOffset; }
+    bool getAsciiArea() const { return m_asciiArea; }
+    bool getScrolled() const { return m_scrolled; }
+    int getSize() const { return m_size; }
+    int modifiedCount() const { return m_modified.size(); }
     int indexNotOf(const QByteArray &ba);
     int indexPrevOf(const QByteArray &ba);
     int indexPrevNotOf(const QByteArray &ba);
@@ -57,7 +57,7 @@ private:
     void showCursor();
     void setSelection(int addr);
     void resetSelection() { m_selectStart = m_selectEnd = -1; }
-    bool isSelected() { return m_selectStart != -1; }
+    bool isSelected() const { return m_selectStart != -1; }
     void setSelected(char n) { overwrite(m_selectStart * 2, m_selectLen, QByteArray(m_selectLen, n)); }
     void overwrite(int pos, char c);
     void overwrite(int pos, int len, const QByteArray &ba);

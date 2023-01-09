@@ -194,16 +194,16 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     hashesPassed++;
                 } else {
                     char buf[20] = {0};
-                    sprintf(buf, "%X", param.expected_CRCs[0]);
+                    snprintf(buf, sizeof(buf), "%X", param.expected_CRCs[0]);
                     const std::string expected_hash_str(buf);
-                    sprintf(buf, "%X", real_hash);
+                    snprintf(buf, sizeof(buf), "%X", real_hash);
                     const std::string real_hash_str(buf);
                     std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
                               << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : ("the expected CRC " + expected_hash_str))
                               << " (got " << real_hash_str << ")." << std::endl;
                     if (debugMode) {
                         char dump_path[150] = {0};
-                        sprintf(dump_path, "failure_hash%s_num%d_dump.bin", which_hash.c_str(), hashesTested+1);
+                        snprintf(dump_path, sizeof(dump_path), "failure_hash%s_num%d_dump.bin", which_hash.c_str(), hashesTested+1);
                         FILE *dump_file = fopen(dump_path, "wb");
                         fwrite(temp_buffer_dup, param.size, 1, dump_file);
                         fclose(dump_file);

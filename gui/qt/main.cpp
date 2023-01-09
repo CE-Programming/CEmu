@@ -21,7 +21,9 @@ int main(int argc, char *argv[]) {
 
     execPath = QCoreApplication::applicationFilePath();
 
+#if QT_VERSION_MAJOR < 6
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
 
     // Add special jacobly font
     QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/resources/custom_fonts/TICELarge.ttf"));

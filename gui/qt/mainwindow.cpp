@@ -2162,9 +2162,9 @@ void MainWindow::autotesterUpdatePresets(int comboBoxIndex) {
     };
     if (comboBoxIndex >= 1 && comboBoxIndex <= static_cast<int>((sizeof(mapIdConsts)/sizeof(mapIdConsts[0])))) {
         char buf[10] = {0};
-        sprintf(buf, "0x%X", mapIdConsts[comboBoxIndex-1].first);
+        snprintf(buf, sizeof(buf), "0x%X", mapIdConsts[comboBoxIndex-1].first);
         ui->startCRC->setText(buf);
-        sprintf(buf, "0x%X", mapIdConsts[comboBoxIndex-1].second);
+        snprintf(buf, sizeof(buf), "0x%X", mapIdConsts[comboBoxIndex-1].second);
         ui->sizeCRC->setText(buf);
         autotesterRefreshCRC();
     }

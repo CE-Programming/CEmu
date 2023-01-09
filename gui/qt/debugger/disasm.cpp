@@ -16,9 +16,9 @@ static std::string strW(uint32_t data) {
     std::string ret;
     bool high = data > 511;
     if (disasm.il) {
-        sprintf(tmpbuf, "$%06X", data);
+        snprintf(tmpbuf, sizeof(tmpbuf), "$%06X", data);
     } else {
-        sprintf(tmpbuf, "$%04X", data);
+        snprintf(tmpbuf, sizeof(tmpbuf), "$%04X", data);
     }
     if (high && disasm.map.count(data)) {
         range = disasm.map.equal_range(data);
@@ -88,7 +88,7 @@ static std::string strA(uint32_t data) {
         return ret;
     }
     if (disasm.il) {
-        sprintf(tmpbuf, "$%06X", data);
+        snprintf(tmpbuf, sizeof(tmpbuf), "$%06X", data);
     } else {
         if (disasm.map.count(cpu.registers.MBASE<<16|data)) {
             range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
@@ -113,7 +113,7 @@ static std::string strA(uint32_t data) {
             }
             return ret;
         }
-        sprintf(tmpbuf, "$%04X", data);
+        snprintf(tmpbuf, sizeof(tmpbuf), "$%04X", data);
     }
     return std::string(tmpbuf);
 }
