@@ -1,0 +1,19 @@
+{
+  "name": "cemu",
+  "version-string": "2.0-dev",
+  "homepage": "https://ce-programming.github.io/CEmu/",
+  "description": "Developer-oriented emulator of the eZ80-based TI-84 Plus CE / TI-83 Premium CE calculators.",
+  "dependencies": [
+    "pkgconf",
+    "libarchive",
+    {
+      "name": "libpng",
+      "features": [ "apng" ]
+    },
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [ "gui", "network", "widgets", "png" ]
+    }
+  ]
+}
