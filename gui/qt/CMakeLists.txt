@@ -221,6 +221,7 @@ endif()
 
 if(NOT WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/capture/libpng-apng/.libs/libpng16.a")
     message(STATUS "Static APNG-enabled LibPNG will be used")
+    target_compile_definitions(CEmu PRIVATE "PNG_SUPPORT")
     target_include_directories(CEmu PRIVATE capture/libpng-apng)
     target_link_libraries(CEmu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/capture/libpng-apng/.libs/libpng16.a)
 else()
