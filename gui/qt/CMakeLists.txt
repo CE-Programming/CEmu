@@ -258,22 +258,19 @@ target_link_libraries(CEmu PRIVATE
     Qt::Widgets
 )
 
-qt_add_resources(CEmu "resources"
-    PREFIX
-        "/skin"
+qt_add_resources(CEmu "skins"
+    PREFIX "/skin"
     FILES
         "resources/skin/ti83pce.png"
         "resources/skin/ti84pce.png"
 )
-qt_add_resources(CEmu "resources1"
-    PREFIX
-        "/setup"
+qt_add_resources(CEmu "setup"
+    PREFIX "/setup"
     FILES
         "resources/setup/home.png"
 )
-qt_add_resources(CEmu "resources2"
-    PREFIX
-        "/icons"
+qt_add_resources(CEmu "icons"
+    PREFIX "/icons"
     FILES
         "resources/icons/add_mem.png"
         "resources/icons/autotester.png"
@@ -342,22 +339,19 @@ qt_add_resources(CEmu "resources2"
         "resources/icons/watchpoints.png"
         "resources/icons/wizard.png"
 )
-qt_add_resources(CEmu "resources3"
-    PREFIX
-        "/fonts"
+qt_add_resources(CEmu "custom_fonts"
+    PREFIX "/fonts"
     FILES
         "resources/custom_fonts/LiberationSansNarrow-Bold.ttf"
         "resources/custom_fonts/TICELarge.ttf"
 )
-qt_add_resources(CEmu "resources4"
-    PREFIX
-        "/other"
+qt_add_resources(CEmu "other"
+    PREFIX "/other"
     FILES
         "tivars_lib_cpp/programs_tokens.csv"
 )
-qt_add_resources(CEmu "resources5"
-    PREFIX
-        "/i18n"
+qt_add_resources(CEmu "i18n"
+    PREFIX "/i18n"
     FILES
         "i18n/es_ES.qm"
         "i18n/fr_FR.qm"
