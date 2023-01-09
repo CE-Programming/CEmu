@@ -43,6 +43,7 @@ moc_*.cpp
 *~
 \#*\#
 cmake-build-*/
+.vs/
 
 # Windows and Mac crap
 Thumbs.db
