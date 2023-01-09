@@ -58,6 +58,7 @@ QStringList SendingHandler::getValidFilesFromArchive(const QString& archivePath)
 
     bundleList.clear();
     extractor(archivePath.toStdString().c_str(), m_tempDir.path().toStdString().c_str(), checkValidFile);
+    // TODO: check bundleList size, alert if 0
     return bundleList;
 }
 

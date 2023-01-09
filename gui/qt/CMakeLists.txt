@@ -9,6 +9,11 @@ project(CEmu
         VERSION 2.0
         LANGUAGES C CXX)
 
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
+   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tivars_lib_cpp/src/TIVarFile.cpp")
+    message(FATAL_ERROR "Some files seem to be missing - you have to run 'git submodule init' and 'git submodule update' first.")
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
@@ -32,13 +37,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
 endif()
 
 include(GNUInstallDirs)
-
-find_package(PkgConfig REQUIRED)
-
-find_package(LibArchive QUIET)
-if (NOT LibArchive_FOUND)
-    pkg_check_modules(LibArchive LibArchive)
-endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -172,11 +170,19 @@ if(HAVE_GLOB)
     target_compile_definitions(CEmu PRIVATE "GLOB_SUPPORT")
 endif()
 
+find_package(PkgConfig QUIET)
+
+find_package(LibArchive QUIET)
+if (NOT LibArchive_FOUND AND PkgConfig_FOUND)
+    pkg_check_modules(LibArchive LibArchive)
+endif()
 if(LibArchive_FOUND)
     target_compile_definitions(CEmu PRIVATE "LIB_ARCHIVE_SUPPORT")
     target_include_directories(CEmu PRIVATE ${LibArchive_INCLUDE_DIRS})
     target_link_directories(CEmu PRIVATE ${LibArchive_LIBRARY_DIRS})
     target_link_libraries(CEmu PRIVATE ${LibArchive_LIBRARIES})
+else()
+    message(WARNING "No LibArchive found! CE Bundle extraction/transfer will not be available")
 endif()
 
 if(NOT WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/capture/libpng-apng/.libs/libpng16.a")
@@ -184,16 +190,19 @@ if(NOT WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/capture/libpng-apng/.libs/l
     target_include_directories(CEmu PRIVATE capture/libpng-apng)
     target_link_libraries(CEmu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/capture/libpng-apng/.libs/libpng16.a)
 else()
-    message(WARNING "System LibPNG will be used - it may not have APNG support!")
     find_package(PNG QUIET)
-    if (NOT PNG_FOUND)
+    if (NOT PNG_FOUND AND PkgConfig_FOUND)
         pkg_check_modules(PNG libpng16)
     endif()
     if(PNG_FOUND)
+        message(WARNING "External LibPNG will be used! It may not have APNG support!")
         target_compile_definitions(CEmu PRIVATE "PNG_SUPPORT")
         target_include_directories(CEmu PRIVATE ${PNG_INCLUDE_DIRS})
         target_link_directories(CEmu PRIVATE ${PNG_LIBRARY_DIRS})
         target_link_libraries(CEmu PRIVATE ${PNG_LIBRARIES})
+        target_link_options(CEmu PRIVATE ${LibArchive_LDFLAGS})
+    else()
+        message(WARNING "No LibPNG found! APNG capture will not be available")
     endif()
 endif()
 
