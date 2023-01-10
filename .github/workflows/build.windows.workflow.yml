@@ -1,0 +1,53 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ master, features/github-actions, cmake ]
+  pull_request:
+    branches: [ master, features/github-actions ]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: "Build target: ${{ matrix.arch }}-${{ matrix.config }}"
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, x86]
+        config: [Release]
+        include:
+          - arch: x86
+            arch_name: 32-bit
+            arch_suffix: "32"
+          - arch: x64
+            arch_name: 64-bit
+            arch_suffix: "64"
+    steps:
+    - name: Checkout Git Repo
+      uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: Install latest CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Restore artifacts, or setup vcpkg (do not install any package)
+      uses: lukka/run-vcpkg@v10
+      with:
+        vcpkgGitCommitId: '5bb5f3923a33d862b25c18fd4514e08c74c698e1'
+
+    - name: Build CEmu Qt ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
+      uses: lukka/run-cmake@v10
+      with:
+        cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
+        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}'
+        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}'
+
+    - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} EXE
+      uses: actions/upload-artifact@v3
+      with:
+          name: CEmu_win${{ matrix.arch_suffix }}_master
+          path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe

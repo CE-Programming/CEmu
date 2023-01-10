@@ -1,0 +1,116 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "ninja-vcpkg",
+      "hidden": true,
+      "generator": "Ninja",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/CEmu.build/${presetName}",
+      "installDir": "${sourceDir}/CEmu.build/${presetName}",
+      "cacheVariables": {
+        "VCPKG_MANIFEST_MODE": {
+          "type": "BOOL",
+          "value": "True"
+        },
+        "VCPKG_MANIFEST_INSTALL": {
+          "type": "BOOL",
+          "value": "True"
+        }
+      }
+    },
+    {
+      "name": "ninja-vcpkg-x64",
+      "hidden": true,
+      "inherits": "ninja-vcpkg",
+      "architecture": {
+        "strategy": "external",
+        "value": "x64"
+      },
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-static"
+        }
+      }
+    },
+    {
+      "name": "ninja-vcpkg-x86",
+      "hidden": true,
+      "inherits": "ninja-vcpkg",
+      "architecture": {
+        "strategy": "external",
+        "value": "x86"
+      },
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x86-windows-static"
+        }
+      }
+    },
+    {
+      "name": "x64-Debug",
+      "inherits": "ninja-vcpkg-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        }
+      }
+    },
+    {
+      "name": "x64-Release",
+      "inherits": "ninja-vcpkg-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        }
+      }
+    },
+    {
+      "name": "x86-Debug",
+      "inherits": "ninja-vcpkg-x86",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        }
+      }
+    },
+      {
+      "name": "x86-Release",
+      "inherits": "ninja-vcpkg-x86",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "x64-Debug",
+      "configurePreset": "x64-Debug"
+    },
+    {
+      "name": "x64-Release",
+      "configurePreset": "x64-Release"
+    },
+    {
+      "name": "x86-Debug",
+      "configurePreset": "x86-Debug"
+    },
+    {
+      "name": "x86-Release",
+      "configurePreset": "x86-Release"
+    }
+  ]
+}
