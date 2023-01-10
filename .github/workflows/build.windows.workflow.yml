@@ -16,12 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, x86]
+        arch: [x64]
         config: [Release]
         include:
-          - arch: x86
-            arch_name: 32-bit
-            arch_suffix: "32"
           - arch: x64
             arch_name: 64-bit
             arch_suffix: "64"
@@ -43,11 +40,13 @@ jobs:
       uses: lukka/run-cmake@v10
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}'
-        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}'
+        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-Only'
+        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}-Only'
+      env:
+        VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} EXE
       uses: actions/upload-artifact@v3
       with:
-          name: CEmu_win${{ matrix.arch_suffix }}_master
-          path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe
+        name: CEmu_win${{ matrix.arch_suffix }}_master
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe

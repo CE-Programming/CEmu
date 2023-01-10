@@ -75,6 +75,20 @@
       }
     },
     {
+      "name": "x64-Release-Only",
+      "inherits": "x64-Release",
+      "cacheVariables": {
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-static-release"
+        },
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-static-release"
+        }
+      }
+    },
+    {
       "name": "x86-Debug",
       "inherits": "ninja-vcpkg-x86",
       "cacheVariables": {
@@ -103,6 +117,10 @@
     {
       "name": "x64-Release",
       "configurePreset": "x64-Release"
+    },
+    {
+      "name": "x64-Release-Only",
+      "configurePreset": "x64-Release-Only"
     },
     {
       "name": "x86-Debug",

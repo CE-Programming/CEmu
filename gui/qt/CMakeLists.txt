@@ -10,7 +10,7 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
 endif()
 
 option(TRY_STATIC_LIBS "Build using as many static libs as possible" OFF)
-if (VCPKG_TARGET_TRIPLET MATCHES "-static(-md)?$")
+if (VCPKG_TARGET_TRIPLET MATCHES "-static(-md|-release)?$")
     if(NOT TRY_STATIC_LIBS)
         message(WARNING "Setting TRY_STATIC_LIBS to ON anyway due to static vcpkg target")
         set(TRY_STATIC_LIBS ON)
