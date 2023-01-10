@@ -263,7 +263,7 @@ SOURCES += \
     ../../core/bus.c \
     keyhistorywidget.cpp \
     tablewidget.cpp \
-    debugger/basicdebugger.cpp
+    basicdebugger.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
