@@ -181,13 +181,12 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
         QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1])));
 
         // lookup in map to see if we've already parsed this file
-        QList<int> values = m_basicPrgmsMap.values(var_name);
-        if (!values.isEmpty()) {
-            int index = values.first();
+        if (m_basicPrgmsMap.contains(var_name)) {
+            int index = m_basicPrgmsMap[var_name];
             if (idx) {
                 *idx = index;
             }
-            if (origReference != m_basicPrgmsOriginalCode.at(index)) {
+            if (*origReference != m_basicPrgmsOriginalCode.at(index)) {
                 m_basicOriginalCode = &m_basicPrgmsOriginalCode.at(index);
                 m_basicFormattedCode = &m_basicPrgmsFormattedCode.at(index);
                 return DBG_BASIC_NEED_REFRESH;
