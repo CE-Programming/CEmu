@@ -27,7 +27,8 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
                                             void *progress_context) {
     static const char *locations[] = { "-r", "-a", "" };
 
-    char **argv = malloc((1+num) * sizeof(char *));
+    const size_t argv_size = (1+num) * sizeof(char *);
+    char **argv = malloc(argv_size);
     if (!argv) {
         gui_console_printf("[CEmu] Transfer Error: can't allocate transfer commands... wut\n");
         return LINK_ERR;
@@ -37,7 +38,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
     argv[0] = name;
     for(int i=0; i<num; i++) {
         argv[i+1] = malloc(7+strlen(files[i])+1);
-        sprintf(argv[i+1], "send%s:%s", locations[location], files[i]);
+        snprintf(argv[i+1], argv_size, "send%s:%s", locations[location], files[i]);
     }
     int err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
     if (err != 0) {

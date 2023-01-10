@@ -204,8 +204,8 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
             QString str;
 
             try {
-                const options_t opts = { { "fromRawBytes", true }, { "prettify", true } };
-                str = QString::fromStdString(tivars::TH_Tokenized::makeStringFromData(data_t(prgmBytes.constData(), prgmBytes.constEnd()), opts));
+                const options_t detok_opts = { { "fromRawBytes", true }, { "prettify", true } };
+                str = QString::fromStdString(tivars::TH_Tokenized::makeStringFromData(data_t(prgmBytes.constData(), prgmBytes.constEnd()), detok_opts));
             } catch(...) {
                 return DBG_BASIC_NO_EXECUTING_PRGM;
             }
@@ -354,8 +354,8 @@ void MainWindow::debugBasicStep() {
 void MainWindow::debugBasicStepNext() {
     // locate next line
     const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
-    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+//    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
+//    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
     int watchPC = begPC;
 /*
