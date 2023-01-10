@@ -13,7 +13,7 @@
     {
       "name": "qtbase",
       "default-features": false,
-      "features": [ "gui", "network", "widgets", "png" ]
+      "features": [ "dbus", "gui", "network", "widgets", "png" ]
     }
   ]
 }
