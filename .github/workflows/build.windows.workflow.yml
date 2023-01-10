@@ -49,4 +49,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_master
-        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-Only/CEmu.exe
