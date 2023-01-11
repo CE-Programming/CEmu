@@ -27,6 +27,13 @@ macro(try_static_libs_if_needed)
                 if(NOT EXISTS ${LIB_DIR})
                     continue()
                 endif()
+                # there's a weird libarchive/zlib issue with static on linux right now:
+                #   /usr/lib/x86_64-linux-gnu/libarchive.a(archive_read_support_filter_gzip.o): undefined reference to symbol 'inflateEnd'
+                #   /lib/x86_64-linux-gnu/libz.so.1: error adding symbols: DSO missing from command line
+                if(LIB_NAME STREQUAL "archive" AND CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+                    message(WARNING "[GCC Linux] Skipping libarchive static lib search due to a linking issue, will fallback on the shared lib")
+                    break()
+                endif()
                 set(LIB_FULLPATH "${LIB_DIR}/${STATIC_LIB_PREFIX}${LIB_NAME}${STATIC_LIB_EXT}")
                 if(NOT EXISTS ${LIB_FULLPATH})
                     set(LIB_FULLPATH "${LIB_DIR}/${LIB_NAME_FULL}/lib/${STATIC_LIB_PREFIX}${LIB_NAME}-static${STATIC_LIB_EXT}")
