@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.21.1)
 
 project(CEmu
         VERSION 2.0
@@ -439,6 +439,7 @@ if(WIN32)
     target_sources(CEmu PUBLIC
         ../../core/os/os-win32.c
         win32-console.cpp
+        resources/windows/cemu.rc
     )
     target_link_libraries(CEmu PRIVATE psapi)
 endif()
