@@ -55,11 +55,10 @@ endif()
 
 include(GNUInstallDirs)
 
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS DBus Gui Network Widgets)
+find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
+qt_standard_project_setup()
 
 if(APPLE)
     set(MAYBE_MACOSX_BUNDLE MACOSX_BUNDLE)
@@ -172,11 +171,22 @@ execute_process(
     OUTPUT_VARIABLE GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_CURR_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# TODO: adjust these automatically (based on CI, branch, if it's a github release build...)
+set(SHORT_VERSION "v2.0")
+set(VERSION_SUFFIX "dev")
+set(LONG_VERSION "${SHORT_VERSION}${VERSION_SUFFIX} (${GIT_CURR_BRANCH} - ${GIT_COMMIT_HASH})")
 
 target_compile_definitions(CEmu PRIVATE
     CEMU_GIT_SHA=\"${GIT_COMMIT_HASH}\"
     CEMU_RELEASE=false
-    CEMU_VERSION=\"v2.0dev\"
+    CEMU_VERSION=\"${SHORT_VERSION}${VERSION_SUFFIX}\"
     DEBUG_SUPPORT
     MULTITHREAD
 )
@@ -210,9 +220,8 @@ if(APPLE AND NOT LibArchive_INCLUDE_DIR)
 endif()
 
 if(PkgConfig_FOUND AND TRY_STATIC_LIBS)
-    pkg_check_modules(DEPS libarchive expat zlib)
+    pkg_check_modules(DEPS libarchive)
     if(DEPS_FOUND)
-        LIST(APPEND DEPS_STATIC_LIBRARIES "bz2")
         try_static_libs_if_needed()
         if(DEPS_STATIC_INCLUDE_DIRS AND DEPS_STATIC_LIBRARY_DIRS AND TRY_STATIC_DEPS_LDFLAGS)
             find_package(Iconv)
@@ -228,7 +237,7 @@ if(PkgConfig_FOUND AND TRY_STATIC_LIBS)
             endif()
         endif()
     else()
-        message(WARNING "Could not find LibArchive deps for a static build, will use fallback")
+        message(WARNING "Could not find all the deps required for static LibArchive, will use fallback")
     endif()
 endif()
 if(NOT LibArchive_FOUND)
@@ -293,7 +302,6 @@ else()
         target_include_directories(CEmu PRIVATE ${PNG_INCLUDE_DIRS})
         target_link_directories(CEmu PRIVATE ${PNG_LIBRARY_DIRS})
         target_link_libraries(CEmu PRIVATE ${PNG_LIBRARIES})
-        target_link_options(CEmu PRIVATE ${LibArchive_LDFLAGS})
     else()
         message(WARNING "No LibPNG found! APNG capture will not be available")
     endif()
@@ -435,11 +443,20 @@ if(UNIX OR APPLE)
 endif()
 
 if(APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE icon.icns)
+    set(app_icon_macos "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/icon.icns")
+    set_source_files_properties(${app_icon_macos} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     target_sources(CEmu PUBLIC
         os/mac/kdmactouchbar.h os/mac/kdmactouchbar.mm
         os/mac/kdmactouchbar_global.h
+        ${app_icon_macos}
     )
     target_link_libraries(CEmu PRIVATE "-framework Cocoa")
+    set_target_properties(CEmu PROPERTIES
+        MACOSX_FRAMEWORK_IDENTIFIER "com.adriweb.CEmu"
+        MACOSX_BUNDLE_COPYRIGHT "CE-Programming team"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${LONG_VERSION}"
+    )
 endif()
 
 if(WIN32)
@@ -460,4 +477,9 @@ message("Binary dir: ${CMAKE_CURRENT_BINARY_DIR}")
 
 # TODO: linux .desktop/.xml files
 
-# Consider using qt_generate_deploy_app_script() for app deployment if the project can use Qt 6.3. In that case rerun qmake2cmake with --min-qt-version=6.3.
+qt_generate_deploy_app_script(
+    TARGET CEmu
+    FILENAME_VARIABLE deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${deploy_script})
