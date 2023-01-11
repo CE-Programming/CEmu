@@ -203,17 +203,13 @@ endif()
 
 find_package(PkgConfig QUIET)
 
-# Set manually when installed with Homebrew, see https://github.com/Homebrew/legacy-homebrew/issues/21415
-# Yes, "INCLUDE_DIR" but not "INCLUDE_DIRS", is correct here.
+# Set manually when installed with Homebrew, see https://github.com/Homebrew/legacy-homebrew/issues/45891
 # Note: we can't do the same for libiconv because it exports libiconv_* symbols and not iconv_*, so we fallback on the non-static system lib...
-if(APPLE AND NOT LibArchive_INCLUDE_DIR)
+if(APPLE)
     set(BREW_LIB_PATHS "/opt/homebrew/lib" "/usr/local/opt" "/usr/local/lib")
     foreach(LIB_DIR ${BREW_LIB_PATHS})
-        if(EXISTS ${LIB_DIR})
-            set(LibArchive_INCLUDE_DIR "${LIB_DIR}/libarchive/include")
-            if(TRY_STATIC_LIBS AND EXISTS "${LIB_DIR}/libarchive/lib/libarchive.a")
-                set(LibArchive_LIBRARY "${LIB_DIR}/libarchive/lib/libarchive.a")
-            endif()
+        if(EXISTS "${LIB_DIR}/libarchive/lib/pkgconfig")
+            set(ENV{PKG_CONFIG_PATH} "${LIB_DIR}/libarchive/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
             break()
         endif()
     endforeach()
