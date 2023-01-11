@@ -58,7 +58,12 @@ include(GNUInstallDirs)
 set(CMAKE_AUTORCC ON)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
-qt_standard_project_setup()
+if(COMMAND qt_standard_project_setup)
+    qt_standard_project_setup()
+else()
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTOUIC ON)
+endif()
 
 if(APPLE)
     set(MAYBE_MACOSX_BUNDLE MACOSX_BUNDLE)
@@ -473,9 +478,11 @@ message("Binary dir: ${CMAKE_CURRENT_BINARY_DIR}")
 
 # TODO: linux .desktop/.xml files
 
-qt_generate_deploy_app_script(
-    TARGET CEmu
-    FILENAME_VARIABLE deploy_script
-    NO_UNSUPPORTED_PLATFORM_ERROR
-)
-install(SCRIPT ${deploy_script})
+if(COMMAND qt_generate_deploy_app_script)
+    qt_generate_deploy_app_script(
+        TARGET CEmu
+        FILENAME_VARIABLE deploy_script
+        NO_UNSUPPORTED_PLATFORM_ERROR
+    )
+    install(SCRIPT ${deploy_script})
+endif()

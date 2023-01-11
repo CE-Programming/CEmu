@@ -1,0 +1,58 @@
+name: Build Linux
+
+on:
+  push:
+    branches: [ master, features/github-actions, cmake ]
+  pull_request:
+    branches: [ master, features/github-actions, cmake ]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: "Build: ${{ matrix.os }} - static ${{ matrix.statictype }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        statictype: [ON, OFF]
+
+    steps:
+    - name: Checkout Git Repo
+      uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: Install dependencies
+      run: |
+        set -e
+        sudo add-apt-repository universe
+        sudo apt update
+        sudo apt install -y cmake ninja-build libarchive-dev zlib1g-dev libgl1-mesa-dev nettle-dev libacl1-dev liblz4-dev libc6-dev
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
+      with:
+        version: 6.4.2
+        target: desktop
+        setup-python: false
+        cache: true
+
+    - name: Build static libpng-apng dependency
+      run: |
+        set -e
+        cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
+
+    - name: Build CEmu Qt in Release
+      run: |
+        set -e
+        mkdir build && cd build
+        cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DTRY_STATIC_LIBS=${{ matrix.statictype }} ../gui/qt
+        cmake --build . --target all
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: CEmu_linux_static${{ matrix.statictype }}_master
+        path: ${{ github.workspace }}/build/CEmu
