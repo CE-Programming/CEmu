@@ -34,7 +34,7 @@ jobs:
     - name: Restore artifacts, or setup vcpkg (do not install any package)
       uses: lukka/run-vcpkg@v10
       with:
-        vcpkgGitCommitId: '5bb5f3923a33d862b25c18fd4514e08c74c698e1'
+        vcpkgGitCommitId: '79c5f022cbac171abcbd8ecfe4fb255af540ada6'
 
     - name: Build CEmu Qt ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
       uses: lukka/run-cmake@v10
