@@ -36,15 +36,26 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
 
     char name[] = "dusb";
     argv[0] = name;
+    int err = 1;
     for(int i=0; i<num; i++) {
-        argv[i+1] = malloc(7+strlen(files[i])+1);
-        snprintf(argv[i+1], argv_size, "send%s:%s", locations[location], files[i]);
+        const size_t arg_size = 7 + strlen(files[i]) + 1;
+        argv[i+1] = malloc(arg_size);
+        if (!argv[i+1]) {
+            gui_console_printf("[CEmu] Transfer Error: can't allocate transfer command... wut\n");
+            num = i;
+            goto alloc_err;
+        }
+        snprintf(argv[i+1], arg_size, "send%s:%s", locations[location], files[i]);
     }
-    int err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
+    err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
     if (err != 0) {
         gui_console_printf("[CEmu] USB transfer error code %d.\n", err);
     }
+    else {
+        gui_console_printf("[CEmu] USB transfer(s) completed successfully.\n");
+    }
 
+alloc_err:
     for(int i=1; i<=num; i++) {
         free(argv[i]);
     }
@@ -62,7 +73,7 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
 
     fd = fopen_utf8(file, "w+b");
     if (!fd) {
-        goto w_err;
+        return LINK_ERR;
     }
     setbuf(fd, NULL);
     if (fwrite(header, sizeof header - 1, 1, fd) != 1) goto w_err;
