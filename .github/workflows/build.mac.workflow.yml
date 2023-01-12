@@ -35,6 +35,13 @@ jobs:
           setup-python: false
           cache: true
 
+    # Workaround!
+    # libarchive.pc now has (lib)iconv in Requires.private, which doesn't work here
+    # See https://github.com/libarchive/libarchive/pull/1813 and other issues
+    - name: Fix libarchive pkg-config file
+      run: |
+        sudo sed -i '' -E '/^Requires.private: (lib)?iconv/d' /usr/local/opt/libarchive/lib/pkgconfig/libarchive.pc
+
     - name: Build CEmu Qt on macOS
       run: |
         set -e
