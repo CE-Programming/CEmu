@@ -550,7 +550,7 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
     flash_write_pattern_t *pattern;
 
     cpu.cycles += flash_block(&addr, NULL);
-    if (!flash.mapped) {
+    if (!flash.mapped || asic.serFlash) {
         return;
     }
 
