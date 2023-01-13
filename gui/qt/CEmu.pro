@@ -186,6 +186,7 @@ if(macx) {
 SOURCES += \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
+    ../../core/bootver.c \
     ../../core/cpu.c \
     ../../core/keypad.c \
     ../../core/lcd.c \
@@ -285,6 +286,7 @@ SOURCES +=  ../../tests/autotester/autotester_cli.cpp \
 HEADERS  += \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
+    ../../core/bootver.h \
     ../../core/cpu.h \
     ../../core/atomics.h \
     ../../core/defines.h \

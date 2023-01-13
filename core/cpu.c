@@ -910,7 +910,7 @@ void cpu_execute(void) {
                 if (cpu.IM == 2) {
                     cpu_interrupt(0x38);
                 } else {
-                    if (asic.preI && cpu.IM == 3) {
+                    if (asic.im2 && cpu.IM == 3) {
                         cpu.cycles++;
                         cpu_interrupt(cpu_read_word(r->I << 8 | (bus_rand() & 0xFF)));
                     } else {

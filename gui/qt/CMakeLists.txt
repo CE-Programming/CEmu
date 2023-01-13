@@ -73,6 +73,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/asic.c ../../core/asic.h
     ../../core/atomics.h
     ../../core/backlight.c ../../core/backlight.h
+    ../../core/bootver.c ../../core/bootver.h
     ../../core/bus.c ../../core/bus.h
     ../../core/cert.c ../../core/cert.h
     ../../core/control.c ../../core/control.h

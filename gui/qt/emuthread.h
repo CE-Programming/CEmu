@@ -22,6 +22,7 @@ class EmuThread : public QThread {
 public:
     explicit EmuThread(QObject *parent = Q_NULLPTR);
     void stop();
+    void onReset();
     void reset();
     void resume();
     void receive();
@@ -77,6 +78,7 @@ signals:
     void sendSpeed(int value);
 
     // state
+    void sendAsicRev(int revision);
     void tested(int status);
     void saved(bool success);
     void loaded(emu_state_t state, emu_data_t type);

@@ -140,6 +140,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
     connect(&emu, &EmuThread::consoleClear, this, &MainWindow::consoleClear, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sendAsicRev, this, &MainWindow::showAsicRev, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendSpeed, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugDisable, this, &MainWindow::debugDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugCommand, this, &MainWindow::debugCommand, Qt::QueuedConnection);
@@ -365,8 +366,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
     connect(ui->guiSkip, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setGuiSkip);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
+    connect(ui->comboBoxAsicRev, &QComboBox::currentIndexChanged, this, &MainWindow::setAsicRevision);
     connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
-    connect(ui->checkRevMHardware, &QCheckBox::stateChanged, this, &MainWindow::setRevMHardware);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
@@ -379,7 +380,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
-    connect(ui->checkPreI, &QCheckBox::stateChanged, this, &MainWindow::setPreRevisionI);
+    connect(ui->checkAllowAnyRev, &QCheckBox::stateChanged, this, &MainWindow::setAllowAnyRev);
     connect(ui->checkNormOs, &QCheckBox::stateChanged, this, &MainWindow::setNormalOs);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &HexWidget::setBytesPerLine);
@@ -581,8 +582,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setDebugResetTrigger(m_config->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
     setDebugIgnoreBreakpoints(m_config->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(m_config->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
-    setPreRevisionI(m_config->value(SETTING_DEBUGGER_PRE_I, false).toBool());
-    setRevMHardware(m_config->value(SETTING_REV_M_HARDWARE, false).toBool());
+    setAllowAnyRev(m_config->value(SETTING_DEBUGGER_ALLOW_ANY_REV, false).toBool());
     setNormalOs(m_config->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
     setLcdDma(m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(m_config->value(SETTING_PAUSE_FOCUS, false).toBool());
@@ -1505,6 +1505,11 @@ void MainWindow::consoleStr() {
     }
 }
 
+void MainWindow::showAsicRev(int revision) {
+    QString asicRevStr = ui->comboBoxAsicRev->itemText(revision);
+    ui->currAsicRev->setText(tr("Current: ") + asicRevStr + tr(" (change requires reset)"));
+}
+
 void MainWindow::showEmuSpeed(int speed) {
     if (m_timerEmuTriggered) {
         m_speedLabel.setText(QStringLiteral("  ") + tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
@@ -2261,6 +2266,7 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
 
     if (state == EMU_STATE_VALID) {
         ui->lcd->setMain();
+        setAsicValidRevisions();
         setCalcSkinTopFromType();
         setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
         for (const auto &dock : findChildren<DockWidget*>()) {

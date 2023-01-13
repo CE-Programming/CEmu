@@ -41,6 +41,7 @@ void emu_exit(void);                                      /* exit emulation */
 void gui_console_clear(void);                             /* sent to clear the console */
 void gui_console_printf(const char *format, ...);         /* printf from the core to stdout */
 void gui_console_err_printf(const char *format, ...);     /* printf from the core to stderr */
+void gui_report_reset(void);                              /* informs that the core has been reset or loaded */
 
 #ifdef DEBUG_SUPPORT
 void gui_debug_open(int reason, uint32_t data);           /* open the gui debugger */

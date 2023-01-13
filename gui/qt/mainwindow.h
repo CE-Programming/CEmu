@@ -418,8 +418,9 @@ private:
     void setMenuBarState(bool state);
     void setStatusBarState(bool state);
     void setUIBoundaries(bool state);
-    void setPreRevisionI(bool state);
-    void setRevMHardware(bool state);
+    void setAsicValidRevisions();
+    void setAsicRevision(int index);
+    void setAllowAnyRev(bool state);
     void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
@@ -437,6 +438,7 @@ private:
     // speed settings
     void setEmuSpeed(int value);
     void setThrottle(int mode);
+    void showAsicRev(int revision);
     void showEmuSpeed(int speed);
     void showFpsSpeed(double emuFps, double guiFps);
     void showStatusMsg(const QString &str);
@@ -669,6 +671,7 @@ private:
     bool m_optimizeRecording;
     bool m_portableActivated = false;
     bool m_ignoreDmaCycles;
+    bool m_allowAnyRev;
     bool m_normalOs;
     bool m_setup = false;
     int m_fullscreen = FULLSCREEN_NONE;
@@ -722,9 +725,8 @@ private:
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
     static const QString SETTING_DEBUGGER_AUTO_EQUATES;
-    static const QString SETTING_DEBUGGER_PRE_I;
+    static const QString SETTING_DEBUGGER_ALLOW_ANY_REV;
     static const QString SETTING_DEBUGGER_NORM_OS;
-    static const QString SETTING_REV_M_HARDWARE;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

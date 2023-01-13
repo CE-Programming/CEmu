@@ -45,6 +45,10 @@ void gui_debug_close(void) {
     emu->debugDisable();
 }
 
+void gui_report_reset(void) {
+    emu->onReset();
+}
+
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
@@ -213,6 +217,10 @@ void EmuThread::unblock() {
     m_mutex.lock();
     m_cv.notify_all();
     m_mutex.unlock();
+}
+
+void EmuThread::onReset() {
+    emit sendAsicRev((int)get_asic_revision());
 }
 
 void EmuThread::reset() {

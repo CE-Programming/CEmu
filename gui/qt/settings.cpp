@@ -5,13 +5,16 @@
 #include "utils.h"
 
 #include "../../core/schedule.h"
+#include "../../core/bootver.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
+#include "../../core/mem.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 
 #include <cmath>
 #include <QtGui/QScreen>
+#include <QtGui/QStandardItemModel>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
@@ -47,9 +50,8 @@ const QString MainWindow::SETTING_DEBUGGER_RAM_ASCII        = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_AUTO_EQUATES     = QStringLiteral("Debugger/auto_equates");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
+const QString MainWindow::SETTING_DEBUGGER_ALLOW_ANY_REV    = QStringLiteral("Debugger/allow_any_rev");
 const QString MainWindow::SETTING_DEBUGGER_NORM_OS          = QStringLiteral("Debugger/norm_os");
-const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
-const QString MainWindow::SETTING_REV_M_HARDWARE            = QStringLiteral("rev_m_hardware");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
@@ -931,16 +933,28 @@ void MainWindow::setRecentSave(bool state) {
     m_config->setValue(SETTING_RECENT_SAVE, state);
 }
 
-void MainWindow::setPreRevisionI(bool state) {
-    ui->checkPreI->setChecked(state);
-    m_config->setValue(SETTING_DEBUGGER_PRE_I, state);
-    asic.preI = state;
+void MainWindow::setAsicValidRevisions() {
+    QStandardItemModel* itemModel = qobject_cast<QStandardItemModel*>(ui->comboBoxAsicRev->model());
+    assert(itemModel);
+    boot_ver_t boot_ver;
+    bool gotVer = !m_allowAnyRev && bootver_parse(mem.flash.block, &boot_ver);
+    for (int row = 1; row < itemModel->rowCount(); row++) {
+        itemModel->item(row)->setEnabled(!gotVer || bootver_check_rev(&boot_ver, (asic_rev_t)row));
+    }
+    if (!itemModel->item(ui->comboBoxAsicRev->currentIndex())->isEnabled()) {
+        ui->comboBoxAsicRev->setCurrentIndex(0);
+    }
 }
 
-void MainWindow::setRevMHardware(bool state) {
-    ui->checkRevMHardware->setChecked(state);
-    m_config->setValue(SETTING_REV_M_HARDWARE, state);
-    asic.revM = state;
+void MainWindow::setAsicRevision(int index) {
+    set_asic_revision((asic_rev_t)ui->comboBoxAsicRev->currentIndex());
+}
+
+void MainWindow::setAllowAnyRev(bool state) {
+    ui->checkAllowAnyRev->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_ALLOW_ANY_REV, state);
+    m_allowAnyRev = state;
+    setAsicValidRevisions();
 }
 
 void MainWindow::setNormalOs(bool state) {

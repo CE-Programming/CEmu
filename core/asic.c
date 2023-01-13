@@ -28,6 +28,9 @@
 /* Global ASIC state */
 asic_state_t asic;
 
+/* Requested revision to apply on reset */
+static asic_rev_t pending_asic_rev = ASIC_REV_AUTO;
+
 #define MAX_RESET_PROCS 20
 
 static void (*reset_procs[MAX_RESET_PROCS])(void);
@@ -102,19 +105,35 @@ void asic_free(void) {
 }
 
 void asic_reset(void) {
-    unsigned int i;
+    asic.revision = (pending_asic_rev == ASIC_REV_AUTO) ? asic.auto_revision : pending_asic_rev;
+    asic.im2 = (asic.revision < ASIC_REV_I);
+    asic.serFlash = (asic.revision >= ASIC_REV_M);
 
-    for(i = 0; i < reset_proc_count; i++) {
+    for (unsigned int i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();
     }
+
+    gui_report_reset();
 }
 
 void set_device_type(ti_device_t device) {
     asic.device = device;
 }
 
+void set_asic_revision(asic_rev_t revision) {
+    pending_asic_rev = revision;
+}
+
+void set_asic_auto_revision(asic_rev_t revision) {
+    asic.auto_revision = revision;
+}
+
 ti_device_t EMSCRIPTEN_KEEPALIVE get_device_type(void) {
     return asic.device;
+}
+
+asic_rev_t EMSCRIPTEN_KEEPALIVE get_asic_revision(void) {
+    return asic.revision;
 }
 
 void set_cpu_clock(uint32_t new_rate) {
@@ -122,30 +141,35 @@ void set_cpu_clock(uint32_t new_rate) {
 }
 
 bool asic_restore(FILE *image) {
-    return fread(&asic.device, sizeof(asic.device), 1, image) == 1
-           && backlight_restore(image)
-           && control_restore(image)
-           && cpu_restore(image)
-           && flash_restore(image)
-           && intrpt_restore(image)
-           && keypad_restore(image)
-           && lcd_restore(image)
-           && mem_restore(image)
-           && watchdog_restore(image)
-           && protect_restore(image)
-           && rtc_restore(image)
-           && sha256_restore(image)
-           && gpt_restore(image)
-           && usb_restore(image)
-           && cxxx_restore(image)
-           && spi_restore(image)
-           && exxx_restore(image)
-           && sched_restore(image)
-           && fgetc(image) == EOF;
+    if (fread(&asic, sizeof(asic), 1, image) == 1
+        && backlight_restore(image)
+        && control_restore(image)
+        && cpu_restore(image)
+        && flash_restore(image)
+        && intrpt_restore(image)
+        && keypad_restore(image)
+        && lcd_restore(image)
+        && mem_restore(image)
+        && watchdog_restore(image)
+        && protect_restore(image)
+        && rtc_restore(image)
+        && sha256_restore(image)
+        && gpt_restore(image)
+        && usb_restore(image)
+        && cxxx_restore(image)
+        && spi_restore(image)
+        && exxx_restore(image)
+        && sched_restore(image)
+        && fgetc(image) == EOF)
+    {
+        gui_report_reset();
+        return true;
+    }
+    return false;
 }
 
 bool asic_save(FILE *image) {
-    return fwrite(&asic.device, sizeof(asic.device), 1, image) == 1
+    return fwrite(&asic, sizeof(asic), 1, image) == 1
            && backlight_save(image)
            && control_save(image)
            && cpu_save(image)

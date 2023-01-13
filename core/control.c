@@ -27,7 +27,7 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             value = control.readBatteryStatus;
             break;
         case 0x03:
-            value = get_device_type() | asic.revM << 4;
+            value = get_device_type() | asic.serFlash << 4;
             break;
         case 0x06:
             value = control.protectedPortsUnlocked;
@@ -149,11 +149,6 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             if (byte == 0xD4) {
                 control.ports[0] |= 1 << 6;
                 cpu_crash("entering sleep mode");
-#ifdef DEBUG_SUPPORT
-                if (debug.openOnReset) {
-                    debug_open(DBG_MISC_RESET, cpu.registers.PC);
-                }
-#endif
             }
             break;
         case 0x0A:
@@ -258,10 +253,10 @@ bool flash_unlocked(void) {
 }
 
 bool unprivileged_code(void) {
-    /* rawPC the PC after the next prefetch (which we do late), before (after on EP) adding MBASE. */
+    /* rawPC the PC after the next prefetch (which we do late), before (after on revM) adding MBASE. */
     uint32_t rawPC = cpu.registers.PC + 1;
     bool mode = cpu.ADL;
-    rawPC = asic.revM ? cpu_address_mode(rawPC, mode) : cpu_mask_mode(rawPC, mode);
+    rawPC = asic.serFlash ? cpu_address_mode(rawPC, mode) : cpu_mask_mode(rawPC, mode);
     return rawPC > control.privileged && (rawPC < control.protectedStart ||
                                           rawPC > control.protectedEnd);
 }

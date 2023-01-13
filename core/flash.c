@@ -20,7 +20,7 @@ static void flash_set_map(uint8_t map) {
 }
 
 static void flash_set_wait_states(uint8_t value) {
-    if (asic.revM) {
+    if (asic.serFlash) {
         flash.waitStates = 2;
     } else {
         flash.waitStates = value;
@@ -141,7 +141,7 @@ static void flash_command_byte_transferred(void) {
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio, bool peek) {
     uint8_t value;
-    if (asic.revM && pio & 0x800) {
+    if (asic.serFlash && pio & 0x800) {
         uint16_t index = pio & 0x7FF;
         if (index < 0x10) {
             value = flash.command[index];
@@ -203,7 +203,7 @@ static uint8_t flash_read(const uint16_t pio, bool peek) {
 /* Write to the 0x1000 range of ports */
 static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
     (void)poke;
-    if (asic.revM && pio & 0x800) {
+    if (asic.serFlash && pio & 0x800) {
         uint16_t index = pio & 0x7FF;
         if (index < 0x10) {
             flash.command[index] = byte;

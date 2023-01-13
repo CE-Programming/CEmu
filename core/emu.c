@@ -1,6 +1,7 @@
 #include "emu.h"
 #include "mem.h"
 #include "asic.h"
+#include "bootver.h"
 #include "cpu.h"
 #include "cert.h"
 #include "os/os.h"
@@ -192,6 +193,26 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             gui_console_printf("[CEmu] Could not determine device device_type.\n");
             state = EMU_STATE_NOT_A_CE;
         }
+
+        /* Parse boot code routines to determine version. */
+        asic_rev_t asic_auto_rev = ASIC_REV_A;
+        boot_ver_t boot_ver;
+        if (bootver_parse(mem.flash.block, &boot_ver)) {
+            gui_console_printf("[CEmu] Boot code version: %u.%u.%u.%04u\n",
+                boot_ver.major, boot_ver.minor, boot_ver.revision, boot_ver.build);
+
+            /* Determine the newest ASIC revision that is compatible */
+            for (asic_rev_t rev = ASIC_REV_A; rev <= ASIC_REV_M; rev++) {
+                if (bootver_check_rev(&boot_ver, rev)) {
+                    asic_auto_rev = rev;
+                }
+            }
+        }
+        else {
+            gui_console_printf("[CEmu] Could not determine boot code version.\n");
+        }
+        gui_console_printf("[CEmu] Default ASIC revision is Rev %c.\n", "AIM"[(int)asic_auto_rev - 1]);
+        set_asic_auto_revision(asic_auto_rev);
 
         asic_reset();
     } else if (type == EMU_DATA_RAM) {

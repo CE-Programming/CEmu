@@ -419,7 +419,7 @@ static uint8_t spi_read(const uint16_t pio, bool peek) {
             case 0: // LCD?
                 break;
             case 1: // ARM?
-                if (!asic.revM) {
+                if (!asic.serFlash) {
                     break;
                 }
                 if (spi.dataLength) {
@@ -466,7 +466,7 @@ static void spi_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 }
                 break;
             case 1: // ARM?
-                if (!asic.revM) {
+                if (!asic.serFlash) {
                     break;
                 }
                 spi.cbw[spi.cbwIndex++ & 0x1F] = byte;
