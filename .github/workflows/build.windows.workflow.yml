@@ -2,9 +2,9 @@ name: Build Windows
 
 on:
   push:
-    branches: [ master, features/github-actions, cmake ]
+    branches: [ master, feature/github-actions ]
   pull_request:
-    branches: [ master, features/github-actions ]
+    branches: [ master, feature/github-actions ]
   release:
     types: [published]
 
@@ -29,15 +29,15 @@ jobs:
         submodules: 'recursive'
 
     - name: Install latest CMake
-      uses: lukka/get-cmake@latest
+      uses: lukka/get-cmake@40c07e5c5de43d1dfc7d9c1344b9e05be7d5696e # latest as of 2023-01-13
 
     - name: Restore artifacts, or setup vcpkg (do not install any package)
-      uses: lukka/run-vcpkg@v10
+      uses: lukka/run-vcpkg@22886c015a6bbb5ca57c55f43a6dbe6943ab744e # latest as of 2023-01-13
       with:
         vcpkgGitCommitId: '79c5f022cbac171abcbd8ecfe4fb255af540ada6'
 
     - name: Build CEmu Qt ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
-      uses: lukka/run-cmake@v10
+      uses: lukka/run-cmake@d8897e1de33ed2ec4628ec5acf69861da7c719db # latest as of 2023-01-13
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-Only'
@@ -50,3 +50,18 @@ jobs:
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-Only/CEmu.exe
+
+    - name: Prepare binary for release upload
+      if: ${{ matrix.config == 'Release' }}
+      run: |
+        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-Release-Only/CEmu.exe" -NewName "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe"
+
+    - name: Update nightly release
+      if: ${{ matrix.config == 'Release' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+      uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
+      with:
+        tag_name: nightly
+        prerelease: true
+        token: ${{secrets.GITHUB_TOKEN}}
+        files: |
+          ${{ github.workspace }}/build/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe

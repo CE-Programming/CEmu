@@ -2,9 +2,9 @@ name: Build Linux
 
 on:
   push:
-    branches: [ master, feature/github-actions, cmake ]
+    branches: [ master, feature/github-actions ]
   pull_request:
-    branches: [ master, feature/github-actions, cmake ]
+    branches: [ master, feature/github-actions ]
   release:
     types: [published]
 
@@ -55,8 +55,23 @@ jobs:
         cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DTRY_STATIC_LIBS=${{ matrix.statictype }} ../gui/qt
         cmake --build . --target all
 
-    - name: Upload binary
+    - name: Upload binary as artifact
       uses: actions/upload-artifact@v3
       with:
         name: CEmu_linux_static${{ matrix.statictype }}_master
         path: ${{ github.workspace }}/build/CEmu
+
+    - name: Prepare binary for release upload
+      if: ${{ matrix.statictype == 'ON' }}
+      run: |
+        mv ${{ github.workspace }}/build/CEmu ${{ github.workspace }}/build/CEmu-nightly_linux64_qt6
+
+    - name: Update nightly release
+      if: ${{ matrix.statictype == 'ON' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+      uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
+      with:
+        tag_name: nightly
+        prerelease: true
+        token: ${{secrets.GITHUB_TOKEN}}
+        files: |
+          ${{ github.workspace }}/build/CEmu-nightly_linux64_qt6
