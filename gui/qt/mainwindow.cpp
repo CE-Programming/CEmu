@@ -366,7 +366,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
     connect(ui->guiSkip, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setGuiSkip);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
-    connect(ui->comboBoxAsicRev, &QComboBox::currentIndexChanged, this, &MainWindow::setAsicRevision);
+    connect(ui->comboBoxAsicRev, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setAsicRevision);
     connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
