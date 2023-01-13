@@ -2,9 +2,9 @@ name: Build Linux
 
 on:
   push:
-    branches: [ master, features/github-actions, cmake ]
+    branches: [ master, feature/github-actions, cmake ]
   pull_request:
-    branches: [ master, features/github-actions, cmake ]
+    branches: [ master, feature/github-actions, cmake ]
   release:
     types: [published]
 
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         statictype: [ON, OFF]
 
     steps:
@@ -24,20 +24,16 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Install and use apt-spy2 to select closest apt mirror
+    - name: workaround for default apt mirror connectivity issues
       run: |
-        # use apt-spy2 to select closest apt mirror, which helps avoid connectivity issues in Azure;
-        # see https://github.com/actions/virtual-environments/issues/675
-        sudo gem install apt-spy2
-        sudo apt-spy2 check
-        sudo apt-spy2 fix --commit
+        sudo sed -i 's/azure\.//' /etc/apt/sources.list
 
     - name: Install dependencies
       run: |
         set -e
         sudo add-apt-repository universe
         sudo apt update
-        sudo apt install -y cmake ninja-build libarchive-dev zlib1g-dev libgl1-mesa-dev nettle-dev libacl1-dev liblz4-dev libc6-dev
+        sudo apt install -y cmake ninja-build libarchive-dev libzstd-dev zlib1g-dev libgl1-mesa-dev nettle-dev libacl1-dev liblz4-dev libc6-dev
 
     - name: Install Qt
       uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
