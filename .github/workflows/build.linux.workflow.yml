@@ -24,6 +24,14 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Install and use apt-spy2 to select closest apt mirror
+      run: |
+        # use apt-spy2 to select closest apt mirror, which helps avoid connectivity issues in Azure;
+        # see https://github.com/actions/virtual-environments/issues/675
+        sudo gem install apt-spy2
+        sudo apt-spy2 check
+        sudo apt-spy2 fix --commit
+
     - name: Install dependencies
       run: |
         set -e
