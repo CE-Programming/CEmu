@@ -64,4 +64,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-Release-Only/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe
+          ./gui/qt/CEmu.build/${{ matrix.arch }}-Release-Only/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe
