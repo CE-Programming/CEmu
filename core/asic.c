@@ -18,6 +18,7 @@
 #include "realclock.h"
 #include "defines.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -27,9 +28,6 @@
 
 /* Global ASIC state */
 asic_state_t asic;
-
-/* Requested revision to apply on reset */
-static asic_rev_t pending_asic_rev = ASIC_REV_AUTO;
 
 #define MAX_RESET_PROCS 20
 
@@ -83,6 +81,36 @@ static void plug_devices(void) {
     gui_console_printf("[CEmu] Initialized Advanced Peripheral Bus...\n");
 }
 
+static asic_rev_t report_reset(asic_rev_t loaded_rev) {
+    /* Parse boot code routines to determine version. */
+    asic_rev_t default_rev = ASIC_REV_A;
+    boot_ver_t boot_ver;
+    bool gotVer = bootver_parse(mem.flash.block, &boot_ver);
+    if (gotVer) {
+        gui_console_printf("[CEmu] Boot code version: %u.%u.%u.%04u\n",
+            boot_ver.major, boot_ver.minor, boot_ver.revision, boot_ver.build);
+
+        /* Determine the newest ASIC revision that is compatible */
+        for (int rev = ASIC_REV_A; rev <= ASIC_REV_M; rev++) {
+            if (bootver_check_rev(&boot_ver, (asic_rev_t)rev)) {
+                default_rev = rev;
+            }
+        }
+    }
+    else {
+        gui_console_printf("[CEmu] Could not determine boot code version.\n");
+    }
+    gui_console_printf("[CEmu] Default ASIC revision is Rev %c.\n", "AIM"[(int)default_rev - 1]);
+
+    loaded_rev = gui_handle_reset((gotVer ? &boot_ver : NULL), loaded_rev, default_rev);
+    return (loaded_rev != ASIC_REV_AUTO) ? loaded_rev : default_rev;
+}
+
+static void set_features() {
+    asic.im2 = (asic.revision < ASIC_REV_I);
+    asic.serFlash = (asic.revision >= ASIC_REV_M);
+}
+
 void asic_init(void) {
     /* First, initilize memory and CPU */
     mem_init();
@@ -105,27 +133,16 @@ void asic_free(void) {
 }
 
 void asic_reset(void) {
-    asic.revision = (pending_asic_rev == ASIC_REV_AUTO) ? asic.auto_revision : pending_asic_rev;
-    asic.im2 = (asic.revision < ASIC_REV_I);
-    asic.serFlash = (asic.revision >= ASIC_REV_M);
+    asic.revision = report_reset(ASIC_REV_AUTO);
+    set_features();
 
     for (unsigned int i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();
     }
-
-    gui_report_reset();
 }
 
 void set_device_type(ti_device_t device) {
     asic.device = device;
-}
-
-void set_asic_revision(asic_rev_t revision) {
-    pending_asic_rev = revision;
-}
-
-void set_asic_auto_revision(asic_rev_t revision) {
-    asic.auto_revision = revision;
 }
 
 ti_device_t EMSCRIPTEN_KEEPALIVE get_device_type(void) {
@@ -141,7 +158,7 @@ void set_cpu_clock(uint32_t new_rate) {
 }
 
 bool asic_restore(FILE *image) {
-    if (fread(&asic, sizeof(asic), 1, image) == 1
+    if (fread(&asic, offsetof(asic_state_t, im2), 1, image) == 1
         && backlight_restore(image)
         && control_restore(image)
         && cpu_restore(image)
@@ -162,14 +179,15 @@ bool asic_restore(FILE *image) {
         && sched_restore(image)
         && fgetc(image) == EOF)
     {
-        gui_report_reset();
+        (void)report_reset(asic.revision);
+        set_features();
         return true;
     }
     return false;
 }
 
 bool asic_save(FILE *image) {
-    return fwrite(&asic, sizeof(asic), 1, image) == 1
+    return fwrite(&asic, offsetof(asic_state_t, im2), 1, image) == 1
            && backlight_save(image)
            && control_save(image)
            && cpu_save(image)

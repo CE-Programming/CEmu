@@ -5,10 +5,8 @@
 #include "utils.h"
 
 #include "../../core/schedule.h"
-#include "../../core/bootver.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
-#include "../../core/mem.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 
@@ -936,24 +934,32 @@ void MainWindow::setRecentSave(bool state) {
 void MainWindow::setAsicValidRevisions() {
     QStandardItemModel* itemModel = qobject_cast<QStandardItemModel*>(ui->comboBoxAsicRev->model());
     assert(itemModel);
-    boot_ver_t boot_ver;
-    bool gotVer = !m_allowAnyRev && bootver_parse(mem.flash.block, &boot_ver);
-    for (int row = 1; row < itemModel->rowCount(); row++) {
-        itemModel->item(row)->setEnabled(!gotVer || bootver_check_rev(&boot_ver, (asic_rev_t)row));
+
+    bool allowAnyRev = ui->checkAllowAnyRev->isChecked();
+    int row = 1;
+    for (int rev : m_supportedRevs) {
+        while (row < rev) {
+            itemModel->item(row++)->setEnabled(allowAnyRev);
+        }
+        itemModel->item(row++)->setEnabled(true);
     }
+    while (row < itemModel->rowCount()) {
+        itemModel->item(row++)->setEnabled(allowAnyRev);
+    }
+
     if (!itemModel->item(ui->comboBoxAsicRev->currentIndex())->isEnabled()) {
         ui->comboBoxAsicRev->setCurrentIndex(0);
     }
 }
 
 void MainWindow::setAsicRevision(int index) {
-    set_asic_revision((asic_rev_t)ui->comboBoxAsicRev->currentIndex());
+    emu.setAsicRev(index);
 }
 
 void MainWindow::setAllowAnyRev(bool state) {
     ui->checkAllowAnyRev->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_ALLOW_ANY_REV, state);
-    m_allowAnyRev = state;
+    emu.setAllowAnyRev(state);
     setAsicValidRevisions();
 }
 

@@ -116,6 +116,10 @@ bool bootver_check_rev(const boot_ver_t* ver, asic_rev_t rev) {
         return false;
     }
 
+    if (!ver) {
+        return true;
+    }
+
     return bootver_check_ver(ver, asic_min_ver + index)
         && bootver_check_ver(asic_max_ver + index, ver);
 }

@@ -434,11 +434,11 @@ private:
     void setUIEditMode(bool mode);
     void setFullscreen(int value);
     void iconsLoad();
+    void showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev);
 
     // speed settings
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showAsicRev(int revision);
     void showEmuSpeed(int speed);
     void showFpsSpeed(double emuFps, double guiFps);
     void showStatusMsg(const QString &str);
@@ -671,6 +671,7 @@ private:
     bool m_optimizeRecording;
     bool m_portableActivated = false;
     bool m_ignoreDmaCycles;
+    QList<int> m_supportedRevs;
     bool m_allowAnyRev;
     bool m_normalOs;
     bool m_setup = false;

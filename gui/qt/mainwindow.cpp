@@ -140,7 +140,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
     connect(&emu, &EmuThread::consoleClear, this, &MainWindow::consoleClear, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::sendAsicRev, this, &MainWindow::showAsicRev, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sendAsicRevInfo, this, &MainWindow::showAsicRevInfo, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendSpeed, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugDisable, this, &MainWindow::debugDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugCommand, this, &MainWindow::debugCommand, Qt::QueuedConnection);
@@ -1505,9 +1505,19 @@ void MainWindow::consoleStr() {
     }
 }
 
-void MainWindow::showAsicRev(int revision) {
-    QString asicRevStr = ui->comboBoxAsicRev->itemText(revision);
-    ui->currAsicRev->setText(tr("Current: ") + asicRevStr + tr(" (change requires reset)"));
+void MainWindow::showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev) {
+    QString defaultRevStr = ui->comboBoxAsicRev->itemText(defaultRev);
+    ui->comboBoxAsicRev->setItemText(0, tr("Auto (%0)").arg(defaultRevStr));
+
+    QString loadedRevStr = ui->comboBoxAsicRev->itemText(loadedRev);
+    ui->currAsicRev->setText(tr("Current: %0 (change requires reset)").arg(loadedRevStr));
+
+    m_supportedRevs = supportedRevs;
+    setAsicValidRevisions();
+
+    if (loadedRev != defaultRev || ui->comboBoxAsicRev->currentIndex() != 0) {
+        ui->comboBoxAsicRev->setCurrentIndex(loadedRev);
+    }
 }
 
 void MainWindow::showEmuSpeed(int speed) {
@@ -2266,7 +2276,6 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
 
     if (state == EMU_STATE_VALID) {
         ui->lcd->setMain();
-        setAsicValidRevisions();
         setCalcSkinTopFromType();
         setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
         for (const auto &dock : findChildren<DockWidget*>()) {
