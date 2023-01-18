@@ -46,28 +46,41 @@ enum spi_ic {
     SPI_IC_GRAM_BYPASS = 1 << 7
 };
 
+#define SPI_WIDTH 32
+#define SPI_RXFIFO_DEPTH 16
+#define SPI_TXFIFO_DEPTH 16
+#define SPI_FEATURES 0xE
+
 typedef struct spi_state {
+    uint32_t cr0, cr1, cr2, intCtrl, dtr, rxFifo[SPI_RXFIFO_DEPTH], txFifo[SPI_TXFIFO_DEPTH];
+    uint32_t rxFrame, txFrame, deviceFrame;
+    uint8_t transferBits, deviceBits;
+    uint8_t rfvi, rfve, tfvi, tfve;
+    uint8_t intStatus;
+    bool arm;
+
     uint32_t param;
-    uint16_t fifo, row, dstRow, srcRow;
-    const uint8_t *data;
-    uint8_t cbw[0x20], csw[0x10], cbwIndex, dataLength, cswIndex;
-    uint8_t regs[0x18];
+    uint16_t row, dstRow, srcRow;
     uint8_t cmd, col, colDir;
 
-    uint32_t scanLine, rowReg, colReg;
+    uint32_t rowReg, colReg;
     uint16_t rowStart, rowEnd, colStart, colEnd;
     uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
     uint8_t mode, ifBpp, ifCtl, ifRed, ifGreen, ifBlue, mac, gamma;
     uint8_t lut[128], frame[320][240][3], display[240][320][4];
 
     bool tear;
-    uint16_t tearLine;
     uint8_t gammaCorrection[2][16];
+
+    uint8_t (*device_select)(uint32_t*);
+    uint8_t (*device_transfer)(uint32_t, uint32_t*);
+    void (*device_deselect)(void);
 } spi_state_t;
 
 extern spi_state_t spi;
 
 eZ80portrange_t init_spi(void);
+void spi_device_select(bool arm);
 void spi_reset(void);
 bool spi_hsync(void);
 bool spi_vsync(void);

@@ -144,6 +144,9 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                     control.readBatteryStatus = control.setBatteryStatus == BATTERY_DISCHARGED ? 0 : byte & 0x80 ? 0 : 3;
                     break;
             }
+            if (asic.serFlash && (control.ports[index] ^ byte) >> 4 & 1) {
+                spi_device_select(byte >> 4 & 1);
+            }
             control.ports[index] = byte;
 
             if (byte == 0xD4) {
