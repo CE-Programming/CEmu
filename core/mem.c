@@ -18,6 +18,11 @@
 /* Global MEMORY state */
 mem_state_t mem;
 
+static uint8_t (*mem_read_flash)(uint32_t);
+
+static uint8_t mem_read_flash_parallel(uint32_t);
+static uint8_t mem_read_flash_serial(uint32_t);
+
 void mem_init(void) {
     unsigned int i;
 
@@ -57,24 +62,8 @@ void mem_free(void) {
 void mem_reset(void) {
     memset(mem.ram.block, 0, SIZE_RAM);
     mem.flash.command = FLASH_NO_COMMAND;
+    mem_read_flash = asic.serFlash ? mem_read_flash_serial : mem_read_flash_parallel;
     gui_console_printf("[CEmu] Memory reset.\n");
-}
-
-static uint32_t flash_block(uint32_t *addr, uint32_t *size) {
-    uint32_t mask = flash.mask;
-    if (size) {
-        *size = mask + 1;
-    }
-    if (*addr <= mask && flash.mapped) {
-        /* assume this will crash */
-        if (flash.waitStates == 6) {
-            flash.waitStates = 10;
-            cpu_crash("[CEmu] Reset triggered, flash data not latched.\n");
-        }
-        return flash.waitStates;
-    }
-    *addr &= mask;
-    return 258;
 }
 
 static void fix_size(uint32_t *addr, int32_t *size) {
@@ -86,7 +75,7 @@ static void fix_size(uint32_t *addr, int32_t *size) {
 
 static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t *block_size) {
     if (*addr < 0xD00000) {
-        flash_block(addr, block_size);
+        *addr &= asic.serFlash ? flash.mask : flash.mappedBytes - 1;
         *block = mem.flash.block;
         *block_size = SIZE_FLASH;
     } else if (*addr < 0xE00000) {
@@ -463,15 +452,16 @@ static flash_write_pattern_t patterns[] = {
 
 };
 
-static uint8_t mem_read_flash(uint32_t addr) {
+static uint8_t mem_read_flash_parallel(uint32_t addr) {
     uint8_t value = 0;
     unsigned int selected;
 
-    cpu.cycles += flash_block(&addr, NULL);
-    if (flash.mapped) {
+    if (likely(addr < flash.mask)) {
+        cpu.cycles += flash.waitStates;
+
         switch(mem.flash.command) {
             case FLASH_NO_COMMAND:
-                value = mem.flash.block[addr];
+                value = mem.flash.block[addr & (SIZE_FLASH - 1)];
                 break;
             case FLASH_SECTOR_ERASE:
                 value = 0x80;
@@ -537,22 +527,45 @@ static uint8_t mem_read_flash(uint32_t addr) {
                 break;
         }
     } else {
+        if (likely(addr >= flash.mappedBytes)) {
+            cpu.cycles += 258;
+        } else {
+            /* wait states too low, assume this will crash */
+            cpu_crash("[CEmu] Reset triggered, flash data not latched.\n");
+        }
         value = mem_read_unmapped_flash(true);
     }
 
     return value;
 }
 
+static uint8_t mem_read_flash_serial(uint32_t addr) {
+    cpu.cycles += flash_touch_cache(addr);
+    return mem.flash.block[addr & flash.mask];
+}
+
 static void mem_write_flash(uint32_t addr, uint8_t byte) {
+    if (asic.serFlash) {
+        /* Writes cause a cache touch, but the write does not modify the cache */
+        cpu.cycles += flash_touch_cache(addr);
+        return;
+    }
+
+    if (unlikely(addr >= flash.mappedBytes)) {
+        cpu.cycles += 258;
+        return;
+    }
+
+    cpu.cycles += flash.waitStates;
+    if (!flash_unlocked()) {
+        /* privileged writes with flash locked are probably ignored */
+        return;
+    }
+
     int i;
     int partial_match = 0;
     flash_write_t *w;
     flash_write_pattern_t *pattern;
-
-    cpu.cycles += flash_block(&addr, NULL);
-    if (!flash.mapped || asic.serFlash) {
-        return;
-    }
 
     if (mem.flash.command != FLASH_NO_COMMAND) {
         if ((mem.flash.command != FLASH_DEEP_POWER_DOWN && byte == 0xF0) ||
@@ -633,6 +646,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
         /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
         case 0x4: case 0x5: case 0x6: case 0x7:
+        case 0x8: case 0x9: case 0xA: case 0xB:
             value = mem_read_flash(addr);
             if (fetch && detect_flash_unlock_sequence(value)) {
                 control.flashUnlocked |= 1 << 3;
@@ -640,9 +654,9 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             break;
 
         /* UNMAPPED */
-        case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+        case 0xC:
             value = mem_read_unmapped_other(true);
-            cpu.cycles += 258;
+            cpu.cycles += asic.serFlash ? 2 : 258;
             break;
 
         /* RAM */
@@ -709,14 +723,19 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                     control.protectionStatus |= 2;
                     gui_console_printf("[CEmu] NMI reset caused by writing to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
                     cpu_nmi();
-                } else if (flash_unlocked()) {
+                } else {
                     mem_write_flash(addr, value);
-                } /* privileged writes with flash locked are probably ignored */
+                }
+                break;
+
+                /* UNMAPPED/FLASH */
+            case 0x8: case 0x9: case 0xA: case 0xB:
+                cpu.cycles += asic.serFlash ? flash_touch_cache(addr) : 258;
                 break;
 
                 /* UNMAPPED */
-            case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-                cpu.cycles += 258;
+            case 0xC:
+                cpu.cycles += asic.serFlash ? 2 : 258;
                 break;
 
                 /* RAM */
@@ -899,6 +918,8 @@ bool mem_restore(FILE *image) {
     for (i = 0; i < 64; i++) {
         mem.flash.sector[i].ptr = &mem.flash.block[i*SIZE_FLASH_SECTOR_64K];
     }
+
+    mem_read_flash = asic.serFlash ? mem_read_flash_serial : mem_read_flash_parallel;
 
     return ret;
 }

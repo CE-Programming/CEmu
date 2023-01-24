@@ -52,12 +52,13 @@ enum spi_ic {
 #define SPI_FEATURES 0xE
 
 typedef struct spi_state {
-    uint32_t cr0, cr1, cr2, intCtrl, dtr, rxFifo[SPI_RXFIFO_DEPTH], txFifo[SPI_TXFIFO_DEPTH];
+    uint32_t cr0, cr1, cr2, intCtrl, dtr;
     uint32_t rxFrame, txFrame, deviceFrame;
     uint8_t transferBits, deviceBits;
     uint8_t rfvi, rfve, tfvi, tfve;
     uint8_t intStatus;
     bool arm;
+    uint32_t rxFifo[SPI_RXFIFO_DEPTH], txFifo[SPI_TXFIFO_DEPTH];
 
     uint32_t param;
     uint16_t row, dstRow, srcRow;

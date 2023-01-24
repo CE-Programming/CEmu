@@ -10,20 +10,69 @@
 /* Global flash state */
 flash_state_t flash;
 
-static void flash_set_map(uint8_t map) {
-    flash.map = map & 0x0F;
-    if (map & 8) {
-        flash.mask = 0xFFFF;
+static void flash_set_map(void) {
+    if (asic.serFlash)
+        return;
+
+    /* Determine how many bytes of flash are mapped */
+    if (flash.ports[0x00] == 0 || flash.ports[0x01] > 0x3F) {
+        flash.mappedBytes = 0;
     } else {
-        flash.mask = ((0x10000 << (map & 7)) - 1) & 0x3FFFFF;
+        uint8_t map = flash.ports[0x02];
+        flash.mappedBytes = 0x10000 << (map < 8 ? map : 0);
+    }
+
+    /* Set the effective access bounds, overriding for low wait states */
+    flash.waitStates = flash.ports[0x05] + 6;
+    if (unlikely(flash.waitStates == 6)) {
+        flash.mask = 0;
+    } else {
+        flash.mask = flash.mappedBytes;
     }
 }
 
-static void flash_set_wait_states(uint8_t value) {
-    if (asic.serFlash) {
-        flash.waitStates = 2;
-    } else {
-        flash.waitStates = value;
+static void flash_set_mask(void) {
+    uint32_t value = flash.maskReg[0]
+                   | flash.maskReg[1] << 8
+                   | flash.maskReg[2] << 16
+                   | flash.maskReg[3] << 24;
+    flash.mask = ~value & (SIZE_FLASH - 1);
+}
+
+void flash_flush_cache(void) {
+    /* Flush only if the cache has been used since the last flush */
+    if (flash.lastCacheLine != FLASH_CACHE_INVALID_LINE) {
+        flash.lastCacheLine = FLASH_CACHE_INVALID_LINE;
+        for (unsigned int set = 0; set < FLASH_CACHE_SETS; set++) {
+            flash.cacheTags[set].mru = flash.cacheTags[set].lru = FLASH_CACHE_INVALID_TAG;
+        }
+    }
+}
+
+uint32_t flash_touch_cache(uint32_t addr) {
+    uint32_t line = addr >> FLASH_CACHE_LINE_BITS;
+    if (likely(line == flash.lastCacheLine)) {
+        return 2;
+    }
+    else {
+        flash.lastCacheLine = line;
+        flash_cache_set_t* set = &flash.cacheTags[line & (FLASH_CACHE_SETS - 1)];
+        uint16_t tag = (uint16_t)(line >> FLASH_CACHE_SET_BITS);
+        if (likely(set->mru == tag)) {
+            return 3;
+        }
+        else if (likely(set->lru == tag)) {
+            /* Swap to track most-recently-used */
+            set->lru = set->mru;
+            set->mru = tag;
+            return 3;
+        }
+        else {
+            /* Handle a cache miss by replacing least-recently-used */
+            set->lru = tag;
+            /* Supposedly this takes from 195-201 cycles, but typically seems to be 196-197 */
+            return 197;
+        }
     }
 }
 
@@ -58,6 +107,7 @@ static void flash_erase(uint32_t size) {
 }
 
 static void flash_execute_command(void) {
+    flash_flush_cache();
     flash.commandAddress = flash.command[0] | flash.command[1] << 8 | flash.command[2] << 16;
     flash.commandLength = flash.command[8] | flash.command[9] << 8 | flash.command[10] << 16;
     flash.commandStatus[0] &= ~7;
@@ -182,20 +232,7 @@ static uint8_t flash_read(const uint16_t pio, bool peek) {
         }
     } else {
         uint8_t index = pio & 0x7F;
-        switch (index) {
-            case 0x00:
-                value = flash.mapped;
-                break;
-            case 0x02:
-                value = flash.map;
-                break;
-            case 0x05:
-                value = flash.waitStates - 6;
-                break;
-            default:
-                value = flash.ports[index];
-                break;
-        }
+        value = flash.ports[index];
     }
     return value;
 }
@@ -215,6 +252,10 @@ static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 case 0x24:
                     flash.commandStatus[0] &= ~(byte & 1);
                     break;
+                case 0x2C: case 0x2D: case 0x2E: case 0x2F:
+                    flash.maskReg[index - 0x2C] = byte;
+                    flash_set_mask();
+                    break;
                 case 0x100:
                     if ((flash.command[0xC] & 1 << 1) && flash.commandLength) {
                         flash_write_command(byte);
@@ -224,22 +265,23 @@ static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
         }
     } else {
-        uint8_t index = pio;
+        uint8_t index = pio & 0x7F;
         switch (index) {
             case 0x00:
-                flash.mapped = byte;
+                flash.ports[index] = byte & 1;
+                flash_set_map();
                 break;
             case 0x01:
                 flash.ports[index] = byte;
-                if (byte > 0x3F) {
-                    flash.mapped = 0;
-                }
+                flash_set_map();
                 break;
             case 0x02:
-                flash_set_map(byte);
+                flash.ports[index] = byte & 0xF;
+                flash_set_map();
                 break;
             case 0x05:
-                flash_set_wait_states(byte + 6);
+                flash.ports[index] = byte;
+                flash_set_map();
                 break;
             case 0x08:
                 flash.ports[index] = byte & 1;
@@ -260,20 +302,28 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_flash(void) {
-    memset(flash.ports, 0, sizeof flash.ports);
-
-    flash.ports[0x00] = 0x01;
-    flash.ports[0x07] = 0xFF;
     flash.uniqueID = UINT64_C(0xFFFFFFFFDE680000) | (rand() & 0xFFFF);
+    gui_console_printf("[CEmu] Initialized Flash...\n");
+    return device;
+}
+
+void flash_reset(void) {
+    memset((uint8_t*)&flash + sizeof(flash.uniqueID), 0, sizeof(flash) - sizeof(flash.uniqueID));
     flash.commandStatus[1] = 0x28;
     flash.commandStatus[2] = 0x03;
     flash.commandStatus[3] = 0x60;
-    flash_set_wait_states(10);
-    flash.mapped = 1;
-    flash_set_map(6);
-
-    gui_console_printf("[CEmu] Initialized Flash...\n");
-    return device;
+    flash.ports[0x00] = 0x01;
+    flash.ports[0x02] = 0x06;
+    flash.ports[0x05] = 0x04;
+    flash.ports[0x07] = 0xFF;
+    flash.maskReg[0] = 0x00;
+    flash.maskReg[1] = 0x00;
+    flash.maskReg[2] = 0xC0;
+    flash.maskReg[3] = 0xFF;
+    flash_set_mask();
+    flash_set_map();
+    flash_flush_cache();
+    gui_console_printf("[CEmu] Flash reset.\n");
 }
 
 bool flash_save(FILE *image) {

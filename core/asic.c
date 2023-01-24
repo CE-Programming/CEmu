@@ -64,6 +64,7 @@ static void plug_devices(void) {
 
     /* Populate reset callbacks */
     add_reset_proc(sched_reset);
+    add_reset_proc(flash_reset);
     add_reset_proc(mem_reset);
     add_reset_proc(lcd_reset);
     add_reset_proc(keypad_reset);
@@ -158,29 +159,31 @@ void set_cpu_clock(uint32_t new_rate) {
 }
 
 bool asic_restore(FILE *image) {
-    if (fread(&asic, offsetof(asic_state_t, im2), 1, image) == 1
-        && backlight_restore(image)
-        && control_restore(image)
-        && cpu_restore(image)
-        && flash_restore(image)
-        && intrpt_restore(image)
-        && keypad_restore(image)
-        && lcd_restore(image)
-        && mem_restore(image)
-        && watchdog_restore(image)
-        && protect_restore(image)
-        && rtc_restore(image)
-        && sha256_restore(image)
-        && gpt_restore(image)
-        && usb_restore(image)
-        && cxxx_restore(image)
-        && spi_restore(image)
-        && exxx_restore(image)
-        && sched_restore(image)
-        && fgetc(image) == EOF)
+    if (fread(&asic, offsetof(asic_state_t, im2), 1, image) != 1) {
+        return false;
+    }
+    set_features();
+    if (backlight_restore(image)
+     && control_restore(image)
+     && cpu_restore(image)
+     && flash_restore(image)
+     && intrpt_restore(image)
+     && keypad_restore(image)
+     && lcd_restore(image)
+     && mem_restore(image)
+     && watchdog_restore(image)
+     && protect_restore(image)
+     && rtc_restore(image)
+     && sha256_restore(image)
+     && gpt_restore(image)
+     && usb_restore(image)
+     && cxxx_restore(image)
+     && spi_restore(image)
+     && exxx_restore(image)
+     && sched_restore(image)
+     && fgetc(image) == EOF)
     {
         (void)report_reset(asic.revision);
-        set_features();
         return true;
     }
     return false;
