@@ -1,4 +1,5 @@
 #include "flash.h"
+#include "control.h"
 #include "emu.h"
 #include "mem.h"
 #include "os/os.h"
@@ -11,9 +12,6 @@
 flash_state_t flash;
 
 static void flash_set_map(void) {
-    if (asic.serFlash)
-        return;
-
     /* Determine how many bytes of flash are mapped */
     if (flash.ports[0x00] == 0 || flash.ports[0x01] > 0x3F) {
         flash.mappedBytes = 0;
@@ -191,47 +189,55 @@ static void flash_command_byte_transferred(void) {
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio, bool peek) {
     uint8_t value;
-    if (asic.serFlash && pio & 0x800) {
-        uint16_t index = pio & 0x7FF;
-        if (index < 0x10) {
-            value = flash.command[index];
-        } else {
-            switch (index) {
-                case 0x18:
-                    value = flash.commandStatus[0] >> 1 & 3;
-                    break;
-                case 0x24:
-                    value = flash.commandStatus[0] >> 0 & 1;
-                    break;
-                case 0x30:
-                    value = 0x04;
-                    break;
-                case 0x31:
-                    value = 0xB4;
-                    break;
-                case 0x32:
-                    value = 0x0E;
-                    break;
-                case 0x33:
-                    value = 0x1F;
-                    break;
-                case 0x100:
-                    if (!(flash.command[0xC] & 1 << 1) && flash.commandLength) {
-                        value = flash_read_command(peek);
-                        if (!peek) {
-                            flash_command_byte_transferred();
+    if (asic.serFlash) {
+        if (pio & 0x800) {
+            uint16_t index = pio & 0x7FF;
+            if (index < 0x10) {
+                value = flash.command[index];
+            } else {
+                switch (index) {
+                    case 0x18:
+                        value = flash.commandStatus[0] >> 1 & 3;
+                        break;
+                    case 0x24:
+                        value = flash.commandStatus[0] >> 0 & 1;
+                        break;
+                    case 0x2C: case 0x2D: case 0x2E: case 0x2F:
+                        value = flash.maskReg[index - 0x2C];
+                        break;
+                    case 0x30:
+                        value = 0x04;
+                        break;
+                    case 0x31:
+                        value = 0xB4;
+                        break;
+                    case 0x32:
+                        value = 0x0E;
+                        break;
+                    case 0x33:
+                        value = 0x1F;
+                        break;
+                    case 0x100:
+                        if (!(flash.command[0xC] & 1 << 1) && flash.commandLength) {
+                            value = flash_read_command(peek);
+                            if (!peek) {
+                                flash_command_byte_transferred();
+                            }
+                        } else {
+                            value = 0;
                         }
-                    } else {
+                        break;
+                    default:
                         value = 0;
-                    }
-                    break;
-                default:
-                    value = 0;
-                    break;
+                        break;
+                }
             }
+        } else {
+            uint8_t index = pio & 0x7F;
+            value = flash.ports[index];
         }
     } else {
-        uint8_t index = pio & 0x7F;
+        uint8_t index = pio;
         value = flash.ports[index];
     }
     return value;
@@ -240,32 +246,50 @@ static uint8_t flash_read(const uint16_t pio, bool peek) {
 /* Write to the 0x1000 range of ports */
 static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
     (void)poke;
-    if (asic.serFlash && pio & 0x800) {
-        uint16_t index = pio & 0x7FF;
-        if (index < 0x10) {
-            flash.command[index] = byte;
-            if (index == 0xF) {
-                flash_execute_command();
+    if (asic.serFlash) {
+        if (!flash_unlocked()) {
+            return;
+        }
+
+        if (pio & 0x800) {
+            uint16_t index = pio & 0x7FF;
+            if (index < 0x10) {
+                flash.command[index] = byte;
+                if (index == 0xF) {
+                    flash_execute_command();
+                }
             }
+            else {
+                switch (index) {
+                    case 0x24:
+                        flash.commandStatus[0] &= ~(byte & 1);
+                        break;
+                    case 0x2C: case 0x2D: case 0x2E: case 0x2F:
+                        flash.maskReg[index - 0x2C] = byte;
+                        flash_set_mask();
+                        break;
+                    case 0x100:
+                        if ((flash.command[0xC] & 1 << 1) && flash.commandLength) {
+                            flash_write_command(byte);
+                            flash_command_byte_transferred();
+                        }
+                        break;
+                }
+            }
+            return;
         } else {
+            uint8_t index = pio & 0x7F;
             switch (index) {
-                case 0x24:
-                    flash.commandStatus[0] &= ~(byte & 1);
+                case 0x10:
+                    flash.ports[index] = byte & 1;
                     break;
-                case 0x2C: case 0x2D: case 0x2E: case 0x2F:
-                    flash.maskReg[index - 0x2C] = byte;
-                    flash_set_mask();
-                    break;
-                case 0x100:
-                    if ((flash.command[0xC] & 1 << 1) && flash.commandLength) {
-                        flash_write_command(byte);
-                        flash_command_byte_transferred();
-                    }
+                default:
+                    flash.ports[index] = byte;
                     break;
             }
         }
     } else {
-        uint8_t index = pio & 0x7F;
+        uint8_t index = pio;
         switch (index) {
             case 0x00:
                 flash.ports[index] = byte & 1;
@@ -284,9 +308,6 @@ static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 flash_set_map();
                 break;
             case 0x08:
-                flash.ports[index] = byte & 1;
-                break;
-            case 0x10:
                 flash.ports[index] = byte & 1;
                 break;
             default:
@@ -312,17 +333,20 @@ void flash_reset(void) {
     flash.commandStatus[1] = 0x28;
     flash.commandStatus[2] = 0x03;
     flash.commandStatus[3] = 0x60;
-    flash.ports[0x00] = 0x01;
-    flash.ports[0x02] = 0x06;
-    flash.ports[0x05] = 0x04;
-    flash.ports[0x07] = 0xFF;
-    flash.maskReg[0] = 0x00;
-    flash.maskReg[1] = 0x00;
-    flash.maskReg[2] = 0xC0;
-    flash.maskReg[3] = 0xFF;
-    flash_set_mask();
-    flash_set_map();
-    flash_flush_cache();
+    if (asic.serFlash) {
+        flash.maskReg[0] = 0x00;
+        flash.maskReg[1] = 0x00;
+        flash.maskReg[2] = 0xC0;
+        flash.maskReg[3] = 0xFF;
+        flash_set_mask();
+        flash_flush_cache();
+    } else {
+        flash.ports[0x00] = 0x01;
+        flash.ports[0x02] = 0x06;
+        flash.ports[0x05] = 0x04;
+        flash.ports[0x07] = 0xFF;
+        flash_set_map();
+    }
     gui_console_printf("[CEmu] Flash reset.\n");
 }
 

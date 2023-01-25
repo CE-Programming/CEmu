@@ -35,7 +35,7 @@ typedef struct flash_state {
     uint8_t commandStatus[4];
     uint8_t maskReg[4];
     flash_cache_set_t cacheTags[FLASH_CACHE_SETS];
-    uint8_t ports[0x80];
+    uint8_t ports[0x100];
 } flash_state_t;
 
 extern flash_state_t flash;
