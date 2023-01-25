@@ -149,7 +149,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             control.ports[index] = byte;
 
-            if (byte == 0xD4) {
+            if ((byte & ~(1 << 4)) == 0xC4) {
                 control.ports[0] |= 1 << 6;
                 cpu_crash("entering sleep mode");
             }
