@@ -211,6 +211,7 @@ SOURCES += \
     ../../core/emu.c \
     ../../core/extras.c \
     ../../core/spi.c \
+    ../../core/uart.c \
     ../../core/debug/debug.c \
     ../../core/debug/zdis/zdis.c \
     ipc.cpp \
@@ -300,6 +301,7 @@ HEADERS  += \
     ../../core/misc.h \
     ../../core/schedule.h \
     ../../core/timers.h \
+    ../../core/uart.h \
     ../../core/usb/device.h \
     ../../core/usb/fotg210.h \
     ../../core/usb/usb.h \

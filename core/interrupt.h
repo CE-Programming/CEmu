@@ -20,6 +20,7 @@ extern "C" {
 #define INT_RTC       (1 << 12)
 #define INT_USB       (1 << 13)
 #define INT_PWR       (1 << 15)
+#define INT_UART      (1 << 16)
 #define INT_SPI       (1 << 18)
 #define INT_WAKE      (1 << 19)
 

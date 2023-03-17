@@ -30,9 +30,7 @@ typedef struct protected_state {
 typedef struct cxxx_state {
     uint8_t ports[0x100];
 } cxxx_state_t;
-typedef struct exxx_state {
-    uint8_t ports[0x80];
-} exxx_state_t;
+
 typedef struct fxxx_state {
     uint8_t dummy;
 } fxxx_state_t;
@@ -40,13 +38,11 @@ typedef struct fxxx_state {
 extern watchdog_state_t watchdog;
 extern protected_state_t protect;
 extern cxxx_state_t cxxx;
-extern exxx_state_t exxx;
 extern fxxx_state_t fxxx;
 
 eZ80portrange_t init_watchdog(void);
 eZ80portrange_t init_protected(void);
 eZ80portrange_t init_cxxx(void);
-eZ80portrange_t init_exxx(void);
 eZ80portrange_t init_fxxx(void);
 void watchdog_reset(void);
 bool watchdog_restore(FILE *image);
@@ -55,8 +51,6 @@ bool protect_restore(FILE *image);
 bool protect_save(FILE *image);
 bool cxxx_restore(FILE *image);
 bool cxxx_save(FILE *image);
-bool exxx_restore(FILE *image);
-bool exxx_save(FILE *image);
 
 #ifdef __cplusplus
 }

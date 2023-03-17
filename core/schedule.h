@@ -9,8 +9,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_1M,
-                CLOCK_32K, CLOCK_1, CLOCK_NUM_ITEMS };
+enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_3M,
+                CLOCK_1M, CLOCK_32K, CLOCK_1, CLOCK_NUM_ITEMS };
 
 enum sched_item_id {
     SCHED_SECOND,
@@ -28,9 +28,10 @@ enum sched_item_id {
     SCHED_USB,
     SCHED_USB_DEVICE,
     SCHED_SPI,
+    SCHED_UART,
 
     SCHED_FIRST_EVENT = SCHED_RUN,
-    SCHED_LAST_EVENT = SCHED_SPI,
+    SCHED_LAST_EVENT = SCHED_UART,
 
     SCHED_PREV_MA,
 

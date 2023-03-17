@@ -98,6 +98,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/sha256.c ../../core/sha256.h
     ../../core/spi.c ../../core/spi.h
     ../../core/timers.c ../../core/timers.h
+    ../../core/uart.c ../../core/uart.h
     ../../core/usb/device.h
     ../../core/usb/disconnected.c
     ../../core/usb/dusb.c
