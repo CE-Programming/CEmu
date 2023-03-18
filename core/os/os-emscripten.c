@@ -23,11 +23,26 @@
 
 static char file_buf[500] = {0};
 
+static bool transfer_progress_cb(void *context, int value, int total) {
+    (void)context;
+    EM_ASM({
+        if (window.transferProgressCallback) { transferProgressCallback($0, $1); }
+    }, value, total);
+    return false;
+}
+
+static int emu_send_variable_with_cb(const char *file, int location, usb_progress_handler_t *progress_handler) {
+    return emu_send_variables(&file, 1, location, progress_handler, NULL);
+}
+
 static void gui_do_stuff(void) {
-    if (file_buf[0] != '\0') {
-        if (emu_send_variable(file_buf, LINK_FILE) != LINK_GOOD) {
-            fprintf(stderr, "Error sending file to emu: %s\n", file_buf);
+    if (unlikely(file_buf[0] != '\0')) {
+        if (emu_send_variable_with_cb(file_buf, LINK_FILE, transfer_progress_cb) != LINK_GOOD) {
+            fprintf(stderr, "[CEmu] Error sending file to emu: %s\n", file_buf);
             fflush(stderr);
+            EM_ASM(
+                if (window.transferErrorCallback) { transferErrorCallback() };
+            );
         }
         file_buf[0] = 0;
     }
