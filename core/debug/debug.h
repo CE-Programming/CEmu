@@ -138,6 +138,8 @@ typedef struct {
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
     int64_t totalCycles, dmaCycles;
+    uint32_t flashCacheMisses, flashTotalAccesses, flashWaitStates;
+    int64_t flashDelayCycles;
     bool step, stepOver;
     uint32_t tempExec, stepOut;
 

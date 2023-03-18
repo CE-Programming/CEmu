@@ -457,6 +457,10 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
     unsigned int selected;
 
     if (likely(addr < flash.mask)) {
+        if (unlikely(++cpu.flashTotalAccesses == 0)) {
+            cpu.flashTotalAccesses = 0x80000000;
+            cpu.flashDelayCycles >>= 1;
+        }
         cpu.cycles += flash.waitStates;
 
         switch(mem.flash.command) {
@@ -556,6 +560,10 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
         return;
     }
 
+    if (unlikely(++cpu.flashTotalAccesses == 0)) {
+        cpu.flashTotalAccesses = 0x80000000;
+        cpu.flashDelayCycles >>= 1;
+    }
     cpu.cycles += flash.waitStates;
     if (!flash_unlocked()) {
         /* privileged writes with flash locked are probably ignored */

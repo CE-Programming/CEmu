@@ -456,6 +456,8 @@ void MainWindow::setFont(int fontSize) {
     ui->lcdbaseView->setFont(monospace);
     ui->lcdcurrView->setFont(monospace);
     ui->cycleView->setFont(monospace);
+    ui->flashAvgView->setFont(monospace);
+    ui->flashMissesView->setFont(monospace);
 }
 
 void MainWindow::setKeypadColor(unsigned int color) {

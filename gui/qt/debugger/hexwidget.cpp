@@ -340,7 +340,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             uint8_t data = static_cast<uint8_t>(m_data[addr]);
             uint8_t flags = debug.addr[addr + m_base];
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
-            bool modified = m_modified[addr];
+            bool modified = !m_modified.isEmpty() && m_modified[addr];
 
             QFont font = painter.font();
             const QFont fontorig = painter.font();

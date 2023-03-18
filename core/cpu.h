@@ -63,6 +63,8 @@ typedef struct eZ80cpu {
     eZ80context_t context;
     uint32_t seconds, cycles, eiDelay, next;
     uint64_t baseCycles, haltCycles, dmaCycles;
+    uint32_t flashTotalAccesses, flashCacheMisses;
+    int64_t flashDelayCycles;
     uint8_t prefetch;
     _Atomic(uint8_t) abort;
     struct {

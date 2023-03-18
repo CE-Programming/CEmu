@@ -4,6 +4,7 @@
 #include "../mem.h"
 #include "../emu.h"
 #include "../cpu.h"
+#include "../flash.h"
 #include "../vat.h"
 
 #include <stdio.h>
@@ -79,6 +80,10 @@ void debug_open(int reason, uint32_t data) {
     debug.cpuHaltCycles = cpu.haltCycles;
     debug.totalCycles += sched_total_cycles();
     debug.dmaCycles += cpu.dmaCycles;
+    debug.flashCacheMisses = cpu.flashCacheMisses;
+    debug.flashTotalAccesses = cpu.flashTotalAccesses;
+    debug.flashWaitStates = flash.waitStates;
+    debug.flashDelayCycles = cpu.flashDelayCycles;
 
     debug.open = true;
     gui_debug_open(reason, data);
@@ -90,6 +95,9 @@ void debug_open(int reason, uint32_t data) {
     cpu.haltCycles = debug.cpuHaltCycles;
     debug.dmaCycles -= cpu.dmaCycles;
     debug.totalCycles -= sched_total_cycles();
+    cpu.flashCacheMisses = debug.flashCacheMisses;
+    cpu.flashTotalAccesses = debug.flashTotalAccesses;
+    cpu.flashDelayCycles = debug.flashDelayCycles;
 }
 
 void debug_watch(uint32_t addr, int mask, bool set) {

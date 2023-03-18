@@ -1,5 +1,6 @@
 #include "flash.h"
 #include "control.h"
+#include "cpu.h"
 #include "emu.h"
 #include "mem.h"
 #include "os/os.h"
@@ -20,8 +21,12 @@ static void flash_set_map(void) {
         flash.mappedBytes = 0x10000 << (map < 8 ? map : 0);
     }
 
+    /* Set new waitstates and adjust recorded delay cycles */
+    uint32_t waitStates = flash.ports[0x05] + 6;
+    cpu.flashDelayCycles += (int64_t)cpu.flashTotalAccesses * (int32_t)(flash.waitStates - waitStates);
+    flash.waitStates = waitStates;
+
     /* Set the effective access bounds, overriding for low wait states */
-    flash.waitStates = flash.ports[0x05] + 6;
     if (unlikely(flash.waitStates == 6)) {
         flash.mask = 0;
     } else {
@@ -48,27 +53,32 @@ void flash_flush_cache(void) {
 }
 
 uint32_t flash_touch_cache(uint32_t addr) {
+    if (unlikely(++cpu.flashTotalAccesses == 0)) {
+        cpu.flashTotalAccesses = 0x80000000;
+        cpu.flashDelayCycles >>= 1;
+    }
     uint32_t line = addr >> FLASH_CACHE_LINE_BITS;
     if (likely(line == flash.lastCacheLine)) {
         return 2;
-    }
-    else {
+    } else {
         flash.lastCacheLine = line;
         flash_cache_set_t* set = &flash.cacheTags[line & (FLASH_CACHE_SETS - 1)];
         uint16_t tag = (uint16_t)(line >> FLASH_CACHE_SET_BITS);
         if (likely(set->mru == tag)) {
+            cpu.flashDelayCycles++;
             return 3;
-        }
-        else if (likely(set->lru == tag)) {
+        } else if (likely(set->lru == tag)) {
             /* Swap to track most-recently-used */
             set->lru = set->mru;
             set->mru = tag;
+            cpu.flashDelayCycles++;
             return 3;
-        }
-        else {
+        } else {
             /* Handle a cache miss by replacing least-recently-used */
             set->lru = tag;
+            cpu.flashCacheMisses++;
             /* Supposedly this takes from 195-201 cycles, but typically seems to be 196-197 */
+            cpu.flashDelayCycles += 195;
             return 197;
         }
     }
@@ -340,6 +350,7 @@ void flash_reset(void) {
         flash.maskReg[3] = 0xFF;
         flash_set_mask();
         flash_flush_cache();
+        flash.waitStates = 2; /* Used only for calculating average cycles per access */
     } else {
         flash.ports[0x00] = 0x01;
         flash.ports[0x02] = 0x06;
