@@ -3,6 +3,7 @@
 #include "misc.h"
 #include "mem.h"
 #include "lcd.h"
+#include "panel.h"
 #include "spi.h"
 #include "uart.h"
 #include "usb/usb.h"
@@ -78,6 +79,7 @@ static void plug_devices(void) {
     add_reset_proc(usb_reset);
     add_reset_proc(control_reset);
     add_reset_proc(backlight_reset);
+    add_reset_proc(panel_reset);
     add_reset_proc(spi_reset);
     add_reset_proc(uart_reset);
 
@@ -180,6 +182,7 @@ bool asic_restore(FILE *image) {
      && gpt_restore(image)
      && usb_restore(image)
      && cxxx_restore(image)
+     && panel_restore(image)
      && spi_restore(image)
      && uart_restore(image)
      && sched_restore(image)
@@ -208,6 +211,7 @@ bool asic_save(FILE *image) {
            && gpt_save(image)
            && usb_save(image)
            && cxxx_save(image)
+           && panel_save(image)
            && spi_save(image)
            && uart_save(image)
            && sched_save(image);

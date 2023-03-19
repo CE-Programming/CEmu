@@ -210,6 +210,7 @@ SOURCES += \
     ../../core/vat.c \
     ../../core/emu.c \
     ../../core/extras.c \
+    ../../core/panel.c \
     ../../core/spi.c \
     ../../core/uart.c \
     ../../core/debug/debug.c \
@@ -315,6 +316,7 @@ HEADERS  += \
     ../../core/vat.h \
     ../../core/extras.h \
     ../../core/os/os.h \
+    ../../core/panel.h \
     ../../core/spi.h \
     ../../core/debug/debug.h \
     ../../core/debug/zdis/zdis.h \

@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "cpu.h"
 #include "lcd.h"
+#include "spi.h"
 #include "bus.h"
 #include "debug/debug.h"
 #include "usb/usb.h"

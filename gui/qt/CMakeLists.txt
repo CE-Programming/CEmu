@@ -91,6 +91,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/mem.c ../../core/mem.h
     ../../core/misc.c ../../core/misc.h
     ../../core/os/os.h
+    ../../core/panel.c ../../core/panel.h
     ../../core/port.c ../../core/port.h
     ../../core/realclock.c ../../core/realclock.h
     ../../core/registers.c ../../core/registers.h

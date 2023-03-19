@@ -8,6 +8,7 @@
 #include "control.h"
 #include "schedule.h"
 #include "interrupt.h"
+#include "panel.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -70,7 +71,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
     uint32_t *dat_end;
 
     if (use_spi) {
-        memcpy(output, spi.display, sizeof(spi.display));
+        memcpy(output, panel.display, sizeof(panel.display));
         return;
     }
 
@@ -158,18 +159,18 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
         if (!likely(lcd.curCol)) {
             if (!likely(lcd.curRow)) {
                 for (v = lcd.VBP; v; v--) {
-                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && spi_refresh_pixel(); h--) {
+                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && panel_refresh_pixel(); h--) {
                     }
-                    if (!spi_hsync()) {
+                    if (!panel_hsync()) {
                         break;
                     }
                 }
             }
-            for (h = lcd.HBP; h && spi_refresh_pixel(); h--) {
+            for (h = lcd.HBP; h && panel_refresh_pixel(); h--) {
             }
         }
-        spi_refresh_pixel();
-        if (likely(lcd.curCol < lcd.PPL && spi.ifCtl & SPI_IC_CTRL_DATA)) {
+        panel_refresh_pixel();
+        if (likely(lcd.curCol < lcd.PPL && panel.ifCtl & PANEL_IC_CTRL_DATA)) {
             if (!likely(lcd.control & 1 << 11)) {
                 red = green = blue = 0;
             } else if (likely(lcd.BGR)) {
@@ -177,17 +178,17 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
                 red = blue;
                 blue = temp;
             }
-            spi_update_pixel_16bpp(red, green, blue);
+            panel_update_pixel_16bpp(red, green, blue);
         }
         if (unlikely(++lcd.curCol >= lcd.PPL)) {
-            for (h = lcd.HFP; h && spi_refresh_pixel(); h--) {
+            for (h = lcd.HFP; h && panel_refresh_pixel(); h--) {
             }
-            spi_hsync();
+            panel_hsync();
             if (unlikely(++lcd.curRow >= lcd.LPP)) {
                 for (v = lcd.VFP; v; v--) {
-                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && spi_refresh_pixel(); h--) {
+                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && panel_refresh_pixel(); h--) {
                     }
-                    if (!spi_hsync()) {
+                    if (!panel_hsync()) {
                         break;
                     }
                 }
@@ -309,7 +310,7 @@ static void lcd_event(enum sched_item_id id) {
             if (lcd.spi) {
                 lcd.pos = 0;
                 lcd.curRow = lcd.curCol = 0;
-                spi_vsync();
+                panel_vsync();
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
             }
             lcd.compare = LCD_LNBU;
