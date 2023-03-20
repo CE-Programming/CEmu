@@ -33,6 +33,12 @@ static bool panel_scan_line(uint16_t row) {
             panel.srcRow &= 0x1FF;
         }
     }
+    if (unlikely(panel.gateConfig & PANEL_GATE_INTERLACE)) {
+        panel.dstRow *= 2;
+        if (panel.dstRow >= PANEL_NUM_ROWS) {
+            panel.dstRow -= (PANEL_NUM_ROWS - 1);
+        }
+    }
     if (unlikely(panel.mac & PANEL_MAC_VRO)) {
         panel.dstRow = PANEL_LAST_ROW - panel.dstRow;
         panel.srcRow = PANEL_LAST_ROW - panel.srcRow;
@@ -166,7 +172,7 @@ static void panel_sw_reset(void) {
     panel.cmd = 0;
     panel.param = 0;
     panel.gamma = 1;
-    panel.mode = PANEL_MODE_SLEEP | PANEL_MODE_OFF;
+    panel.mode = PANEL_MODE_SLEEP | PANEL_MODE_OFF | PANEL_MODE_IGNORE;
     panel.colStart = 0;
     panel.colEnd = panel.mac & PANEL_MAC_RCX ? PANEL_LAST_COL : PANEL_LAST_ROW;
     panel.rowStart = 0;
@@ -177,6 +183,9 @@ static void panel_sw_reset(void) {
     panel.partialStart = 0;
     panel.partialEnd = PANEL_LAST_ROW;
     panel.scrollStart = 0;
+    panel.gateCount = PANEL_NUM_ROWS / 8 - 1;
+    panel.gateStart = 0 / 8;
+    panel.gateConfig = PANEL_GATE_MIRROR;
     panel.tear = false;
 }
 
@@ -281,7 +290,7 @@ static void panel_write_param(uint8_t value) {
                 switch (panel.ifBpp & 7) {
                     default:
                     case 6: /* 18bpp */
-                        switch (panel.param % 3) {
+                        switch (panel.param) {
                             case 0:
                                 panel.ifBlue = value >> 2;
                                 break;
@@ -291,11 +300,12 @@ static void panel_write_param(uint8_t value) {
                             case 2:
                                 panel.ifRed = value >> 2;
                                 panel_update_pixel_18bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                                panel.param = (uint8_t)-1;
                                 break;
                         }
                         break;
                     case 5: /* 16bpp */
-                        switch (panel.param % 2) {
+                        switch (panel.param) {
                             case 0:
                                 panel.ifBlue = value >> 3;
                                 panel.ifGreen = value << 3 & 0x38;
@@ -304,11 +314,12 @@ static void panel_write_param(uint8_t value) {
                                 panel.ifGreen |= value >> 5;
                                 panel.ifRed = value & 0x1F;
                                 panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                                panel.param = (uint8_t)-1;
                                 break;
                         }
                         break;
                     case 3: /* 12bpp */
-                        switch (panel.param % 3) {
+                        switch (panel.param) {
                             case 0:
                                 panel.ifBlue = value >> 4;
                                 panel.ifGreen = value & 0xF;
@@ -322,6 +333,7 @@ static void panel_write_param(uint8_t value) {
                                 panel.ifGreen = value >> 4;
                                 panel.ifRed = value & 0xF;
                                 panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                                panel.param = (uint8_t)-1;
                                 break;
                         }
                         break;
@@ -373,7 +385,7 @@ static void panel_write_param(uint8_t value) {
             }
             break;
         case 0x3A:
-            switch (word_param) {
+            switch (panel.param) {
                 case 0:
                     panel.ifBpp = value;
                     break;
@@ -382,7 +394,7 @@ static void panel_write_param(uint8_t value) {
             }
             break;
         case 0xB0:
-            switch (word_param) {
+            switch (panel.param) {
                 case 0:
                     panel.ifCtl = value;
                     break;
@@ -393,10 +405,29 @@ static void panel_write_param(uint8_t value) {
             }
             break;
         case 0xE0:
-            panel.gammaCorrection[0][panel.param] = value;
+            if (panel.param < 16) {
+                panel.gammaCorrection[0][panel.param] = value;
+            }
             break;
         case 0xE1:
-            panel.gammaCorrection[1][panel.param] = value;
+            if (panel.param < 16) {
+                panel.gammaCorrection[1][panel.param] = value;
+            }
+            break;
+        case 0xE4:
+            switch (panel.param) {
+                case 0:
+                    panel.gateConfig = value;
+                    break;
+                case 1:
+                    panel.gateStart = value;
+                    break;
+                case 2:
+                    panel.gateConfig = value;
+                    break;
+                default:
+                    break;
+            }
             break;
         default:
             break;

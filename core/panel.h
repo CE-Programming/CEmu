@@ -46,15 +46,21 @@ enum panel_ic {
     PANEL_IC_GRAM_BYPASS = 1 << 7
 };
 
+enum panel_gate {
+    PANEL_GATE_SCANDIR = 1 << 0,
+    PANEL_GATE_INTERLACE = 1 << 2,
+    PANEL_GATE_MIRROR = 1 << 4
+};
+
 typedef struct panel_state {
-    uint32_t param;
     uint16_t row, dstRow, srcRow;
-    uint8_t cmd, col, colDir;
+    uint8_t cmd, param, col, colDir;
 
     uint32_t rowReg, colReg;
     uint16_t rowStart, rowEnd, colStart, colEnd;
     uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
     uint8_t mode, ifBpp, ifCtl, ifRed, ifGreen, ifBlue, mac, gamma;
+    uint8_t gateCount, gateStart, gateConfig;
     uint8_t frame[320][240][3], display[240][320][4];
 
     bool tear;
