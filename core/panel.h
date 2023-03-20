@@ -25,53 +25,366 @@ enum panel_mode {
     PANEL_MODE_OFF     = 1 << 1,
     PANEL_MODE_BLANK   = 1 << 2,
     PANEL_MODE_PARTIAL = 1 << 3,
-    PANEL_MODE_INVERT  = 1 << 4,
-    PANEL_MODE_IDLE    = 1 << 5,
-    PANEL_MODE_SCROLL  = 1 << 6,
-    PANEL_MODE_IGNORE  = 1 << 7
+    PANEL_MODE_IDLE    = 1 << 4,
+    PANEL_MODE_SCROLL  = 1 << 5
 };
 
-enum panel_mac {
-    PANEL_MAC_HRO = 1 << 2,
-    PANEL_MAC_BGR = 1 << 3,
-    PANEL_MAC_VRO = 1 << 4,
-    PANEL_MAC_RCX = 1 << 5,
-    PANEL_MAC_CAO = 1 << 6,
-    PANEL_MAC_RAO = 1 << 7
-};
+typedef struct panel_gamma {
+    uint8_t V0 : 4;
+    uint8_t V63 : 4;
 
-enum panel_ic {
-    PANEL_IC_DM_MASK     = 3 << 0,
-    PANEL_IC_DM_MCU      = 0 << 0,
-    PANEL_IC_DM_RGB      = 1 << 0,
-    PANEL_IC_DM_VSYNC    = 2 << 0,
-    PANEL_IC_CTRL_DATA   = 1 << 4,
-    PANEL_IC_GRAM_BYPASS = 1 << 7
-};
+    uint8_t V1 : 6;
+    uint8_t : 2;
 
-enum panel_gate {
-    PANEL_GATE_SCANDIR = 1 << 0,
-    PANEL_GATE_INTERLACE = 1 << 2,
-    PANEL_GATE_MIRROR = 1 << 4
-};
+    uint8_t V2 : 6;
+    uint8_t : 2;
 
-typedef struct panel_scroll_regs {
-    uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
-} panel_scroll_regs_t;
+    uint8_t V4 : 5;
+    uint8_t : 3;
+
+    uint8_t V6 : 5;
+    uint8_t : 3;
+
+    uint8_t V13 : 4;
+    uint8_t J0 : 2;
+    uint8_t : 2;
+
+    uint8_t V20 : 7;
+    uint8_t : 1;
+
+    uint8_t V27 : 3;
+    uint8_t : 1;
+    uint8_t V36 : 3;
+    uint8_t : 1;
+
+    uint8_t V43 : 7;
+    uint8_t : 1;
+
+    uint8_t V50 : 4;
+    uint8_t J1 : 2;
+    uint8_t : 2;
+
+    uint8_t V57 : 5;
+    uint8_t : 3;
+
+    uint8_t V59 : 5;
+    uint8_t : 3;
+
+    uint8_t V61 : 6;
+    uint8_t : 2;
+
+    uint8_t V62 : 6;
+    uint8_t : 2;
+} panel_gamma_t;
+
+typedef struct panel_params {
+    /* Word params */
+    struct {
+        uint16_t XS;
+        uint16_t XE;
+    } CASET;
+    struct {
+        uint16_t YS;
+        uint16_t YE;
+    } RASET;
+    struct {
+        uint16_t PSL;
+        uint16_t PEL;
+    } PTLAR;
+    struct {
+        uint16_t TFA;
+        uint16_t VSA;
+        uint16_t BFA;
+    } VSCRDEF;
+    struct {
+        uint16_t VSP;
+    } VSCRSADD;
+    struct {
+        uint16_t N;
+    } TESCAN;
+    /* Byte params */
+    struct {
+        uint8_t : 2;
+        uint8_t MH : 1;
+        uint8_t RGB : 1;
+        uint8_t ML : 1;
+        uint8_t MV : 1;
+        uint8_t MX : 1;
+        uint8_t MY : 1;
+    } MADCTL;
+    struct {
+        uint8_t GC : 4;
+        uint8_t : 4;
+    } GAMSET;
+    struct {
+        uint8_t MCU : 3;
+        uint8_t : 1;
+        uint8_t RGB : 3;
+        uint8_t : 1;
+    } COLMOD;
+    struct {
+        uint8_t DBV;
+    } DISBV;
+    struct {
+        uint8_t : 2;
+        uint8_t BL : 1;
+        uint8_t DD : 1;
+        uint8_t : 1;
+        uint8_t BCTRL : 1;
+        uint8_t : 2;
+    } CTRLD;
+    struct {
+        uint8_t C : 2;
+        uint8_t : 2;
+        uint8_t CE : 2;
+        uint8_t : 1;
+        uint8_t CECTRL : 1;
+    } CACE;
+    struct {
+        uint8_t CMB;
+    } CABCMB;
+    struct {
+        uint8_t DM : 2;
+        uint8_t : 2;
+        uint8_t RM : 1;
+        uint8_t : 3;
+        uint8_t MDT : 2;
+
+        uint8_t RIM : 1;
+        uint8_t ENDIAN : 1;
+        uint8_t EPF : 2;
+        uint8_t : 2;
+    } RAMCTRL;
+    struct {
+        uint8_t EPL : 1;
+        uint8_t DPL : 1;
+        uint8_t HSPL : 1;
+        uint8_t VSPL : 1;
+        uint8_t : 1;
+        uint8_t RCM : 2;
+        uint8_t WO : 1;
+
+        uint8_t VBP : 7;
+        uint8_t : 1;
+
+        uint8_t HBP : 5;
+        uint8_t : 3;
+    } RGBCTRL;
+    struct {
+        uint8_t BPA : 7;
+        uint8_t : 1;
+
+        uint8_t FPA : 7;
+        uint8_t : 1;
+
+        uint8_t PSEN : 1;
+        uint8_t : 7;
+
+        uint8_t FPB : 4;
+        uint8_t BPB : 4;
+
+        uint8_t FPC : 4;
+        uint8_t BPC : 4;
+    } PORCTRL;
+    struct {
+        uint8_t DIV : 2;
+        uint8_t : 2;
+        uint8_t FRSEN : 1;
+        uint8_t : 3;
+
+        uint8_t RTNB : 5;
+        uint8_t NLB : 3;
+
+        uint8_t RTNC : 5;
+        uint8_t NLC : 3;
+    } FRCTRL1;
+    struct {
+        uint8_t ISC : 4;
+        uint8_t PTGISC : 1;
+        uint8_t : 2;
+        uint8_t NDL : 1;
+    } PARCTRL;
+    struct {
+        uint8_t VGLS : 3;
+        uint8_t : 1;
+        uint8_t VGHS : 3;
+        uint8_t : 1;
+    } GCTRL;
+    struct {
+        uint8_t PAD_2A;
+        uint8_t PAD_2B;
+
+        uint8_t GTA : 6;
+        uint8_t : 2;
+
+        uint8_t GOF : 4;
+        uint8_t GOFR : 4;
+    } GTADJ;
+    struct {
+        uint8_t : 2;
+        uint8_t DGMEN : 1;
+        uint8_t : 5;
+    } DGMEN;
+    struct {
+        uint8_t VCOMS : 6;
+        uint8_t : 2;
+    } VCOMS;
+    struct {
+        uint8_t IS : 1;
+        uint8_t NS : 1;
+        uint8_t : 6;
+    } POWSAVE;
+    struct {
+        uint8_t DOFSAVE : 1;
+        uint8_t : 7;
+    } DLPOFFSAVE;
+    struct {
+        uint8_t XGS : 1;
+        uint8_t XMV : 1;
+        uint8_t XMH : 1;
+        uint8_t XMX : 1;
+        uint8_t XINV : 1;
+        uint8_t XBGR : 1;
+        uint8_t XMY : 1;
+        uint8_t : 1;
+    } LCMCTRL;
+    struct {
+        uint8_t ID1;
+        uint8_t ID2;
+        uint8_t ID3;
+    } IDSET;
+    struct {
+        uint8_t CMDEN : 1;
+        uint8_t : 7;
+
+        uint8_t PAD_FF;
+    } VDVVRHEN;
+    struct {
+        uint8_t VRHS : 6;
+        uint8_t : 2;
+    } VRHSET;
+    struct {
+        uint8_t VDVS : 6;
+        uint8_t : 2;
+    } VDVSET;
+    struct {
+        uint8_t VCMOFS : 6;
+        uint8_t : 2;
+    } VCMOFSET;
+    struct {
+        uint8_t RTNA : 5;
+        uint8_t NLA : 3;
+    } FRCTRL2;
+    struct {
+        uint8_t PWMPOL : 1;
+        uint8_t PWMFIX : 1;
+        uint8_t DPOFPWM : 1;
+        uint8_t LEDONREV : 1;
+        uint8_t : 4;
+    } CABCCTRL;
+    struct {
+        uint8_t PAD_08;
+    } REGSEL1;
+    struct {
+        uint8_t PAD_0F;
+    } REGSEL2;
+    struct {
+        uint8_t CLK : 3;
+        uint8_t CS : 3;
+        uint8_t : 2;
+    } PWMFRSEL;
+    struct {
+        uint8_t PAD_A4;
+
+        uint8_t VDS : 2;
+        uint8_t : 2;
+        uint8_t AVCL : 2;
+        uint8_t AVDD : 2;
+    } PWCTRL1;
+    struct {
+        uint8_t PAD_4C;
+    } VAPVANEN;
+    struct {
+        uint8_t PAD_5A;
+        uint8_t PAD_69;
+        uint8_t PAD_02;
+
+        uint8_t EN : 1;
+        uint8_t : 7;
+    } CMD2EN;
+    struct {
+        uint8_t NL : 6;
+        uint8_t : 2;
+
+        uint8_t SCN : 6;
+        uint8_t : 2;
+
+        uint8_t GS : 1;
+        uint8_t : 1;
+        uint8_t SM : 1;
+        uint8_t : 1;
+        uint8_t TMG : 1;
+        uint8_t : 3;
+    } GATECTRL;
+    struct {
+        uint8_t SPIRD : 1;
+        uint8_t : 3;
+        uint8_t SPI2EN : 1;
+        uint8_t : 3;
+    } SPI2EN;
+    struct {
+        uint8_t STP14CK : 2;
+        uint8_t : 2;
+        uint8_t SBCLK : 2;
+        uint8_t : 2;
+    } PWCTRL2;
+    struct {
+        uint8_t SEQ : 5;
+        uint8_t : 3;
+
+        uint8_t SPRET : 5;
+        uint8_t : 3;
+
+        uint8_t GEQ : 4;
+        uint8_t : 4;
+    } EQCTRL;
+    struct {
+        uint8_t PAD_01;
+    } PROMCTRL;
+    struct {
+        uint8_t PAD_5A;
+        uint8_t PAD_69;
+        uint8_t PAD_EE;
+
+        uint8_t : 2;
+        uint8_t PROMEN : 1;
+        uint8_t : 5;
+    } PROMEN;
+    struct {
+        uint8_t ADD;
+        uint8_t D;
+    } NVMSET;
+    struct {
+        uint8_t PAD_29;
+        uint8_t PAD_A5;
+    } PROMACT;
+    panel_gamma_t PVGAMCTRL;
+    panel_gamma_t NVGAMCTRL;
+    uint8_t DGMLUTR[64];
+    uint8_t DGMLUTB[64];
+} panel_params_t;
 
 typedef struct panel_state {
     uint16_t row, dstRow, srcRow;
-    uint8_t cmd, param, col, colDir;
+    uint8_t cmd, paramIter, paramEnd, col, colDir;
+    bool ignoreScan, invert, tear;
 
     uint32_t rowReg, colReg;
-    uint16_t rowStart, rowEnd, colStart, colEnd;
-    panel_scroll_regs_t pendingScroll, activeScroll;
-    uint8_t mode, ifBpp, ifCtl, ifRed, ifGreen, ifBlue, mac, gamma;
-    uint8_t gateCount, gateStart, gateConfig;
-    uint8_t frame[320][240][3], display[240][320][4];
+    uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
+    uint8_t mode, pendingMode, ifRed, ifGreen, ifBlue;
 
-    bool tear;
-    uint8_t gammaCorrection[2][16];
+    panel_params_t params;
+    uint8_t frame[320][240][3], display[240][320][4];
 
     /* Below state is initialized at runtime */
     uint8_t lut[128];

@@ -170,7 +170,7 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             }
         }
         panel_refresh_pixel();
-        if (likely(lcd.curCol < lcd.PPL && panel.ifCtl & PANEL_IC_CTRL_DATA)) {
+        if (likely(lcd.curCol < lcd.PPL && panel.params.RAMCTRL.RM)) {
             if (!likely(lcd.control & 1 << 11)) {
                 red = green = blue = 0;
             } else if (likely(lcd.BGR)) {
