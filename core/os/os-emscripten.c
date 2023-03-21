@@ -89,6 +89,10 @@ uint8_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
     return &(spi.display[0][0][0]);
 }
 
+int EMSCRIPTEN_KEEPALIVE emsc_set_main_loop_timing(int mode, int value) {
+    return emscripten_set_main_loop_timing(mode, value);
+}
+
 void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
     emscripten_pause_main_loop();
 }
