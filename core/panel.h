@@ -375,9 +375,9 @@ typedef struct panel_params {
 } panel_params_t;
 
 typedef struct panel_state {
-    uint16_t row, dstRow, srcRow;
-    uint8_t cmd, paramIter, paramEnd, col, colDir;
-    bool ignoreScan, invert, tear;
+    uint16_t row, col, dstRow, srcRow;
+    uint8_t cmd, paramIter, paramEnd;
+    bool invert, tear;
 
     uint32_t rowReg, colReg;
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
@@ -399,7 +399,7 @@ bool panel_save(FILE *image);
 void panel_hw_reset(void);
 bool panel_hsync(void);
 bool panel_vsync(void);
-bool panel_refresh_pixel(void);
+void panel_refresh_pixels(uint16_t count);
 void panel_update_pixel_18bpp(uint8_t r, uint8_t g, uint8_t b);
 void panel_update_pixel_16bpp(uint8_t r, uint8_t g, uint8_t b);
 void panel_update_pixel_12bpp(uint8_t r, uint8_t g, uint8_t b);

@@ -98,12 +98,17 @@ static bool panel_inv_enabled(void) {
     return panel.invert ^ panel.params.LCMCTRL.XINV;
 }
 
-static bool panel_scan_line(uint16_t row) {
-    if (unlikely(row > PANEL_LAST_ROW)) {
-        panel.ignoreScan = true;
-        return false;
+static bool panel_start_line(uint16_t row) {
+    if (unlikely(row >= PANEL_NUM_ROWS)) {
+        panel.col = PANEL_NUM_COLS;
+        if (likely(row == PANEL_NUM_ROWS)) {
+            return false;
+        }
+        panel.row = row;
+        return true;
     }
-    panel.ignoreScan = false;
+    panel.row = panel.dstRow = panel.srcRow = row;
+    /* Partial mode */
     if (unlikely(panel.mode & PANEL_MODE_PARTIAL) &&
         panel.partialStart > panel.partialEnd ?
         panel.partialStart > row && row > panel.partialEnd :
@@ -112,7 +117,7 @@ static bool panel_scan_line(uint16_t row) {
     } else {
         panel.mode &= ~PANEL_MODE_BLANK;
     }
-    panel.row = panel.dstRow = panel.srcRow = row;
+    /* Scroll mode */
     if (unlikely(panel.mode & PANEL_MODE_SCROLL)) {
         uint16_t top = panel.topArea, bot = panel.bottomArea;
         if (row >= top && row <= bot) {
@@ -134,18 +139,24 @@ static bool panel_scan_line(uint16_t row) {
         panel.dstRow = PANEL_LAST_ROW - panel.dstRow;
         panel.srcRow = PANEL_LAST_ROW - panel.srcRow;
     }
-    if (unlikely(panel_col_scan_reverse())) {
-        panel.col = PANEL_LAST_COL;
-        panel.colDir = -1;
-    } else {
-        panel.col = 0;
-        panel.colDir = 1;
-    }
+    panel.col = -(panel.params.RGBCTRL.HBP >= 6 ? panel.params.RGBCTRL.HBP : 6);
     return true;
 }
 
+static bool panel_start_frame() {
+    panel.mode = panel.pendingMode;
+    panel.partialStart = panel.params.PTLAR.PSL;
+    panel.partialEnd = panel.params.PTLAR.PEL;
+    panel.topArea = panel.params.VSCRDEF.TFA;
+    panel.bottomArea = PANEL_LAST_ROW - panel.params.VSCRDEF.BFA;
+    panel.scrollStart = panel.params.VSCRSADD.VSP;
+
+    uint8_t vertBackPorch = panel.params.RGBCTRL.VBP >= 2 ? panel.params.RGBCTRL.VBP : 2;
+    return panel_start_line(-vertBackPorch);
+}
+
 bool panel_hsync(void) {
-    return panel_scan_line(panel.row + 1);
+    return panel_start_line(panel.row + 1);
 }
 
 static void panel_reset_mregs(void) {
@@ -163,61 +174,68 @@ bool panel_vsync(void) {
         /* RAM access from RGB interface resets memory registers on vsync */
         panel_reset_mregs();
     }
-    panel.mode = panel.pendingMode;
-    panel.partialStart = panel.params.PTLAR.PSL;
-    panel.partialEnd = panel.params.PTLAR.PEL;
-    panel.topArea = panel.params.VSCRDEF.TFA;
-    panel.bottomArea = PANEL_LAST_ROW - panel.params.VSCRDEF.BFA;
-    panel.scrollStart = panel.params.VSCRSADD.VSP;
 
-    return panel_scan_line(0);
+    return panel_start_frame();
 }
 
-bool panel_refresh_pixel(void) {
-    uint8_t *pixel, red, green, blue;
-    if (unlikely(panel.ignoreScan)) {
-        return false;
+void panel_refresh_pixels(uint16_t count) {
+    uint16_t col = panel.col;
+    /* Check for back or front porches */
+    if (unlikely(col >= PANEL_NUM_COLS)) {
+        /* Return if front porch */
+        if (likely(col == PANEL_NUM_COLS)) {
+            return;
+        }
+        /* Consume cycles from back porch */
+        if (col <= (uint16_t)-count) {
+            panel.col = col + count;
+            return;
+        }
+        /* Clip to start of line */
+        count += col;
+        col = 0;
     }
+    /* Update column */
+    panel.col = col + count;
+    /* Clip to end of line */
+    if (unlikely(panel.col > PANEL_NUM_COLS)) {
+        panel.col = PANEL_NUM_COLS;
+        count = PANEL_NUM_COLS - col;
+    }
+    /* Apply scan direction, but still internally scan forward */
+    if (unlikely(panel_col_scan_reverse())) {
+        col = PANEL_NUM_COLS - panel.col;
+    }
+
+    uint8_t (*dstPixel)[4] = &panel.display[col][panel.dstRow];
+    uint8_t idleShift = (panel.mode & PANEL_MODE_IDLE) ? 7 : 0;
     if (unlikely(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF | PANEL_MODE_BLANK))) {
-        red = green = blue = ~0;
+        while (count--) {
+            memset(dstPixel, ~0, sizeof(*dstPixel));
+            dstPixel += PANEL_NUM_ROWS;
+        }
+    } else if (unlikely(panel.srcRow > PANEL_LAST_ROW)) {
+        while (count--) {
+            (*dstPixel)[PANEL_RED] = (int8_t)bus_rand() >> idleShift;
+            (*dstPixel)[PANEL_GREEN] = (int8_t)bus_rand() >> idleShift;
+            (*dstPixel)[PANEL_BLUE] = (int8_t)bus_rand() >> idleShift;
+            (*dstPixel)[PANEL_ALPHA] = ~0;
+            dstPixel += PANEL_NUM_ROWS;
+        }
     } else {
-        if (unlikely(panel.srcRow > PANEL_LAST_ROW)) {
-            red = bus_rand();
-            green = bus_rand();
-            blue = bus_rand();
-        } else {
-            pixel = panel.frame[panel.srcRow][panel.col];
-            red = pixel[PANEL_RED];
-            green = pixel[PANEL_GREEN];
-            blue = pixel[PANEL_BLUE];
-        }
-        if (unlikely(panel_bgr_enabled())) {
-            uint8_t temp = red;
-            red = blue;
-            blue = temp;
-        }
-        if (unlikely(panel_inv_enabled())) {
-            red = ~red;
-            green = ~green;
-            blue = ~blue;
-        }
-        if (unlikely(panel.mode & PANEL_MODE_IDLE)) {
-            red = (int8_t)red >> 7;
-            green = (int8_t)green >> 7;
-            blue = (int8_t)blue >> 7;
+        uint8_t (*srcPixel)[3] = &panel.frame[panel.srcRow][col];
+        uint8_t invMask = panel_inv_enabled() ? 0xFF : 0;
+        uint8_t redIndex = panel_bgr_enabled() ? PANEL_BLUE : PANEL_RED;
+        uint8_t blueIndex = redIndex ^ (PANEL_RED ^ PANEL_BLUE);
+        while (count--) {
+            (*dstPixel)[redIndex] = (int8_t)((*srcPixel)[PANEL_RED] ^ invMask) >> idleShift;
+            (*dstPixel)[PANEL_GREEN] = (int8_t)((*srcPixel)[PANEL_GREEN] ^ invMask) >> idleShift;
+            (*dstPixel)[blueIndex] = (int8_t)((*srcPixel)[PANEL_BLUE] ^ invMask) >> idleShift;
+            (*dstPixel)[PANEL_ALPHA] = ~0;
+            srcPixel++;
+            dstPixel += PANEL_NUM_ROWS;
         }
     }
-    pixel = panel.display[panel.col][panel.dstRow];
-    pixel[PANEL_RED] = red;
-    pixel[PANEL_GREEN] = green;
-    pixel[PANEL_BLUE] = blue;
-    pixel[PANEL_ALPHA] = ~0;
-    panel.col += panel.colDir;
-    if (unlikely(panel.col > PANEL_LAST_COL)) {
-        panel.ignoreScan = true;
-        return false;
-    }
-    return true;
 }
 
 static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
