@@ -154,22 +154,21 @@ void lcd_free(void) {
 }
 
 static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
-    uint32_t v, h, ticks = 1;
+    uint32_t v, ticks = 1;
     if (likely(lcd.curRow < lcd.LPP)) {
         if (!likely(lcd.curCol)) {
             if (!likely(lcd.curRow)) {
                 for (v = lcd.VBP; v; v--) {
-                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && panel_refresh_pixel(); h--) {
-                    }
                     if (!panel_hsync()) {
                         break;
                     }
+                    panel_refresh_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
-            for (h = lcd.HBP; h && panel_refresh_pixel(); h--) {
-            }
+            panel_hsync();
+            panel_refresh_pixels(lcd.HSW + lcd.HBP);
         }
-        panel_refresh_pixel();
+        panel_refresh_pixels(1);
         if (likely(lcd.curCol < lcd.PPL && panel.params.RAMCTRL.RM)) {
             if (!likely(lcd.control & 1 << 11)) {
                 red = green = blue = 0;
@@ -181,16 +180,13 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             panel_update_pixel_16bpp(red, green, blue);
         }
         if (unlikely(++lcd.curCol >= lcd.PPL)) {
-            for (h = lcd.HFP; h && panel_refresh_pixel(); h--) {
-            }
-            panel_hsync();
+            panel_refresh_pixels(lcd.HFP);
             if (unlikely(++lcd.curRow >= lcd.LPP)) {
                 for (v = lcd.VFP; v; v--) {
-                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && panel_refresh_pixel(); h--) {
-                    }
                     if (!panel_hsync()) {
                         break;
                     }
+                    panel_refresh_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
             lcd.curCol = 0;
