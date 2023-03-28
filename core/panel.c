@@ -1,6 +1,6 @@
-#include "bus.h"
 #include "panel.h"
 #include "bus.h"
+#include "schedule.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -99,14 +99,18 @@ static bool panel_inv_enabled(void) {
 }
 
 static bool panel_start_line(uint16_t row) {
+    panel.lastScanTick = (panel.linesPerFrame - (int16_t)row) * panel.ticksPerLine;
     if (unlikely(row >= PANEL_NUM_ROWS)) {
         panel.col = PANEL_NUM_COLS;
-        if (likely(row == PANEL_NUM_ROWS)) {
+        if (likely(row == panel.linesPerFrame)) {
+            assert(panel.nextLineTick == 0);
             return false;
         }
+        panel.nextLineTick = panel.lastScanTick - panel.ticksPerLine;
         panel.row = row;
         return true;
     }
+    panel.nextLineTick = panel.lastScanTick - panel.ticksPerLine;
     panel.row = panel.dstRow = panel.srcRow = row;
     /* Partial mode */
     if (unlikely(panel.mode & PANEL_MODE_PARTIAL) &&
@@ -139,23 +143,66 @@ static bool panel_start_line(uint16_t row) {
         panel.dstRow = PANEL_LAST_ROW - panel.dstRow;
         panel.srcRow = PANEL_LAST_ROW - panel.srcRow;
     }
-    panel.col = -(panel.params.RGBCTRL.HBP >= 6 ? panel.params.RGBCTRL.HBP : 6);
+    panel.col = -panel.horizBackPorch;
     return true;
 }
 
 static bool panel_start_frame() {
+    /* Ensure all pixels were scanned, if scheduled vsync is still pending */
+    if (sched_active(SCHED_PANEL)) {
+        panel_refresh_pixels_until(0);
+        sched_clear(SCHED_PANEL);
+    }
+
     panel.mode = panel.pendingMode;
     panel.partialStart = panel.params.PTLAR.PSL;
     panel.partialEnd = panel.params.PTLAR.PEL;
     panel.topArea = panel.params.VSCRDEF.TFA;
     panel.bottomArea = PANEL_LAST_ROW - panel.params.VSCRDEF.BFA;
     panel.scrollStart = panel.params.VSCRSADD.VSP;
+    panel.displayMode = panel.params.RAMCTRL.DM;
 
-    uint8_t vertBackPorch = panel.params.RGBCTRL.VBP >= 2 ? panel.params.RGBCTRL.VBP : 2;
+    uint8_t vertBackPorch, vertFrontPorch, horizBackPorch;
+    uint16_t horizFrontPorch;
+    if (likely(panel.displayMode == PANEL_DM_RGB)) {
+        vertBackPorch = panel.params.RGBCTRL.VBP >= 2 ? panel.params.RGBCTRL.VBP : 2;
+        vertFrontPorch = 1;
+
+        horizBackPorch = panel.params.RGBCTRL.HBP >= 6 ? panel.params.RGBCTRL.HBP : 6;
+        horizFrontPorch = 0;
+    } else {
+        if (unlikely(panel.params.PORCTRL.PSEN) && (panel.mode & (PANEL_MODE_IDLE | PANEL_MODE_PARTIAL))) {
+            vertBackPorch = (panel.mode & PANEL_MODE_PARTIAL ? panel.params.PORCTRL.BPC : panel.params.PORCTRL.BPB) * 4;
+            vertFrontPorch = (panel.mode & PANEL_MODE_PARTIAL ? panel.params.PORCTRL.FPC : panel.params.PORCTRL.FPB) * 4;
+        } else {
+            vertBackPorch = panel.params.PORCTRL.BPA;
+            vertFrontPorch = panel.params.PORCTRL.FPA;
+        }
+        if (vertBackPorch < 1) {
+            vertBackPorch = 1;
+        }
+        if (vertFrontPorch < 1) {
+            vertFrontPorch = 1;
+        }
+
+        /* 10 additional clocks are divided between back and front porch, divide these into 6 and 4 arbitrarily */
+        horizBackPorch = 6;
+        if (unlikely(panel.params.FRCTRL1.FRSEN) && (panel.mode & (PANEL_MODE_IDLE | PANEL_MODE_PARTIAL))) {
+            horizFrontPorch = panel.mode & PANEL_MODE_PARTIAL ? panel.params.FRCTRL1.RTNC : panel.params.FRCTRL1.RTNB;
+        } else {
+            horizFrontPorch = panel.params.FRCTRL2.RTNA;
+        }
+        horizFrontPorch = horizFrontPorch * 16 + 4;
+    }
+
+    panel.ticksPerLine = PANEL_NUM_COLS + horizFrontPorch;
+    panel.linesPerFrame = PANEL_NUM_ROWS + vertFrontPorch;
+    panel.horizBackPorch = horizBackPorch;
     return panel_start_line(-vertBackPorch);
 }
 
 bool panel_hsync(void) {
+    assert(panel.displayMode == PANEL_DM_RGB);
     return panel_start_line(panel.row + 1);
 }
 
@@ -169,13 +216,47 @@ static void panel_reset_mregs(void) {
     }
 }
 
-bool panel_vsync(void) {
+void panel_vsync(void) {
     if (likely(panel.params.RAMCTRL.RM)) {
         /* RAM access from RGB interface resets memory registers on vsync */
         panel_reset_mregs();
     }
 
-    return panel_start_frame();
+    /* Accept vsync only if already in RGB interface mode or frame has finished scanning */
+    if (likely(panel.displayMode == PANEL_DM_RGB) ||
+        likely(panel.row >= PANEL_NUM_ROWS && panel.row <= panel.linesPerFrame)) {
+        /* If new display mode is RGB interface, simply start the frame */
+        if (likely(panel.params.RAMCTRL.DM == PANEL_DM_RGB)) {
+            panel_start_frame();
+        /* If new display mode is vsync interface, start the frame and schedule */
+        } else if (panel.params.RAMCTRL.DM == PANEL_DM_VSYNC) {
+            panel_start_frame();
+            sched_repeat_relative(SCHED_PANEL, SCHED_LCD, 0, panel.lastScanTick);
+        }
+    }
+}
+
+static void panel_event(enum sched_item_id id) {
+    /* Ensure all pixels were scanned */
+    panel_refresh_pixels_until(0);
+
+    /* If the new display mode is MCU, start the next frame now */
+    if (panel.params.RAMCTRL.DM == PANEL_DM_MCU) {
+        panel_start_frame();
+        sched_repeat(SCHED_PANEL, panel.lastScanTick);
+    }
+}
+
+void panel_refresh_pixels_until(uint32_t currTick) {
+    while (unlikely(currTick < panel.nextLineTick)) {
+        panel_refresh_pixels(panel.ticksPerLine);
+        panel_start_line(panel.row + 1);
+    }
+    if (likely(panel.lastScanTick > currTick)) {
+        uint16_t count = panel.lastScanTick - currTick;
+        panel.lastScanTick = currTick;
+        panel_refresh_pixels(count);
+    }
 }
 
 void panel_refresh_pixels(uint16_t count) {
@@ -287,9 +368,12 @@ void panel_update_pixel_12bpp(uint8_t red, uint8_t green, uint8_t blue) {
 
 void panel_hw_reset(void) {
     memcpy(&panel.params, &panel_reset_params, sizeof(panel_params_t));
-    panel.mode = panel.pendingMode = PANEL_MODE_SLEEP | PANEL_MODE_OFF;
+    panel.pendingMode = PANEL_MODE_SLEEP | PANEL_MODE_OFF;
     panel.cmd = panel.paramIter = panel.paramEnd = 0;
     panel.invert = panel.tear = false;
+    /* The display mode is reset to MCU interface, so start the frame and schedule it */
+    panel_start_frame();
+    sched_set(SCHED_PANEL, panel.lastScanTick);
 }
 
 static void panel_sw_reset(void) {
@@ -477,6 +561,14 @@ static void panel_write_param(uint8_t value) {
         /* Swap endianness of word parameters */
         index ^= (index < offsetof(panel_params_t, MADCTL));
         ((uint8_t*)&panel.params)[index] = value;
+        if (unlikely(index == offsetof(panel_params_t, RAMCTRL))) {
+            /* Handle display mode switch from RGB to MCU */
+            if (unlikely(panel.params.RAMCTRL.DM == PANEL_DM_MCU) &&
+                panel.displayMode == PANEL_DM_RGB) {
+                panel_start_frame();
+                sched_set(SCHED_PANEL, panel.lastScanTick);
+            }
+        }
     } else if (panel.cmd == 0x2C || panel.cmd == 0x3C) {
         if (unlikely(!panel.params.RAMCTRL.RM)) {
             switch (panel.params.COLMOD.MCU) {
@@ -566,6 +658,10 @@ static void panel_init_luts(void) {
 void panel_reset(void) {
     memset(&panel, 0, sizeof(panel));
     panel_init_luts();
+
+    sched.items[SCHED_PANEL].callback.event = panel_event;
+    sched.items[SCHED_PANEL].clock = CLOCK_10M;
+    sched_clear(SCHED_PANEL);
 
     panel_hw_reset();
 }

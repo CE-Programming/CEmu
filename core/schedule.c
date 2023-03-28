@@ -125,7 +125,7 @@ bool sched_active(enum sched_item_id id) {
 uint64_t sched_cycle(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
     assert(sched_active(id));
-    return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cycle;
+    return (uint32_t)item->second * (uint64_t)sched.clockRates[CLOCK_CPU] + item->cycle;
 }
 
 uint64_t sched_cycles_remaining(enum sched_item_id id) {
@@ -135,11 +135,20 @@ uint64_t sched_cycles_remaining(enum sched_item_id id) {
 uint64_t sched_tick(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
     assert(item->second >= 0);
-    return (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
+    return (uint32_t)item->second * (uint64_t)sched.clockRates[item->clock] + item->tick;
 }
 
 uint64_t sched_ticks_remaining(enum sched_item_id id) {
     return sched_tick(id) - muldiv_floor(cpu.cycles, sched.clockRates[sched.items[id].clock], sched.clockRates[CLOCK_CPU]);
+}
+
+uint64_t sched_ticks_remaining_relative(enum sched_item_id id, enum sched_item_id base, uint32_t offset) {
+    struct sched_item *item = &sched.items[id];
+    struct sched_item *base_item = &sched.items[base];
+    assert(item->second >= 0);
+    assert(base_item->second >= 0);
+    return (uint32_t)(item->second - base_item->second) * (uint64_t)sched.clockRates[item->clock] +
+        (item->tick - muldiv_floor(base_item->tick + offset, sched.clockRates[item->clock], sched.clockRates[base_item->clock]));
 }
 
 void sched_process_pending_events(void) {
@@ -253,7 +262,7 @@ uint32_t sched_get_clock_rate(enum clock_id clock) {
 }
 
 void sched_reset(void) {
-    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 6000000, 3000000, 1000000, 32768, 1 };
+    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 10000000, 6000000, 3000000, 1000000, 32768, 1 };
 
     struct sched_item usb_device_item = sched.items[SCHED_USB_DEVICE];
 

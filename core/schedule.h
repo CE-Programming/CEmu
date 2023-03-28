@@ -9,8 +9,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_3M,
-                CLOCK_1M, CLOCK_32K, CLOCK_1, CLOCK_NUM_ITEMS };
+enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_10M, CLOCK_6M,
+                CLOCK_3M, CLOCK_1M, CLOCK_32K, CLOCK_1, CLOCK_NUM_ITEMS };
 
 enum sched_item_id {
     SCHED_SECOND,
@@ -29,9 +29,10 @@ enum sched_item_id {
     SCHED_USB_DEVICE,
     SCHED_SPI,
     SCHED_UART,
+    SCHED_PANEL,
 
     SCHED_FIRST_EVENT = SCHED_RUN,
-    SCHED_LAST_EVENT = SCHED_UART,
+    SCHED_LAST_EVENT = SCHED_PANEL,
 
     SCHED_PREV_MA,
 
@@ -87,6 +88,7 @@ uint64_t sched_cycle(enum sched_item_id id);
 uint64_t sched_cycles_remaining(enum sched_item_id id);
 uint64_t sched_tick(enum sched_item_id id);
 uint64_t sched_ticks_remaining(enum sched_item_id id);
+uint64_t sched_ticks_remaining_relative(enum sched_item_id id, enum sched_item_id base, uint32_t offset);
 void sched_set_clock(enum clock_id clock, uint32_t new_rate);
 uint32_t sched_get_clock_rate(enum clock_id clock);
 uint64_t sched_total_cycles(void);
