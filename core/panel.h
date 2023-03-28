@@ -29,6 +29,12 @@ enum panel_mode {
     PANEL_MODE_SCROLL  = 1 << 5
 };
 
+enum panel_display_mode {
+    PANEL_DM_MCU = 0,
+    PANEL_DM_RGB = 1,
+    PANEL_DM_VSYNC = 2
+};
+
 typedef struct panel_gamma {
     uint8_t V0 : 4;
     uint8_t V63 : 4;
@@ -375,12 +381,15 @@ typedef struct panel_params {
 } panel_params_t;
 
 typedef struct panel_state {
+    uint32_t lastScanTick, nextLineTick;
+    uint16_t ticksPerLine, linesPerFrame;
     uint16_t row, col, dstRow, srcRow;
     uint8_t cmd, paramIter, paramEnd;
     bool invert, tear;
 
     uint32_t rowReg, colReg;
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
+    uint8_t displayMode, horizBackPorch;
     uint8_t mode, pendingMode, ifRed, ifGreen, ifBlue;
 
     panel_params_t params;
@@ -398,7 +407,8 @@ bool panel_save(FILE *image);
 
 void panel_hw_reset(void);
 bool panel_hsync(void);
-bool panel_vsync(void);
+void panel_vsync(void);
+void panel_refresh_pixels_until(uint32_t currTick);
 void panel_refresh_pixels(uint16_t count);
 void panel_update_pixel_18bpp(uint8_t r, uint8_t g, uint8_t b);
 void panel_update_pixel_16bpp(uint8_t r, uint8_t g, uint8_t b);

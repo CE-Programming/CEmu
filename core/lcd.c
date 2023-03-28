@@ -153,10 +153,11 @@ void lcd_free(void) {
     lcd.gui_callback_data = NULL;
 }
 
-static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
-    uint32_t v, ticks = 1;
+static void lcd_process_pixel(uint32_t *ticks, uint8_t red, uint8_t green, uint8_t blue) {
+    uint32_t v;
+    *ticks += lcd.PCD * 2;
     if (likely(lcd.curRow < lcd.LPP)) {
-        if (!likely(lcd.curCol)) {
+        if (!likely(lcd.curCol) && likely(panel.displayMode == PANEL_DM_RGB)) {
             if (!likely(lcd.curRow)) {
                 for (v = lcd.VBP; v; v--) {
                     if (!panel_hsync()) {
@@ -168,7 +169,11 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             panel_hsync();
             panel_refresh_pixels(lcd.HSW + lcd.HBP);
         }
-        panel_refresh_pixels(1);
+        if (likely(!sched_active(SCHED_PANEL))) {
+            panel_refresh_pixels(1);
+        } else {
+            panel_refresh_pixels_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_PREV_MA, *ticks));
+        }
         if (likely(lcd.curCol < lcd.PPL && panel.params.RAMCTRL.RM)) {
             if (!likely(lcd.control & 1 << 11)) {
                 red = green = blue = 0;
@@ -180,35 +185,40 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             panel_update_pixel_16bpp(red, green, blue);
         }
         if (unlikely(++lcd.curCol >= lcd.PPL)) {
-            panel_refresh_pixels(lcd.HFP);
-            if (unlikely(++lcd.curRow >= lcd.LPP)) {
-                for (v = lcd.VFP; v; v--) {
-                    if (!panel_hsync()) {
-                        break;
+            lcd.curCol = 0;
+            lcd.curRow++;
+            if (likely(panel.displayMode == PANEL_DM_RGB)) {
+                panel_refresh_pixels(lcd.HFP);
+                if (unlikely(lcd.curRow >= lcd.LPP)) {
+                    for (v = lcd.VFP; v; v--) {
+                        if (!panel_hsync()) {
+                            break;
+                        }
+                        panel_refresh_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                     }
-                    panel_refresh_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
-            lcd.curCol = 0;
-            ticks += lcd.HFP + lcd.HSW + lcd.HBP;
+            *ticks += (lcd.HFP + lcd.HSW + lcd.HBP) * lcd.PCD * 2;
         }
     }
-    return ticks * lcd.PCD * 2;
 }
 
-static uint32_t lcd_process_half(uint16_t pixel) {
+static void lcd_process_half(uint32_t *ticks, uint16_t pixel) {
     switch (lcd.LCDBPP) {
         default: /* 1555 */
-            return lcd_process_pixel(pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
+            lcd_process_pixel(ticks, pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
+            break;
         case 6: /* 565 */
-            return lcd_process_pixel(pixel & 0x1F, pixel >> 5 & 0x3F, pixel >> 11 & 0x1F);
+            lcd_process_pixel(ticks, pixel & 0x1F, pixel >> 5 & 0x3F, pixel >> 11 & 0x1F);
+            break;
         case 7: /* 444 */
-            return lcd_process_pixel(pixel << 1 & 0x1E, pixel >> 2 & 0x3C, pixel >> 7 & 0x1E);
+            lcd_process_pixel(ticks, pixel << 1 & 0x1E, pixel >> 2 & 0x3C, pixel >> 7 & 0x1E);
+            break;
     }
 }
 
-static uint32_t lcd_process_index(uint8_t index) {
-    return lcd_process_half(lcd.palette[index]);
+static void lcd_process_index(uint32_t *ticks, uint8_t index) {
+    lcd_process_half(ticks, lcd.palette[index]);
 }
 
 static void lcd_fill_bytes(uint8_t bytes) {
@@ -239,14 +249,14 @@ static uint32_t lcd_words(uint8_t words) {
     while (words--) {
         uint32_t word = lcd_drain_word(&pos);
         if (unlikely(lcd.LCDBPP == 5)) {
-            ticks += lcd_process_pixel(word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
+            lcd_process_pixel(&ticks, word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
         } else if (unlikely(lcd.LCDBPP >= 4)) {
-            ticks += lcd_process_half(word);
-            ticks += lcd_process_half(word >> 16);
+            lcd_process_half(&ticks, word);
+            lcd_process_half(&ticks, word >> 16);
         } else {
             for (bit = 0; bit < 32; bit += bpp) {
-                ticks += lcd_process_index(word >> (bit ^ (unlikely(lcd.BEPO) ? 8 - bpp : 0)) &
-                                           ((1 << bpp) - 1));
+                lcd_process_index(&ticks,
+                                  word >> (bit ^ (unlikely(lcd.BEPO) ? 8 - bpp : 0)) & ((1 << bpp) - 1));
             }
         }
     }
