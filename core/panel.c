@@ -70,6 +70,32 @@ static const panel_params_t panel_reset_params = {
                  0xC0, 0xC4, 0xC8, 0xCC, 0xD0, 0xD4, 0xD8, 0xDC, 0xE0, 0xE4, 0xE8, 0xEC, 0xF0, 0xF4, 0xF8, 0xFC }
 };
 
+static const uint8_t epfLut12[4][16] = {
+    { 0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x24, 0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C },
+    { 0x03, 0x07, 0x0B, 0x0F, 0x13, 0x17, 0x1B, 0x1F, 0x23, 0x27, 0x2B, 0x2F, 0x33, 0x37, 0x3B, 0x3F },
+    { 0x00, 0x04, 0x08, 0x0C, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 0x2E, 0x33, 0x37, 0x3B, 0x3F },
+    { 0x00, 0x04, 0x08, 0x0C, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 0x2E, 0x33, 0x37, 0x3B, 0x3F }
+};
+
+static const uint8_t epfLut16[4][64] = {
+    { 0x00, 0x00, 0x02, 0x02, 0x04, 0x04, 0x06, 0x06, 0x08, 0x08, 0x0A, 0x0A, 0x0C, 0x0C, 0x0E, 0x0E,
+      0x10, 0x10, 0x12, 0x12, 0x14, 0x14, 0x16, 0x16, 0x18, 0x18, 0x1A, 0x1A, 0x1C, 0x1C, 0x1E, 0x1E,
+      0x20, 0x20, 0x22, 0x22, 0x24, 0x24, 0x26, 0x26, 0x28, 0x28, 0x2A, 0x2A, 0x2C, 0x2C, 0x2E, 0x2E,
+      0x30, 0x30, 0x32, 0x32, 0x34, 0x34, 0x36, 0x36, 0x38, 0x38, 0x3A, 0x3A, 0x3C, 0x3C, 0x3E, 0x3E },
+    { 0x01, 0x01, 0x03, 0x03, 0x05, 0x05, 0x07, 0x07, 0x09, 0x09, 0x0B, 0x0B, 0x0D, 0x0D, 0x0F, 0x0F,
+      0x11, 0x11, 0x13, 0x13, 0x15, 0x15, 0x17, 0x17, 0x19, 0x19, 0x1B, 0x1B, 0x1D, 0x1D, 0x1F, 0x1F,
+      0x21, 0x21, 0x23, 0x23, 0x25, 0x25, 0x27, 0x27, 0x29, 0x29, 0x2B, 0x2B, 0x2D, 0x2D, 0x2F, 0x2F,
+      0x31, 0x31, 0x33, 0x33, 0x35, 0x35, 0x37, 0x37, 0x39, 0x39, 0x3B, 0x3B, 0x3D, 0x3D, 0x3F, 0x3F },
+    { 0x00, 0x00, 0x02, 0x02, 0x04, 0x04, 0x06, 0x06, 0x08, 0x08, 0x0A, 0x0A, 0x0C, 0x0C, 0x0E, 0x0E,
+      0x10, 0x10, 0x12, 0x12, 0x14, 0x14, 0x16, 0x16, 0x18, 0x18, 0x1A, 0x1A, 0x1C, 0x1C, 0x1E, 0x1E,
+      0x21, 0x21, 0x23, 0x23, 0x25, 0x25, 0x27, 0x27, 0x29, 0x29, 0x2B, 0x2B, 0x2D, 0x2D, 0x2F, 0x2F,
+      0x31, 0x31, 0x33, 0x33, 0x35, 0x35, 0x37, 0x37, 0x39, 0x39, 0x3B, 0x3B, 0x3D, 0x3D, 0x3F, 0x3F },
+    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+      0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+      0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+      0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F }
+};
+
 static bool panel_row_scan_reverse(void) {
     return panel.params.MADCTL.ML ^ panel.params.GATECTRL.SCN;
 }
@@ -147,6 +173,43 @@ static bool panel_start_line(uint16_t row) {
     return true;
 }
 
+static void panel_invert_luts(void) {
+    for (uint8_t c = 0; c < 32; c++) {
+        uint8_t rc = 63 - c;
+        for (uint8_t i = PANEL_RED; i <= PANEL_BLUE; i++) {
+            uint8_t temp = panel.gammaLut[i][c];
+            panel.gammaLut[i][c] = panel.gammaLut[i][rc];
+            panel.gammaLut[i][rc] = temp;
+        }
+    }
+}
+
+static void panel_generate_luts(void) {
+    if (unlikely(panel.mode & PANEL_MODE_IDLE)) {
+        memset(&panel.gammaLut[PANEL_GREEN][0], 0, 32);
+        memset(&panel.gammaLut[PANEL_GREEN][32], 255, 32);
+    } else {
+        for (uint8_t c = 0; c < 64; c++) {
+            panel.gammaLut[PANEL_GREEN][c] = c << 2 | c >> 4;
+        }
+    }
+
+    if (unlikely(panel.params.DGMEN.DGMEN) && !(panel.mode & PANEL_MODE_IDLE)) {
+        for (uint8_t c = 0; c < 64; c += 2) {
+            /* Yes, the opposite DGMLUTs are used on purpose, the datasheet seemingly reversed them because of default BGR */
+            panel.gammaLut[PANEL_RED][c] = panel.gammaLut[PANEL_RED][c + 1] = panel.gammaLut[PANEL_GREEN][panel.params.DGMLUTB[c] >> 2];
+            panel.gammaLut[PANEL_BLUE][c] = panel.gammaLut[PANEL_BLUE][c + 1] = panel.gammaLut[PANEL_GREEN][panel.params.DGMLUTR[c] >> 2];
+        }
+    } else {
+        memcpy(panel.gammaLut[PANEL_RED], panel.gammaLut[PANEL_GREEN], 64);
+        memcpy(panel.gammaLut[PANEL_BLUE], panel.gammaLut[PANEL_GREEN], 64);
+    }
+
+    if (unlikely(panel_inv_enabled())) {
+        panel_invert_luts();
+    }
+}
+
 static bool panel_start_frame() {
     /* Ensure all pixels were scanned, if scheduled vsync is still pending */
     if (sched_active(SCHED_PANEL)) {
@@ -161,6 +224,8 @@ static bool panel_start_frame() {
     panel.bottomArea = PANEL_LAST_ROW - panel.params.VSCRDEF.BFA;
     panel.scrollStart = panel.params.VSCRSADD.VSP;
     panel.displayMode = panel.params.RAMCTRL.DM;
+
+    panel_generate_luts();
 
     uint8_t vertBackPorch, vertFrontPorch, horizBackPorch;
     uint16_t horizFrontPorch;
@@ -243,7 +308,7 @@ static void panel_event(enum sched_item_id id) {
     /* If the new display mode is MCU, start the next frame now */
     if (panel.params.RAMCTRL.DM == PANEL_DM_MCU) {
         panel_start_frame();
-        sched_repeat(SCHED_PANEL, panel.lastScanTick);
+        sched_repeat(id, panel.lastScanTick);
     }
 }
 
@@ -289,7 +354,8 @@ void panel_refresh_pixels(uint16_t count) {
     }
 
     uint8_t (*dstPixel)[4] = &panel.display[col][panel.dstRow];
-    uint8_t idleShift = (panel.mode & PANEL_MODE_IDLE) ? 7 : 0;
+    uint8_t redIndex = panel_bgr_enabled() ? PANEL_BLUE : PANEL_RED;
+    uint8_t blueIndex = redIndex ^ (PANEL_RED ^ PANEL_BLUE);
     if (unlikely(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF | PANEL_MODE_BLANK))) {
         while (count--) {
             memset(dstPixel, ~0, sizeof(*dstPixel));
@@ -297,21 +363,18 @@ void panel_refresh_pixels(uint16_t count) {
         }
     } else if (unlikely(panel.srcRow > PANEL_LAST_ROW)) {
         while (count--) {
-            (*dstPixel)[PANEL_RED] = (int8_t)bus_rand() >> idleShift;
-            (*dstPixel)[PANEL_GREEN] = (int8_t)bus_rand() >> idleShift;
-            (*dstPixel)[PANEL_BLUE] = (int8_t)bus_rand() >> idleShift;
+            (*dstPixel)[redIndex] = panel.gammaLut[PANEL_RED][bus_rand() % 64];
+            (*dstPixel)[PANEL_GREEN] = panel.gammaLut[PANEL_GREEN][bus_rand() % 64];
+            (*dstPixel)[blueIndex] = panel.gammaLut[PANEL_BLUE][bus_rand() % 64];
             (*dstPixel)[PANEL_ALPHA] = ~0;
             dstPixel += PANEL_NUM_ROWS;
         }
     } else {
         uint8_t (*srcPixel)[3] = &panel.frame[panel.srcRow][col];
-        uint8_t invMask = panel_inv_enabled() ? 0xFF : 0;
-        uint8_t redIndex = panel_bgr_enabled() ? PANEL_BLUE : PANEL_RED;
-        uint8_t blueIndex = redIndex ^ (PANEL_RED ^ PANEL_BLUE);
         while (count--) {
-            (*dstPixel)[redIndex] = (int8_t)((*srcPixel)[PANEL_RED] ^ invMask) >> idleShift;
-            (*dstPixel)[PANEL_GREEN] = (int8_t)((*srcPixel)[PANEL_GREEN] ^ invMask) >> idleShift;
-            (*dstPixel)[blueIndex] = (int8_t)((*srcPixel)[PANEL_BLUE] ^ invMask) >> idleShift;
+            (*dstPixel)[redIndex] = panel.gammaLut[PANEL_RED][(*srcPixel)[PANEL_RED]];
+            (*dstPixel)[PANEL_GREEN] = panel.gammaLut[PANEL_GREEN][(*srcPixel)[PANEL_GREEN]];
+            (*dstPixel)[blueIndex] = panel.gammaLut[PANEL_BLUE][(*srcPixel)[PANEL_BLUE]];
             (*dstPixel)[PANEL_ALPHA] = ~0;
             srcPixel++;
             dstPixel += PANEL_NUM_ROWS;
@@ -351,19 +414,30 @@ static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
     }
 }
 
-void panel_update_pixel_18bpp(uint8_t red, uint8_t green, uint8_t blue) {
+static void panel_update_pixel_18bpp(uint8_t red, uint8_t green, uint8_t blue) {
     assert(red < 64 && green < 64 && blue < 64);
-    panel_update_pixel(red << 2 | red >> 4, green << 2 | green >> 4, blue << 2 | blue >> 4);
+    panel_update_pixel(red, green, blue);
 }
 
-void panel_update_pixel_16bpp(uint8_t red, uint8_t green, uint8_t blue) {
+static void panel_update_pixel_16bpp(uint8_t red, uint8_t green, uint8_t blue) {
     assert(red < 32 && green < 64 && blue < 32);
-    panel_update_pixel(panel.lut[red + 0], panel.lut[green + 32], panel.lut[blue + 96]);
+    const uint8_t *lut = epfLut16[panel.params.RAMCTRL.EPF];
+    panel_update_pixel(lut[red << 1 | (green & 1)], green, lut[blue << 1 | (green & 1)]);
 }
 
-void panel_update_pixel_12bpp(uint8_t red, uint8_t green, uint8_t blue) {
+static void panel_update_pixel_12bpp(uint8_t red, uint8_t green, uint8_t blue) {
     assert(red < 16 && green < 16 && blue < 16);
-    panel_update_pixel(panel.lut[(red << 1) + 0], panel.lut[(green << 2) + 32], panel.lut[(blue << 1) + 96]);
+    const uint8_t *lut = epfLut12[panel.params.RAMCTRL.EPF];
+    panel_update_pixel(lut[red], lut[green], lut[blue]);
+}
+
+void panel_update_pixel_rgb(uint8_t red, uint8_t green, uint8_t blue) {
+    assert(red < 32 && green < 64 && blue < 32);
+    if (unlikely(panel.params.COLMOD.RGB == 5)) {
+        panel_update_pixel_16bpp(red, green, blue);
+    } else {
+        panel_update_pixel_18bpp(red << 1, green, blue << 1);
+    }
 }
 
 void panel_hw_reset(void) {
@@ -420,10 +494,16 @@ static void panel_write_cmd(uint8_t value) {
             panel.params.VSCRSADD.VSP = 0;
             break;
         case 0x20:
-            panel.invert = false;
+            if (panel.invert) {
+                panel.invert = false;
+                panel_invert_luts();
+            }
             break;
         case 0x21:
-            panel.invert = true;
+            if (!panel.invert) {
+                panel.invert = true;
+                panel_invert_luts();
+            }
             break;
         PANEL_CMD_CASE(0x26, GAMSET)
             break;
@@ -560,6 +640,7 @@ static void panel_write_param(uint8_t value) {
         uint8_t index = panel.paramIter++;
         /* Swap endianness of word parameters */
         index ^= (index < offsetof(panel_params_t, MADCTL));
+        uint8_t oldValue = ((uint8_t*)&panel.params)[index];
         ((uint8_t*)&panel.params)[index] = value;
         if (unlikely(index == offsetof(panel_params_t, RAMCTRL))) {
             /* Handle display mode switch from RGB to MCU */
@@ -567,6 +648,10 @@ static void panel_write_param(uint8_t value) {
                 panel.displayMode == PANEL_DM_RGB) {
                 panel_start_frame();
                 sched_set(SCHED_PANEL, panel.lastScanTick);
+            }
+        } else if (unlikely(index == offsetof(panel_params_t, LCMCTRL))) {
+            if ((value ^ oldValue) & 1 << 4) {
+                panel_invert_luts();
             }
         }
     } else if (panel.cmd == 0x2C || panel.cmd == 0x3C) {
@@ -589,17 +674,16 @@ static void panel_write_param(uint8_t value) {
                     }
                     break;
                 case 5: /* 16bpp */
-                    switch (panel.paramIter++) {
-                        case 0:
-                            panel.ifBlue = value >> 3;
-                            panel.ifGreen = value << 3 & 0x38;
-                            break;
-                        case 1:
-                            panel.ifGreen |= value >> 5;
-                            panel.ifRed = value & 0x1F;
-                            panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
-                            panel.paramIter = 0;
-                            break;
+                    if (panel.paramIter ^ panel.params.RAMCTRL.ENDIAN) {
+                        panel.ifGreen = (panel.ifGreen & 0x38) | value >> 5;
+                        panel.ifRed = value & 0x1F;
+                    } else {
+                        panel.ifBlue = value >> 3;
+                        panel.ifGreen = (panel.ifGreen & 7) | (value << 3 & 0x38);
+                    }
+
+                    if (!(panel.paramIter ^= 1)) {
+                        panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
                     }
                     break;
                 case 3: /* 12bpp */
@@ -642,22 +726,8 @@ uint8_t panel_spi_transfer(uint32_t txData, uint32_t* rxData) {
 void panel_spi_deselect(void) {
 }
 
-static void panel_init_luts(void) {
-    uint8_t i = 0, c;
-    for (c = 0; c < 1 << 5; c++) {
-        panel.lut[i++] = c << 3 | c >> 2;
-    }
-    for (c = 0; c < 1 << 6; c++) {
-        panel.lut[i++] = c << 2 | c >> 4;
-    }
-    for (c = 0; c < 1 << 5; c++) {
-        panel.lut[i++] = c << 3 | c >> 2;
-    }
-}
-
 void panel_reset(void) {
     memset(&panel, 0, sizeof(panel));
-    panel_init_luts();
 
     sched.items[SCHED_PANEL].callback.event = panel_event;
     sched.items[SCHED_PANEL].clock = CLOCK_10M;
@@ -667,12 +737,12 @@ void panel_reset(void) {
 }
 
 bool panel_save(FILE *image) {
-    return fwrite(&panel, offsetof(panel_state_t, lut), 1, image) == 1;
+    return fwrite(&panel, offsetof(panel_state_t, gammaLut), 1, image) == 1;
 }
 
 bool panel_restore(FILE *image) {
-    if (fread(&panel, offsetof(panel_state_t, lut), 1, image) == 1) {
-        panel_init_luts();
+    if (fread(&panel, offsetof(panel_state_t, gammaLut), 1, image) == 1) {
+        panel_generate_luts();
         return true;
     }
     return false;
