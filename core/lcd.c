@@ -182,7 +182,7 @@ static void lcd_process_pixel(uint32_t *ticks, uint8_t red, uint8_t green, uint8
                 red = blue;
                 blue = temp;
             }
-            panel_update_pixel_16bpp(red, green, blue);
+            panel_update_pixel_rgb(red, green, blue);
         }
         if (unlikely(++lcd.curCol >= lcd.PPL)) {
             lcd.curCol = 0;

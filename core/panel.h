@@ -396,7 +396,7 @@ typedef struct panel_state {
     uint8_t frame[320][240][3], display[240][320][4];
 
     /* Below state is initialized at runtime */
-    uint8_t lut[128];
+    uint8_t gammaLut[3][64];
 } panel_state_t;
 
 extern panel_state_t panel;
@@ -410,9 +410,7 @@ bool panel_hsync(void);
 void panel_vsync(void);
 void panel_refresh_pixels_until(uint32_t currTick);
 void panel_refresh_pixels(uint16_t count);
-void panel_update_pixel_18bpp(uint8_t r, uint8_t g, uint8_t b);
-void panel_update_pixel_16bpp(uint8_t r, uint8_t g, uint8_t b);
-void panel_update_pixel_12bpp(uint8_t r, uint8_t g, uint8_t b);
+void panel_update_pixel_rgb(uint8_t r, uint8_t g, uint8_t b);
 
 uint8_t panel_spi_select(uint32_t* rxData);
 uint8_t panel_spi_transfer(uint32_t txData, uint32_t* rxData);
