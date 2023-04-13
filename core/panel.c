@@ -184,14 +184,114 @@ static void panel_invert_luts(void) {
     }
 }
 
+static void lerp_batch(float curve[64], float a, float b, float scale, const uint8_t *indices, const uint8_t *amounts) {
+    float step = (a - b) * scale;
+    for (size_t idx = 0; indices[idx] != 0xFF; idx++) {
+        curve[indices[idx]] = b + step * amounts[idx];
+    }
+}
+
+static void lerp_between(float *curve, size_t length) {
+    float a = *curve;
+    float step = (curve[length] - a) / length;
+    while (--length) {
+        *(++curve) = (a += step);
+    }
+}
+
+static float lerp_percent(float a, float b, uint8_t amount) {
+    return b + (a - b) * amount * 0.01f;
+}
+
+static void panel_generate_gamma_curve(float curve[64], const panel_gamma_t *params) {
+    static const uint8_t j0_percents[4][8] = {
+        { 50, 50, 86, 71, 57, 43, 29, 14 },
+        { 56, 44, 71, 57, 40, 29, 17, 6 },
+        { 50, 50, 80, 63, 49, 34, 20, 9 },
+        { 60, 42, 66, 49, 34, 23, 14, 6 }
+    };
+    static const uint8_t j1_percents[4][8] = {
+        { 86, 71, 57, 43, 29, 14, 50, 50 },
+        { 86, 71, 60, 46, 34, 17, 56, 50 },
+        { 86, 77, 63, 46, 31, 14, 47, 50 },
+        { 89, 80, 69, 51, 37, 20, 47, 53 }
+    };
+
+    static const uint8_t idx_main[] = { 0, 1, 2, 20, 43, 61, 62, 63, 0xFF };
+    static const uint8_t idx_2_20[] = { 4, 6, 13, 0xFF };
+    static const uint8_t idx_20_43[] = { 27, 36, 0xFF };
+    static const uint8_t idx_43_61[] = { 50, 57, 59, 0xFF };
+    static const uint8_t idx_6_13[] = { 7, 8, 9, 10, 11, 12, 0xFF };
+    static const uint8_t idx_50_57[] = { 51, 52, 53, 54, 55, 56, 0xFF };
+
+#define P(param, base) ((base) - (params->V##param))
+    /* Level 1 */
+    lerp_batch(curve, 0.0f, 1.0f, 1.0f / 129, idx_main, (uint8_t[]) {
+        P(0, 129), P(1, 128), P(2, 128), P(20, 128), P(43, 128), P(61, 64), P(62, 64), P(63, 23)
+    });
+    /* Level 2 */
+    lerp_batch(curve, curve[2], curve[20], 1.0f / 60, idx_2_20, (uint8_t[]) {
+        P(4, 57), P(6, 47), P(13, 21)
+    });
+    lerp_batch(curve, curve[20], curve[43], 1.0f / 25, idx_20_43, (uint8_t[]) {
+        P(27, 20), P(36, 11)
+    });
+    lerp_batch(curve, curve[43], curve[61], 1.0f / 60, idx_43_61, (uint8_t[]) {
+        P(50, 54), P(57, 44), P(59, 34)
+    });
+#undef P
+
+    /* Level 3 */
+    const uint8_t *j0 = j0_percents[params->J0];
+    curve[3] = lerp_percent(curve[2], curve[4], j0[0]);
+    curve[5] = lerp_percent(curve[4], curve[6], j0[1]);
+    lerp_batch(curve, curve[6], curve[13], 0.01f, idx_6_13, &j0[2]);
+
+    lerp_between(&curve[13], 7);
+    lerp_between(&curve[20], 7);
+    lerp_between(&curve[27], 9);
+    lerp_between(&curve[36], 7);
+    lerp_between(&curve[43], 7);
+
+    const uint8_t *j1 = j1_percents[params->J1];
+    lerp_batch(curve, curve[50], curve[57], 0.01f, idx_50_57, &j1[0]);
+    curve[58] = lerp_percent(curve[57], curve[59], j1[6]);
+    curve[60] = lerp_percent(curve[59], curve[61], j1[7]);
+}
+
 static void panel_generate_luts(void) {
-    if (unlikely(panel.mode & PANEL_MODE_IDLE)) {
-        memset(&panel.gammaLut[PANEL_GREEN][0], 0, 32);
-        memset(&panel.gammaLut[PANEL_GREEN][32], 255, 32);
+    /* Degree-7 polynomial mapping voltage to grayscale level */
+    static const float poly_coeffs[] = {
+        177.929585f, -381.708019f, 298.312928f, -117.553824f,
+        31.5682476f, -4.12354072f, 0.735548594f, -0.00151918877f + 1.0f / 512
+    };
+
+    if (!unlikely(panel.gammaDirty)) {
+        return;
+    }
+    panel.gammaDirty = false;
+
+    if (panel.accurateGamma) {
+        float gamma_pos[64], gamma_neg[64];
+        panel_generate_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
+        panel_generate_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
+        for (uint8_t c = 0; c < 64; c++) {
+            float gamma = (gamma_pos[c] + gamma_neg[c]) * 0.5f;
+            float adjusted = poly_coeffs[0];
+            for (size_t i = 1; i < sizeof(poly_coeffs) / sizeof(poly_coeffs[0]); i++) {
+                adjusted = adjusted * gamma + poly_coeffs[i];
+            }
+            panel.gammaLut[PANEL_GREEN][c] = adjusted < 1.0f ? (uint8_t)(adjusted * 256.0f) : 255;
+        }
     } else {
         for (uint8_t c = 0; c < 64; c++) {
             panel.gammaLut[PANEL_GREEN][c] = c << 2 | c >> 4;
         }
+    }
+
+    if (unlikely(panel.mode & PANEL_MODE_IDLE)) {
+        memset(&panel.gammaLut[PANEL_GREEN][1], panel.gammaLut[PANEL_GREEN][0], 31);
+        memset(&panel.gammaLut[PANEL_GREEN][32], panel.gammaLut[PANEL_GREEN][63], 31);
     }
 
     if (unlikely(panel.params.DGMEN.DGMEN) && !(panel.mode & PANEL_MODE_IDLE)) {
@@ -217,6 +317,9 @@ static bool panel_start_frame() {
         sched_clear(SCHED_PANEL);
     }
 
+    if ((panel.mode ^ panel.pendingMode) & PANEL_MODE_IDLE) {
+        panel.gammaDirty = true;
+    }
     panel.mode = panel.pendingMode;
     panel.partialStart = panel.params.PTLAR.PSL;
     panel.partialEnd = panel.params.PTLAR.PEL;
@@ -442,6 +545,7 @@ void panel_update_pixel_rgb(uint8_t red, uint8_t green, uint8_t blue) {
 
 void panel_hw_reset(void) {
     memcpy(&panel.params, &panel_reset_params, sizeof(panel_params_t));
+    panel.gammaDirty = true;
     panel.pendingMode = PANEL_MODE_SLEEP | PANEL_MODE_OFF;
     panel.cmd = panel.paramIter = panel.paramEnd = 0;
     panel.invert = panel.tear = false;
@@ -653,6 +757,8 @@ static void panel_write_param(uint8_t value) {
             if ((value ^ oldValue) & 1 << 4) {
                 panel_invert_luts();
             }
+        } else if (unlikely(index >= offsetof(panel_params_t, PVGAMCTRL))) {
+            panel.gammaDirty = true;
         }
     } else if (panel.cmd == 0x2C || panel.cmd == 0x3C) {
         if (unlikely(!panel.params.RAMCTRL.RM)) {
@@ -727,7 +833,7 @@ void panel_spi_deselect(void) {
 }
 
 void panel_reset(void) {
-    memset(&panel, 0, sizeof(panel));
+    memset(&panel, 0, offsetof(panel_state_t, gammaLut));
 
     sched.items[SCHED_PANEL].callback.event = panel_event;
     sched.items[SCHED_PANEL].clock = CLOCK_10M;
@@ -742,6 +848,7 @@ bool panel_save(FILE *image) {
 
 bool panel_restore(FILE *image) {
     if (fread(&panel, offsetof(panel_state_t, gammaLut), 1, image) == 1) {
+        panel.gammaDirty = true;
         panel_generate_luts();
         return true;
     }

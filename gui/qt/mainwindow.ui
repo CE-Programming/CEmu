@@ -9472,17 +9472,41 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="checkSpi">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="text">
-                  <string>Emulate physical LCD SPI drawing</string>
-                 </property>
-                </widget>
+                <layout class="QHBoxLayout" name="horizontalLayout_16">
+                 <item>
+                  <widget class="QCheckBox" name="checkSpi">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::NoFocus</enum>
+                   </property>
+                   <property name="text">
+                    <string>Emulate physical LCD SPI drawing</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="checkGamma">
+                   <property name="text">
+                    <string>Emulate LCD gamma</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_13">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
                </item>
               </layout>
              </widget>
