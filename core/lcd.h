@@ -85,6 +85,7 @@ void lcd_disable(void);
 void emu_lcd_drawframe(void *output);
 void emu_set_lcd_callback(void (*callback)(void*), void *data);
 void emu_set_lcd_spi(int enable);
+void emu_set_lcd_gamma(int enable);
 
 /* advanced api functions */
 void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t lcd_control, bool mask);

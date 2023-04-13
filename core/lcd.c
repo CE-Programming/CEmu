@@ -54,6 +54,11 @@ void emu_set_lcd_spi(int enable) {
     lcd.spi = enable;
 }
 
+void emu_set_lcd_gamma(int enable) {
+    panel.accurateGamma = enable;
+    panel.gammaDirty = true;
+}
+
 void emu_lcd_drawframe(void *output) {
     if (lcd.control & 1 << 11) {
         emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE, lcd.spi);

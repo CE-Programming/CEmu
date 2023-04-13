@@ -16,6 +16,7 @@ typedef struct {
     char *rom;
     char *image;
     int spi;
+    int gamma;
     int limit;
     int fullscreen;
     sdl_t sdl;
@@ -53,6 +54,7 @@ void sdl_cemu_configure(cemu_sdl_t *cemu) {
     emu_set_run_rate(1000);
     emu_set_lcd_callback(sdl_update_lcd, &cemu->sdl);
     emu_set_lcd_spi(cemu->spi);
+    emu_set_lcd_gamma(cemu->gamma);
 }
 
 bool sdl_cemu_load(cemu_sdl_t *cemu) {
@@ -204,6 +206,7 @@ int main(int argc, char **argv) {
     cemu.image = NULL;
     cemu.rom = NULL;
     cemu.spi = 0;
+    cemu.gamma = 0;
 
     for (;;) {
         int c;
@@ -216,6 +219,7 @@ int main(int argc, char **argv) {
             {"image",      required_argument, 0,  'i' },
             {"limit",      required_argument, 0,  'l' },
             {"spi",        no_argument,       0,  's' },
+            {"gamma",      no_argument,       0,  'g' },
             {"keymap",     required_argument, 0,  'k' },
             {"asic",       required_argument, 0,  'a' },
             {"python",     no_argument,       0,  'p' },
@@ -223,7 +227,7 @@ int main(int argc, char **argv) {
             {}
         };
 
-        c = getopt_long(argc, argv, "fr:i:l:sk:a:", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:l:sgk:a:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -253,6 +257,11 @@ int main(int argc, char **argv) {
             case 's':
                 fprintf(stdout, "spi: yes\n");
                 cemu.spi = 1;
+                break;
+
+            case 'g':
+                fprintf(stdout, "gamma: yes\n");
+                cemu.gamma = 1;
                 break;
 
             case 'k':
