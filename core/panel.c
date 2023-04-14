@@ -1,5 +1,6 @@
 #include "panel.h"
 #include "bus.h"
+#include "lcd.h"
 #include "schedule.h"
 
 #include <assert.h>
@@ -335,6 +336,8 @@ static bool panel_start_frame() {
         sched_clear(SCHED_PANEL);
     }
 
+    lcd_gui_event();
+
     if ((panel.mode ^ panel.pendingMode) & PANEL_MODE_IDLE) {
         panel.gammaDirty = true;
     }
@@ -408,9 +411,8 @@ void panel_vsync(void) {
         panel_reset_mregs();
     }
 
-    /* Accept vsync only if already in RGB interface mode or frame has finished scanning */
-    if (likely(panel.displayMode == PANEL_DM_RGB) ||
-        likely(panel.row >= PANEL_NUM_ROWS && panel.row <= panel.linesPerFrame)) {
+    /* Accept vsync only if the frame has finished scanning */
+    if (likely(panel.row >= PANEL_NUM_ROWS && panel.row <= panel.linesPerFrame)) {
         /* If new display mode is RGB interface, simply start the frame */
         if (likely(panel.params.RAMCTRL.DM == PANEL_DM_RGB)) {
             panel_start_frame();

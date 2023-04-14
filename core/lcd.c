@@ -147,7 +147,7 @@ draw_black:
     while (out < out_end) { *out++ = 0xFF000000 | (unsigned int)(bus_rand() << (bus_rand() & 0x18)); }
 }
 
-static void lcd_gui_event(void) {
+void lcd_gui_event(void) {
     if (lcd.gui_callback) {
         lcd.gui_callback(lcd.gui_callback_data);
     }
@@ -285,7 +285,6 @@ static void lcd_event(enum sched_item_id id) {
         default:
             fallthrough;
         case LCD_SYNC:
-            lcd_gui_event();
             lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
             lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
             lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;
@@ -323,6 +322,8 @@ static void lcd_event(enum sched_item_id id) {
                 lcd.curRow = lcd.curCol = 0;
                 panel_vsync();
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
+            } else {
+                lcd_gui_event();
             }
             lcd.compare = LCD_LNBU;
             break;
