@@ -119,10 +119,6 @@ typedef struct panel_params {
         uint8_t MY : 1;
     } MADCTL;
     struct {
-        uint8_t GC : 4;
-        uint8_t : 4;
-    } GAMSET;
-    struct {
         uint8_t MCU : 3;
         uint8_t : 1;
         uint8_t RGB : 3;
@@ -226,11 +222,6 @@ typedef struct panel_params {
         uint8_t GOF : 4;
         uint8_t GOFR : 4;
     } GTADJ;
-    struct {
-        uint8_t : 2;
-        uint8_t DGMEN : 1;
-        uint8_t : 5;
-    } DGMEN;
     struct {
         uint8_t VCOMS : 6;
         uint8_t : 2;
@@ -374,6 +365,16 @@ typedef struct panel_params {
         uint8_t PAD_29;
         uint8_t PAD_A5;
     } PROMACT;
+    /* Gamma-modifying params */
+    struct {
+        uint8_t GC : 4;
+        uint8_t : 4;
+    } GAMSET;
+    struct {
+        uint8_t : 2;
+        uint8_t DGMEN : 1;
+        uint8_t : 5;
+    } DGMEN;
     panel_gamma_t PVGAMCTRL;
     panel_gamma_t NVGAMCTRL;
     uint8_t DGMLUTR[64];
