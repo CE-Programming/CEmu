@@ -40,8 +40,8 @@ jobs:
       uses: lukka/run-cmake@d8897e1de33ed2ec4628ec5acf69861da7c719db # latest as of 2023-01-13
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-Only'
-        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}-Only'
+        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}'
+        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}'
       env:
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
@@ -49,12 +49,12 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_master
-        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-Only/CEmu.exe
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe
 
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |
-        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-Release-Only/CEmu.exe" -NewName "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe"
+        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe" -NewName "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe"
 
     - name: Update nightly release
       if: ${{ matrix.config == 'Release' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
@@ -64,4 +64,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ./gui/qt/CEmu.build/${{ matrix.arch }}-Release-Only/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe
+          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe

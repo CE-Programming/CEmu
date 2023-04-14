@@ -73,19 +73,23 @@
       }
     },
     {
+      "name": "x64-RelWithDebInfo",
+      "inherits": "ninja-vcpkg-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "RelWithDebInfo"
+        }
+      }
+    },
+    {
       "name": "x64-Release",
       "inherits": "ninja-vcpkg-x64",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
           "type": "STRING",
           "value": "Release"
-        }
-      }
-    },
-    {
-      "name": "x64-Release-Only",
-      "inherits": "x64-Release",
-      "cacheVariables": {
+        },
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-static-release"
@@ -106,7 +110,17 @@
         }
       }
     },
-      {
+    {
+      "name": "x86-RelWithDebInfo",
+      "inherits": "ninja-vcpkg-x86",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "RelWithDebInfo"
+        }
+      }
+    },
+    {
       "name": "x86-Release",
       "inherits": "ninja-vcpkg-x86",
       "cacheVariables": {
@@ -123,16 +137,20 @@
       "configurePreset": "x64-Debug"
     },
     {
+      "name": "x64-RelWithDebInfo",
+      "configurePreset": "x64-RelWithDebInfo"
+    },
+    {
       "name": "x64-Release",
       "configurePreset": "x64-Release"
     },
     {
-      "name": "x64-Release-Only",
-      "configurePreset": "x64-Release-Only"
-    },
-    {
       "name": "x86-Debug",
       "configurePreset": "x86-Debug"
+    },
+    {
+      "name": "x86-RelWithDebInfo",
+      "configurePreset": "x86-RelWithDebInfo"
     },
     {
       "name": "x86-Release",
