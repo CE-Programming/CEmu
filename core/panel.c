@@ -9,6 +9,11 @@
 
 panel_state_t panel;
 
+#define GAMMA_PARAMS(j0, j1, v0, v1, v2, v20, v43, v61, v62, v63, v4, v6, v13, v27, v36, v50, v57, v59) \
+    { .V0 = 129-v0, .V63 = 23-v63, .V1 = 128-v1, .V2 = 128-v2, .V4 = 57-v4, .V6 = 47-v6, .V13 = 21-v13, \
+      .J0 = j0, .V20 = 128-v20, .V27 = 20-v27, .V36 = 11-v36, .V43 = 128-v43, .V50 = 54-v50, .J1 = j1,  \
+      .V57 = 44-v57, .V59 = 34-v59, .V61 = 64-v61, .V62 = 64-v62 }
+
 static const panel_params_t panel_reset_params = {
     .CASET = { .XS = 0, .XE = PANEL_LAST_COL },
     .RASET = { .YS = 0, .YE = PANEL_LAST_ROW },
@@ -17,7 +22,6 @@ static const panel_params_t panel_reset_params = {
     .VSCRSADD = { .VSP = 0 },
     .TESCAN = { .N = 0 },
     .MADCTL = { .MH = 0, .RGB = 0, .ML = 0, .MV = 0, .MX = 0, .MY = 0 },
-    .GAMSET = { .GC = 1 },
     .COLMOD = { .MCU = 6, .RGB = 6 },
     .DISBV = { .DBV = 0 },
     .CTRLD = { .BL = 0, .DD = 0, .BCTRL = 0 },
@@ -30,7 +34,6 @@ static const panel_params_t panel_reset_params = {
     .PARCTRL = { .ISC = 0, .PTGISC = 0, .NDL = 0 },
     .GCTRL = { .VGLS = 5, .VGHS = 3 },
     .GTADJ = { .PAD_2A = 0x2A, .PAD_2B = 0x2B, .GTA = 34, .GOF = 5, .GOFR = 7 },
-    .DGMEN = { .DGMEN = 0 },
     .VCOMS = { .VCOMS = 32 },
     .POWSAVE = { .IS = 1, .NS = 1 },
     .DLPOFFSAVE = { .DOFSAVE = 1 },
@@ -56,10 +59,10 @@ static const panel_params_t panel_reset_params = {
     .PROMEN = { .PAD_5A = 0x00, .PAD_69 = 0x00, .PAD_EE = 0x00, .PROMEN = 0 },
     .NVMSET = { .ADD = 0x00, .D = 0x00 },
     .PROMACT = { .PAD_29 = 0x00, .PAD_A5 = 0x00 },
-    .PVGAMCTRL = { .V0 = 0, .V63 = 7, .V1 = 44, .V2 = 46, .V4 = 21, .V6 = 16, .V13 = 9, .J0 = 0, .V20 = 72, .V27 = 3,
-                   .V36 = 3, .V43 = 83, .V50 = 11, .J1 = 0, .V57 = 25, .V59 = 24, .V61 = 32, .V62 = 37 },
-    .NVGAMCTRL = { .V0 = 0, .V63 = 7, .V1 = 44, .V2 = 46, .V4 = 21, .V6 = 16, .V13 = 9, .J0 = 0, .V20 = 72, .V27 = 3,
-                   .V36 = 3, .V43 = 83, .V50 = 11, .J1 = 0, .V57 = 25, .V59 = 24, .V61 = 32, .V62 = 37 },
+    .GAMSET = { .GC = 1 },
+    .DGMEN = { .DGMEN = 0 },
+    .PVGAMCTRL = GAMMA_PARAMS(0, 0,  129, 84, 82, 56, 45, 32, 27, 16,  36, 31, 12,  17, 8,  43, 19, 10),
+    .NVGAMCTRL = GAMMA_PARAMS(0, 0,  129, 84, 82, 56, 45, 32, 27, 16,  36, 31, 12,  17, 8,  43, 19, 10),
     .DGMLUTR = { 0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x24, 0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C,
                  0x40, 0x44, 0x48, 0x4C, 0x50, 0x54, 0x58, 0x5C, 0x60, 0x64, 0x68, 0x6C, 0x70, 0x74, 0x78, 0x7C,
                  0x80, 0x84, 0x88, 0x8C, 0x90, 0x94, 0x98, 0x9C, 0xA0, 0xA4, 0xA8, 0xAC, 0xB0, 0xB4, 0xB8, 0xBC,
@@ -69,6 +72,21 @@ static const panel_params_t panel_reset_params = {
                  0x80, 0x84, 0x88, 0x8C, 0x90, 0x94, 0x98, 0x9C, 0xA0, 0xA4, 0xA8, 0xAC, 0xB0, 0xB4, 0xB8, 0xBC,
                  0xC0, 0xC4, 0xC8, 0xCC, 0xD0, 0xD4, 0xD8, 0xDC, 0xE0, 0xE4, 0xE8, 0xEC, 0xF0, 0xF4, 0xF8, 0xFC }
 };
+
+static const panel_gamma_t gamma_presets[4][2] = {
+    /* G2.2 */
+    { GAMMA_PARAMS(1, 3,  129, 128, 126, 83, 65, 45, 41, 10,  42, 32, 11,  16, 6,  43, 20, 11),
+      GAMMA_PARAMS(0, 3,  129, 128, 126, 85, 64, 45, 41, 10,  43, 33, 12,  17, 7,  43, 20, 11) },
+    /* G1.8 */
+    /* TODO */ { 0 },
+    /* G2.5 */
+    /* TODO */ { 0 },
+    /* G1.0 */
+    { GAMMA_PARAMS(0, 0,  129, 84, 82, 56, 45, 32, 27, 16,  36, 31, 12,  17, 8,  43, 19, 10),
+      GAMMA_PARAMS(0, 0,  129, 84, 82, 56, 45, 32, 27, 16,  36, 31, 12,  17, 8,  43, 19, 10) }
+};
+
+#undef GAMMA_PARAMS
 
 static const uint8_t epfLut12[4][16] = {
     { 0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x24, 0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C },
@@ -757,7 +775,27 @@ static void panel_write_param(uint8_t value) {
             if ((value ^ oldValue) & 1 << 4) {
                 panel_invert_luts();
             }
-        } else if (unlikely(index >= offsetof(panel_params_t, PVGAMCTRL))) {
+        } else if (unlikely(index >= offsetof(panel_params_t, GAMSET))) {
+            if (unlikely(index == offsetof(panel_params_t, GAMSET))) {
+                const panel_gamma_t *gamma_preset;
+                switch (panel.params.GAMSET.GC) {
+                    case 8:
+                        gamma_preset = gamma_presets[3];
+                        break;
+                    case 4:
+                        gamma_preset = gamma_presets[2];
+                        break;
+                    case 2:
+                        gamma_preset = gamma_presets[1];
+                        break;
+                    case 1:
+                    default:
+                        gamma_preset = gamma_presets[0];
+                        break;
+                }
+                panel.params.PVGAMCTRL = gamma_preset[0];
+                panel.params.NVGAMCTRL = gamma_preset[1];
+            }
             panel.gammaDirty = true;
         }
     } else if (panel.cmd == 0x2C || panel.cmd == 0x3C) {
