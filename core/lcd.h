@@ -80,6 +80,7 @@ bool lcd_restore(FILE *image);
 bool lcd_save(FILE *image);
 void lcd_update(void);
 void lcd_disable(void);
+void lcd_gui_event(void);
 
 /* api functions */
 void emu_lcd_drawframe(void *output);
