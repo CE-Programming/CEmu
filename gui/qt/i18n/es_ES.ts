@@ -31,7 +31,7 @@
         <location filename="../keyhistorywidget.cpp" line="10"/>
         <source>Clear History</source>
         <translation>Borrar Historial</translation>
-    </message> 
+    </message>
     <message>
         <location filename="../keyhistorywidget.cpp" line="11"/>
         <source>Size</source>
@@ -181,7 +181,7 @@
         <translation>Identificación anterior: </translation>
     </message>
     <message>
-        <location filename="../Step Overdebugger.cpp" line="263"/>
+        <location filename="../debugger.cpp" line="263"/>
         <source>Debugging Info (*.ini)</source>
         <translation>Información de depuración (*.ini)</translation>
     </message>
@@ -278,7 +278,7 @@
     <message>
         <location filename="../debugger.cpp" line="1801"/>
         <source>All Files (*.*)</source>
-        <translation>Todos los Step Overarchivos (*.*)</translation>
+        <translation>Todos los archivos (*.*)</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2495"/>
@@ -317,7 +317,7 @@
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2402"/>
-        <location filena branch in your fork wolfarmoon/CEmu, so you can send a pull request.me="../mainwindow.cpp" line="2499"/>
+        <location filename="../mainwindow.cpp" line="2499"/>
         <location filename="../memorywidget.cpp" line="264"/>
         <source>Toggle Read Watchpoint</source>
         <translation>Alternar este punto de mira leído</translation>
@@ -872,7 +872,7 @@
     <message>
         <location filename="../mainwindow.ui" line="542"/>
         <source>Step Out</source>
-        <translation></translation> 
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2706"/>
