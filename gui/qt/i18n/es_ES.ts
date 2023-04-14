@@ -1332,7 +1332,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="314"/>
-        <source></source>
+        <source>Show Live Execution</source>
         <translation>Mostrar ejecución en tiempo real</translation>
     </message>
     <message>
