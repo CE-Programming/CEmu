@@ -139,6 +139,7 @@ set(CEmu_Sources
     ../../core/usb/disconnected.c
     ../../core/usb/dusb.c
     ../../core/usb/fotg210.h
+    ../../core/usb/physical.c
     ../../core/usb/usb.c ../../core/usb/usb.h
     ../../core/vat.c ../../core/vat.h
     ../../tests/autotester/autotester.cpp ../../tests/autotester/autotester.h
@@ -266,6 +267,18 @@ if(LibArchive_FOUND)
     target_link_libraries(CEmu PRIVATE LibArchive::LibArchive)
 else()
     message(WARNING "No LibArchive found! CE Bundle extraction/transfer will not be available")
+endif()
+
+if(PkgConfig_FOUND)
+    pkg_check_modules(LibUsb libusb-1.0>=1.0.16)
+    if(LibUsb_FOUND)
+        target_compile_definitions(CEmu PRIVATE "LIBUSB_SUPPORT")
+        target_include_directories(CEmu PRIVATE ${LibUsb_INCLUDE_DIRS})
+        target_link_directories(CEmu PRIVATE ${LibUsb_LIBRARY_DIRS})
+        target_link_libraries(CEmu PRIVATE ${LibUsb_LIBRARIES})
+    else()
+        message(WARNING "No LibUsb found! Some USB things will not be available")
+    endif()
 endif()
 
 find_package(PNG QUIET)

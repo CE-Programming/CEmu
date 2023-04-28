@@ -25,6 +25,10 @@
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "STRING",
           "value": "${sourceDir}/triplets"
+        },
+        "VCPKG_INSTALL_OPTIONS": {
+          "type": "STRING",
+          "value": "--allow-unsupported"
         }
       }
     },

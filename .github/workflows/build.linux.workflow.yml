@@ -2,7 +2,7 @@ name: Build Linux
 
 on:
   push:
-    branches: [ master, feature/github-actions ]
+    branches: [ master, feature/github-actions, test/libusb ]
   pull_request:
     branches: [ master, feature/github-actions ]
 
@@ -40,7 +40,7 @@ jobs:
     - name: Install dependencies
       run: |
         set -e
-        sudo apt install -y autoconf automake autoconf-archive '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev
+        sudo apt install -y autoconf automake autoconf-archive '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev libudev-dev libusb-1.0-0-dev
 
     - name: Install latest CMake
       uses: lukka/get-cmake@a70f1cfa1857a3eecfe0d34962269e1b1e8be56c # latest as of 2024-08-08
