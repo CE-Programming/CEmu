@@ -1,6 +1,7 @@
 #include "vat.h"
 #include "mem.h"
 #include "debug/debug.h"
+#include "defines.h"
 
 #include <string.h>
 
@@ -186,6 +187,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
                     *dest++ = 's';
                     break;
                 }
+                fallthrough;
             default:
                 for (i = 0; i < 8 && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
                                       (name[i] >= 'a' && name[i] <= 'z') ||
