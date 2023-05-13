@@ -2325,7 +2325,7 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *varAddr = new QTableWidgetItem(int2hex(var.address, 6));
         QTableWidgetItem *varVatAddr = new QTableWidgetItem(int2hex(var.vat, 6));
         QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size, 4));
-        QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name)));
+        QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name, var.named)));
         QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));
 
         varAddr->setFont(monospace);
