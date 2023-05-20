@@ -1,6 +1,7 @@
 #include "vat.h"
 #include "mem.h"
 #include "debug/debug.h"
+#include "defines.h"
 
 #include <string.h>
 
@@ -80,7 +81,7 @@ static void hex_byte(char **dest, uint8_t byte) {
     *(*dest)++ = hex_char(byte >> 0);
 }
 
-const char *calc_var_name_to_utf8(uint8_t name[8]) {
+const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
     static char buffer[20];
     char *dest = buffer;
     uint8_t i = 0;
@@ -173,17 +174,20 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                     *dest++ = 'n';
                 }
                 break;
-            case 0x72:
-                *dest++ = 'A';
-                *dest++ = 'n';
-                *dest++ = 's';
-                break;
             case 0xAA:
                 *dest++ = 'S';
                 *dest++ = 't';
                 *dest++ = 'r';
                 *dest++ = '0' + (name[1] + 1) % 10;
                 break;
+            case 0x72:
+                if (!named) {
+                    *dest++ = 'A';
+                    *dest++ = 'n';
+                    *dest++ = 's';
+                    break;
+                }
+                fallthrough;
             default:
                 for (i = 0; i < 8 && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
                                       (name[i] >= 'a' && name[i] <= 'z') ||

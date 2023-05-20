@@ -76,7 +76,7 @@ typedef enum calc_var_type {
 } calc_var_type_t;
 
 extern const char *calc_var_type_names[0x40];
-const char *calc_var_name_to_utf8(uint8_t name[8]);
+const char *calc_var_name_to_utf8(uint8_t name[8], bool named);
 const char *calc_var_name_to_ascii(uint8_t name[8]);
 
 typedef struct calc_var {

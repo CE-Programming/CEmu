@@ -1917,7 +1917,7 @@ void MainWindow::varShow() {
                     var_type_str += QStringLiteral(" (ASM)");
                 }
 
-                QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
+                QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name, var.named));
                 QTableWidgetItem *var_location = new QTableWidgetItem(var.archived ? tr("Archive") : QStringLiteral("RAM"));
                 QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
@@ -2008,7 +2008,7 @@ void MainWindow::varSaveSelectedFiles() {
         if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
             calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
 
-            name = QString(calc_var_name_to_utf8(var.name));
+            name = QString(calc_var_name_to_utf8(var.name, var.named));
             filename = dialog.directory().absolutePath() + "/" + name + "." + m_varExtensions[var.type1];
 
             if (emu_receive_variable(filename.toStdString().c_str(), &var, 1) != LINK_GOOD) {

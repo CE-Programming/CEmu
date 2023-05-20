@@ -178,7 +178,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
         ui->basicTempEdit->clear();
         return DBG_BASIC_NO_EXECUTING_PRGM;
     } else {
-        QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1])));
+        QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1]), true));
 
         // lookup in map to see if we've already parsed this file
         if (m_basicPrgmsMap.contains(var_name)) {
