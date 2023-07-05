@@ -86,24 +86,16 @@ jobs:
               '/tmp/CEmu-nightly_mac_qt5/'"
           eval "create-dmg $createDmgArgs" || eval "create-dmg $createDmgArgs" # We also retry just in case...
 
-    - name: "Notarize DMG"
-      env:
-        HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
+    - name: "[macOS] Notarize and staple DMG"
       if: ${{ runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && env.HAVE_SECRETS == 'true' }}
-      uses: adriweb/xcode-notarize-please@77452e14fadc0b5629870193e273c99623a1b320 # v1.2
-      with:
-          product-path: CEmu-nightly_mac_qt5.dmg
-          appstore-connect-username: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
-          appstore-connect-password: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
-          primary-bundle-id: 'com.adriweb.CEmu'
-
-    - name: "Staple DMG"
       env:
-        HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
-      if: ${{ runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && env.HAVE_SECRETS == 'true' }}
-      uses: adriweb/xcode-staple@2114e06658d8492882b252406aaa7fee3e75ed85 # v1.0.0
-      with:
-          product-path: CEmu-nightly_mac_qt5.dmg
+        APPLE_NOTARIZATION_USERNAME: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
+        APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+        APPLE_NOTARIZATION_TEAMID: ${{ secrets.APPLE_NOTARIZATION_TEAMID }}
+      run: |
+        xcrun notarytool store-credentials "notarytool-profile" --apple-id "$APPLE_NOTARIZATION_USERNAME" --team-id "$APPLE_NOTARIZATION_TEAMID" --password "$APPLE_NOTARIZATION_PASSWORD"
+        xcrun notarytool submit "CEmu-nightly_mac_qt5.dmg" --keychain-profile "notarytool-profile" --wait
+        xcrun stapler staple "CEmu-nightly_mac_qt5.dmg"
 
     - name: Upload dmg as artifact
       uses: actions/upload-artifact@v3
