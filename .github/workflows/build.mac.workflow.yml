@@ -89,6 +89,7 @@ jobs:
     - name: "[macOS] Notarize and staple DMG"
       if: ${{ runner.os == 'macOS' && github.repository == 'CE-Programming/CEmu' && env.HAVE_SECRETS == 'true' }}
       env:
+        HAVE_SECRETS: ${{ secrets.APPLE_NOTARIZATION_PASSWORD != '' }}
         APPLE_NOTARIZATION_USERNAME: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
         APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
         APPLE_NOTARIZATION_TEAMID: ${{ secrets.APPLE_NOTARIZATION_TEAMID }}
