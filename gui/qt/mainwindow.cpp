@@ -567,7 +567,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
     setKeypadHolding(m_config->value(SETTING_KEYPAD_HOLDING, true).toBool());
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
-    setAutoSave(m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool());
+    ui->checkSaveRestore->setChecked(m_config->value(SETTING_SAVE_ON_CLOSE, true).toBool());
     setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
     setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_DISASM_SPACE, false).toBool());
     setDebugDisasmAddrCol(m_config->value(SETTING_DEBUGGER_ADDR_COL, true).toBool());
