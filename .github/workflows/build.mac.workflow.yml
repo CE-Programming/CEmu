@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         set -e
-        brew install libarchive libpng zlib
+        brew install libarchive libpng zlib automake autoconf libtool
 
     - name: Install Qt
       uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
