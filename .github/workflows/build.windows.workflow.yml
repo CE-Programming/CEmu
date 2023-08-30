@@ -29,15 +29,15 @@ jobs:
         submodules: 'recursive'
 
     - name: Install latest CMake
-      uses: lukka/get-cmake@359fbae4b163fa01633e6de228fa7f2a31ab1fc7 # latest as of 2023-04-14
+      uses: lukka/get-cmake@4dcd3eb73017c61159eb130746fbca35d78a3d5f # latest as of 2023-08-30
 
     - name: Restore artifacts, or setup vcpkg (do not install any package)
-      uses: lukka/run-vcpkg@abed23940f9d7bc267b0e1a21ee7b699a3794baa # latest as of 2023-04-14
+      uses: lukka/run-vcpkg@3a22746930754ced94ac552915aa816265ef90c1 # latest as of 2023-08-30
       with:
-        vcpkgGitCommitId: 'b08025687f75908191b1e6c67925d46ea0f398dd'
+        vcpkgGitCommitId: 'e21c414460498b0c7c94d815ad6d1a3d313ff28b' # latest as of 2023-08-30
 
     - name: Build CEmu Qt ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
-      uses: lukka/run-cmake@d8897e1de33ed2ec4628ec5acf69861da7c719db # latest as of 2023-01-13
+      uses: lukka/run-cmake@fbcfe006bc5450def7a319af91733647d985d157 # latest as of 2023-08-30
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: '${{ matrix.arch }}-${{ matrix.config }}'
