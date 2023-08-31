@@ -41,7 +41,10 @@ enum panel_mac {
 };
 
 enum panel_ic {
-    PANEL_IC_CTRL_SYNC   = 1 << 0,
+    PANEL_IC_DM_MASK     = 3 << 0,
+    PANEL_IC_DM_MCU      = 0 << 0,
+    PANEL_IC_DM_RGB      = 1 << 0,
+    PANEL_IC_DM_VSYNC    = 2 << 0,
     PANEL_IC_CTRL_DATA   = 1 << 4,
     PANEL_IC_GRAM_BYPASS = 1 << 7
 };
@@ -52,13 +55,17 @@ enum panel_gate {
     PANEL_GATE_MIRROR = 1 << 4
 };
 
+typedef struct panel_scroll_regs {
+    uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
+} panel_scroll_regs_t;
+
 typedef struct panel_state {
     uint16_t row, dstRow, srcRow;
     uint8_t cmd, param, col, colDir;
 
     uint32_t rowReg, colReg;
     uint16_t rowStart, rowEnd, colStart, colEnd;
-    uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
+    panel_scroll_regs_t pendingScroll, activeScroll;
     uint8_t mode, ifBpp, ifCtl, ifRed, ifGreen, ifBlue, mac, gamma;
     uint8_t gateCount, gateStart, gateConfig;
     uint8_t frame[320][240][3], display[240][320][4];

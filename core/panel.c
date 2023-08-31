@@ -10,25 +10,30 @@ panel_state_t panel;
 
 static bool panel_scan_line(uint16_t row) {
     if (unlikely(row > PANEL_LAST_ROW)) {
-        panel.mode |= PANEL_MODE_IGNORE;
-        return false;
+        if (likely((panel.ifCtl & PANEL_IC_DM_MASK) != PANEL_IC_DM_MCU)) {
+            panel.mode |= PANEL_MODE_IGNORE;
+            return false;
+        } else {
+            panel.activeScroll = panel.pendingScroll;
+            row = 0;
+        }
     }
     panel.mode &= ~PANEL_MODE_IGNORE;
     if (unlikely(panel.mode & PANEL_MODE_PARTIAL) &&
-        panel.partialStart > panel.partialEnd ?
-        panel.partialStart > row && row > panel.partialEnd :
-        panel.partialStart > row || row > panel.partialEnd) {
+        panel.activeScroll.partialStart > panel.activeScroll.partialEnd ?
+        panel.activeScroll.partialStart > row && row > panel.activeScroll.partialEnd :
+        panel.activeScroll.partialStart > row || row > panel.activeScroll.partialEnd) {
         panel.mode |= PANEL_MODE_BLANK;
     } else {
         panel.mode &= ~PANEL_MODE_BLANK;
     }
     panel.row = panel.dstRow = panel.srcRow = row;
     if (unlikely(panel.mode & PANEL_MODE_SCROLL)) {
-        uint16_t top = panel.topArea, bot = PANEL_LAST_ROW - panel.bottomArea;
+        uint16_t top = panel.activeScroll.topArea, bot = PANEL_LAST_ROW - panel.activeScroll.bottomArea;
         if (row >= top && row <= bot) {
-            panel.srcRow += panel.scrollStart - top;
+            panel.srcRow += panel.activeScroll.scrollStart - top;
             if (panel.srcRow > bot) {
-                panel.srcRow -= PANEL_NUM_ROWS - panel.topArea - panel.bottomArea;
+                panel.srcRow -= (bot + 1 - top);
             }
             panel.srcRow &= 0x1FF;
         }
@@ -54,7 +59,11 @@ static bool panel_scan_line(uint16_t row) {
 }
 
 bool panel_hsync(void) {
-    return panel_scan_line(panel.row + 1);
+    if (likely((panel.ifCtl & PANEL_IC_DM_MASK) == PANEL_IC_DM_RGB)) {
+        return panel_scan_line(panel.row + 1);
+    } else {
+        return !(panel.mode & PANEL_MODE_IGNORE);
+    }
 }
 
 static void panel_reset_mregs(void) {
@@ -71,7 +80,12 @@ bool panel_vsync(void) {
     if (likely(panel.ifCtl & PANEL_IC_CTRL_DATA)) {
         panel_reset_mregs();
     }
-    return panel_scan_line(0);
+    if (likely((panel.ifCtl & PANEL_IC_DM_MASK) != PANEL_IC_DM_MCU)) {
+        panel.activeScroll = panel.pendingScroll;
+        return panel_scan_line(0);
+    } else {
+        return true;
+    }
 }
 
 bool panel_refresh_pixel(void) {
@@ -115,8 +129,12 @@ bool panel_refresh_pixel(void) {
     pixel[PANEL_ALPHA] = ~0;
     panel.col += panel.colDir;
     if (unlikely(panel.col > PANEL_LAST_COL)) {
-        panel.mode |= PANEL_MODE_IGNORE;
-        return false;
+        if (likely((panel.ifCtl & PANEL_IC_DM_MASK) == PANEL_IC_DM_RGB)) {
+            panel.mode |= PANEL_MODE_IGNORE;
+            return false;
+        } else {
+            return panel_scan_line(panel.row + 1);
+        }
     }
     return true;
 }
@@ -177,12 +195,13 @@ static void panel_sw_reset(void) {
     panel.colEnd = panel.mac & PANEL_MAC_RCX ? PANEL_LAST_COL : PANEL_LAST_ROW;
     panel.rowStart = 0;
     panel.rowEnd = panel.mac & PANEL_MAC_RCX ? PANEL_LAST_ROW : PANEL_LAST_COL;
-    panel.topArea = 0;
-    panel.scrollArea = PANEL_NUM_ROWS;
-    panel.bottomArea = 0;
-    panel.partialStart = 0;
-    panel.partialEnd = PANEL_LAST_ROW;
-    panel.scrollStart = 0;
+    panel.pendingScroll.partialStart = 0;
+    panel.pendingScroll.partialEnd = PANEL_LAST_ROW;
+    panel.pendingScroll.topArea = 0;
+    panel.pendingScroll.scrollArea = PANEL_NUM_ROWS;
+    panel.pendingScroll.bottomArea = 0;
+    panel.pendingScroll.scrollStart = 0;
+    panel.activeScroll = panel.pendingScroll;
     panel.gateCount = PANEL_NUM_ROWS / 8 - 1;
     panel.gateStart = 0 / 8;
     panel.gateConfig = PANEL_GATE_MIRROR;
@@ -212,11 +231,11 @@ static void panel_write_cmd(uint8_t value) {
             break;
         case 0x12:
             panel.mode |= PANEL_MODE_PARTIAL;
-            panel.scrollStart = 0;
+            panel.pendingScroll.scrollStart = 0;
             break;
         case 0x13:
             panel.mode &= ~(PANEL_MODE_PARTIAL | PANEL_MODE_SCROLL);
-            panel.scrollStart = 0;
+            panel.pendingScroll.scrollStart = 0;
             break;
         case 0x20:
             panel.mode &= ~PANEL_MODE_INVERT;
@@ -345,10 +364,10 @@ static void panel_write_param(uint8_t value) {
         case 0x30:
             switch (word_param) {
                 case 0:
-                    write8(panel.partialStart, bit_offset, value & 0x1FF >> bit_offset);
+                    write8(panel.pendingScroll.partialStart, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 1:
-                    write8(panel.partialEnd, bit_offset, value & 0x1FF >> bit_offset);
+                    write8(panel.pendingScroll.partialEnd, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 default:
                     break;
@@ -357,13 +376,13 @@ static void panel_write_param(uint8_t value) {
         case 0x33:
             switch (word_param) {
                 case 0:
-                    write8(panel.topArea, bit_offset, value & 0x1FF >> bit_offset);
+                    write8(panel.pendingScroll.topArea, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 1:
-                    write8(panel.scrollArea, bit_offset, value & 0x1FF >> bit_offset);
+                    write8(panel.pendingScroll.scrollArea, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 2:
-                    write8(panel.bottomArea, bit_offset, value & 0x1FF >> bit_offset);
+                    write8(panel.pendingScroll.bottomArea, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 default:
                     break;
@@ -377,7 +396,7 @@ static void panel_write_param(uint8_t value) {
         case 0x37:
             switch (word_param) {
                 case 0:
-                    write8(panel.scrollStart, bit_offset, value & 0x1FF >> bit_offset);
+                    write8(panel.pendingScroll.scrollStart, bit_offset, value & 0x1FF >> bit_offset);
                     panel.mode |= PANEL_MODE_SCROLL;
                     break;
                 default:
