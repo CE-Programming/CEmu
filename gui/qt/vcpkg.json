@@ -19,5 +19,11 @@
       "features": [ "dbus", "gui", "network", "widgets", "png" ]
     }
   ],
-  "builtin-baseline": "e21c414460498b0c7c94d815ad6d1a3d313ff28b"
+  "builtin-baseline": "e21c414460498b0c7c94d815ad6d1a3d313ff28b",
+  "overrides": [
+    {
+      "name": "qtbase",
+      "version": "6.5.1"
+    }
+  ]
 }
