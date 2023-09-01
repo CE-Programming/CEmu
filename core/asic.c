@@ -19,6 +19,7 @@
 #include "backlight.h"
 #include "realclock.h"
 #include "defines.h"
+#include "cert.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -138,6 +139,9 @@ void asic_free(void) {
 }
 
 void asic_reset(void) {
+    /* Update the Python state first, so it can be read by the reset handler if needed */
+    static const uint16_t path[] = { 0x0330, 0x0430 };
+    asic.python = !cert_field_find_path(mem.flash.block + 0x3B0001, SIZE_FLASH_SECTOR_64K, path, 2, NULL, NULL);
     asic.revision = report_reset(ASIC_REV_AUTO);
     set_features();
 
@@ -156,6 +160,10 @@ ti_device_t EMSCRIPTEN_KEEPALIVE get_device_type(void) {
 
 asic_rev_t EMSCRIPTEN_KEEPALIVE get_asic_revision(void) {
     return asic.revision;
+}
+
+bool EMSCRIPTEN_KEEPALIVE get_asic_python(void) {
+    return asic.python;
 }
 
 void set_cpu_clock(uint32_t new_rate) {

@@ -23,7 +23,9 @@ typedef enum {
 
 typedef struct asic_state {
     ti_device_t device;
-    asic_rev_t revision; /* Only updated on reset */
+    /* Only updated on reset */
+    asic_rev_t revision;
+    bool python;
     /* Populated based on revision */
     bool im2;
     bool serFlash;
@@ -40,6 +42,7 @@ void set_cpu_clock(uint32_t new_rate);
 void set_device_type(ti_device_t device);
 ti_device_t get_device_type(void);
 asic_rev_t get_asic_revision(void);
+bool get_asic_python(void);
 
 #ifdef __cplusplus
 }
