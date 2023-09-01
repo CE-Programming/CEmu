@@ -23,7 +23,7 @@
   "overrides": [
     {
       "name": "qtbase",
-      "version": "6.5.1"
+      "version": "6.4.3"
     }
   ]
 }
