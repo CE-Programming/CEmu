@@ -10,12 +10,19 @@ on:
 
 jobs:
   build:
-    name: "Build: ${{ matrix.os }}"
+    name: "Build: ${{ matrix.os }} Qt${{ matrix.qtvershort }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macOS-latest]
+        os: [macos-11, macos-12]
+        include:
+          - os: macos-11
+            qtver: "5.15.2"
+            qtvershort: 5
+          - os: macos-12
+            qtver: "6.5.2"
+            qtvershort: 6
 
     steps:
     - name: Checkout Git Repo
@@ -29,9 +36,10 @@ jobs:
         brew install libarchive libpng zlib automake autoconf libtool
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
+      uses: jurplel/install-qt-action@b3ea5275e37b734d027040e2c7fe7a10ea2ef946 # v3.3.0
       with:
           target: desktop
+          version: "${{ matrix.qtver }}"
           setup-python: false
           cache: true
 
@@ -40,7 +48,7 @@ jobs:
     # See https://github.com/libarchive/libarchive/pull/1813 and other issues
     - name: Fix libarchive pkg-config file
       run: |
-        sudo sed -i '' -E '/^Requires.private: (lib)?iconv/d' /usr/local/opt/libarchive/lib/pkgconfig/libarchive.pc
+        sudo sed -i '' -E '/^Requires.private: (lib)?iconv/d' $(brew --prefix libarchive)/lib/pkgconfig/libarchive.pc
 
     - name: Build CEmu Qt on macOS
       run: |
@@ -51,8 +59,8 @@ jobs:
         cd build
         qmake ../gui/qt && make -j4
         macdeployqt CEmu.app
-        mkdir -p /tmp/CEmu-nightly_mac_qt5/
-        mv CEmu.app /tmp/CEmu-nightly_mac_qt5/
+        mkdir -p /tmp/CEmu-nightly_mac_${{matrix.qtvershort}}/
+        mv CEmu.app /tmp/CEmu-nightly_mac_${{matrix.qtvershort}}/
 
     - name: "Codesign CEmu.app"
       env:
@@ -69,21 +77,21 @@ jobs:
           security unlock-keychain -p $MACOS_KEYCHAIN_PWD build.keychain
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MACOS_KEYCHAIN_PWD build.keychain
-          /usr/bin/codesign --deep --force --verify --verbose --sign "$MACOS_CODESIGN_IDENT" --timestamp --options runtime /tmp/CEmu-nightly_mac_qt5/CEmu.app
+          /usr/bin/codesign --deep --force --verify --verbose --sign "$MACOS_CODESIGN_IDENT" --timestamp --options runtime /tmp/CEmu-nightly_mac_${{matrix.qtvershort}}/CEmu.app
 
     - name: "Create the DMG"
       run: |
           brew install create-dmg || brew install create-dmg; # we try twice because sometimes it fails...
           # The codesign variable may be empty (for forks) but that's fine, create-dmg only does code-signing if it's not empty.
           createDmgArgs="--codesign '${{ secrets.MACOS_CODESIGN_IDENT }}' \
-              --volname 'CEmu-nightly Qt5' \
+              --volname 'CEmu-nightly Qt${{matrix.qtvershort}}' \
               --window-pos 200 120 \
               --window-size 600 400 \
               --icon-size 64 \
               --icon 'CEmu.app' 125 200 \
               --app-drop-link 400 200 \
-              'CEmu-nightly_mac_qt5.dmg' \
-              '/tmp/CEmu-nightly_mac_qt5/'"
+              'CEmu-nightly_mac_${{matrix.qtvershort}}.dmg' \
+              '/tmp/CEmu-nightly_mac_${{matrix.qtvershort}}/'"
           eval "create-dmg $createDmgArgs" || eval "create-dmg $createDmgArgs" # We also retry just in case...
 
     - name: "[macOS] Notarize and staple DMG"
@@ -95,14 +103,14 @@ jobs:
         APPLE_NOTARIZATION_TEAMID: ${{ secrets.APPLE_NOTARIZATION_TEAMID }}
       run: |
         xcrun notarytool store-credentials "notarytool-profile" --apple-id "$APPLE_NOTARIZATION_USERNAME" --team-id "$APPLE_NOTARIZATION_TEAMID" --password "$APPLE_NOTARIZATION_PASSWORD"
-        xcrun notarytool submit "CEmu-nightly_mac_qt5.dmg" --keychain-profile "notarytool-profile" --wait
-        xcrun stapler staple "CEmu-nightly_mac_qt5.dmg"
+        xcrun notarytool submit "CEmu-nightly_mac_${{matrix.qtvershort}}.dmg" --keychain-profile "notarytool-profile" --wait
+        xcrun stapler staple "CEmu-nightly_mac_${{matrix.qtvershort}}.dmg"
 
     - name: Upload dmg as artifact
       uses: actions/upload-artifact@v3
       with:
-          name: CEmu-nightly_mac_qt5
-          path: CEmu-nightly_mac_qt5.dmg
+          name: CEmu-nightly_mac_${{matrix.qtvershort}}
+          path: CEmu-nightly_mac_${{matrix.qtvershort}}.dmg
 
     - name: Update nightly release
       if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
@@ -112,4 +120,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          CEmu-nightly_mac_qt5.dmg
+          CEmu-nightly_mac_${{matrix.qtvershort}}.dmg
