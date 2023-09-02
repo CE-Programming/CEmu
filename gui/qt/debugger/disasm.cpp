@@ -20,43 +20,37 @@ static std::string strW(uint32_t data) {
     } else {
         snprintf(tmpbuf, sizeof(tmpbuf), "$%04X", data);
     }
-    if (high && disasm.map.count(data)) {
+    if (high) {
         range = disasm.map.equal_range(data);
-        for (sit = range.first;  sit != range.second;) {
+        for (sit = range.first; sit != range.second; ++sit) {
             if (disasm.bold_sym) {
                 ret += "<b>" + sit->second + "</b>";
             } else {
                 ret += sit->second;
             }
-           ++sit;
-           ret += (sit != range.second ? "|" : "");
+            ret += '|';
         }
         if (!ret.empty()) {
-            ret += "|";
+            ret += std::string(tmpbuf);
+            return ret;
         }
-        ret += std::string(tmpbuf);
-        return ret;
-    }
-    if (!disasm.il) {
-        if (high && disasm.map.count(cpu.registers.MBASE<<16|data)) {
+        if (!disasm.il) {
             range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
-            for (sit = range.first;  sit != range.second;) {
+            for (sit = range.first; sit != range.second; ++sit) {
                 if (disasm.bold_sym) {
                     ret += "<b>" + sit->second + "</b>";
                 } else {
                     ret += sit->second;
                 }
-               ++sit;
-               ret += (sit != range.second ? "|" : "");
+                ret += '|';
             }
             if (!ret.empty()) {
-                ret += "|";
+                ret += std::string(tmpbuf);
+                if (data > 0xFFFF) {
+                    ret += " & $FFFF";
+                }
+                return ret;
             }
-            ret += std::string(tmpbuf);
-            if (data > 0xFFFF) {
-                ret += " & $FFFF";
-            }
-            return ret;
         }
     }
     return std::string(tmpbuf);
@@ -67,47 +61,39 @@ static std::string strA(uint32_t data) {
     map_t::iterator sit;
     std::string ret;
     bool high = data > 511;
-    if (disasm.map.count(data)) {
-        range = disasm.map.equal_range(data);
-        for (sit = range.first;  sit != range.second;) {
-           if (high || (!high && sit->second[0] == '_')) {
-               if (disasm.bold_sym) {
-                   ret += "<b>" + sit->second + "</b>";
-               } else {
-                   ret += sit->second;
-               }
-               ++sit;
-               ret += (sit != range.second ? "|" : "");
-           } else {
-               ++sit;
-           }
+    range = disasm.map.equal_range(data);
+    for (sit = range.first; sit != range.second; ++sit) {
+        if (high || sit->second[0] == '_') {
+            if (!ret.empty()) {
+                ret += '|';
+            }
+            if (disasm.bold_sym) {
+                ret += "<b>" + sit->second + "</b>";
+            } else {
+                ret += sit->second;
+            }
         }
-        if (ret.back() == '|') {
-            ret.pop_back();
-        }
+    }
+    if (!ret.empty()) {
         return ret;
     }
     if (disasm.il) {
         snprintf(tmpbuf, sizeof(tmpbuf), "$%06X", data);
     } else {
-        if (disasm.map.count(cpu.registers.MBASE<<16|data)) {
-            range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
-            for (sit = range.first;  sit != range.second;) {
-               if (high || (!high && sit->second[0] == '_')) {
-                   if (disasm.bold_sym) {
-                       ret += "<b>" + sit->second + "</b>";
-                   } else {
-                       ret += sit->second;
-                   }
-                   ++sit;
-                   ret += (sit != range.second ? "|" : "");
-               } else {
-                   ++sit;
-               }
+        range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
+        for (sit = range.first; sit != range.second; ++sit) {
+            if (high || sit->second[0] == '_') {
+                if (!ret.empty()) {
+                    ret += '|';
+                }
+                if (disasm.bold_sym) {
+                    ret += "<b>" + sit->second + "</b>";
+                } else {
+                    ret += sit->second;
+                }
             }
-            if (ret.back() == '|') {
-                ret.pop_back();
-            }
+        }
+        if (!ret.empty()) {
             if (data > 0xFFFF) {
                 ret += " & $FFFF";
             }
