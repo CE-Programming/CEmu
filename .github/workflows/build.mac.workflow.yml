@@ -62,6 +62,17 @@ jobs:
         mkdir -p /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
         mv CEmu.app /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
 
+    - name: Fixup libarchive deps for some reason
+      run: |
+        libDir=/tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/CEmu.app/Contents/Frameworks/
+        libAPath=${libDir}/libarchive.13.dylib
+        ls -al "$libAPath" || exit 1
+        for lib in xz zstd lz4 libb2; do cp -a $(brew --prefix ${lib})/lib/lib*.dylib "$libDir"; done
+        install_name_tool -change "@loader_path/../../../../opt/xz/lib/liblzma.5.dylib"   "@executable_path/../Frameworks/liblzma.5.dylib" \
+                          -change "@loader_path/../../../../opt/zstd/lib/libzstd.1.dylib" "@executable_path/../Frameworks/libzstd.1.dylib" \
+                          -change "@loader_path/../../../../opt/lz4/lib/liblz4.1.dylib"   "@executable_path/../Frameworks/liblz4.1.dylib"  \
+                          -change "@loader_path/../../../../opt/libb2/lib/libb2.1.dylib"  "@executable_path/../Frameworks/libb2.1.dylib"  "$libAPath" || echo lib path replacement fail
+
     - name: "Codesign CEmu.app"
       env:
           HAVE_SECRETS: ${{ secrets.MACOS_CERTIFICATE_PWD != '' }}
