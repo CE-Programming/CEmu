@@ -1552,7 +1552,6 @@ bool MainWindow::runSetup() {
     delete romWizard;
 
     if (path.isEmpty()) {
-        m_initPassed = false;
         return false;
     } else {
         setRom(path);
