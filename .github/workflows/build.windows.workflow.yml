@@ -23,6 +23,11 @@ jobs:
             arch_name: 64-bit
             arch_suffix: "64"
     steps:
+    - name: Remove Perl Strawberry installation
+      # Removes conflicting headers from include paths
+      run: |
+        Remove-Item -Recurse -Force C:/Strawberry
+
     - name: Checkout Git Repo
       uses: actions/checkout@v3
       with:
