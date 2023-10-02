@@ -103,8 +103,7 @@ void MainWindow::debugStep(int mode) {
         debug_step(mode, m_runUntilAddr);
     } else {
         disasm.base = static_cast<int32_t>(cpu.registers.PC);
-        disasm.ctx.zdis_adl = cpu.ADL;
-        disasmGet();
+        disasmGet(true);
         debug_step(mode, static_cast<uint32_t>(disasm.next));
     }
     emu.resume();
@@ -1915,7 +1914,7 @@ void MainWindow::disasmUpdateAddr(int base, bool pane) {
     m_disasmAddr = base;
     m_disasmPane = pane;
     m_disasmOffsetSet = false;
-    disasm.ctx.zdis_adl = adlState(ui->checkADLDisasm->checkState());
+    disasm.adl = adlState(ui->checkADLDisasm->checkState());
     disasm.base = -1;
     disasm.next = m_disasmAddr - ((pane) ? 0x40 : 0);
     if (disasm.next < 0) { disasm.next = 0; }

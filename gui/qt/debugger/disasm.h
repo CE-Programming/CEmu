@@ -29,6 +29,7 @@ typedef struct {
     } highlight;
     int32_t base;
     int32_t next;
+    bool adl;
     bool il;
     bool uppercase;
     bool implicit;
@@ -43,7 +44,7 @@ typedef struct {
 extern disasm_state_t disasm;
 
 void disasmInit();
-void disasmGet();
+void disasmGet(bool useCpuMode = false);
 
 extern "C" [[gnu::used]] void debugInstruction(void);
 

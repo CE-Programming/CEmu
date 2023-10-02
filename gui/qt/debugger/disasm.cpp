@@ -181,11 +181,11 @@ void disasmInit() {
     disasm.ctx.zdis_put = disasmPut;
 }
 
-void disasmGet() {
+void disasmGet(bool useCpuMode) {
     disasm.ctx.zdis_lowercase = !disasm.uppercase;
     disasm.ctx.zdis_implicit = !disasm.implicit;
     disasm.ctx.zdis_end_addr = static_cast<uint32_t>(disasm.base);
-    disasm.ctx.zdis_adl = cpu.ADL;
+    disasm.ctx.zdis_adl = useCpuMode ? cpu.ADL : disasm.adl;
     disasm.cur = &disasm.instr.opcode;
 
     disasm.highlight.watchR = false;
@@ -239,6 +239,6 @@ void disasmGet() {
 #include <iostream>
 void debugInstruction(void) {
     disasm.base = cpu.registers.PC;
-    disasmGet();
+    disasmGet(true);
     std::cerr << disasm.instr.opcode << '\t' << disasm.instr.operands << std::endl;
 }
