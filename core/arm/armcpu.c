@@ -12,6 +12,12 @@
 # define __has_builtin(builtin) 0
 #endif
 
+#ifdef _MSC_VER
+# define DEBUG_BREAK __debugbreak()
+#else
+# define DEBUG_BREAK asm("int3")
+#endif
+
 #if defined(__GCC_ASM_FLAG_OUTPUTS__) &&       \
     (defined(__i386) || defined(__x86_64__) || \
      defined(_M_IX86) || defined(_M_IX64))
@@ -331,17 +337,17 @@ bool arm_cpu_exception(arm_t *arm, arm_exception_number_t exc) {
     assert(exc > ARM_Thread_Mode &&
            exc < ARM_Invalid_Exception &&
            "Invalid exception");
-    if (cpu->active & 1 << exc) {
+    if (cpu->active & (uint64_t)1 << exc) {
         return false;
     }
     if (arm->debug && exc == ARM_Exception_HardFault) {
-        asm("int3");
+        DEBUG_BREAK;
     }
     if (cpu->exc) {
         cpu->exc = false;
         cpu->pc = 0;
         if (arm->debug) {
-            asm("int3");
+            DEBUG_BREAK;
         }
         return false;
     }
@@ -398,7 +404,7 @@ bool arm_cpu_exception(arm_t *arm, arm_exception_number_t exc) {
     }
     uint32_t pc = arm_mem_load_word(arm, cpu->scb.vtor + (exc << 2)) + 1;
     if (!pc || pc >= UINT32_C(0x80000000)) {
-        asm("int3");
+        DEBUG_BREAK;;
     }
     if (!cpu->exc) {
         cpu->exc = true;
@@ -418,7 +424,7 @@ bool arm_cpu_exception(arm_t *arm, arm_exception_number_t exc) {
     }
     cpu->scb.icsr = (cpu->scb.icsr & ~SCB_ICSR_VECTACTIVE_Msk) |
         (exc & SCB_ICSR_VECTACTIVE_Msk) << SCB_ICSR_VECTACTIVE_Pos;
-    cpu->active |= 1 << exc;
+    cpu->active |= (uint64_t)1 << exc;
     cpu->pc = pc;
     return true;
 }
@@ -432,7 +438,7 @@ static void arm_cpu_interwork(arm_t *arm, uint32_t addr) {
     } else {
         // Exception Return
         uint32_t sp, val;
-        assert(!~(addr | 0xF) && cpu->active & 1 << curexc &&
+        assert(!~(addr | 0xF) && cpu->active & (uint64_t)1 << curexc &&
                "Unpredictable exception return");
         cpu->active &= ~(1 << curexc);
         switch (addr) {
@@ -492,7 +498,7 @@ static void arm_cpu_interwork(arm_t *arm, uint32_t addr) {
         }
         cpu->pc = arm_mem_load_word(arm, sp + 0x18) + 1;
         if (!cpu->pc || cpu->pc >= UINT32_C(0x80000000)) {
-            asm("int3");
+            DEBUG_BREAK;
         }
         assert(cpu->pc & 1 && "Unpredictable exception return");
         if (cpu->exc) {
@@ -530,7 +536,7 @@ void arm_cpu_execute(arm_t *arm) {
     arm_cpu_t *cpu = &arm->cpu;
     uint32_t icsr = cpu->scb.icsr, pc = cpu->pc - 2, opc, val;
     if (arm->debug && pc >= UINT32_C(0x80000000)) {
-        asm("int3");
+        DEBUG_BREAK;
     }
     uint8_t i;
     arm_exception_number_t curexc =
@@ -587,12 +593,12 @@ void arm_cpu_execute(arm_t *arm) {
     if (arm->debug) {
         fprintf(stderr, "PC %08X %04X\n", pc, opc);
         if (!arm->sync.slp) {
-            asm("int3");
+            DEBUG_BREAK;
         }
         //if (pc == UINT32_C(0x000010BC) ||
         //    pc == UINT32_C(0x000010CA) ||
         //    pc == UINT32_C(0x000010F6) ||
-        //    pc == UINT32_C(0x00001104)) asm("int3");
+        //    pc == UINT32_C(0x00001104)) DEBUG_BREAK;
     }
     switch (opc >> 12 & 0xF) {
         case 0:
@@ -1135,7 +1141,7 @@ void arm_cpu_execute(arm_t *arm) {
     }
     if (!cpu->pc || cpu->pc >= UINT32_C(0x80000000) ||
         cpu->pc - 2 == UINT32_C(0x00006A0C)) {
-        asm("int3");
+        DEBUG_BREAK;
     }
     if (unlikely(cpu->exc)) {
         cpu->exc = false;

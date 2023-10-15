@@ -112,7 +112,9 @@
 
 #endif
 
+#if 0
 #include "cmsis_compiler.h"               /* CMSIS compiler specific defines */
+#endif
 
 
 #ifdef __cplusplus
@@ -741,6 +743,7 @@ typedef struct
 #define __NVIC_SetPriorityGrouping(X) (void)(X)
 #define __NVIC_GetPriorityGrouping()  (0U)
 
+#if 0
 /**
   \brief   Enable Interrupt
   \details Enables a device specific interrupt in the NVIC interrupt controller.
@@ -1079,7 +1082,7 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
 #endif
 
 /*@} end of CMSIS_Core_SysTickFunctions */
-
+#endif
 
 
 

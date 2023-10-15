@@ -86,8 +86,6 @@ static void plug_devices(void) {
     add_reset_proc(panel_reset);
     add_reset_proc(spi_reset);
     add_reset_proc(uart_reset);
-    add_reset_proc(arm_mem_reset);
-    add_reset_proc(arm_cpu_reset);
     add_reset_proc(coproc_reset);
 
     gui_console_printf("[CEmu] Initialized Advanced Peripheral Bus...\n");
