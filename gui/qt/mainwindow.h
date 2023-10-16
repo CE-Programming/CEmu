@@ -421,6 +421,7 @@ private:
     void setAsicValidRevisions();
     void setAsicRevision(int index);
     void setAllowAnyRev(bool state);
+    void setPythonEdition(int state);
     void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
@@ -434,7 +435,7 @@ private:
     void setUIEditMode(bool mode);
     void setFullscreen(int value);
     void iconsLoad();
-    void showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev);
+    void showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev, bool python);
 
     // speed settings
     void setEmuSpeed(int value);
@@ -728,6 +729,7 @@ private:
     static const QString SETTING_DEBUGGER_AUTO_EQUATES;
     static const QString SETTING_DEBUGGER_ALLOW_ANY_REV;
     static const QString SETTING_DEBUGGER_NORM_OS;
+    static const QString SETTING_PYTHON_EDITION;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

@@ -87,7 +87,7 @@ static void plug_devices(void) {
     gui_console_printf("[CEmu] Initialized Advanced Peripheral Bus...\n");
 }
 
-static asic_rev_t report_reset(asic_rev_t loaded_rev) {
+static asic_rev_t report_reset(asic_rev_t loaded_rev, bool* python) {
     /* Parse boot code routines to determine version. */
     asic_rev_t default_rev = ASIC_REV_A;
     boot_ver_t boot_ver;
@@ -102,13 +102,18 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev) {
                 default_rev = rev;
             }
         }
+
+        /* By default, ignore Python Edition in certificate if boot code is too old */
+        if (loaded_rev == ASIC_REV_AUTO && default_rev < ASIC_REV_M) {
+            *python = false;
+        }
     }
     else {
         gui_console_printf("[CEmu] Could not determine boot code version.\n");
     }
     gui_console_printf("[CEmu] Default ASIC revision is Rev %c.\n", "AIM"[(int)default_rev - 1]);
 
-    loaded_rev = gui_handle_reset((gotVer ? &boot_ver : NULL), loaded_rev, default_rev);
+    loaded_rev = gui_handle_reset((gotVer ? &boot_ver : NULL), loaded_rev, default_rev, python);
     return (loaded_rev != ASIC_REV_AUTO) ? loaded_rev : default_rev;
 }
 
@@ -142,7 +147,7 @@ void asic_reset(void) {
     /* Update the Python state first, so it can be read by the reset handler if needed */
     static const uint16_t path[] = { 0x0330, 0x0430 };
     asic.python = !cert_field_find_path(mem.flash.block + 0x3B0001, SIZE_FLASH_SECTOR_64K, path, 2, NULL, NULL);
-    asic.revision = report_reset(ASIC_REV_AUTO);
+    asic.revision = report_reset(ASIC_REV_AUTO, &asic.python);
     set_features();
 
     for (unsigned int i = 0; i < reset_proc_count; i++) {
@@ -196,7 +201,8 @@ bool asic_restore(FILE *image) {
      && sched_restore(image)
      && fgetc(image) == EOF)
     {
-        (void)report_reset(asic.revision);
+        bool python = asic.python;
+        (void)report_reset(asic.revision, &python);
         return true;
     }
     return false;

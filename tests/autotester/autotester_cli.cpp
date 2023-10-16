@@ -30,10 +30,11 @@ namespace cemucore
         void gui_console_clear() {}
         void gui_console_printf(const char* format, ...) { (void)format; }
         void gui_console_err_printf(const char* format, ...) { (void)format; }
-        asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev) {
+        asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
             (void)boot_ver;
             (void)loaded_rev;
             (void)default_rev;
+            (void)python;
             return ASIC_REV_AUTO;
         }
     }

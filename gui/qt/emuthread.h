@@ -34,7 +34,8 @@ public:
     void setThrottle(bool state);
     void setAsicRev(int rev);
     void setAllowAnyRev(bool allow);
-    asic_rev_t handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev);
+    void setForcePython(Qt::CheckState state);
+    asic_rev_t handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, bool* python);
     void writeConsole(int console, const char *format, va_list args);
     void debugOpen(int reason, uint32_t addr);
     void save(emu_data_t fileType, const QString &filePath);
@@ -81,7 +82,7 @@ signals:
     void sendSpeed(int value);
 
     // state
-    void sendAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev);
+    void sendAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev, bool python);
     void tested(int status);
     void saved(bool success);
     void loaded(emu_state_t state, emu_data_t type);
@@ -138,6 +139,7 @@ private:
 
     std::atomic_int m_asicRev;
     std::atomic_bool m_allowAnyRev;
+    std::atomic<Qt::CheckState> m_forcePython;
 
     QQueue<quint16> m_keyQueue;
     QMutex m_keyQueueMutex;

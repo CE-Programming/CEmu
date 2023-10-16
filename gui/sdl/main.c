@@ -23,14 +23,18 @@ typedef struct {
 
 static const cemu_sdl_key_t *keymap = cemu_keymap;
 static asic_rev_t asic_rev = ASIC_REV_AUTO;
+static int8_t python_rev = -1;
 
 void gui_console_clear() {}
 void gui_console_printf(const char *format, ...) { (void)format; }
 void gui_console_err_printf(const char *format, ...) { (void)format; }
-asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev) {
+asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
     (void)boot_ver;
     (void)loaded_rev;
     (void)default_rev;
+    if (python_rev >= 0) {
+        *python = python_rev;
+    }
     return asic;
 }
 
@@ -214,6 +218,8 @@ int main(int argc, char **argv) {
             {"spi",        no_argument,       0,  's' },
             {"keymap",     required_argument, 0,  'k' },
             {"asic",       required_argument, 0,  'a' },
+            {"python",     no_argument,       0,  'p' },
+            {"nonpython",  no_argument,       0,  'P' },
             {}
         };
 
@@ -269,6 +275,16 @@ int main(int argc, char **argv) {
                         asic_rev = ASIC_REV_M;
                     }
                 }
+                break;
+
+            case 'p':
+                fprintf(stdout, "python: yes\n");
+                python_rev = true;
+                break;
+
+            case 'P':
+                fprintf(stdout, "python: no\n");
+                python_rev = false;
                 break;
 
             default:

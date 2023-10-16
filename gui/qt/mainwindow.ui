@@ -9516,6 +9516,16 @@ QPushButton:pressed {
                 </layout>
                </item>
                <item>
+                <widget class="QCheckBox" name="checkPythonEdition">
+                 <property name="text">
+                  <string>Emulate Python Edition</string>
+                 </property>
+                 <property name="tristate">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QCheckBox" name="checkSpi">
                  <property name="enabled">
                   <bool>true</bool>
