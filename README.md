@@ -28,11 +28,12 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Full screen modes (F11 key)
 * Emulation states for efficient saving / restoring
 * CE skins (colors like the real devices)
-* Available in English, French, Spanish, and Dutch
+* Available in English, French, Spanish, Dutch, and Chinese
 
 ### _Developer features_
 * Main options available via CLI arguments
 * IPC features when launching several CEmu processes
+* Choice of ASIC / HW revision emulation (A, pre-I, M+...)
 * Import/Export RAM, ROM, images...
 * Custom display refresh rate, FPS indicator
 * Custom emulation speed/throttling
@@ -45,6 +46,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Memory viewer/editor
 * CPU state/registers viewer/editor
 * LCD state/parameters viewer/editor
+* Tracking of flash cache misses and average access time
 * Memory visualizer (as fully customizable virtual LCDs)
 * Stack viewer
 * OP1-7 viewer
@@ -52,11 +54,11 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Variable Allocation Table (VAT) viewer
 * Variable list with preview and program launcher
 * TI-Basic program viewer with syntax-highlight and reformatting
+* TI-Basic program debugger with line-by-line stepping
 * Recent files list with ability to quickly resend
 * Cycle counter for benchmarking/profiling
 * Emulation of DMA and SPI (for optimal accuracy)
 * Misc. emulation (backlight, battery...)
-* Pre-I HW Rev. emulation toggle (IM 2 compatibility)
 * "Autotester" (automated unit testing, light scripting)
 
 ## How to build
