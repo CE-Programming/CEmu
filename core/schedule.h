@@ -77,6 +77,7 @@ uint32_t sched_event_next_cycle(void);
 uint32_t sched_dma_next_cycle(void);
 void sched_process_pending_events(void);
 void sched_process_pending_dma(uint8_t duration);
+void sched_rewind_cpu(uint8_t duration);
 void sched_clear(enum sched_item_id id);
 void sched_set(enum sched_item_id id, uint64_t ticks);
 void sched_repeat(enum sched_item_id id, uint64_t ticks);

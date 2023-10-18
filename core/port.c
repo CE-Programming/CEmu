@@ -65,5 +65,5 @@ void port_write_byte(uint16_t address, uint8_t value) {
     cpu.cycles += PORT_WRITE_DELAY;
     sched_process_pending_events(); /* make io ports consistent with mid-instruction state */
     port_write(address, port_loc, value, false);
-    cpu.cycles -= PORT_WRITE_DELAY - port_write_cycles[port_loc];
+    sched_rewind_cpu(PORT_WRITE_DELAY - port_write_cycles[port_loc]); /* safely handle underflow */
 }

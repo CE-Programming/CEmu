@@ -197,6 +197,27 @@ static void sched_second(enum sched_item_id id) {
     sched_update(SCHED_SECOND);
 }
 
+void sched_rewind_cpu(uint8_t duration) {
+    if (likely(cpu.cycles >= duration)) {
+        cpu.cycles -= duration;
+        return;
+    }
+
+    /* Cycles would underflow, so undo the effects of sched_second */
+    enum sched_item_id id;
+    for (id = SCHED_SECOND; id < SCHED_NUM_ITEMS; id++) {
+        if (sched_active(id)) {
+            sched.items[id].second++;
+        }
+    }
+    cpu.seconds--;
+    cpu.cycles += sched.clockRates[CLOCK_CPU] - duration;
+    cpu.eiDelay += sched.clockRates[CLOCK_CPU];
+    cpu.baseCycles -= sched.clockRates[CLOCK_CPU];
+    sched.items[SCHED_SECOND].second = 0; /* Don't use sched_repeat! */
+    sched_update_next(SCHED_SECOND); /* All other events are >= 1 second now */
+}
+
 void sched_set_clock(enum clock_id clock, uint32_t new_rate) {
     enum sched_item_id id;
     struct sched_item *item;
