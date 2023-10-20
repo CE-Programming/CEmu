@@ -79,9 +79,11 @@ static const panel_gamma_t gamma_presets[4][2] = {
     { GAMMA_PARAMS(1, 3,  129, 128, 126, 83, 65, 45, 41, 10,  42, 32, 11,  16, 6,  43, 20, 11),
       GAMMA_PARAMS(0, 3,  129, 128, 126, 85, 64, 45, 41, 10,  43, 33, 12,  17, 7,  43, 20, 11) },
     /* G1.8 */
-    /* TODO */ { 0 },
+    { GAMMA_PARAMS(0, 0,  129, 128, 108, 65, 51, 34, 31, 16,  39, 32, 11,  16, 7,  43, 22, 12),
+      GAMMA_PARAMS(0, 0,  129, 128, 108, 65, 51, 34, 31, 16,  39, 32, 11,  16, 7,  43, 22, 12) },
     /* G2.5 */
-    /* TODO */ { 0 },
+    { GAMMA_PARAMS(0, 0,  129, 128, 125, 69, 54, 40, 38, 16,  45, 37, 11,  15, 5,  39, 22, 11),
+      GAMMA_PARAMS(0, 0,  129, 128, 125, 69, 54, 40, 38, 16,  45, 37, 11,  15, 5,  39, 22, 11) },
     /* G1.0 */
     { GAMMA_PARAMS(0, 0,  129, 84, 82, 56, 45, 32, 27, 16,  36, 31, 12,  17, 8,  43, 19, 10),
       GAMMA_PARAMS(0, 0,  129, 84, 82, 56, 45, 32, 27, 16,  36, 31, 12,  17, 8,  43, 19, 10) }
@@ -279,10 +281,11 @@ static void panel_generate_gamma_curve(float curve[64], const panel_gamma_t *par
 }
 
 static void panel_generate_luts(void) {
-    /* Degree-7 polynomial mapping voltage to grayscale level */
+    /* Degree-11 monotonic polynomial mapping voltage to grayscale level */
     static const float poly_coeffs[] = {
-        177.929585f, -381.708019f, 298.312928f, -117.553824f,
-        31.5682476f, -4.12354072f, 0.735548594f, -0.00151918877f + 1.0f / 512
+        -6.152751e+03f, 3.509293e+04, -8.592034e+04, 1.179787e+05f,
+        -9.970368e+04f, 5.365410e+04f, -1.842299e+04f, 3.923620e+03f,
+        -4.768793e+02f, 2.828117e+01f, -3.968704e-11f, -1.998141e-03f + 0.5f / 256
     };
 
     if (!unlikely(panel.gammaDirty)) {
@@ -300,7 +303,8 @@ static void panel_generate_luts(void) {
             for (size_t i = 1; i < sizeof(poly_coeffs) / sizeof(poly_coeffs[0]); i++) {
                 adjusted = adjusted * gamma + poly_coeffs[i];
             }
-            panel.gammaLut[PANEL_GREEN][c] = adjusted < 1.0f ? (uint8_t)(adjusted * 256.0f) : 255;
+            assert(adjusted < 1.0f);
+            panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(adjusted * 256.0f);
         }
     } else {
         for (uint8_t c = 0; c < 64; c++) {
@@ -559,7 +563,7 @@ void panel_update_pixel_rgb(uint8_t red, uint8_t green, uint8_t blue) {
     if (unlikely(panel.params.COLMOD.RGB == 5)) {
         panel_update_pixel_16bpp(red, green, blue);
     } else {
-        panel_update_pixel_18bpp(red << 1, green, blue << 1);
+        panel_update_pixel_18bpp((red << 1) | (red >> 4), green, (blue << 1) | (blue >> 4));
     }
 }
 
