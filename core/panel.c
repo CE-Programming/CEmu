@@ -281,11 +281,21 @@ static void panel_generate_gamma_curve(float curve[64], const panel_gamma_t *par
 }
 
 static void panel_generate_luts(void) {
-    /* Degree-11 monotonic polynomial mapping voltage to grayscale level */
-    static const float poly_coeffs[] = {
-        -6.152751e+03f, 3.509293e+04, -8.592034e+04, 1.179787e+05f,
-        -9.970368e+04f, 5.365410e+04f, -1.842299e+04f, 3.923620e+03f,
-        -4.768793e+02f, 2.828117e+01f, -3.968704e-11f, -1.998141e-03f + 0.5f / 256
+    /* Monotonic cubic spline mapping voltage to grayscale level */
+    static const struct spline {
+        float gamma, a, b, c, d;
+    } spline[] = {
+        { 0.0000000f,   0.9429345f,  0.9091704f, 0.4518956f, 0.00000000f + 0.5f / 255 },
+        { 0.0620155f, -10.4345504f,  1.0846001f, 0.5755403f, 0.03174603f + 0.5f / 255 },
+        { 0.1145995f,  11.5803859f, -0.5614705f, 0.6030486f, 0.06349206f + 0.5f / 255 },
+        { 0.2843669f,  -8.2473606f,  5.3364470f, 1.4136841f, 0.20634921f + 0.5f / 255 },
+        { 0.3488372f,  -6.5355189f,  3.7413179f, 1.9989302f, 0.31746032f + 0.5f / 255 },
+        { 0.5000000f, -65.9879198f,  0.7775361f, 2.6820128f, 0.68253968f + 0.5f / 255 },
+        { 0.5428295f,   1.1334623f, -7.7011443f, 2.3854784f, 0.79365079f + 0.5f / 255 },
+        { 0.6234496f, -74.7865571f, -1.6524155f, 1.1658447f, 0.93650794f + 0.5f / 255 },
+        { 0.6821705f,   1.1437826f, -0.8245875f, 0.1981567f, 0.98412698f + 0.5f / 255 },
+        { 0.9224806f,   0.0000000f,  0.0000000f, 0.0000000f, 1.00000000f + 0.5f / 255 },
+        { 1.0000000f,   0.0000000f,  0.0000000f, 0.0000000f, 1.00000000f + 0.5f / 255 }
     };
 
     if (!unlikely(panel.gammaDirty)) {
@@ -297,14 +307,23 @@ static void panel_generate_luts(void) {
         float gamma_pos[64], gamma_neg[64];
         panel_generate_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
         panel_generate_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
+        const struct spline *piece = &spline[0];
         for (uint8_t c = 0; c < 64; c++) {
             float gamma = (gamma_pos[c] + gamma_neg[c]) * 0.5f;
-            float adjusted = poly_coeffs[0];
-            for (size_t i = 1; i < sizeof(poly_coeffs) / sizeof(poly_coeffs[0]); i++) {
-                adjusted = adjusted * gamma + poly_coeffs[i];
+            assert(gamma >= 0.0f && gamma <= 1.0f);
+            if (unlikely(gamma < piece->gamma)) {
+                do {
+                    piece--;
+                } while (gamma < piece->gamma);
+            } else {
+                while (gamma > piece[1].gamma) {
+                    piece++;
+                }
             }
-            assert(adjusted < 1.0f);
-            panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(adjusted * 256.0f);
+            float diff = gamma - piece->gamma;
+            float grayscale = ((piece->a * diff + piece->b) * diff + piece->c) * diff + piece->d;
+            assert(grayscale >= 0.0f && grayscale < 256.0f / 255.0f);
+            panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(grayscale * 255.0f);
         }
     } else {
         for (uint8_t c = 0; c < 64; c++) {
