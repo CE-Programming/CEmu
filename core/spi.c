@@ -266,7 +266,7 @@ void spi_reset(void) {
     spi_set_device_funcs();
 
     sched.items[SCHED_SPI].callback.event = spi_event;
-    sched.items[SCHED_SPI].clock = CLOCK_12M;
+    sched.items[SCHED_SPI].clock = CLOCK_24M;
     sched_clear(SCHED_SPI);
 }
 
