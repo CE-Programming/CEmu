@@ -866,7 +866,7 @@ static void cpu_halt(void) {
 
 void cpu_restore_next(void) {
     if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || cpu.abort != CPU_ABORT_NONE) {
-        cpu.next = cpu.cycles;
+        cpu.next = 0; /* always applies, even after cycle rewind during port writes */
     } else if (cpu.IEF_wait) {
         cpu.next = cpu.eiDelay; /* execute one instruction */
     } else {
@@ -898,8 +898,12 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.IEF2 = true;
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
-            cpu_prefetch_discard();
-            cpu.cycles += 2;
+            if (cpu.halted) {
+                cpu.cycles++;
+            } else {
+                cpu_prefetch_discard();
+            }
+            cpu.cycles++;
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.halted = cpu.inBlock = false;
             if (cpu.NMI) {
@@ -1126,6 +1130,7 @@ void cpu_execute(void) {
                             continue;
                         }
                         if (context.z == 6) { /* HALT */
+                            cpu.cycles++;
                             cpu_halt();
                         }
                     } else {
@@ -1493,6 +1498,7 @@ void cpu_execute(void) {
                                                                     r->A = r->MBASE;
                                                                     break;
                                                                 case 6: /* SLP */
+                                                                    cpu.cycles++;
                                                                     cpu_halt();
                                                                     break;
                                                                 case 7: /* RSMIX */
