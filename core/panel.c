@@ -208,8 +208,9 @@ static void panel_sw_reset(void) {
     panel.tear = false;
 }
 
-static void panel_hw_reset(void) {
+void panel_hw_reset(void) {
     panel.mac = 0;
+    panel.ifBpp = 0x66;
     panel_sw_reset();
 }
 

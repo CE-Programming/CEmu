@@ -83,6 +83,7 @@ void panel_reset(void);
 bool panel_restore(FILE *image);
 bool panel_save(FILE *image);
 
+void panel_hw_reset(void);
 bool panel_hsync(void);
 bool panel_vsync(void);
 bool panel_refresh_pixel(void);

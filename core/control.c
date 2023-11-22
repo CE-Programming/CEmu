@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "cpu.h"
 #include "lcd.h"
+#include "panel.h"
 #include "spi.h"
 #include "bus.h"
 #include "debug/debug.h"
@@ -144,6 +145,9 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 case 1: /* Battery is bad */
                     control.readBatteryStatus = control.setBatteryStatus == BATTERY_DISCHARGED ? 0 : byte & 0x80 ? 0 : 3;
                     break;
+            }
+            if ((control.ports[index] & ~byte) >> 2 & 1) {
+                panel_hw_reset();
             }
             if (asic.python && (control.ports[index] ^ byte) >> 4 & 1) {
                 spi_device_select(byte >> 4 & 1);
