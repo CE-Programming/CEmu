@@ -139,6 +139,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x07:
             control.readBatteryStatus = (byte & 0x90) ? 1 : 0;
+            control.ports[index] = byte;
             break;
         case 0x09:
             switch (control.readBatteryStatus) {
@@ -163,9 +164,9 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             control.readBatteryStatus += (control.readBatteryStatus == 3) ? 1 : 0;
             control.ports[index] = byte;
             break;
-        case 0x0B:
         case 0x0C:
             control.readBatteryStatus = 0;
+            control.ports[index] = byte;
             break;
         case 0x0D:
             /* This bit disables vram and makes it garbage */
