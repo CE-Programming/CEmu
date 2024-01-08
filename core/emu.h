@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #include "schedule.h"
-#include "asic.h"
+#include "bootver.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -41,6 +41,16 @@ void emu_exit(void);                                      /* exit emulation */
 void gui_console_clear(void);                             /* sent to clear the console */
 void gui_console_printf(const char *format, ...);         /* printf from the core to stdout */
 void gui_console_err_printf(const char *format, ...);     /* printf from the core to stderr */
+
+/* called at reset or state load, indicates hardware info and allows specifying a revision on reset
+ * params:
+ *   boot_ver: boot code version if found, else NULL
+ *   loaded_rev: ASIC_REV_AUTO on reset, or loaded revision on state load
+ *   default_rev: default revision to use when returning ASIC_REV_AUTO
+ *   python: determined edition based on certificate, can be overridden by updating its value
+ * returns:
+ *   hardware revision to use; ignored when loading state */
+asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python);
 
 #ifdef DEBUG_SUPPORT
 void gui_debug_open(int reason, uint32_t data);           /* open the gui debugger */

@@ -3091,6 +3091,103 @@
                  </property>
                 </widget>
                </item>
+               <item row="3" column="0">
+                <widget class="QLineEdit" name="flashAvgView">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>65</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>75</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>MS Shell Dlg 2</family>
+                   <pointsize>9</pointsize>
+                  </font>
+                 </property>
+                 <property name="inputMask">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string notr="true"/>
+                 </property>
+                 <property name="maxLength">
+                  <number>32767</number>
+                 </property>
+                 <property name="frame">
+                  <bool>true</bool>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="label_34">
+                 <property name="text">
+                  <string>Avg. Flash</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="flashMissesView">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>65</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>75</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>MS Shell Dlg 2</family>
+                   <pointsize>9</pointsize>
+                  </font>
+                 </property>
+                 <property name="inputMask">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string notr="true"/>
+                 </property>
+                 <property name="maxLength">
+                  <number>32767</number>
+                 </property>
+                 <property name="frame">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="3">
+                <widget class="QLabel" name="label_35">
+                 <property name="text">
+                  <string>Flash Cache Misses</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -9227,53 +9324,10 @@ QPushButton:pressed {
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="1">
-                  <widget class="QSpinBox" name="guiSkip">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="focusPolicy">
-                    <enum>Qt::ClickFocus</enum>
-                   </property>
-                   <property name="suffix">
-                    <string/>
-                   </property>
-                   <property name="minimum">
-                    <number>0</number>
-                   </property>
-                   <property name="maximum">
-                    <number>30</number>
-                   </property>
-                   <property name="value">
-                    <number>0</number>
-                   </property>
-                   <property name="displayIntegerBase">
-                    <number>10</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QSpinBox" name="emulationSpeedSpin">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="suffix">
-                    <string>%</string>
-                   </property>
-                   <property name="maximum">
-                    <number>500</number>
-                   </property>
-                   <property name="value">
-                    <number>100</number>
-                   </property>
-                   <property name="displayIntegerBase">
-                    <number>10</number>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="label_24">
+                   <property name="text">
+                    <string>Update status:</string>
                    </property>
                   </widget>
                  </item>
@@ -9287,16 +9341,6 @@ QPushButton:pressed {
                    </property>
                    <property name="text">
                     <string>Frame skip:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLabel" name="maxFps">
-                   <property name="text">
-                    <string>Actual FPS:</string>
-                   </property>
-                   <property name="textFormat">
-                    <enum>Qt::PlainText</enum>
                    </property>
                   </widget>
                  </item>
@@ -9349,10 +9393,32 @@ QPushButton:pressed {
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="label_24">
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="emulationSpeedSpin">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="suffix">
+                    <string>%</string>
+                   </property>
+                   <property name="maximum">
+                    <number>500</number>
+                   </property>
+                   <property name="value">
+                    <number>100</number>
+                   </property>
+                   <property name="displayIntegerBase">
+                    <number>10</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_33">
                    <property name="text">
-                    <string>Update status:</string>
+                    <string>ASIC revision:</string>
                    </property>
                   </widget>
                  </item>
@@ -9378,7 +9444,86 @@ QPushButton:pressed {
                    </property>
                   </widget>
                  </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="guiSkip">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
+                   <property name="suffix">
+                    <string/>
+                   </property>
+                   <property name="minimum">
+                    <number>0</number>
+                   </property>
+                   <property name="maximum">
+                    <number>30</number>
+                   </property>
+                   <property name="value">
+                    <number>0</number>
+                   </property>
+                   <property name="displayIntegerBase">
+                    <number>10</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QComboBox" name="comboBoxAsicRev">
+                   <item>
+                    <property name="text">
+                     <string>Auto</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rev A</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rev I</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rev M</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="maxFps">
+                   <property name="text">
+                    <string>Actual FPS:</string>
+                   </property>
+                   <property name="textFormat">
+                    <enum>Qt::PlainText</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="2">
+                  <widget class="QLabel" name="currAsicRev">
+                   <property name="text">
+                    <string>Current:</string>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkPythonEdition">
+                 <property name="text">
+                  <string>Emulate Python Edition</string>
+                 </property>
+                 <property name="tristate">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QCheckBox" name="checkSpi">
@@ -9482,13 +9627,6 @@ QPushButton:pressed {
                  </item>
                 </layout>
                </item>
-               <item row="1" column="1">
-                <widget class="QCheckBox" name="checkPreI">
-                 <property name="text">
-                  <string>Emulate Pre-Revision I (IM 2)</string>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="0">
                 <widget class="QCheckBox" name="checkDisableSoftCommands">
                  <property name="focusPolicy">
@@ -9496,16 +9634,6 @@ QPushButton:pressed {
                  </property>
                  <property name="text">
                   <string>Enable software commands</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QCheckBox" name="checkNormOs">
-                 <property name="toolTip">
-                  <string>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</string>
-                 </property>
-                 <property name="text">
-                  <string>Assume normal OS operation</string>
                  </property>
                 </widget>
                </item>
@@ -9526,6 +9654,26 @@ QPushButton:pressed {
                  </property>
                  <property name="text">
                   <string>Auto. save and restore debug state</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QCheckBox" name="checkNormOs">
+                 <property name="toolTip">
+                  <string>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</string>
+                 </property>
+                 <property name="text">
+                  <string>Assume normal OS operation</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="checkAllowAnyRev">
+                 <property name="toolTip">
+                  <string>May cause problems if boot code is incompatible. Use only if you know what you're doing.</string>
+                 </property>
+                 <property name="text">
+                  <string>Allow any ASIC revision</string>
                  </property>
                 </widget>
                </item>

@@ -73,6 +73,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/asic.c ../../core/asic.h
     ../../core/atomics.h
     ../../core/backlight.c ../../core/backlight.h
+    ../../core/bootver.c ../../core/bootver.h
     ../../core/bus.c ../../core/bus.h
     ../../core/cert.c ../../core/cert.h
     ../../core/control.c ../../core/control.h
@@ -90,6 +91,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/mem.c ../../core/mem.h
     ../../core/misc.c ../../core/misc.h
     ../../core/os/os.h
+    ../../core/panel.c ../../core/panel.h
     ../../core/port.c ../../core/port.h
     ../../core/realclock.c ../../core/realclock.h
     ../../core/registers.c ../../core/registers.h
@@ -97,6 +99,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/sha256.c ../../core/sha256.h
     ../../core/spi.c ../../core/spi.h
     ../../core/timers.c ../../core/timers.h
+    ../../core/uart.c ../../core/uart.h
     ../../core/usb/device.h
     ../../core/usb/disconnected.c
     ../../core/usb/dusb.c
@@ -332,6 +335,8 @@ qt_add_resources(CEmu "skins"
     FILES
         "resources/skin/ti83pce.png"
         "resources/skin/ti84pce.png"
+        "resources/skin/ti83pce_ep.png"
+        "resources/skin/ti84pce_py.png"
 )
 qt_add_resources(CEmu "setup"
     PREFIX "/setup"

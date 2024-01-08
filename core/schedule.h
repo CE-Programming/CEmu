@@ -9,8 +9,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_1M,
-                CLOCK_32K, CLOCK_1, CLOCK_NUM_ITEMS };
+enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_3M,
+                CLOCK_1M, CLOCK_32K, CLOCK_1, CLOCK_NUM_ITEMS };
 
 enum sched_item_id {
     SCHED_SECOND,
@@ -27,9 +27,11 @@ enum sched_item_id {
     SCHED_RTC,
     SCHED_USB,
     SCHED_USB_DEVICE,
+    SCHED_SPI,
+    SCHED_UART,
 
     SCHED_FIRST_EVENT = SCHED_RUN,
-    SCHED_LAST_EVENT = SCHED_USB_DEVICE,
+    SCHED_LAST_EVENT = SCHED_UART,
 
     SCHED_PREV_MA,
 
@@ -75,6 +77,7 @@ uint32_t sched_event_next_cycle(void);
 uint32_t sched_dma_next_cycle(void);
 void sched_process_pending_events(void);
 void sched_process_pending_dma(uint8_t duration);
+void sched_rewind_cpu(uint8_t duration);
 void sched_clear(enum sched_item_id id);
 void sched_set(enum sched_item_id id, uint64_t ticks);
 void sched_repeat(enum sched_item_id id, uint64_t ticks);

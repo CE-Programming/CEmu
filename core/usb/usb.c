@@ -213,7 +213,11 @@ static uint8_t usb_ep0_idx_update(void) {
 static uint8_t usb_read(uint16_t pio, bool peek) {
     uint8_t value = 0;
     if (pio < sizeof usb.regs) {
-        value = ((uint8_t *)&usb.regs)[pio];
+        if (unlikely(usb.regs.dma_ctrl >> 31 & usb.regs.phy_tmsr) && pio >= 0x044 && pio < 0x1C8) {
+            value = 0;
+        } else {
+            value = ((uint8_t *)&usb.regs)[pio];
+        }
     } else if (pio < (peek ? 0x1d8 : 0x1d4)) {
         value = usb.ep0_data[peek ? (usb.ep0_idx & 4) ^ (pio & 7) : (usb_ep0_idx_update() & 4) | (pio & 3)];
     }
@@ -223,6 +227,9 @@ static uint8_t usb_read(uint16_t pio, bool peek) {
 static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     uint8_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
+    if (unlikely(usb.regs.dma_ctrl >> 31 & usb.regs.phy_tmsr) && index >= (0x044 >> 2) && index < (0x1C8 >> 2)) {
+        return;
+    }
     (void)poke;
     switch (index) {
         case 0x010 >> 2: // USBCMD - USB Command Register
@@ -444,6 +451,7 @@ void usb_reset(void) {
     usb.regs.otgisr                     = 0;
     clear(usb.regs.rsvd3);
     usb.regs.isr                        = 0;
+    usb.regs.imr                        = 0;
     clear(usb.regs.rsvd4);
     usb.regs.dev_ctrl                   = 0x00000020;
     usb.regs.dev_addr                   = 0;

@@ -56,8 +56,6 @@ uint32_t cpu_address_mode(uint32_t address, bool mode) {
 }
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
-    /* rawPC the PC after the next prefetch (which we do late), before adding MBASE. */
-    cpu.registers.rawPC = cpu_mask_mode(address + 1, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 }
@@ -814,9 +812,7 @@ void cpu_init(void) {
 }
 
 void cpu_reset(void) {
-    bool preI = cpu.preI;
     memset(&cpu, 0, sizeof(cpu));
-    cpu.preI = preI;
     cpu_restore_next();
     cpu_flush(0, false);
     gui_console_printf("[CEmu] CPU reset.\n");
@@ -870,7 +866,7 @@ static void cpu_halt(void) {
 
 void cpu_restore_next(void) {
     if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || cpu.abort != CPU_ABORT_NONE) {
-        cpu.next = cpu.cycles;
+        cpu.next = 0; /* always applies, even after cycle rewind during port writes */
     } else if (cpu.IEF_wait) {
         cpu.next = cpu.eiDelay; /* execute one instruction */
     } else {
@@ -902,8 +898,12 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.IEF2 = true;
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
-            cpu_prefetch_discard();
-            cpu.cycles += 2;
+            if (cpu.halted) {
+                cpu.cycles++;
+            } else {
+                cpu_prefetch_discard();
+            }
+            cpu.cycles++;
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.halted = cpu.inBlock = false;
             if (cpu.NMI) {
@@ -914,7 +914,7 @@ void cpu_execute(void) {
                 if (cpu.IM == 2) {
                     cpu_interrupt(0x38);
                 } else {
-                    if (cpu.preI && cpu.IM == 3) {
+                    if (asic.im2 && cpu.IM == 3) {
                         cpu.cycles++;
                         cpu_interrupt(cpu_read_word(r->I << 8 | (bus_rand() & 0xFF)));
                     } else {
@@ -1130,6 +1130,7 @@ void cpu_execute(void) {
                             continue;
                         }
                         if (context.z == 6) { /* HALT */
+                            cpu.cycles++;
                             cpu_halt();
                         }
                     } else {
@@ -1497,6 +1498,7 @@ void cpu_execute(void) {
                                                                     r->A = r->MBASE;
                                                                     break;
                                                                 case 6: /* SLP */
+                                                                    cpu.cycles++;
                                                                     cpu_halt();
                                                                     break;
                                                                 case 7: /* RSMIX */

@@ -4,6 +4,8 @@
 #include "mem.h"
 #include "cpu.h"
 #include "lcd.h"
+#include "panel.h"
+#include "spi.h"
 #include "bus.h"
 #include "debug/debug.h"
 #include "usb/usb.h"
@@ -27,7 +29,7 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             value = control.readBatteryStatus;
             break;
         case 0x03:
-            value = get_device_type();
+            value = get_device_type() | asic.serFlash << 4;
             break;
         case 0x06:
             value = control.protectedPortsUnlocked;
@@ -137,6 +139,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x07:
             control.readBatteryStatus = (byte & 0x90) ? 1 : 0;
+            control.ports[index] = byte;
             break;
         case 0x09:
             switch (control.readBatteryStatus) {
@@ -144,25 +147,26 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                     control.readBatteryStatus = control.setBatteryStatus == BATTERY_DISCHARGED ? 0 : byte & 0x80 ? 0 : 3;
                     break;
             }
+            if ((control.ports[index] & ~byte) >> 2 & 1) {
+                panel_hw_reset();
+            }
+            if (asic.python && (control.ports[index] ^ byte) >> 4 & 1) {
+                spi_device_select(byte >> 4 & 1);
+            }
             control.ports[index] = byte;
 
-            if (byte == 0xD4) {
+            if ((byte & ~(1 << 4)) == 0xC4) {
                 control.ports[0] |= 1 << 6;
                 cpu_crash("entering sleep mode");
-#ifdef DEBUG_SUPPORT
-                if (debug.openOnReset) {
-                    debug_open(DBG_MISC_RESET, cpu.registers.PC);
-                }
-#endif
             }
             break;
         case 0x0A:
             control.readBatteryStatus += (control.readBatteryStatus == 3) ? 1 : 0;
             control.ports[index] = byte;
             break;
-        case 0x0B:
         case 0x0C:
             control.readBatteryStatus = 0;
+            control.ports[index] = byte;
             break;
         case 0x0D:
             /* This bit disables vram and makes it garbage */
@@ -258,7 +262,10 @@ bool flash_unlocked(void) {
 }
 
 bool unprivileged_code(void) {
-    return cpu.registers.rawPC > control.privileged &&
-        (cpu.registers.rawPC < control.protectedStart ||
-         cpu.registers.rawPC > control.protectedEnd);
+    /* rawPC the PC after the next prefetch (which we do late), before (after on revM) adding MBASE. */
+    uint32_t rawPC = cpu.registers.PC + 1;
+    bool mode = cpu.ADL;
+    rawPC = asic.serFlash ? cpu_address_mode(rawPC, mode) : cpu_mask_mode(rawPC, mode);
+    return rawPC > control.privileged && (rawPC < control.protectedStart ||
+                                          rawPC > control.protectedEnd);
 }

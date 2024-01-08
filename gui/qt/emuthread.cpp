@@ -1,5 +1,6 @@
 #include "emuthread.h"
 
+#include "../../core/bootver.h"
 #include "../../core/control.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
@@ -43,6 +44,10 @@ void gui_debug_open(int reason, uint32_t data) {
 
 void gui_debug_close(void) {
     emu->debugDisable();
+}
+
+asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
+    return emu->handleReset(boot_ver, loaded_rev, default_rev, python);
 }
 
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
@@ -215,6 +220,32 @@ void EmuThread::unblock() {
     m_mutex.unlock();
 }
 
+asic_rev_t EmuThread::handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, bool* python) {
+    // Build a list of supported revisions
+    QList<int> supportedRevs;
+    supportedRevs.reserve(ASIC_REV_M - ASIC_REV_A + 1);
+    for (int rev = ASIC_REV_A; rev <= ASIC_REV_M; rev++) {
+        if (bootver_check_rev(bootVer, (asic_rev_t)rev)) {
+            supportedRevs.push_back(rev);
+        }
+    }
+
+    // If CPU reset, override the ASIC revision
+    if (loadedRev == ASIC_REV_AUTO) {
+        loadedRev = (asic_rev_t)m_asicRev.load();
+        if (!m_allowAnyRev.load() && !supportedRevs.contains((int)loadedRev)) {
+            loadedRev = ASIC_REV_AUTO;
+        }
+        Qt::CheckState forcePython = m_forcePython.load();
+        if (forcePython != Qt::PartiallyChecked) {
+            *python = (forcePython == Qt::Checked);
+        }
+    }
+    emit sendAsicRevInfo(supportedRevs, (int)loadedRev, (int)defaultRev, *python);
+
+    return (loadedRev != ASIC_REV_AUTO) ? loadedRev : defaultRev;
+}
+
 void EmuThread::reset() {
     req(RequestReset);
 }
@@ -293,6 +324,18 @@ void EmuThread::setSpeed(int value) {
 void EmuThread::setThrottle(bool state) {
     std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
     m_throttle = state;
+}
+
+void EmuThread::setAsicRev(int rev) {
+    m_asicRev.store(rev);
+}
+
+void EmuThread::setAllowAnyRev(bool allow) {
+    m_allowAnyRev.store(allow);
+}
+
+void EmuThread::setForcePython(Qt::CheckState state) {
+    m_forcePython.store(state);
 }
 
 void EmuThread::debugOpen(int reason, uint32_t data) {

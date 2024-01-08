@@ -400,7 +400,7 @@ private:
     void setKeymap(const QString &value);
     void setKeypadColor(unsigned int color);
     void setKeypadHolding(bool enabled);
-    void setCalcSkinTopFromType();
+    void setCalcSkinTopFromType(bool python);
 
     // settings
     void setRom(const QString &path);
@@ -418,7 +418,10 @@ private:
     void setMenuBarState(bool state);
     void setStatusBarState(bool state);
     void setUIBoundaries(bool state);
-    void setPreRevisionI(bool state);
+    void setAsicValidRevisions();
+    void setAsicRevision(int index);
+    void setAllowAnyRev(bool state);
+    void setPythonEdition(int state);
     void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
@@ -432,6 +435,7 @@ private:
     void setUIEditMode(bool mode);
     void setFullscreen(int value);
     void iconsLoad();
+    void showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev, bool python);
 
     // speed settings
     void setEmuSpeed(int value);
@@ -668,6 +672,8 @@ private:
     bool m_optimizeRecording;
     bool m_portableActivated = false;
     bool m_ignoreDmaCycles;
+    QList<int> m_supportedRevs;
+    bool m_allowAnyRev;
     bool m_normalOs;
     bool m_setup = false;
     int m_fullscreen = FULLSCREEN_NONE;
@@ -721,8 +727,9 @@ private:
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
     static const QString SETTING_DEBUGGER_AUTO_EQUATES;
-    static const QString SETTING_DEBUGGER_PRE_I;
+    static const QString SETTING_DEBUGGER_ALLOW_ANY_REV;
     static const QString SETTING_DEBUGGER_NORM_OS;
+    static const QString SETTING_PYTHON_EDITION;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

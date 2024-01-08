@@ -186,6 +186,7 @@ if(macx) {
 SOURCES += \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
+    ../../core/bootver.c \
     ../../core/cpu.c \
     ../../core/keypad.c \
     ../../core/lcd.c \
@@ -209,7 +210,9 @@ SOURCES += \
     ../../core/vat.c \
     ../../core/emu.c \
     ../../core/extras.c \
+    ../../core/panel.c \
     ../../core/spi.c \
+    ../../core/uart.c \
     ../../core/debug/debug.c \
     ../../core/debug/zdis/zdis.c \
     ipc.cpp \
@@ -285,6 +288,7 @@ SOURCES +=  ../../tests/autotester/autotester_cli.cpp \
 HEADERS  += \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
+    ../../core/bootver.h \
     ../../core/cpu.h \
     ../../core/atomics.h \
     ../../core/defines.h \
@@ -298,6 +302,7 @@ HEADERS  += \
     ../../core/misc.h \
     ../../core/schedule.h \
     ../../core/timers.h \
+    ../../core/uart.h \
     ../../core/usb/device.h \
     ../../core/usb/fotg210.h \
     ../../core/usb/usb.h \
@@ -311,6 +316,7 @@ HEADERS  += \
     ../../core/vat.h \
     ../../core/extras.h \
     ../../core/os/os.h \
+    ../../core/panel.h \
     ../../core/spi.h \
     ../../core/debug/debug.h \
     ../../core/debug/zdis/zdis.h \

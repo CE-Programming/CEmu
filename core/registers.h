@@ -144,7 +144,6 @@ typedef struct {
             uint8_t PCU;
         };
     };
-    uint32_t rawPC;
     uint16_t I;
     uint8_t R, MBASE;
 } eZ80registers_t;

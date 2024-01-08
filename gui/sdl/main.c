@@ -22,10 +22,21 @@ typedef struct {
 } cemu_sdl_t;
 
 static const cemu_sdl_key_t *keymap = cemu_keymap;
+static asic_rev_t asic_rev = ASIC_REV_AUTO;
+static int8_t python_rev = -1;
 
 void gui_console_clear() {}
 void gui_console_printf(const char *format, ...) { (void)format; }
 void gui_console_err_printf(const char *format, ...) { (void)format; }
+asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
+    (void)boot_ver;
+    (void)loaded_rev;
+    (void)default_rev;
+    if (python_rev >= 0) {
+        *python = python_rev;
+    }
+    return asic;
+}
 
 void sdl_update_lcd(void *data) {
     sdl_t *sdl = (sdl_t*)data;
@@ -206,10 +217,13 @@ int main(int argc, char **argv) {
             {"limit",      required_argument, 0,  'l' },
             {"spi",        no_argument,       0,  's' },
             {"keymap",     required_argument, 0,  'k' },
+            {"asic",       required_argument, 0,  'a' },
+            {"python",     no_argument,       0,  'p' },
+            {"nonpython",  no_argument,       0,  'P' },
             {}
         };
 
-        c = getopt_long(argc, argv, "fr:i:l:sk:", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:l:sk:a:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -248,6 +262,29 @@ int main(int argc, char **argv) {
                 if (!strcmp(optarg, "smartpad")) {
                     keymap = smartpad_keymap;
                 }
+                break;
+
+            case 'a':
+                if (strlen(optarg) == 1) {
+                    char rev = toupper(optarg[0]);
+                    if (rev < 'I') {
+                        asic_rev = ASIC_REV_A;
+                    } else if (rev < 'M') {
+                        asic_rev = ASIC_REV_I;
+                    } else {
+                        asic_rev = ASIC_REV_M;
+                    }
+                }
+                break;
+
+            case 'p':
+                fprintf(stdout, "python: yes\n");
+                python_rev = true;
+                break;
+
+            case 'P':
+                fprintf(stdout, "python: no\n");
+                python_rev = false;
                 break;
 
             default:

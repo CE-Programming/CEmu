@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <QtGui/QScreen>
+#include <QtGui/QStandardItemModel>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
@@ -47,8 +48,9 @@ const QString MainWindow::SETTING_DEBUGGER_RAM_ASCII        = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_AUTO_EQUATES     = QStringLiteral("Debugger/auto_equates");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
+const QString MainWindow::SETTING_DEBUGGER_ALLOW_ANY_REV    = QStringLiteral("Debugger/allow_any_rev");
 const QString MainWindow::SETTING_DEBUGGER_NORM_OS          = QStringLiteral("Debugger/norm_os");
-const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
+const QString MainWindow::SETTING_PYTHON_EDITION            = QStringLiteral("python_edition");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
@@ -455,6 +457,8 @@ void MainWindow::setFont(int fontSize) {
     ui->lcdbaseView->setFont(monospace);
     ui->lcdcurrView->setFont(monospace);
     ui->cycleView->setFont(monospace);
+    ui->flashAvgView->setFont(monospace);
+    ui->flashMissesView->setFont(monospace);
 }
 
 void MainWindow::setKeypadColor(unsigned int color) {
@@ -467,10 +471,14 @@ void MainWindow::setKeypadHolding(bool enabled) {
     m_config->setValue(SETTING_KEYPAD_HOLDING, enabled);
 }
 
-void MainWindow::setCalcSkinTopFromType() {
-    bool is83 = get_device_type() == TI83PCE;
-    ui->calcSkinTop->setStyleSheet(is83 ? QStringLiteral(".QFrame { border-image: url(:/skin/resources/skin/ti83pce.png) 0 0 0 0 stretch stretch; }")
-                                        : QStringLiteral(".QFrame { border-image: url(:/skin/resources/skin/ti84pce.png) 0 0 0 0 stretch stretch; }"));
+void MainWindow::setCalcSkinTopFromType(bool python) {
+    QString fileName;
+    if (get_device_type() == TI83PCE) {
+        fileName = python ? "ti83pce_ep.png" : "ti83pce.png";
+    } else {
+        fileName = python ? "ti84pce_py.png" : "ti84pce.png";
+    }
+    ui->calcSkinTop->setStyleSheet(".QFrame { border-image: url(:/skin/resources/skin/" + fileName + ") 0 0 0 0 stretch stretch; }");
 }
 
 void MainWindow::setImagePath() {
@@ -930,10 +938,50 @@ void MainWindow::setRecentSave(bool state) {
     m_config->setValue(SETTING_RECENT_SAVE, state);
 }
 
-void MainWindow::setPreRevisionI(bool state) {
-    ui->checkPreI->setChecked(state);
-    m_config->setValue(SETTING_DEBUGGER_PRE_I, state);
-    cpu.preI = state;
+void MainWindow::setAsicValidRevisions() {
+    QStandardItemModel* itemModel = qobject_cast<QStandardItemModel*>(ui->comboBoxAsicRev->model());
+    assert(itemModel);
+
+    bool allowAnyRev = ui->checkAllowAnyRev->isChecked();
+    int row = 1;
+    for (int rev : m_supportedRevs) {
+        while (row < rev) {
+            itemModel->item(row++)->setEnabled(allowAnyRev);
+        }
+        itemModel->item(row++)->setEnabled(true);
+    }
+    while (row < itemModel->rowCount()) {
+        itemModel->item(row++)->setEnabled(allowAnyRev);
+    }
+
+    if (!itemModel->item(ui->comboBoxAsicRev->currentIndex())->isEnabled()) {
+        ui->comboBoxAsicRev->setCurrentIndex(0);
+    }
+}
+
+void MainWindow::setAsicRevision(int index) {
+    emu.setAsicRev(index);
+}
+
+void MainWindow::setAllowAnyRev(bool state) {
+    ui->checkAllowAnyRev->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_ALLOW_ANY_REV, state);
+    emu.setAllowAnyRev(state);
+    setAsicValidRevisions();
+    ui->checkPythonEdition->setEnabled(state);
+    if (!state) {
+        ui->checkPythonEdition->setCheckState(Qt::PartiallyChecked);
+    }
+}
+
+void MainWindow::setPythonEdition(int state) {
+    Qt::CheckState forcePython = static_cast<Qt::CheckState>(state);
+    if (!ui->checkAllowAnyRev->isChecked()) {
+        forcePython = Qt::PartiallyChecked;
+    }
+    ui->checkPythonEdition->setCheckState(forcePython);
+    m_config->setValue(SETTING_PYTHON_EDITION, forcePython);
+    emu.setForcePython(forcePython);
 }
 
 void MainWindow::setNormalOs(bool state) {

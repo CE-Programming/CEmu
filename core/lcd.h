@@ -8,7 +8,6 @@ extern "C" {
 #endif
 
 #include "port.h"
-#include "spi.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>

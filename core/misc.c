@@ -13,7 +13,6 @@
 watchdog_state_t watchdog;
 protected_state_t protect;
 cxxx_state_t cxxx; /* Global CXXX state */
-exxx_state_t exxx; /* Global EXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
 static void watchdog_event(enum sched_item_id id) {
@@ -230,49 +229,6 @@ bool cxxx_save(FILE *image) {
 
 bool cxxx_restore(FILE *image) {
     return fread(&cxxx, sizeof(cxxx), 1, image) == 1;
-}
-
-/* ============================================= */
-
-/* Read from the 0xEXXX range of ports */
-static uint8_t exxx_read(const uint16_t pio, bool peek) {
-    uint8_t index = pio & 0x7F;
-    uint8_t read_byte;
-    (void)peek;
-
-    switch (index) {
-        case 0x14:
-            read_byte = 32 | exxx.ports[index];
-            break;
-        default:
-            read_byte = exxx.ports[index];
-            break;
-    }
-    return read_byte;
-}
-
-/* Write to the 0xEXXX range of ports */
-static void exxx_write(const uint16_t pio, const uint8_t byte, bool poke) {
-    (void)poke;
-    exxx.ports[pio & 0x7F] = byte;
-}
-
-static const eZ80portrange_t pexxx = {
-    .read  = exxx_read,
-    .write = exxx_write
-};
-
-eZ80portrange_t init_exxx(void) {
-    memset(&exxx, 0, sizeof(exxx));
-    return pexxx;
-}
-
-bool exxx_save(FILE *image) {
-    return fwrite(&exxx, sizeof(exxx), 1, image) == 1;
-}
-
-bool exxx_restore(FILE *image) {
-    return fread(&exxx, sizeof(exxx), 1, image) == 1;
 }
 
 /* ============================================= */

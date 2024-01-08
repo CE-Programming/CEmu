@@ -554,6 +554,7 @@ void MainWindow::debugSync() {
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
     debug.totalCycles = ui->cycleView->text().toLongLong() + (m_ignoreDmaCycles ? debug.dmaCycles : 0);
+    debug.flashCacheMisses = ui->flashMissesView->text().toUInt();
 
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
@@ -606,6 +607,8 @@ void MainWindow::debugGuiState(bool state) {
     ui->groupFlash->setEnabled(state);
     ui->groupRAM->setEnabled(state);
     ui->cycleView->setEnabled(state);
+    ui->flashAvgView->setEnabled(state);
+    ui->flashMissesView->setEnabled(state);
     ui->freqView->setEnabled(state);
     ui->groupRTC->setEnabled(state);
     ui->groupGPT->setEnabled(state);
@@ -757,6 +760,14 @@ void MainWindow::debugPopulate() {
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? m_cNone : m_cBack);
     ui->cycleView->setText(tmp);
 
+    tmp = QString::number((double)debug.flashDelayCycles / debug.flashTotalAccesses + debug.flashWaitStates);
+    ui->flashAvgView->setPalette(tmp == ui->flashAvgView->text() ? m_cNone : m_cBack);
+    ui->flashAvgView->setText(tmp);
+
+    tmp = QString::number(debug.flashCacheMisses);
+    ui->flashMissesView->setPalette(tmp == ui->flashMissesView->text() ? m_cNone : m_cBack);
+    ui->flashMissesView->setText(tmp);
+
     tmp = QString::number(rtc.readSec);
     ui->seconds->setPalette(tmp == ui->seconds->text() ? m_cNone : m_cBack);
     ui->seconds->setText(tmp);
@@ -849,8 +860,15 @@ void MainWindow::debugPopulate() {
 void MainWindow::debugZeroCycles() {
     debug.totalCycles = 0;
     debug.dmaCycles = 0;
+    debug.flashCacheMisses = 0;
+    debug.flashTotalAccesses = 0;
+    debug.flashDelayCycles = 0;
     ui->cycleView->setText(QStringLiteral("0"));
     ui->cycleView->repaint();
+    ui->flashMissesView->setText(QStringLiteral("0"));
+    ui->flashMissesView->repaint();
+    ui->flashAvgView->setText(QStringLiteral("nan"));
+    ui->flashAvgView->repaint();
 }
 
 // ------------------------------------------------

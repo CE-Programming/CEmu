@@ -14,8 +14,21 @@ typedef enum {
     TI83PCE = 1
 } ti_device_t;
 
+typedef enum {
+    ASIC_REV_AUTO = 0, /* Used only with set_asic_revision() */
+    ASIC_REV_A = 1,
+    ASIC_REV_I = 2,
+    ASIC_REV_M = 3
+} asic_rev_t;
+
 typedef struct asic_state {
     ti_device_t device;
+    /* Only updated on reset */
+    asic_rev_t revision;
+    bool python;
+    /* Populated based on revision */
+    bool im2;
+    bool serFlash;
 } asic_state_t;
 
 extern asic_state_t asic;
@@ -28,6 +41,8 @@ bool asic_save(FILE *image);
 void set_cpu_clock(uint32_t new_rate);
 void set_device_type(ti_device_t device);
 ti_device_t get_device_type(void);
+asic_rev_t get_asic_revision(void);
+bool get_asic_python(void);
 
 #ifdef __cplusplus
 }
