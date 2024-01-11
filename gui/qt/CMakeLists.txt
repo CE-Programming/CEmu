@@ -43,7 +43,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Sane flags
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # sane defaults + hardening
     set(GLOBAL_COMPILE_FLAGS "-W -Wall -Wextra -Wno-unused-parameter -Werror=write-strings -Wredundant-decls -Werror=date-time -Werror=return-type -Werror=pointer-arith")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GLOBAL_COMPILE_FLAGS} -Werror=implicit-function-declaration -Werror=missing-prototypes")
@@ -51,6 +51,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
     # useful flags for debugging
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    if(MSVC_VERSION GREATER_EQUAL 1935)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /experimental:c11atomics")
+    endif()
 endif()
 
 include(GNUInstallDirs)
