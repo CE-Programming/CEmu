@@ -20,6 +20,7 @@ struct CEmuOpts {
     QString imageFile;
     QString launchPrgm;
     QString debugFile;
+    QString screenshotFile;
     QString idString;
     QString pidString;
     QStringList sendFiles;

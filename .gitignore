@@ -64,3 +64,4 @@ gui/qt/capture/libpng*
 # more build stuff
 gui/qt/CEmu.build/
 gui/qt/cmake-build-*/
+gui/qt/out/

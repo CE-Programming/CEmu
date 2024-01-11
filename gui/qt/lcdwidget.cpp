@@ -38,9 +38,6 @@ void LCDWidget::paintEvent(QPaintEvent*) {
         m_mutex.lock();
         c.drawImage(cw, m_image);
         m_mutex.unlock();
-        if (backlight.factor < 1) {
-            c.fillRect(cw, QColor(0, 0, 0, (1 - backlight.factor) * 255));
-        }
     } else {
         c.fillRect(cw, Qt::black);
         c.setPen(Qt::white);
@@ -88,9 +85,16 @@ void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
 }
 
 QImage LCDWidget::getImage() {
-    QPixmap pixmap(size());
-    render(&pixmap);
-    return pixmap.toImage();
+    QImage image;
+    if ((control.ports[5] & 1 << 4) && (lcd.control & 1 << 11)) {
+        m_mutex.lock();
+        image = m_image.copy();
+        m_mutex.unlock();
+    } else {
+        image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+        image.fill(Qt::black);
+    }
+    return image;
 }
 
 void LCDWidget::mousePressEvent(QMouseEvent *e) {
@@ -114,7 +118,7 @@ void LCDWidget::mouseMoveEvent(QMouseEvent *e) {
         mimeData->setImageData(image);
         mimeData->setUrls(QList<QUrl>() << QUrl::fromLocalFile(path));
         drag->setMimeData(mimeData);
-        drag->setHotSpot(e->pos());
+        drag->setHotSpot(e->pos() * ((double)image.rect().width() / rect().width()));
         drag->setPixmap(mymap);
         switch (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
             case Qt::IgnoreAction:
@@ -164,6 +168,10 @@ void LCDWidget::draw() {
         m_skip = m_frameskip;
         m_mutex.lock();
         emu_lcd_drawframe(m_image.bits());
+        if (backlight.factor < 1) {
+            QPainter c(&m_image);
+            c.fillRect(c.window(), QColor(0, 0, 0, (1 - backlight.factor) * 255));
+        }
         m_mutex.unlock();
 #ifdef PNG_WRITE_APNG_SUPPORTED
         apng_add_frame(m_image.constBits());

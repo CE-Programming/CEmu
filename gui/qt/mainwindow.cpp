@@ -2597,7 +2597,8 @@ bool MainWindow::ipcSetup() {
            << opts.sendRAMFiles
            << opts.restoreOnOpen
            << opts.speed
-           << opts.launchPrgm;
+           << opts.launchPrgm
+           << opts.screenshotFile;
 
     // blocking call
     com.send(byteArray);
@@ -2620,13 +2621,17 @@ void MainWindow::ipcCli(QDataStream &stream) {
            >> o.sendRAMFiles
            >> o.restoreOnOpen
            >> o.speed
-           >> o.launchPrgm;
+           >> o.launchPrgm
+           >> o.screenshotFile;
 
     optLoadFiles(o);
     optAttemptLoad(o);
     optSend(o);
     if (o.speed != -1) {
         setEmuSpeed(o.speed);
+    }
+    if (!o.screenshotFile.isEmpty()) {
+        ui->lcd->getImage().save(o.screenshotFile, "PNG", 0);
     }
 }
 

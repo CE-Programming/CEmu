@@ -102,6 +102,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "id"));
     parser.addOption(procID);
 
+    QCommandLineOption screenshotFile(QStringList() << QStringLiteral("screenshot"),
+                QCoreApplication::translate("main", "Saves a screenshot to <File> (only usable as a sent command)"),
+                QCoreApplication::translate("main", "screenshot"));
+    parser.addOption(screenshotFile);
+
     QCommandLineOption deforceReset(QStringList() << QStringLiteral("no-reset"),
                 QCoreApplication::translate("main", "Does not reset when sending"));
     parser.addOption(deforceReset);
@@ -150,6 +155,7 @@ int main(int argc, char *argv[]) {
     opts.launchPrgm         = parser.value(launchPrgm);
     opts.imageFile          = parser.value(imageFile);
     opts.debugFile          = parser.value(debugFile);
+    opts.screenshotFile     = parser.value(screenshotFile);
     opts.sendFiles          = parser.values(sendFiles);
     opts.sendArchFiles      = parser.values(sendArchFiles);
     opts.sendRAMFiles       = parser.values(sendRAMFiles);
@@ -162,10 +168,13 @@ int main(int argc, char *argv[]) {
         opts.speed = -1;
     }
     if (parser.isSet(loadTestFile)) {
-        opts.autotesterFile = QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
+        opts.autotesterFile = QFileInfo(parser.value(loadTestFile)).absoluteFilePath();
+    }
+    if (parser.isSet(screenshotFile)) {
+        opts.screenshotFile = QFileInfo(parser.value(screenshotFile)).absoluteFilePath();
     }
     if (parser.isSet(fullscreenOption)) {
-        int value = parser.value(loadRomFile).toInt();
+        int value = parser.value(fullscreenOption).toInt();
         switch (value) {
             case 0: case 1: case 2:
                 break;
