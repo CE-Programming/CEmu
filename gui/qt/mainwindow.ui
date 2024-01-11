@@ -9494,6 +9494,13 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item>
+                  <widget class="QCheckBox" name="checkResponse">
+                   <property name="text">
+                    <string>Emulate LCD response time</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <spacer name="horizontalSpacer_13">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>

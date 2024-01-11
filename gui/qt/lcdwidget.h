@@ -17,7 +17,7 @@ public:
     void setMain();
     void draw();
     void setFrameskip(int value);
-    void setMode(bool state);
+    void setResponseMode(bool state);
 
 signals:
     void updateLcd(double emuFps);
@@ -51,7 +51,10 @@ private:
     bool m_transferDrag = false;
     bool m_screenshotDrag = false;
     QRect m_left, m_right;
-    QImage m_image;
+    QRegion m_interlaceLeft, m_interlaceRight;
+    QImage *m_currFrame;
+    QImage m_renderedFrame;
+    QImage m_blendedFrame;
     QMutex m_mutex;
 
     // for dragable roms
@@ -60,7 +63,7 @@ private:
 
     unsigned int m_array[ArraySize];
     int m_index = 0;
-    bool m_spiMode;
+    bool m_responseMode = false;
     int m_skip = 0;
     int m_frameskip = 0;
 };

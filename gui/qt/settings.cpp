@@ -56,6 +56,7 @@ const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Sc
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
 const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Screen/spi");
 const QString MainWindow::SETTING_SCREEN_GAMMA              = QStringLiteral("Screen/gamma");
+const QString MainWindow::SETTING_SCREEN_RESPONSE           = QStringLiteral("Screen/response");
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
 const QString MainWindow::SETTING_KEYPAD_CUSTOM_PATH        = QStringLiteral("Keypad/custom_path");
@@ -356,13 +357,18 @@ void MainWindow::setLcdSpi(bool state) {
     ui->checkGamma->setEnabled(state);
     m_config->setValue(SETTING_SCREEN_SPI, state);
     emu_set_lcd_spi(state == false ? 0 : 1);
-    emit setLcdMode(state);
 }
 
 void MainWindow::setLcdGamma(bool state) {
     ui->checkGamma->setChecked(state);
     m_config->setValue(SETTING_SCREEN_GAMMA, state);
     emu_set_lcd_gamma(state == false ? 0 : 1);
+}
+
+void MainWindow::setLcdResponse(bool state) {
+    ui->checkResponse->setChecked(state);
+    m_config->setValue(SETTING_SCREEN_RESPONSE, state);
+    emit setLcdResponseMode(state);
 }
 
 void MainWindow::setLcdDma(bool state) {

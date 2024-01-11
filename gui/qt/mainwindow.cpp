@@ -336,7 +336,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // lcd flow
     connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::lcdUpdate, Qt::QueuedConnection);
-    connect(this, &MainWindow::setLcdMode, ui->lcd, &LCDWidget::setMode);
+    connect(this, &MainWindow::setLcdResponseMode, ui->lcd, &LCDWidget::setResponseMode);
     connect(this, &MainWindow::setLcdFrameskip, ui->lcd, &LCDWidget::setFrameskip);
     connect(ui->statusInterval, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setStatusInterval);
     connect(&m_timerEmu, &QTimer::timeout, [this]{ m_timerEmuTriggered = true; });
@@ -373,6 +373,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkPythonEdition, &QCheckBox::stateChanged, this, &MainWindow::setPythonEdition);
     connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
     connect(ui->checkGamma, &QCheckBox::toggled, this, &MainWindow::setLcdGamma);
+    connect(ui->checkResponse, &QCheckBox::toggled, this, &MainWindow::setLcdResponse);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
@@ -572,6 +573,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
     setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
     setLcdGamma(m_config->value(SETTING_SCREEN_GAMMA, true).toBool());
+    setLcdResponse(m_config->value(SETTING_SCREEN_RESPONSE, true).toBool());
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
     setKeypadHolding(m_config->value(SETTING_KEYPAD_HOLDING, true).toBool());
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
