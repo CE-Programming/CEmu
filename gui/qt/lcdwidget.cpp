@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "../../core/link.h"
 #include "../../core/lcd.h"
+#include "../../core/panel.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
 #include "../../core/debug/debug.h"
@@ -20,8 +21,13 @@
 LCDWidget::LCDWidget(QWidget *parent) : QWidget{parent} {
     installEventFilter(keypadBridge);
     m_mutex.lock();
-    m_image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    m_renderedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    m_blendedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    m_currFrame = &m_renderedFrame;
     m_mutex.unlock();
+    for (int x = 0; x < 320; x++) {
+        (x % 2 ? m_interlaceRight : m_interlaceLeft) |= QRegion(x, 0, 1, 240);
+    }
 }
 
 void LCDWidget::paintEvent(QPaintEvent*) {
@@ -36,7 +42,7 @@ void LCDWidget::paintEvent(QPaintEvent*) {
     c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < LCD_WIDTH);
     if ((control.ports[5] & 1 << 4) && (lcd.control & 1 << 11)) {
         m_mutex.lock();
-        c.drawImage(cw, m_image);
+        c.drawImage(cw, *m_currFrame);
         m_mutex.unlock();
     } else {
         c.fillRect(cw, Qt::black);
@@ -88,7 +94,7 @@ QImage LCDWidget::getImage() {
     QImage image;
     if ((control.ports[5] & 1 << 4) && (lcd.control & 1 << 11)) {
         m_mutex.lock();
-        image = m_image.copy();
+        image = m_renderedFrame.copy();
         m_mutex.unlock();
     } else {
         image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
@@ -146,13 +152,15 @@ double LCDWidget::refresh() {
 
 void LCDWidget::setMain() {
     m_mutex.lock();
-    m_image.fill(Qt::black);
+    m_renderedFrame.fill(Qt::black);
+    m_blendedFrame.fill(Qt::black);
+    m_currFrame = &m_renderedFrame;
     m_mutex.unlock();
     emu_set_lcd_callback([](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); }, this);
 }
 
-void LCDWidget::setMode(bool state) {
-    m_spiMode = state;
+void LCDWidget::setResponseMode(bool state) {
+    m_responseMode = state;
 }
 
 void LCDWidget::setFrameskip(int value) {
@@ -167,14 +175,31 @@ void LCDWidget::draw() {
     } else {
         m_skip = m_frameskip;
         m_mutex.lock();
-        emu_lcd_drawframe(m_image.bits());
+        m_blendedFrame.swap(m_renderedFrame);
+        emu_lcd_drawframe(m_renderedFrame.bits());
         if (backlight.factor < 1) {
-            QPainter c(&m_image);
+            QPainter c(&m_renderedFrame);
             c.fillRect(c.window(), QColor(0, 0, 0, (1 - backlight.factor) * 255));
+        }
+        if (m_responseMode) {
+            QPainter c(&m_blendedFrame);
+            if (lcd.spi && panel.params.GATECTRL.SM) {
+                c.setClipRegion(m_interlaceRight);
+                c.setOpacity(0.4);
+                c.drawImage(QPoint(0, 0), m_renderedFrame);
+                c.setClipRegion(m_interlaceLeft);
+                c.setOpacity(0.6);
+            } else {
+                c.setOpacity(0.6);
+            }
+            c.drawImage(QPoint(0, 0), m_renderedFrame);
+            m_currFrame = &m_blendedFrame;
+        } else {
+            m_currFrame = &m_renderedFrame;
         }
         m_mutex.unlock();
 #ifdef PNG_WRITE_APNG_SUPPORTED
-        apng_add_frame(m_image.constBits());
+        apng_add_frame(m_currFrame->constBits());
 #endif
         double guiFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
         emit updateLcd(guiFps / (m_frameskip + 1));
