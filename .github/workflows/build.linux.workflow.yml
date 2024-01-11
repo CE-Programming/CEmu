@@ -38,7 +38,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
       with:
-        version: 6.4.2
+        version: 6.6.1
         target: desktop
         setup-python: false
         cache: true

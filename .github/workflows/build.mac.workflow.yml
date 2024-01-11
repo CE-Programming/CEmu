@@ -21,7 +21,7 @@ jobs:
             qtver: "5.15.2"
             qtvershort: 5
           - os: macos-12
-            qtver: "6.5.2"
+            qtver: "6.6.1"
             qtvershort: 6
 
     steps:
