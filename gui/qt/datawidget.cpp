@@ -6,8 +6,15 @@
 
 DataWidget::DataWidget(QWidget *parent) : QPlainTextEdit{parent} {
     moveable = false;
-    currentLineColor = isRunningInDarkMode() ? QColor(Qt::black) : QColor(Qt::yellow).lighter(160);
     setContextMenuPolicy(Qt::CustomContextMenu);
+}
+
+void DataWidget::updateDarkMode() {
+    bool darkMode = isRunningInDarkMode();
+    for (QTextEdit::ExtraSelection &selection : highlights) {
+        selection.format.setBackground(selection.format.colorProperty(QTextFormat::UserProperty + darkMode));
+    }
+    updateAllHighlights();
 }
 
 void DataWidget::clearAllHighlights() {
@@ -50,15 +57,17 @@ bool DataWidget::labelCheck() {
 void DataWidget::cursorState(bool state) {
     moveable = state;
     if (moveable) {
-        addHighlight(currentLineColor);
+        addHighlight(QColor(Qt::yellow).lighter(160), Qt::black);
     }
 }
 
-void DataWidget::addHighlight(const QColor &color) {
+void DataWidget::addHighlight(const QColor &lightModeColor, const QColor &darkModeColor) {
     QTextEdit::ExtraSelection selection;
 
-    selection.format.setBackground(color);
+    selection.format.setBackground(isRunningInDarkMode() ? darkModeColor : lightModeColor);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    selection.format.setProperty(QTextFormat::UserProperty, lightModeColor);
+    selection.format.setProperty(QTextFormat::UserProperty + 1, darkModeColor);
     selection.cursor = textCursor();
     selection.cursor.movePosition(QTextCursor::StartOfLine);
 
@@ -70,7 +79,7 @@ void DataWidget::highlightCurrentLine() {
         if (!highlights.isEmpty()) {
             highlights.removeLast();
         }
-        addHighlight(currentLineColor);
+        addHighlight(QColor(Qt::yellow).lighter(160), Qt::black);
         setExtraSelections(highlights);
         if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier)) {
             bool ok = true;

@@ -214,6 +214,9 @@ private:
     void translateExtras(int init);
     void translateSwitch(const QString &lang);
 
+    // dark mode
+    void darkModeSwitch(bool darkMode);
+
     // state slots
     void stateAdd(QString &name, QString &path);
     void stateAddNew();

@@ -27,6 +27,7 @@ std::string calc_var_content_string(const calc_var_t &var);
 int utf8_strlen(const std::string &str);
 
 bool isRunningInDarkMode();
+bool isSystemInDarkMode();
 
 // Qt Specific
 #include <QtCore/QString>

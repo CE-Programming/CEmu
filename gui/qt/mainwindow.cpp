@@ -83,9 +83,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     qRegisterMetaType<QList<bool>>("QList<bool>");
 #endif
 
-    m_isInDarkMode = isRunningInDarkMode();
-
     ui->setupUi(this);
+
+    darkModeSwitch(isSystemInDarkMode());
 
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
 
@@ -112,8 +112,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_breakpoints = ui->breakpoints;
     m_ports = ui->ports;
     m_disasm = ui->disasm;
-
-    m_disasmOpcodeColor = m_isInDarkMode ? "darkorange" : "darkblue";
 
     ui->console->setMaximumBlockCount(1000);
 
@@ -655,7 +653,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         ui->checkPortable->blockSignals(false);
     }
 
-    m_cBack.setColor(QPalette::Base, QColor(isRunningInDarkMode() ? Qt::blue : Qt::yellow).lighter(160));
     m_consoleFormat = ui->console->currentCharFormat();
 }
 
@@ -884,6 +881,24 @@ void MainWindow::translateExtras(int init) {
     }
 }
 
+void MainWindow::darkModeSwitch(bool darkMode) {
+    m_isInDarkMode = darkMode;
+#ifdef Q_OS_WIN
+    QApplication::setStyle(darkMode ? "fusion" : "windowsvista");
+#endif
+    m_disasmOpcodeColor = darkMode ? "darkorange" : "darkblue";
+    if (darkMode) {
+        m_cBack.setColor(QPalette::Base, QColor(Qt::blue).lighter(180));
+        m_cBack.setColor(QPalette::Text, Qt::black);
+    } else {
+        m_cBack.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
+        m_cBack.setColor(QPalette::Text, Qt::black);
+    }
+    ui->disasm->updateDarkMode();
+    ui->basicEdit->updateDarkMode();
+    ui->basicTempEdit->updateDarkMode();
+}
+
 void MainWindow::changeEvent(QEvent* event) {
     const auto eventType = event->type();
     if (eventType == QEvent::LanguageChange) {
@@ -895,6 +910,12 @@ void MainWindow::changeEvent(QEvent* event) {
         translateSwitch(QLocale::system().name());
     }
     QMainWindow::changeEvent(event);
+    if (eventType == QEvent::ThemeChange) {
+        bool darkMode = isSystemInDarkMode();
+        if (darkMode != m_isInDarkMode) {
+            darkModeSwitch(darkMode);
+        }
+    }
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
@@ -2413,7 +2434,7 @@ void MainWindow::disasmLine() {
     }
 
     if (disasm.highlight.pc == true) {
-        m_disasm->addHighlight(QColor(Qt::blue).lighter(160));
+        m_disasm->addHighlight(QColor(Qt::blue).lighter(180), QColor(Qt::blue).darker(160));
     }
 }
 

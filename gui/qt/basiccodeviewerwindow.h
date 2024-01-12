@@ -62,6 +62,7 @@ class BasicEditor : public QPlainTextEdit
 public:
     BasicEditor(QWidget *parent = nullptr);
 
+    void updateDarkMode();
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
     void toggleHighlight();

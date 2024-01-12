@@ -26,6 +26,14 @@ BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
     updateLineNumberAreaWidth(0);
 }
 
+void BasicEditor::updateDarkMode()
+{
+    if (highlighter != nullptr) {
+        delete highlighter;
+        highlighter = new BasicHighlighter(document());
+    }
+}
+
 void BasicEditor::toggleHighlight()
 {
     if (highlighter == nullptr) {

@@ -16,9 +16,10 @@ class DataWidget : public QPlainTextEdit {
 
 public:
     explicit DataWidget(QWidget *p = Q_NULLPTR);
+    void updateDarkMode();
     void clearAllHighlights();
     void updateAllHighlights();
-    void addHighlight(const QColor& color);
+    void addHighlight(const QColor &lightModeColor, const QColor &darkModeColor);
     void highlightCurrentLine();
     void cursorState(bool movable);
     bool labelCheck();
@@ -30,7 +31,6 @@ signals:
 
 private:
     bool moveable;
-    QColor currentLineColor;
     QList<QTextEdit::ExtraSelection> highlights;
 };
 

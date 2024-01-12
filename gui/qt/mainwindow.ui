@@ -2842,15 +2842,6 @@
                         </color>
                        </brush>
                       </colorrole>
-                      <colorrole role="Text">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>0</red>
-                         <green>0</green>
-                         <blue>0</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
                      </active>
                      <inactive>
                       <colorrole role="WindowText">
@@ -2862,27 +2853,9 @@
                         </color>
                        </brush>
                       </colorrole>
-                      <colorrole role="Text">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>0</red>
-                         <green>0</green>
-                         <blue>0</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
                      </inactive>
                      <disabled>
                       <colorrole role="WindowText">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>120</red>
-                         <green>120</green>
-                         <blue>120</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                      <colorrole role="Text">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
                          <red>120</red>
@@ -2919,15 +2892,6 @@
                         </color>
                        </brush>
                       </colorrole>
-                      <colorrole role="Text">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>0</red>
-                         <green>0</green>
-                         <blue>0</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
                      </active>
                      <inactive>
                       <colorrole role="WindowText">
@@ -2939,27 +2903,9 @@
                         </color>
                        </brush>
                       </colorrole>
-                      <colorrole role="Text">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>0</red>
-                         <green>0</green>
-                         <blue>0</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
                      </inactive>
                      <disabled>
                       <colorrole role="WindowText">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>120</red>
-                         <green>120</green>
-                         <blue>120</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                      <colorrole role="Text">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
                          <red>120</red>

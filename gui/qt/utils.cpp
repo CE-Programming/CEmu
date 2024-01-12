@@ -12,6 +12,9 @@
 #include <QtCore/QString>
 #include <QtCore/QTime>
 #include <QtCore/QCoreApplication>
+#include <QtWidgets/QApplication>
+#include <QtGui/QPalette>
+#include <QtGui/QStyleHints>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
 #include <QtCore/QRandomGenerator>
@@ -82,15 +85,17 @@ int utf8_strlen(const std::string &str) {
 }
 
 bool isRunningInDarkMode() {
-    static bool isDarkMode = false;
-    static bool boolSet = false;
+    QPalette palette = qApp->palette();
+    return palette.window().color().value() < palette.windowText().color().value();
+}
 
-    if (boolSet) {
-        return isDarkMode;
-    }
+bool isSystemInDarkMode() {
+    bool isDarkMode;
 
-    // TODO: handle other OS' way to know if we're running in dark mode
-#if defined(Q_OS_MACX) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 5, 0))
+    isDarkMode = qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+
+#elif defined(Q_OS_MACX) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
     {
         std::array<char, 20> buffer;
         std::string result;
@@ -103,9 +108,12 @@ bool isRunningInDarkMode() {
         }
         isDarkMode = (result == "Dark");
     }
-#endif
 
-    boolSet = true;
+#else
+    // TODO: handle other OS' way to know if we're running in dark mode
+    isDarkMode = isRunningInDarkMode();
+
+#endif
 
     return isDarkMode;
 }
