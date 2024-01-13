@@ -23,11 +23,7 @@ static std::string strW(uint32_t data) {
     if (high) {
         range = disasm.map.equal_range(data);
         for (sit = range.first; sit != range.second; ++sit) {
-            if (disasm.bold_sym) {
-                ret += "<b>" + sit->second + "</b>";
-            } else {
-                ret += sit->second;
-            }
+            ret += sit->second;
             ret += '|';
         }
         if (!ret.empty()) {
@@ -37,11 +33,7 @@ static std::string strW(uint32_t data) {
         if (!disasm.il) {
             range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
             for (sit = range.first; sit != range.second; ++sit) {
-                if (disasm.bold_sym) {
-                    ret += "<b>" + sit->second + "</b>";
-                } else {
-                    ret += sit->second;
-                }
+                ret += sit->second;
                 ret += '|';
             }
             if (!ret.empty()) {
@@ -67,11 +59,7 @@ static std::string strA(uint32_t data) {
             if (!ret.empty()) {
                 ret += '|';
             }
-            if (disasm.bold_sym) {
-                ret += "<b>" + sit->second + "</b>";
-            } else {
-                ret += sit->second;
-            }
+            ret += sit->second;
         }
     }
     if (!ret.empty()) {
@@ -86,11 +74,7 @@ static std::string strA(uint32_t data) {
                 if (!ret.empty()) {
                     ret += '|';
                 }
-                if (disasm.bold_sym) {
-                    ret += "<b>" + sit->second + "</b>";
-                } else {
-                    ret += sit->second;
-                }
+                ret += sit->second;
             }
         }
         if (!ret.empty()) {

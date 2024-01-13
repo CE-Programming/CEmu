@@ -2,6 +2,9 @@
 #define CODEEDITOR_H
 
 #include <QtWidgets/QPlainTextEdit>
+#include <QtGui/QSyntaxHighlighter>
+#include <QtGui/QTextCharFormat>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
@@ -10,6 +13,40 @@ QT_BEGIN_NAMESPACE
     class QSize;
     class QWidget;
 QT_END_NAMESPACE
+
+class AsmHighlighter : public QSyntaxHighlighter
+{
+    Q_OBJECT
+
+public:
+    AsmHighlighter(QTextDocument *parent = nullptr);
+
+protected:
+    void highlightBlock(const QString &text) Q_DECL_OVERRIDE;
+
+private:
+    struct HighlightingRule
+    {
+        QRegularExpression pattern;
+        QTextCharFormat format;
+    };
+    QVector<HighlightingRule> highlightingRules;
+
+    QTextCharFormat addressFormat;
+    QTextCharFormat symbolFormat;
+    QTextCharFormat watchRFormat;
+    QTextCharFormat watchWFormat;
+    QTextCharFormat breakPFormat;
+    QTextCharFormat bytesFormat;
+    QTextCharFormat mnemonicFormat;
+    QTextCharFormat hexFormat;
+    QTextCharFormat decimalFormat;
+    QTextCharFormat parenFormat;
+    QTextCharFormat registerFormat;
+
+    QRegularExpression labelPattern;
+    QRegularExpression instructionPattern;
+};
 
 class DataWidget : public QPlainTextEdit {
     Q_OBJECT
@@ -31,6 +68,7 @@ signals:
 
 private:
     bool moveable;
+    AsmHighlighter *highlighter;
     QList<QTextEdit::ExtraSelection> highlights;
 };
 

@@ -6,6 +6,10 @@
 
 DataWidget::DataWidget(QWidget *parent) : QPlainTextEdit{parent} {
     moveable = false;
+    highlighter = new AsmHighlighter(document());
+    QFont font = this->font();
+    font.setStyleHint(QFont::TypeWriter);
+    setFont(font);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -15,6 +19,8 @@ void DataWidget::updateDarkMode() {
         selection.format.setBackground(selection.format.colorProperty(QTextFormat::UserProperty + darkMode));
     }
     updateAllHighlights();
+    delete highlighter;
+    highlighter = new AsmHighlighter(document());
 }
 
 void DataWidget::clearAllHighlights() {
@@ -25,6 +31,8 @@ void DataWidget::clearAllHighlights() {
 
     highlights.clear();
     updateAllHighlights();
+    delete highlighter;
+    highlighter = new AsmHighlighter(document());
 }
 
 void DataWidget::updateAllHighlights() {
@@ -113,6 +121,78 @@ void DataWidget::highlightCurrentLine() {
                     emit gotoMemoryAddress(address);
                 } else {
                     emit gotoDisasmAddress(address);
+                }
+            }
+        }
+    }
+}
+
+AsmHighlighter::AsmHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent) {
+    HighlightingRule rule;
+    bool darkMode = isRunningInDarkMode();
+
+    addressFormat.setForeground(QColor(darkMode ? "#888" : "#444"));
+    addressFormat.setFontWeight(QFont::Bold);
+
+    watchRFormat.setForeground(QColor("#008000"));
+    watchRFormat.setFontWeight(QFont::Bold);
+    watchWFormat.setForeground(QColor("#808000"));
+    watchWFormat.setFontWeight(QFont::Bold);
+    breakPFormat.setForeground(QColor("#800000"));
+    breakPFormat.setFontWeight(QFont::Bold);
+
+    mnemonicFormat.setForeground(QColor(darkMode ? "darkorange" : "darkblue"));
+
+    symbolFormat.setFontWeight(disasm.bold_sym ? QFont::DemiBold : QFont::Normal);
+    rule.pattern = QRegularExpression("\\b\\w+\\b");
+    rule.format = symbolFormat;
+    highlightingRules.append(rule);
+
+    decimalFormat.setForeground(QColor(darkMode ? "lime" : "green"));
+    rule.pattern = QRegularExpression("\\b\\d+\\b");
+    rule.format = decimalFormat;
+    highlightingRules.append(rule);
+
+    registerFormat.setForeground(QColor(darkMode ? "magenta" : "purple"));
+    rule.pattern = QRegularExpression("\\b([abcdehlirmpz]|af|bc|de|hl|sp|i[xy][hl]?|mb|n[cz]|p[eo])\\b", QRegularExpression::CaseInsensitiveOption);
+    rule.format = registerFormat;
+    highlightingRules.append(rule);
+
+    hexFormat.setForeground(QColor(darkMode ? "lime" : "green"));
+    rule.pattern = QRegularExpression("\\$[0-9a-fA-F]+\\b");
+    rule.format = hexFormat;
+    highlightingRules.append(rule);
+
+    parenFormat.setForeground(QColor(darkMode ? "lightblue" : "navy"));
+    rule.pattern = QRegularExpression("[()]");
+    rule.format = parenFormat;
+    highlightingRules.append(rule);
+
+    labelPattern = QRegularExpression(QStringLiteral("^(%1)\\s+(\\S+):")
+                                      .arg(disasm.addr ? QStringLiteral("[0-9a-fA-F]+") : QString()));
+    instructionPattern = QRegularExpression(QStringLiteral("^(%1) ([ R])([ W])([ X])\\s+(%2)\\s+(\\S+)")
+                                            .arg(disasm.addr ? QStringLiteral("[0-9a-fA-F]+") : QString(),
+                                                 disasm.bytes ? QStringLiteral("[0-9a-fA-F]+") : QStringLiteral(" ")));
+}
+
+void AsmHighlighter::highlightBlock(const QString &text) {
+    QRegularExpressionMatch match;
+    if ((match = labelPattern.match(text)).hasMatch()) {
+        setFormat(match.capturedStart(1), match.capturedLength(1), addressFormat);
+        setFormat(match.capturedStart(2), match.capturedLength(2), symbolFormat);
+    } else if ((match = instructionPattern.match(text)).hasMatch()) {
+        setFormat(match.capturedStart(1), match.capturedLength(1), addressFormat);
+        setFormat(match.capturedStart(2), match.capturedLength(2), watchRFormat);
+        setFormat(match.capturedStart(3), match.capturedLength(3), watchWFormat);
+        setFormat(match.capturedStart(4), match.capturedLength(4), breakPFormat);
+        setFormat(match.capturedStart(5), match.capturedLength(5), bytesFormat);
+        setFormat(match.capturedStart(6), match.capturedLength(6), mnemonicFormat);
+        foreach(const HighlightingRule &rule, highlightingRules) {
+            QRegularExpressionMatchIterator iter = rule.pattern.globalMatch(text, match.capturedEnd());
+            while (iter.hasNext()) {
+                const auto& innerMatch = iter.next();
+                if (innerMatch.hasMatch()) {
+                    setFormat(innerMatch.capturedStart(), innerMatch.capturedLength(), rule.format);
                 }
             }
         }

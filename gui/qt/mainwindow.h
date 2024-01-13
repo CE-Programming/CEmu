@@ -573,7 +573,6 @@ private:
     InterCom com;
 
     bool m_isInDarkMode = false;
-    const char* m_disasmOpcodeColor;
 
     int m_watchGUIMask = DBG_MASK_NONE;
 

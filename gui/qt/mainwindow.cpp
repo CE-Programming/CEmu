@@ -886,7 +886,6 @@ void MainWindow::darkModeSwitch(bool darkMode) {
 #ifdef Q_OS_WIN
     QApplication::setStyle(darkMode ? "fusion" : "windowsvista");
 #endif
-    m_disasmOpcodeColor = darkMode ? "darkorange" : "darkblue";
     if (darkMode) {
         m_cBack.setColor(QPalette::Base, QColor(Qt::blue).lighter(180));
         m_cBack.setColor(QPalette::Text, Qt::black);
@@ -2389,15 +2388,14 @@ void MainWindow::disasmLine() {
 
         QString line;
         QString symbols;
-        QString highlighted;
 
         if (useLabel) {
             if (disasm.base > 511 || (disasm.base < 512 && sit->second[0] == '_')) {
-                line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b>     %2</pre>"))
-                                        .arg(int2hex(static_cast<uint32_t>(disasm.base), 6),
-                                             QString::fromStdString(disasm.bold_sym ? "<b>" + sit->second + "</b>" : sit->second) + ":");
+                line = QStringLiteral("%1  %2:")
+                       .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
+                            QString::fromStdString(sit->second));
 
-                m_disasm->appendHtml(line);
+                m_disasm->appendPlainText(line);
             }
 
             if (numLines == j + 1) {
@@ -2405,25 +2403,16 @@ void MainWindow::disasmLine() {
             }
             sit++;
         } else {
-            symbols = QString(QStringLiteral("<b><font color='#008000'>%1</font><font color='#808000'>%2</font><font color='#800000'>%3</font></b>"))
-                             .arg((disasm.highlight.watchR  ? QStringLiteral("R") : QStringLiteral(" ")),
-                                  (disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" ")),
-                                  (disasm.highlight.breakP  ? QStringLiteral("X") : QStringLiteral(" ")));
-
-            highlighted = QString::fromStdString(disasm.instr.operands)
-                                  .replace(QRegularExpression(QStringLiteral("(\\$[0-9a-fA-F]+)")), QStringLiteral("<font color='green'>\\1</font>")) // hex numbers
-                                  .replace(QRegularExpression(QStringLiteral("(^\\d)")), QStringLiteral("<font color='blue'>\\1</font>"))             // dec number
-                                  .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
-
-            line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='%4'>%5</font> %6</pre>"))
+            line = QString(QStringLiteral("%1 %2%3%4 %5  %6 %7"))
                            .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
-                                symbols,
+                                disasm.highlight.watchR ? QStringLiteral("R") : QStringLiteral(" "),
+                                disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" "),
+                                disasm.highlight.breakP ? QStringLiteral("X") : QStringLiteral(" "),
                                 disasm.bytes ? QString::fromStdString(disasm.instr.data).leftJustified(12, ' ') : QStringLiteral(" "),
-                                m_disasmOpcodeColor,
                                 QString::fromStdString(disasm.instr.opcode),
-                                highlighted);
+                                QString::fromStdString(disasm.instr.operands));
 
-            m_disasm->appendHtml(line);
+            m_disasm->appendPlainText(line);
         }
     }
 
