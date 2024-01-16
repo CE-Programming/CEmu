@@ -704,6 +704,8 @@ private:
     bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
 
+    QString m_styleForMode[2];
+
     QFont varPreviewCEFont;
     QFont varPreviewItalicFont;
 

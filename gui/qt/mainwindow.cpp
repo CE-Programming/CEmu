@@ -85,6 +85,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->setupUi(this);
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 1, 0))
+    m_styleForMode[0] = m_styleForMode[1] = QApplication::style()->objectName();
+#else
+    m_styleForMode[0] = m_styleForMode[1] = QApplication::style()->name();
+#endif
     darkModeSwitch(isSystemInDarkMode());
 
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
@@ -882,10 +887,14 @@ void MainWindow::translateExtras(int init) {
 }
 
 void MainWindow::darkModeSwitch(bool darkMode) {
+    QApplication::setStyle(m_styleForMode[darkMode]);
+    if (darkMode != isRunningInDarkMode()) {
+        m_styleForMode[darkMode] = QStringLiteral("fusion");
+        QApplication::setStyle(m_styleForMode[darkMode]);
+        darkMode = isRunningInDarkMode();
+    }
+
     m_isInDarkMode = darkMode;
-#ifdef Q_OS_WIN
-    QApplication::setStyle(darkMode ? "fusion" : "windowsvista");
-#endif
     if (darkMode) {
         m_cBack.setColor(QPalette::Base, QColor(Qt::blue).lighter(180));
         m_cBack.setColor(QPalette::Text, Qt::black);
