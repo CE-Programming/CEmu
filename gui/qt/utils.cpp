@@ -94,25 +94,9 @@ bool isSystemInDarkMode() {
 
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 5, 0))
     isDarkMode = qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark;
-
-#elif defined(Q_OS_MACX) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
-    {
-        std::array<char, 20> buffer;
-        std::string result;
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("defaults read -g AppleInterfaceStyle", "r"), pclose);
-        while (pipe && fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        if (result.back() == '\n') {
-            result.pop_back();
-        }
-        isDarkMode = (result == "Dark");
-    }
-
 #else
     // TODO: handle other OS' way to know if we're running in dark mode
     isDarkMode = isRunningInDarkMode();
-
 #endif
 
     return isDarkMode;
