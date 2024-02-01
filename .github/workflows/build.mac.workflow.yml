@@ -15,14 +15,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-12]
+        os: [macos-11, macos-12, macos-14]
         include:
           - os: macos-11
             qtver: "5.15.2"
-            qtvershort: 5
+            qtvershort: "5_intel"
           - os: macos-12
             qtver: "6.6.1"
-            qtvershort: 6
+            qtvershort: "6_intel"
+          - os: macos-14
+            qtver: "6.6.1"
+            qtvershort: "6_arm"
 
     steps:
     - name: Checkout Git Repo
