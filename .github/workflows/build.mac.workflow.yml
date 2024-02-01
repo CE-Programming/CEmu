@@ -56,7 +56,7 @@ jobs:
     - name: Build CEmu Qt on macOS
       run: |
         set -e
-        export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig:$PKG_CONFIG_PATH"
+        export PKG_CONFIG_PATH="$(brew --prefix libarchive)/lib/pkgconfig:$PKG_CONFIG_PATH"
         cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
         mkdir build
         cd build
