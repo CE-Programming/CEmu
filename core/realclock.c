@@ -11,7 +11,7 @@ rtc_state_t rtc;
 
 static void rtc_event(enum sched_item_id id) {
     /* Update exactly once a second */
-    sched_repeat(id, 1);
+    sched_repeat(id, 32768);
 
     if (rtc.control & 64) { /* (Bit 6) -- Load time */
         rtc.readSec = rtc.writeSec;
@@ -145,7 +145,7 @@ static void rtc_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x20:
             rtc.control = byte;
             if (rtc.control & 1) {
-                sched_set(SCHED_RTC, 0);
+                sched_repeat_relative(SCHED_RTC, SCHED_SECOND, 0, 0);
             } else {
                 sched_clear(SCHED_RTC);
             }
@@ -178,7 +178,7 @@ void rtc_reset() {
     memset(&rtc, 0, sizeof rtc);
     rtc.revision = 0x00010500;
 
-    sched_init_event(SCHED_RTC, CLOCK_1, rtc_event);
+    sched_init_event(SCHED_RTC, CLOCK_32K, rtc_event);
 
     gui_console_printf("[CEmu] RTC reset.\n");
 }

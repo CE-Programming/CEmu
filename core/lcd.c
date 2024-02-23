@@ -177,7 +177,7 @@ static void lcd_process_pixel(uint32_t *ticks, uint8_t red, uint8_t green, uint8
         if (likely(!sched_active(SCHED_PANEL))) {
             panel_refresh_pixels(1);
         } else {
-            panel_refresh_pixels_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_PREV_MA, *ticks));
+            panel_refresh_pixels_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, *ticks));
         }
         if (likely(lcd.curCol < lcd.PPL && panel.params.RAMCTRL.RM)) {
             if (!likely(lcd.control & 1 << 11)) {
