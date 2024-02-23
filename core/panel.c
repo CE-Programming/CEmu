@@ -298,58 +298,60 @@ static void panel_generate_luts(void) {
         { 1.0000000f,   0.0000000f,  0.0000000f, 0.0000000f, 1.00000000f + 0.5f / 255 }
     };
 
-    if (!unlikely(panel.gammaDirty)) {
-        return;
-    }
-    panel.gammaDirty = false;
+    if (unlikely(panel.gammaDirty)) {
+        panel.gammaDirty = false;
 
-    if (panel.accurateGamma) {
-        float gamma_pos[64], gamma_neg[64];
-        panel_generate_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
-        panel_generate_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
-        const struct spline *piece = &spline[0];
-        for (uint8_t c = 0; c < 64; c++) {
-            float gamma = (gamma_pos[c] + gamma_neg[c]) * 0.5f;
-            assert(gamma >= 0.0f && gamma <= 1.0f);
-            if (unlikely(gamma < piece->gamma)) {
-                do {
-                    piece--;
-                } while (gamma < piece->gamma);
-            } else {
-                while (gamma > piece[1].gamma) {
-                    piece++;
+        if (panel.accurateGamma) {
+            float gamma_pos[64], gamma_neg[64];
+            panel_generate_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
+            panel_generate_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
+            const struct spline *piece = &spline[0];
+            for (uint8_t c = 0; c < 64; c++) {
+                float gamma = (gamma_pos[c] + gamma_neg[c]) * 0.5f;
+                assert(gamma >= 0.0f && gamma <= 1.0f);
+                if (unlikely(gamma < piece->gamma)) {
+                    do {
+                        piece--;
+                    } while (gamma < piece->gamma);
+                } else {
+                    while (gamma > piece[1].gamma) {
+                        piece++;
+                    }
                 }
+                float diff = gamma - piece->gamma;
+                float grayscale = ((piece->a * diff + piece->b) * diff + piece->c) * diff + piece->d;
+                assert(grayscale >= 0.0f && grayscale < 256.0f / 255.0f);
+                panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(grayscale * 255.0f);
             }
-            float diff = gamma - piece->gamma;
-            float grayscale = ((piece->a * diff + piece->b) * diff + piece->c) * diff + piece->d;
-            assert(grayscale >= 0.0f && grayscale < 256.0f / 255.0f);
-            panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(grayscale * 255.0f);
+        } else {
+            for (uint8_t c = 0; c < 64; c++) {
+                panel.gammaLut[PANEL_GREEN][c] = c << 2 | c >> 4;
+            }
         }
-    } else {
-        for (uint8_t c = 0; c < 64; c++) {
-            panel.gammaLut[PANEL_GREEN][c] = c << 2 | c >> 4;
+
+        if (unlikely(panel.mode & PANEL_MODE_IDLE)) {
+            memset(&panel.gammaLut[PANEL_GREEN][1], panel.gammaLut[PANEL_GREEN][0], 31);
+            memset(&panel.gammaLut[PANEL_GREEN][32], panel.gammaLut[PANEL_GREEN][63], 31);
+        }
+
+        if (unlikely(panel.params.DGMEN.DGMEN) && !(panel.mode & PANEL_MODE_IDLE)) {
+            for (uint8_t c = 0; c < 64; c += 2) {
+                /* Yes, the opposite DGMLUTs are used on purpose, the datasheet seemingly reversed them because of default BGR */
+                panel.gammaLut[PANEL_RED][c] = panel.gammaLut[PANEL_RED][c + 1] = panel.gammaLut[PANEL_GREEN][panel.params.DGMLUTB[c] >> 2];
+                panel.gammaLut[PANEL_BLUE][c] = panel.gammaLut[PANEL_BLUE][c + 1] = panel.gammaLut[PANEL_GREEN][panel.params.DGMLUTR[c] >> 2];
+            }
+        } else {
+            memcpy(panel.gammaLut[PANEL_RED], panel.gammaLut[PANEL_GREEN], 64);
+            memcpy(panel.gammaLut[PANEL_BLUE], panel.gammaLut[PANEL_GREEN], 64);
+        }
+
+        if (unlikely(panel_inv_enabled())) {
+            panel_invert_luts();
         }
     }
 
-    if (unlikely(panel.mode & PANEL_MODE_IDLE)) {
-        memset(&panel.gammaLut[PANEL_GREEN][1], panel.gammaLut[PANEL_GREEN][0], 31);
-        memset(&panel.gammaLut[PANEL_GREEN][32], panel.gammaLut[PANEL_GREEN][63], 31);
-    }
-
-    if (unlikely(panel.params.DGMEN.DGMEN) && !(panel.mode & PANEL_MODE_IDLE)) {
-        for (uint8_t c = 0; c < 64; c += 2) {
-            /* Yes, the opposite DGMLUTs are used on purpose, the datasheet seemingly reversed them because of default BGR */
-            panel.gammaLut[PANEL_RED][c] = panel.gammaLut[PANEL_RED][c + 1] = panel.gammaLut[PANEL_GREEN][panel.params.DGMLUTB[c] >> 2];
-            panel.gammaLut[PANEL_BLUE][c] = panel.gammaLut[PANEL_BLUE][c + 1] = panel.gammaLut[PANEL_GREEN][panel.params.DGMLUTR[c] >> 2];
-        }
-    } else {
-        memcpy(panel.gammaLut[PANEL_RED], panel.gammaLut[PANEL_GREEN], 64);
-        memcpy(panel.gammaLut[PANEL_BLUE], panel.gammaLut[PANEL_GREEN], 64);
-    }
-
-    if (unlikely(panel_inv_enabled())) {
-        panel_invert_luts();
-    }
+    bool blankLevel = panel_inv_enabled() ^ (!(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF)) && panel.params.PARCTRL.NDL);
+    panel.blankLevel = panel.gammaLut[PANEL_GREEN][blankLevel ? 0 : 63];
 }
 
 static bool panel_start_frame() {
@@ -503,8 +505,12 @@ void panel_refresh_pixels(uint16_t count) {
     uint8_t redIndex = panel_bgr_enabled() ? PANEL_BLUE : PANEL_RED;
     uint8_t blueIndex = redIndex ^ (PANEL_RED ^ PANEL_BLUE);
     if (unlikely(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF | PANEL_MODE_BLANK))) {
+        uint8_t level = panel.blankLevel;
         while (count--) {
-            memset(dstPixel, ~0, sizeof(*dstPixel));
+            (*dstPixel)[PANEL_RED] = level;
+            (*dstPixel)[PANEL_GREEN] = level;
+            (*dstPixel)[PANEL_BLUE] = level;
+            (*dstPixel)[PANEL_ALPHA] = ~0;
             dstPixel += PANEL_NUM_ROWS;
         }
     } else if (unlikely(panel.srcRow > PANEL_LAST_ROW)) {

@@ -398,6 +398,7 @@ typedef struct panel_state {
 
     /* Below state is initialized at runtime */
     uint8_t gammaLut[3][64];
+    uint8_t blankLevel;
     bool accurateGamma;
     bool gammaDirty;
 } panel_state_t;
