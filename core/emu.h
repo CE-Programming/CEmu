@@ -30,7 +30,7 @@ typedef enum {
 emu_state_t emu_load(emu_data_t type, const char *path);  /* load an emulator state */
 bool emu_save(emu_data_t type, const char *path);         /* save an emulator state */
 void emu_run(uint64_t ticks);                             /* core emulation function, call after emu_load */
-void emu_set_run_rate(uint32_t rate);                     /* how many ticks per second for emu_run */
+bool emu_set_run_rate(uint32_t rate);                     /* how many ticks per second for emu_run */
 uint32_t emu_get_run_rate(void);                          /* getter for the above */
 void emu_reset(void);                                     /* reset emulation as if the reset button was pressed */
 void emu_exit(void);                                      /* exit emulation */
