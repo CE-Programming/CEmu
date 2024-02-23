@@ -342,7 +342,7 @@ static void lcd_event(enum sched_item_id id) {
         case LCD_ACTIVE_VIDEO:
             duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             if (!lcd.prefill) {
-                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
+                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, (lcd.HSW + lcd.HBP) * lcd.PCD, 0);
             }
             lcd.compare = LCD_FRONT_PORCH;
             break;
@@ -361,7 +361,7 @@ static uint32_t lcd_dma(enum sched_item_id id) {
         if ((lcd.prefill = lcd.pos)) {
             sched_repeat(id, lcd.pos == 128 ? 22 : 19);
         } else if (lcd.compare == LCD_FRONT_PORCH) {
-            sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
+            sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, (lcd.HSW + lcd.HBP) * lcd.PCD, 0);
         }
         return lcd.pos & 64 ? 18 : 19;
     }
@@ -651,21 +651,11 @@ eZ80portrange_t init_lcd(void) {
 }
 
 bool lcd_save(FILE *image) {
-    lcd_state_t sanatizedLcd;
-    memcpy(&sanatizedLcd, &lcd, sizeof(lcd_state_t));
-    sanatizedLcd.gui_callback = NULL;
-    sanatizedLcd.gui_callback_data = NULL;
-    sanatizedLcd.data = NULL;
-    sanatizedLcd.data_end = NULL;
-    return fwrite(&sanatizedLcd, sizeof(lcd_state_t), 1, image) == 1;
+    return fwrite(&lcd, offsetof(lcd_state_t, data), 1, image) == 1;
 }
 
 bool lcd_restore(FILE *image) {
-    bool ret = fread(&lcd, sizeof(lcd), 1, image) == 1;
-    lcd.gui_callback = NULL;
-    lcd.gui_callback_data = NULL;
-    lcd.data = NULL;
-    lcd.data_end = NULL;
+    bool ret = fread(&lcd, offsetof(lcd_state_t, data), 1, image) == 1;
     lcd_update();
     return ret;
 }

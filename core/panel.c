@@ -117,31 +117,31 @@ static const uint8_t epfLut16[4][64] = {
       0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F }
 };
 
-static bool panel_row_scan_reverse(void) {
+static inline bool panel_row_scan_reverse(void) {
     return panel.params.MADCTL.ML ^ panel.params.GATECTRL.SCN;
 }
 
-static bool panel_col_scan_reverse(void) {
+static inline bool panel_col_scan_reverse(void) {
     return panel.params.MADCTL.MH ^ panel.params.LCMCTRL.XMH;
 }
 
-static bool panel_row_addr_reverse(void) {
+static inline bool panel_row_addr_reverse(void) {
     return panel.params.MADCTL.MY ^ panel.params.LCMCTRL.XMY;
 }
 
-static bool panel_col_addr_reverse(void) {
+static inline bool panel_col_addr_reverse(void) {
     return panel.params.MADCTL.MX ^ panel.params.LCMCTRL.XMX;
 }
 
-static bool panel_row_col_addr_swap(void) {
+static inline bool panel_row_col_addr_swap(void) {
     return panel.params.MADCTL.MV ^ panel.params.LCMCTRL.XMV;
 }
 
-static bool panel_bgr_enabled(void) {
+static inline bool panel_bgr_enabled(void) {
     return panel.params.MADCTL.RGB ^ panel.params.LCMCTRL.XBGR;
 }
 
-static bool panel_inv_enabled(void) {
+static inline bool panel_inv_enabled(void) {
     return panel.invert ^ panel.params.LCMCTRL.XINV;
 }
 
