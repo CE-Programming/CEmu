@@ -377,12 +377,8 @@ void lcd_reset(void) {
     memset(&lcd, 0, offsetof(lcd_state_t, spi));
     lcd_update();
 
-    sched.items[SCHED_LCD].callback.event = lcd_event;
-    sched.items[SCHED_LCD].clock = CLOCK_24M;
-    sched_clear(SCHED_LCD);
-    sched.items[SCHED_LCD_DMA].callback.dma = lcd_dma;
-    sched.items[SCHED_LCD_DMA].clock = CLOCK_48M;
-    sched_clear(SCHED_LCD_DMA);
+    sched_init_event(SCHED_LCD, CLOCK_24M, lcd_event);
+    sched_init_dma(SCHED_LCD_DMA, CLOCK_48M, lcd_dma);
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 

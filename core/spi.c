@@ -265,9 +265,7 @@ void spi_reset(void) {
     memset(&spi, 0, sizeof(spi));
     spi_set_device_funcs();
 
-    sched.items[SCHED_SPI].callback.event = spi_event;
-    sched.items[SCHED_SPI].clock = CLOCK_24M;
-    sched_clear(SCHED_SPI);
+    sched_init_event(SCHED_SPI, CLOCK_24M, spi_event);
 }
 
 void spi_device_select(bool arm) {

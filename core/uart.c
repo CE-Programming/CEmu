@@ -467,8 +467,7 @@ void uart_reset(void) {
 
     uart_set_device_funcs();
 
-    sched.items[SCHED_UART].callback.event = uart_event;
-    sched.items[SCHED_UART].clock = CLOCK_3M;
+    sched_init_event(SCHED_UART, CLOCK_3M, uart_event);
     uart_set_timer(true);
 }
 

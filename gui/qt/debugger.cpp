@@ -752,7 +752,7 @@ void MainWindow::debugPopulate() {
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? m_cNone : m_cBack);
     ui->lcdcurrView->setText(tmp);
 
-    tmp = QString::number(sched.clockRates[CLOCK_CPU] / 1e6);
+    tmp = QString::number(sched_get_clock_rate(CLOCK_CPU) / 1e6);
     ui->freqView->setPalette(tmp == ui->freqView->text() ? m_cNone : m_cBack);
     ui->freqView->setText(tmp);
 

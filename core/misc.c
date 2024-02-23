@@ -92,9 +92,9 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             old = watchdog.control;
             write8(watchdog.control, bit_offset, byte);                    
             if (watchdog.control & 16) {
-                sched.items[SCHED_WATCHDOG].clock = CLOCK_32K;
+                sched_set_item_clock(SCHED_WATCHDOG, CLOCK_32K);
             } else {
-                sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
+                sched_set_item_clock(SCHED_WATCHDOG, CLOCK_CPU);
             }
             if ((watchdog.control ^ old) & 1) {
                 if (watchdog.control & 1) {
@@ -124,9 +124,7 @@ void watchdog_reset() {
     /* Initialize device to default state */
     memset(&watchdog, 0, sizeof watchdog);
 
-    sched.items[SCHED_WATCHDOG].callback.event = watchdog_event;
-    sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
-    sched_clear(SCHED_WATCHDOG);
+    sched_init_event(SCHED_WATCHDOG, CLOCK_CPU, watchdog_event);
     watchdog.revision = 0x00010602;
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;

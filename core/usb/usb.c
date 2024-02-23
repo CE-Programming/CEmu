@@ -489,10 +489,10 @@ void usb_reset(void) {
     }
 #undef clear
 #undef fill
-    sched.items[SCHED_USB].callback.event = usb_event;
-    sched.items[SCHED_USB].clock = CLOCK_12M;
-    sched.items[SCHED_USB_DEVICE].callback.event = usb_device_event;
-    sched.items[SCHED_USB_DEVICE].clock = CLOCK_1M;
+    sched_init_event(SCHED_USB, CLOCK_12M, usb_event);
+    if (!sched_active(SCHED_USB_DEVICE)) {
+        sched_init_event(SCHED_USB_DEVICE, CLOCK_1M, usb_device_event);
+    }
 }
 
 static void usb_init_hccr(void) {
