@@ -54,7 +54,7 @@ static void apng_write_delay(void) {
     uint64_t time = sched_total_time(CLOCK_48M) - apng.prev_time;
     int logo = 48 - clzll(time);
     uint64_t shift = logo > 10 ? (uint64_t)logo : 10;
-    png_uint_16 num = time >> shift, den = sched.clockRates[CLOCK_48M] >> shift;
+    png_uint_16 num = time >> shift, den = sched_get_clock_rate(CLOCK_48M) >> shift;
     fwrite(&num, sizeof(num), 1, apng.tmp);
     fwrite(&den, sizeof(den), 1, apng.tmp);
     apng.prev_time += num << shift;

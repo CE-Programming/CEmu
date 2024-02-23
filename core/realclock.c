@@ -178,9 +178,7 @@ void rtc_reset() {
     memset(&rtc, 0, sizeof rtc);
     rtc.revision = 0x00010500;
 
-    sched.items[SCHED_RTC].callback.event = rtc_event;
-    sched.items[SCHED_RTC].clock = CLOCK_1;
-    sched_clear(SCHED_RTC);
+    sched_init_event(SCHED_RTC, CLOCK_1, rtc_event);
 
     gui_console_printf("[CEmu] RTC reset.\n");
 }

@@ -198,10 +198,12 @@ static void sched_second(enum sched_item_id id) {
             sched.items[id].second--;
         }
     }
+    uint32_t cpu_clock_rate = sched_get_clock_rate(CLOCK_CPU);
+    assert(cpu.cycles >= cpu_clock_rate);
     cpu.seconds++;
-    cpu.cycles -= sched.clockRates[CLOCK_CPU];
-    cpu.eiDelay -= sched.clockRates[CLOCK_CPU];
-    cpu.baseCycles += sched.clockRates[CLOCK_CPU];
+    cpu.cycles -= cpu_clock_rate;
+    cpu.eiDelay -= cpu_clock_rate;
+    cpu.baseCycles += cpu_clock_rate;
     sched.items[SCHED_SECOND].second = 0; /* Don't use sched_repeat! */
     sched_update(SCHED_SECOND);
 }
@@ -219,12 +221,29 @@ void sched_rewind_cpu(uint8_t duration) {
             sched.items[id].second++;
         }
     }
+    uint32_t cpu_clock_rate = sched_get_clock_rate(CLOCK_CPU);
     cpu.seconds--;
-    cpu.cycles += sched.clockRates[CLOCK_CPU] - duration;
-    cpu.eiDelay += sched.clockRates[CLOCK_CPU];
-    cpu.baseCycles -= sched.clockRates[CLOCK_CPU];
+    cpu.cycles += cpu_clock_rate - duration;
+    cpu.eiDelay += cpu_clock_rate;
+    cpu.baseCycles -= cpu_clock_rate;
     sched.items[SCHED_SECOND].second = 0; /* Don't use sched_repeat! */
     sched_update_next(SCHED_SECOND); /* All other events are >= 1 second now */
+}
+
+void sched_init_event(enum sched_item_id id, enum clock_id clock, void (*event)(enum sched_item_id id)) {
+    assert(id >= SCHED_FIRST_EVENT && id <= SCHED_LAST_EVENT);
+    struct sched_item *item = &sched.items[id];
+    sched_clear(id);
+    item->clock = clock;
+    item->callback.event = event;
+}
+
+void sched_init_dma(enum sched_item_id id, enum clock_id clock, uint32_t (*dma)(enum sched_item_id id)) {
+    assert(id >= SCHED_FIRST_DMA && id <= SCHED_LAST_DMA);
+    struct sched_item *item = &sched.items[id];
+    sched_clear(id);
+    item->clock = clock;
+    item->callback.dma = dma;
 }
 
 void sched_set_clock(enum clock_id clock, uint32_t new_rate) {
@@ -257,6 +276,17 @@ void sched_set_clock(enum clock_id clock, uint32_t new_rate) {
     sched.clockRates[clock] = new_rate;
 }
 
+void sched_set_item_clock(enum sched_item_id id, enum clock_id clock) {
+    struct sched_item *item = &sched.items[id];
+    if (sched_active(id) && sched.clockRates[clock] != sched.clockRates[item->clock]) {
+        uint64_t ticks = sched_ticks_remaining(id);
+        item->clock = clock;
+        sched_set(id, ticks);
+    } else {
+        item->clock = clock;
+    }
+}
+
 uint32_t sched_get_clock_rate(enum clock_id clock) {
     return sched.clockRates[clock];
 }
@@ -268,6 +298,9 @@ void sched_reset(void) {
 
     memset(&sched, 0, sizeof sched);
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
+    for (enum sched_item_id id = 0; id < SCHED_NUM_ITEMS; id++) {
+        sched.items[id].second = ~0;
+    }
 
     sched_update_next(sched.dma.next = SCHED_SECOND);
 
@@ -277,12 +310,10 @@ void sched_reset(void) {
     sched.items[SCHED_SECOND].tick = 1;
     sched.items[SCHED_SECOND].cycle = sched.clockRates[CLOCK_CPU];
 
-    sched.items[SCHED_RUN].clock = CLOCK_RUN;
-    sched.items[SCHED_RUN].callback.event = sched_run_event;
+    sched_init_event(SCHED_RUN, CLOCK_RUN, sched_run_event);
     sched_set(SCHED_RUN, 0);
 
     sched.items[SCHED_USB_DEVICE] = usb_device_item;
-    sched_repeat(SCHED_USB_DEVICE, 0);
 
     sched.items[SCHED_PREV_MA].clock = CLOCK_48M;
     sched_set(SCHED_PREV_MA, 0);
@@ -290,6 +321,9 @@ void sched_reset(void) {
 
 void sched_init(void) {
     memset(&sched, 0, sizeof sched);
+    for (enum sched_item_id id = 0; id < SCHED_NUM_ITEMS; id++) {
+        sched.items[id].second = ~0;
+    }
 }
 
 uint64_t sched_total_cycles(void) {

@@ -173,9 +173,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
 void keypad_reset(void) {
     keypad.row = 0;
 
-    sched.items[SCHED_KEYPAD].callback.event = keypad_scan_event;
-    sched.items[SCHED_KEYPAD].clock = CLOCK_6M;
-    sched_clear(SCHED_KEYPAD);
+    sched_init_event(SCHED_KEYPAD, CLOCK_6M, keypad_scan_event);
 
     gui_console_printf("[CEmu] Keypad reset.\n");
 }

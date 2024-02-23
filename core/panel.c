@@ -904,10 +904,7 @@ void panel_spi_deselect(void) {
 void panel_reset(void) {
     memset(&panel, 0, offsetof(panel_state_t, gammaLut));
 
-    sched.items[SCHED_PANEL].callback.event = panel_event;
-    sched.items[SCHED_PANEL].clock = CLOCK_10M;
-    sched_clear(SCHED_PANEL);
-
+    sched_init_event(SCHED_PANEL, CLOCK_10M, panel_event);
     panel_hw_reset();
 }
 
