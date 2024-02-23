@@ -62,6 +62,8 @@ typedef struct lcd_state {
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
+
+    /* Everything above here goes into the state */
     uint32_t *data;                /* Pointer to start of data to start extracting from */
     uint32_t *data_end;            /* End pointer that is allowed access */
 

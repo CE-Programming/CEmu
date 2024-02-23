@@ -24,9 +24,11 @@
 #define likely(x) !unlikely(!(x))
 
 #if __has_builtin(__builtin_unreachable)
-# define unreachable __builtin_unreachable
+# define unreachable() __builtin_unreachable()
+#elif defined(_MSC_VER)
+# define unreachable() __assume(0)
 #else
-# define unreachable abort
+# define unreachable() abort()
 #endif
 
 #ifdef _MSC_VER
