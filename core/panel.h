@@ -19,6 +19,7 @@ extern "C" {
 #define PANEL_LAST_ROW 319
 #define PANEL_NUM_COLS 240
 #define PANEL_LAST_COL 239
+#define PANEL_ADDR_MASK 0x1FF
 
 enum panel_mode {
     PANEL_MODE_SLEEP   = 1 << 0,
@@ -386,9 +387,9 @@ typedef struct panel_state {
     uint16_t ticksPerLine, linesPerFrame;
     uint16_t row, col, dstRow, srcRow;
     uint8_t cmd, paramIter, paramEnd;
-    bool invert, tear;
+    bool invert, tear, windowFull;
 
-    uint32_t rowReg, colReg;
+    uint32_t xAddr, yAddr;
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
     uint8_t displayMode, horizBackPorch;
     uint8_t mode, pendingMode, ifRed, ifGreen, ifBlue;

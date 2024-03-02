@@ -117,20 +117,24 @@ static const uint8_t epfLut16[4][64] = {
       0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F }
 };
 
-static inline bool panel_row_scan_reverse(void) {
-    return panel.params.MADCTL.ML ^ panel.params.GATECTRL.SCN;
-}
-
 static inline bool panel_col_scan_reverse(void) {
     return panel.params.MADCTL.MH ^ panel.params.LCMCTRL.XMH;
 }
 
-static inline bool panel_row_addr_reverse(void) {
-    return panel.params.MADCTL.MY ^ panel.params.LCMCTRL.XMY;
+static inline uint32_t panel_row_scan_reverse_mask(void) {
+    return -(uint32_t)panel.params.MADCTL.ML;
 }
 
-static inline bool panel_col_addr_reverse(void) {
-    return panel.params.MADCTL.MX ^ panel.params.LCMCTRL.XMX;
+static inline uint32_t panel_gate_scan_reverse_mask(void) {
+    return -(uint32_t)(panel.params.GATECTRL.GS ^ panel.params.LCMCTRL.XGS);
+}
+
+static inline uint32_t panel_row_addr_reverse_mask(void) {
+    return -(uint32_t)(panel.params.MADCTL.MY ^ panel.params.LCMCTRL.XMY);
+}
+
+static inline uint32_t panel_col_addr_reverse_mask(void) {
+    return -(uint32_t)(panel.params.MADCTL.MX ^ panel.params.LCMCTRL.XMX);
 }
 
 static inline bool panel_row_col_addr_swap(void) {
@@ -143,6 +147,11 @@ static inline bool panel_bgr_enabled(void) {
 
 static inline bool panel_inv_enabled(void) {
     return panel.invert ^ panel.params.LCMCTRL.XINV;
+}
+
+static inline uint32_t panel_reverse_addr(uint32_t addr, uint32_t upperBound, uint32_t dirMask) {
+    assert(dirMask == 0 || dirMask == ~0);
+    return (addr ^ dirMask) + (upperBound & dirMask);
 }
 
 static bool panel_start_line(uint16_t row) {
@@ -176,7 +185,7 @@ static bool panel_start_line(uint16_t row) {
             if (panel.srcRow > bot) {
                 panel.srcRow -= (bot + 1 - top);
             }
-            panel.srcRow &= 0x1FF;
+            panel.srcRow &= PANEL_ADDR_MASK;
         }
     }
     /* Interlaced scan mode */
@@ -186,10 +195,10 @@ static bool panel_start_line(uint16_t row) {
             panel.dstRow -= (PANEL_NUM_ROWS - 1);
         }
     }
-    if (unlikely(panel_row_scan_reverse())) {
-        panel.dstRow = PANEL_LAST_ROW - panel.dstRow;
-        panel.srcRow = PANEL_LAST_ROW - panel.srcRow;
-    }
+    uint32_t rowDirMask = panel_row_scan_reverse_mask();
+    uint32_t gateDirMask = panel_gate_scan_reverse_mask();
+    panel.srcRow = panel_reverse_addr(panel.srcRow, PANEL_NUM_ROWS, rowDirMask);
+    panel.dstRow = panel_reverse_addr(panel.dstRow, PANEL_NUM_ROWS, rowDirMask ^ gateDirMask);
     panel.col = -panel.horizBackPorch;
     return true;
 }
@@ -367,11 +376,11 @@ static bool panel_start_frame() {
         panel.gammaDirty = true;
     }
     panel.mode = panel.pendingMode;
-    panel.partialStart = panel.params.PTLAR.PSL;
-    panel.partialEnd = panel.params.PTLAR.PEL;
-    panel.topArea = panel.params.VSCRDEF.TFA;
-    panel.bottomArea = PANEL_LAST_ROW - panel.params.VSCRDEF.BFA;
-    panel.scrollStart = panel.params.VSCRSADD.VSP;
+    panel.partialStart = panel.params.PTLAR.PSL & PANEL_ADDR_MASK;
+    panel.partialEnd = panel.params.PTLAR.PEL & PANEL_ADDR_MASK;
+    panel.topArea = panel.params.VSCRDEF.TFA & PANEL_ADDR_MASK;
+    panel.bottomArea = (PANEL_LAST_ROW - panel.params.VSCRDEF.BFA) & PANEL_ADDR_MASK;
+    panel.scrollStart = panel.params.VSCRSADD.VSP & PANEL_ADDR_MASK;
     panel.displayMode = panel.params.RAMCTRL.DM;
 
     panel_generate_luts();
@@ -379,10 +388,10 @@ static bool panel_start_frame() {
     uint8_t vertBackPorch, vertFrontPorch, horizBackPorch;
     uint16_t horizFrontPorch;
     if (likely(panel.displayMode == PANEL_DM_RGB)) {
-        vertBackPorch = panel.params.RGBCTRL.VBP >= 2 ? panel.params.RGBCTRL.VBP : 2;
+        vertBackPorch = panel.params.RGBCTRL.VBP;
         vertFrontPorch = 1;
 
-        horizBackPorch = panel.params.RGBCTRL.HBP >= 6 ? panel.params.RGBCTRL.HBP : 6;
+        horizBackPorch = panel.params.RGBCTRL.HBP;
         horizFrontPorch = 0;
     } else {
         if (unlikely(panel.params.PORCTRL.PSEN) && (panel.mode & (PANEL_MODE_IDLE | PANEL_MODE_PARTIAL))) {
@@ -391,9 +400,6 @@ static bool panel_start_frame() {
         } else {
             vertBackPorch = panel.params.PORCTRL.BPA;
             vertFrontPorch = panel.params.PORCTRL.FPA;
-        }
-        if (vertBackPorch < 1) {
-            vertBackPorch = 1;
         }
         if (vertFrontPorch < 1) {
             vertFrontPorch = 1;
@@ -408,6 +414,9 @@ static bool panel_start_frame() {
         }
         horizFrontPorch = horizFrontPorch * 16 + 4;
     }
+    if (vertBackPorch < 1) {
+        vertBackPorch = 1;
+    }
 
     panel.ticksPerLine = PANEL_NUM_COLS + horizFrontPorch;
     panel.linesPerFrame = PANEL_NUM_ROWS + vertFrontPorch;
@@ -421,13 +430,21 @@ bool panel_hsync(void) {
 }
 
 static void panel_reset_mregs(void) {
+    uint32_t xDirMask, yDirMask, xBound, yBound;
     if (likely(panel_row_col_addr_swap())) {
-        panel.rowReg = panel.params.CASET.XS;
-        panel.colReg = panel.params.RASET.YS;
+        xDirMask = panel_row_addr_reverse_mask();
+        xBound = PANEL_NUM_ROWS;
+        yDirMask = panel_col_addr_reverse_mask();
+        yBound = PANEL_NUM_COLS;
     } else {
-        panel.rowReg = panel.params.RASET.YS;
-        panel.colReg = panel.params.CASET.XS;
+        xDirMask = panel_col_addr_reverse_mask();
+        xBound = PANEL_NUM_COLS;
+        yDirMask = panel_row_addr_reverse_mask();
+        yBound = PANEL_NUM_ROWS;
     }
+    panel.xAddr = panel_reverse_addr(panel.params.CASET.XS, xBound, xDirMask) & PANEL_ADDR_MASK;
+    panel.yAddr = panel_reverse_addr(panel.params.RASET.YS, yBound, yDirMask) & PANEL_ADDR_MASK;
+    panel.windowFull = false;
 }
 
 void panel_vsync(void) {
@@ -535,34 +552,66 @@ void panel_refresh_pixels(uint16_t count) {
 }
 
 static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
-    if (likely(panel.rowReg < 320 && panel.colReg < 240)) {
-        uint8_t *pixel = panel.frame[panel.rowReg][panel.colReg];
+    uint32_t row, col;
+    uint32_t xLimit = panel.params.CASET.XE & PANEL_ADDR_MASK;
+    if (likely(panel_row_col_addr_swap())) {
+        if (xLimit > PANEL_LAST_ROW) {
+            xLimit = PANEL_LAST_ROW;
+        }
+        uint32_t xDirMask = panel_row_addr_reverse_mask();
+        xLimit = panel_reverse_addr(xLimit, PANEL_NUM_ROWS, xDirMask);
+        row = panel.xAddr;
+        col = panel.yAddr;
+        if (unlikely(row == xLimit)) {
+            panel.xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_ROWS, xDirMask) & PANEL_ADDR_MASK;
+            uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
+            if (yLimit > PANEL_LAST_COL) {
+                yLimit = PANEL_LAST_COL;
+            }
+            uint32_t yDirMask = panel_col_addr_reverse_mask();
+            yLimit = panel_reverse_addr(yLimit, PANEL_NUM_COLS, yDirMask);
+            if (unlikely(col == yLimit)) {
+                panel.yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_COLS, yDirMask) & PANEL_ADDR_MASK;
+                panel.windowFull = panel.params.RAMCTRL.RM;
+            } else {
+                panel.yAddr = (col + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+            }
+        } else {
+            panel.xAddr = (row + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+        }
+    } else {
+        if (xLimit > PANEL_LAST_COL) {
+            xLimit = PANEL_LAST_COL;
+        }
+        uint32_t xDirMask = panel_col_addr_reverse_mask();
+        xLimit = panel_reverse_addr(xLimit, PANEL_NUM_COLS, xDirMask);
+        col = panel.xAddr;
+        row = panel.yAddr;
+        if (unlikely(col == xLimit)) {
+            panel.xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_COLS, xDirMask) & PANEL_ADDR_MASK;
+            uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
+            if (yLimit > PANEL_LAST_ROW) {
+                yLimit = PANEL_LAST_ROW;
+            }
+            uint32_t yDirMask = panel_row_addr_reverse_mask();
+            yLimit = panel_reverse_addr(yLimit, PANEL_NUM_ROWS, yDirMask);
+            if (unlikely(row == yLimit)) {
+                panel.yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_ROWS, yDirMask) & PANEL_ADDR_MASK;
+                panel.windowFull = panel.params.RAMCTRL.RM;
+            } else {
+                panel.yAddr = (row + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+            }
+        } else {
+            panel.xAddr = (col + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+        }
+    }
+
+    col &= 0xFF;
+    if (likely(row < PANEL_NUM_ROWS && col < PANEL_NUM_COLS)) {
+        uint8_t *pixel = panel.frame[row][col];
         pixel[PANEL_RED] = red;
         pixel[PANEL_GREEN] = green;
         pixel[PANEL_BLUE] = blue;
-    }
-    if (likely(panel_row_col_addr_swap())) {
-        if (unlikely(panel.rowReg == panel.params.CASET.XE)) {
-            if (unlikely(panel.colReg == panel.params.RASET.YE && panel.params.RASET.YS <= panel.params.RASET.YE)) {
-                panel.rowReg = panel.colReg = ~0;
-            } else {
-                panel.rowReg = panel.params.CASET.XS;
-                panel.colReg = (panel.colReg + (panel_col_addr_reverse() ? -1 : 1)) & 0xFF;
-            }
-        } else if (panel.rowReg < 0x200) {
-            panel.rowReg = (panel.rowReg + (panel_row_addr_reverse() ? -1 : 1)) & 0x1FF;
-        }
-    } else {
-        if (unlikely(panel.colReg == panel.params.CASET.XE)) {
-            if (unlikely(panel.rowReg == panel.params.RASET.YE && panel.params.RASET.YS <= panel.params.RASET.YE)) {
-                panel.rowReg = panel.colReg = ~0;
-            } else {
-                panel.colReg = panel.params.CASET.XS;
-                panel.rowReg = (panel.rowReg + (panel_row_addr_reverse() ? -1 : 1)) & 0x1FF;
-            }
-        } else if (panel.colReg < 0x100) {
-            panel.colReg = (panel.colReg + (panel_col_addr_reverse() ? -1 : 1)) & 0xFF;
-        }
     }
 }
 
@@ -585,6 +634,9 @@ static void panel_update_pixel_12bpp(uint8_t red, uint8_t green, uint8_t blue) {
 
 void panel_update_pixel_rgb(uint8_t red, uint8_t green, uint8_t blue) {
     assert(red < 32 && green < 64 && blue < 32);
+    if (unlikely(panel.windowFull)) {
+        return;
+    }
     if (unlikely(panel.params.COLMOD.RGB == 5)) {
         panel_update_pixel_16bpp(red, green, blue);
     } else {
@@ -671,7 +723,11 @@ static void panel_write_cmd(uint8_t value) {
         PANEL_CMD_CASE(0x2B, RASET)
             break;
         case 0x2C:
-            panel_reset_mregs();
+            if (unlikely(panel.params.RAMCTRL.RM)) {
+                panel.cmd = 0x00;
+            } else {
+                panel_reset_mregs();
+            }
             break;
         PANEL_CMD_CASE(0x30, PTLAR)
             break;
@@ -695,6 +751,13 @@ static void panel_write_cmd(uint8_t value) {
             panel.pendingMode |= PANEL_MODE_IDLE;
             break;
         PANEL_CMD_CASE(0x3A, COLMOD)
+            break;
+        case 0x3C:
+            if (unlikely(panel.params.RAMCTRL.RM)) {
+                panel.cmd = 0x00;
+            } else {
+                panel.windowFull = false;
+            }
             break;
         PANEL_CMD_CASE(0x44, TESCAN)
             break;
@@ -830,57 +893,55 @@ static void panel_write_param(uint8_t value) {
             panel.gammaDirty = true;
         }
     } else if (panel.cmd == 0x2C || panel.cmd == 0x3C) {
-        if (unlikely(!panel.params.RAMCTRL.RM)) {
-            switch (panel.params.COLMOD.MCU) {
-                default:
-                case 6: /* 18bpp */
-                    switch (panel.paramIter++) {
-                        case 0:
-                            panel.ifBlue = value >> 2;
-                            break;
-                        case 1:
-                            panel.ifGreen = value >> 2;
-                            break;
-                        case 2:
-                            panel.ifRed = value >> 2;
-                            panel_update_pixel_18bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
-                            panel.paramIter = 0;
-                            break;
-                    }
-                    break;
-                case 5: /* 16bpp */
-                    if (panel.paramIter ^ panel.params.RAMCTRL.ENDIAN) {
-                        panel.ifGreen = (panel.ifGreen & 0x38) | value >> 5;
-                        panel.ifRed = value & 0x1F;
-                    } else {
-                        panel.ifBlue = value >> 3;
-                        panel.ifGreen = (panel.ifGreen & 7) | (value << 3 & 0x38);
-                    }
+        switch (panel.params.COLMOD.MCU) {
+            default:
+            case 6: /* 18bpp */
+                switch (panel.paramIter++) {
+                    case 0:
+                        panel.ifBlue = value >> 2;
+                        break;
+                    case 1:
+                        panel.ifGreen = value >> 2;
+                        break;
+                    case 2:
+                        panel.ifRed = value >> 2;
+                        panel_update_pixel_18bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel.paramIter = 0;
+                        break;
+                }
+                break;
+            case 5: /* 16bpp */
+                if (panel.paramIter ^ panel.params.RAMCTRL.ENDIAN) {
+                    panel.ifGreen = (panel.ifGreen & 0x38) | value >> 5;
+                    panel.ifRed = value & 0x1F;
+                } else {
+                    panel.ifBlue = value >> 3;
+                    panel.ifGreen = (panel.ifGreen & 7) | (value << 3 & 0x38);
+                }
 
-                    if (!(panel.paramIter ^= 1)) {
-                        panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
-                    }
-                    break;
-                case 3: /* 12bpp */
-                    switch (panel.paramIter++) {
-                        case 0:
-                            panel.ifBlue = value >> 4;
-                            panel.ifGreen = value & 0xF;
-                            break;
-                        case 1:
-                            panel.ifRed = value >> 4;
-                            panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
-                            panel.ifBlue = value & 0xF;
-                            break;
-                        case 2:
-                            panel.ifGreen = value >> 4;
-                            panel.ifRed = value & 0xF;
-                            panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
-                            panel.paramIter = 0;
-                            break;
-                    }
-                    break;
-            }
+                if (!(panel.paramIter ^= 1)) {
+                    panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                }
+                break;
+            case 3: /* 12bpp */
+                switch (panel.paramIter++) {
+                    case 0:
+                        panel.ifBlue = value >> 4;
+                        panel.ifGreen = value & 0xF;
+                        break;
+                    case 1:
+                        panel.ifRed = value >> 4;
+                        panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel.ifBlue = value & 0xF;
+                        break;
+                    case 2:
+                        panel.ifGreen = value >> 4;
+                        panel.ifRed = value & 0xF;
+                        panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel.paramIter = 0;
+                        break;
+                }
+                break;
         }
     }
 }
