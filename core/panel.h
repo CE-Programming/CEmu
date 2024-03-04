@@ -36,6 +36,11 @@ enum panel_display_mode {
     PANEL_DM_VSYNC = 2
 };
 
+typedef struct panel_mem_ptr {
+    uint16_t xAddr;
+    uint16_t yAddr;
+} panel_mem_ptr_t;
+
 typedef struct panel_gamma {
     uint8_t V0 : 4;
     uint8_t V63 : 4;
@@ -387,9 +392,10 @@ typedef struct panel_state {
     uint16_t ticksPerLine, linesPerFrame;
     uint16_t row, col, dstRow, srcRow;
     uint8_t cmd, paramIter, paramEnd;
-    bool invert, tear, windowFull;
+    bool invert, tear;
+    bool windowFull, autoResetMemPtr, writeContinueBug;
 
-    uint32_t xAddr, yAddr;
+    panel_mem_ptr_t memPtrs[2];
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
     uint8_t displayMode, horizBackPorch;
     uint8_t mode, pendingMode, ifRed, ifGreen, ifBlue;
