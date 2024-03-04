@@ -429,7 +429,7 @@ bool panel_hsync(void) {
     return panel_start_line(panel.row + 1);
 }
 
-static void panel_reset_mregs(void) {
+static void panel_reset_mem_ptr(void) {
     uint32_t xDirMask, yDirMask, xBound, yBound;
     if (likely(panel_row_col_addr_swap())) {
         xDirMask = panel_row_addr_reverse_mask();
@@ -442,15 +442,20 @@ static void panel_reset_mregs(void) {
         yDirMask = panel_row_addr_reverse_mask();
         yBound = PANEL_NUM_ROWS;
     }
-    panel.xAddr = panel_reverse_addr(panel.params.CASET.XS, xBound, xDirMask) & PANEL_ADDR_MASK;
-    panel.yAddr = panel_reverse_addr(panel.params.RASET.YS, yBound, yDirMask) & PANEL_ADDR_MASK;
-    panel.windowFull = false;
+    panel_mem_ptr_t *memPtr = &panel.memPtrs[panel.params.RAMCTRL.RM];
+    memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, xBound, xDirMask) & PANEL_ADDR_MASK;
+    memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, yBound, yDirMask) & PANEL_ADDR_MASK;
+    if (panel.params.RAMCTRL.RM) {
+        panel.windowFull = false;
+    } else {
+        panel.autoResetMemPtr = false;
+    }
 }
 
 void panel_vsync(void) {
     if (likely(panel.params.RAMCTRL.RM)) {
-        /* RAM access from RGB interface resets memory registers on vsync */
-        panel_reset_mregs();
+        /* Frame memory pointer for RGB interface resets on vsync */
+        panel_reset_mem_ptr();
     }
 
     /* Accept vsync only if the frame has finished scanning */
@@ -552,6 +557,7 @@ void panel_refresh_pixels(uint16_t count) {
 }
 
 static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
+    panel_mem_ptr_t *memPtr = &panel.memPtrs[panel.params.RAMCTRL.RM];
     uint32_t row, col;
     uint32_t xLimit = panel.params.CASET.XE & PANEL_ADDR_MASK;
     if (likely(panel_row_col_addr_swap())) {
@@ -560,10 +566,9 @@ static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
         }
         uint32_t xDirMask = panel_row_addr_reverse_mask();
         xLimit = panel_reverse_addr(xLimit, PANEL_NUM_ROWS, xDirMask);
-        row = panel.xAddr;
-        col = panel.yAddr;
+        row = memPtr->xAddr;
+        col = memPtr->yAddr;
         if (unlikely(row == xLimit)) {
-            panel.xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_ROWS, xDirMask) & PANEL_ADDR_MASK;
             uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
             if (yLimit > PANEL_LAST_COL) {
                 yLimit = PANEL_LAST_COL;
@@ -571,13 +576,19 @@ static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             uint32_t yDirMask = panel_col_addr_reverse_mask();
             yLimit = panel_reverse_addr(yLimit, PANEL_NUM_COLS, yDirMask);
             if (unlikely(col == yLimit)) {
-                panel.yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_COLS, yDirMask) & PANEL_ADDR_MASK;
-                panel.windowFull = panel.params.RAMCTRL.RM;
+                if (panel.params.RAMCTRL.RM) {
+                    panel.windowFull = true;
+                }
+                memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_COLS, yDirMask) & PANEL_ADDR_MASK;
             } else {
-                panel.yAddr = (col + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+                memPtr->yAddr = (col + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
             }
+            if (unlikely(panel.writeContinueBug)) {
+                col = memPtr->yAddr;
+            }
+            memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_ROWS, xDirMask) & PANEL_ADDR_MASK;
         } else {
-            panel.xAddr = (row + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+            memPtr->xAddr = (row + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
         }
     } else {
         if (xLimit > PANEL_LAST_COL) {
@@ -585,10 +596,9 @@ static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
         }
         uint32_t xDirMask = panel_col_addr_reverse_mask();
         xLimit = panel_reverse_addr(xLimit, PANEL_NUM_COLS, xDirMask);
-        col = panel.xAddr;
-        row = panel.yAddr;
+        col = memPtr->xAddr;
+        row = memPtr->yAddr;
         if (unlikely(col == xLimit)) {
-            panel.xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_COLS, xDirMask) & PANEL_ADDR_MASK;
             uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
             if (yLimit > PANEL_LAST_ROW) {
                 yLimit = PANEL_LAST_ROW;
@@ -596,13 +606,19 @@ static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             uint32_t yDirMask = panel_row_addr_reverse_mask();
             yLimit = panel_reverse_addr(yLimit, PANEL_NUM_ROWS, yDirMask);
             if (unlikely(row == yLimit)) {
-                panel.yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_ROWS, yDirMask) & PANEL_ADDR_MASK;
-                panel.windowFull = panel.params.RAMCTRL.RM;
+                if (likely(panel.params.RAMCTRL.RM)) {
+                    panel.windowFull = true;
+                }
+                memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_ROWS, yDirMask) & PANEL_ADDR_MASK;
             } else {
-                panel.yAddr = (row + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+                memPtr->yAddr = (row + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
             }
+            if (unlikely(panel.writeContinueBug)) {
+                row = memPtr->yAddr;
+            }
+            memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_COLS, xDirMask) & PANEL_ADDR_MASK;
         } else {
-            panel.xAddr = (col + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+            memPtr->xAddr = (col + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
         }
     }
 
@@ -650,6 +666,9 @@ void panel_hw_reset(void) {
     panel.pendingMode = PANEL_MODE_SLEEP | PANEL_MODE_OFF;
     panel.cmd = panel.paramIter = panel.paramEnd = 0;
     panel.invert = panel.tear = false;
+    panel.windowFull = false;
+    panel.autoResetMemPtr = true;
+    memset(&panel.memPtrs, 0, sizeof(panel.memPtrs));
     /* The display mode is reset to MCU interface, so start the frame and schedule it */
     panel_start_frame();
     sched_set(SCHED_PANEL, panel.lastScanTick);
@@ -726,7 +745,8 @@ static void panel_write_cmd(uint8_t value) {
             if (unlikely(panel.params.RAMCTRL.RM)) {
                 panel.cmd = 0x00;
             } else {
-                panel_reset_mregs();
+                panel.autoResetMemPtr = false;
+                panel.writeContinueBug = false;
             }
             break;
         PANEL_CMD_CASE(0x30, PTLAR)
@@ -755,8 +775,11 @@ static void panel_write_cmd(uint8_t value) {
         case 0x3C:
             if (unlikely(panel.params.RAMCTRL.RM)) {
                 panel.cmd = 0x00;
+            } else if (unlikely(panel.autoResetMemPtr)) {
+                panel.cmd = 0x2C;
+                panel.writeContinueBug = false;
             } else {
-                panel.windowFull = false;
+                panel.writeContinueBug = true;
             }
             break;
         PANEL_CMD_CASE(0x44, TESCAN)
@@ -865,6 +888,11 @@ static void panel_write_param(uint8_t value) {
                 panel_start_frame();
                 sched_set(SCHED_PANEL, panel.lastScanTick);
             }
+            /* Handle frame memory pointer reset when switching to RGB interface */
+            if ((value & ~oldValue) & 1 << 4) {
+                panel_reset_mem_ptr();
+                panel.writeContinueBug = false;
+            }
         } else if (unlikely(index == offsetof(panel_params_t, LCMCTRL))) {
             if ((value ^ oldValue) & 1 << 4) {
                 panel_invert_luts();
@@ -905,7 +933,12 @@ static void panel_write_param(uint8_t value) {
                         break;
                     case 2:
                         panel.ifRed = value >> 2;
+                        if (unlikely(panel.cmd == 0x2C)) {
+                            panel.cmd = 0x3C;
+                            panel_reset_mem_ptr();
+                        }
                         panel_update_pixel_18bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel.writeContinueBug = false;
                         panel.paramIter = 0;
                         break;
                 }
@@ -920,7 +953,12 @@ static void panel_write_param(uint8_t value) {
                 }
 
                 if (!(panel.paramIter ^= 1)) {
+                    if (unlikely(panel.cmd == 0x2C)) {
+                        panel.cmd = 0x3C;
+                        panel_reset_mem_ptr();
+                    }
                     panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                    panel.writeContinueBug = false;
                 }
                 break;
             case 3: /* 12bpp */
@@ -931,7 +969,12 @@ static void panel_write_param(uint8_t value) {
                         break;
                     case 1:
                         panel.ifRed = value >> 4;
+                        if (unlikely(panel.cmd == 0x2C)) {
+                            panel.cmd = 0x3C;
+                            panel_reset_mem_ptr();
+                        }
                         panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel.writeContinueBug = false;
                         panel.ifBlue = value & 0xF;
                         break;
                     case 2:
