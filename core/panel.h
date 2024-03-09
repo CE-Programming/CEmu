@@ -156,12 +156,13 @@ typedef struct panel_params {
         uint8_t : 2;
         uint8_t RM : 1;
         uint8_t : 3;
-        uint8_t MDT : 2;
 
+        uint8_t MDT : 2;
         uint8_t RIM : 1;
         uint8_t ENDIAN : 1;
         uint8_t EPF : 2;
-        uint8_t : 2;
+        uint8_t WEMODE0 : 1;
+        uint8_t WEMODE1 : 1;
     } RAMCTRL;
     struct {
         uint8_t EPL : 1;
@@ -393,7 +394,7 @@ typedef struct panel_state {
     uint16_t row, col, dstRow, srcRow;
     uint8_t cmd, paramIter, paramEnd;
     bool invert, tear;
-    bool windowFull, autoResetMemPtr, writeContinueBug;
+    bool windowFullRgb, windowFullSpi, autoResetMemPtr, writeContinueBug;
 
     panel_mem_ptr_t memPtrs[2];
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
