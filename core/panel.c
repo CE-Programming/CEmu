@@ -679,6 +679,10 @@ void panel_update_pixel_rgb(uint8_t red, uint8_t green, uint8_t blue) {
     }
 }
 
+static void panel_update_clock_rate(void) {
+    sched_set_clock(CLOCK_PANEL, 10000000 >> panel.params.FRCTRL1.DIV);
+}
+
 void panel_hw_reset(void) {
     memcpy(&panel.params, &panel_reset_params, sizeof(panel_params_t));
     panel.gammaDirty = true;
@@ -690,6 +694,7 @@ void panel_hw_reset(void) {
     memset(&panel.memPtrs, 0, sizeof(panel.memPtrs));
     /* The display mode is reset to MCU interface, so start the frame and schedule it */
     panel_start_frame();
+    panel_update_clock_rate();
     sched_set(SCHED_PANEL, panel.lastScanTick);
 }
 
@@ -912,6 +917,10 @@ static void panel_write_param(uint8_t value) {
                 panel_reset_mem_ptr();
                 panel.writeContinueBug = false;
             }
+        } else if (unlikely(index == offsetof(panel_params_t, FRCTRL1))) {
+            if ((value ^ oldValue) & 3) {
+                panel_update_clock_rate();
+            }
         } else if (unlikely(index == offsetof(panel_params_t, LCMCTRL))) {
             if ((value ^ oldValue) & 1 << 4) {
                 panel_invert_luts();
@@ -1027,7 +1036,7 @@ void panel_spi_deselect(void) {
 void panel_reset(void) {
     memset(&panel, 0, offsetof(panel_state_t, gammaLut));
 
-    sched_init_event(SCHED_PANEL, CLOCK_10M, panel_event);
+    sched_init_event(SCHED_PANEL, CLOCK_PANEL, panel_event);
     panel_hw_reset();
 }
 

@@ -496,7 +496,7 @@ uint32_t sched_get_clock_rate(enum clock_id clock) {
 }
 
 void sched_reset(void) {
-    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 10000000, 6000000, 3000000, 1000000, 32768 };
+    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 10000000, 60, 48000000, 24000000, 12000000, 6000000, 3000000, 1000000, 32768 };
 
     struct sched_item usb_device_item = sched.items[SCHED_USB_DEVICE];
 
