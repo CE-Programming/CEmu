@@ -324,7 +324,7 @@ typedef struct panel_params {
         uint8_t : 2;
 
         uint8_t GS : 1;
-        uint8_t : 1;
+        uint8_t SS : 1;
         uint8_t SM : 1;
         uint8_t : 1;
         uint8_t TMG : 1;

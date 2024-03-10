@@ -117,8 +117,12 @@ static const uint8_t epfLut16[4][64] = {
       0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F }
 };
 
-static inline bool panel_col_scan_reverse(void) {
-    return panel.params.MADCTL.MH ^ panel.params.LCMCTRL.XMH;
+static inline uint32_t panel_col_scan_reverse_mask(void) {
+    return -(uint32_t)(panel.params.MADCTL.MH ^ panel.params.LCMCTRL.XMH);
+}
+
+static inline uint32_t panel_source_scan_reverse_mask(void) {
+    return -(uint32_t)panel.params.GATECTRL.SS;
 }
 
 static inline uint32_t panel_row_scan_reverse_mask(void) {
@@ -520,41 +524,45 @@ void panel_refresh_pixels(uint16_t count) {
         panel.col = PANEL_NUM_COLS;
         count = PANEL_NUM_COLS - col;
     }
+    assert(count > 0);
+
     /* Apply scan direction, but still internally scan forward */
-    if (unlikely(panel_col_scan_reverse())) {
-        col = PANEL_NUM_COLS - panel.col;
-    }
+    uint32_t colDirMask = panel_col_scan_reverse_mask();
+    uint32_t sourceDirMask = panel_source_scan_reverse_mask();
+    col = panel_reverse_addr(col, PANEL_NUM_COLS - (count - 1), colDirMask ^ sourceDirMask);
 
     uint8_t (*dstPixel)[4] = &panel.display[col][panel.dstRow];
     uint8_t redIndex = panel_bgr_enabled() ? PANEL_BLUE : PANEL_RED;
     uint8_t blueIndex = redIndex ^ (PANEL_RED ^ PANEL_BLUE);
     if (unlikely(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF | PANEL_MODE_BLANK))) {
         uint8_t level = panel.blankLevel;
-        while (count--) {
+        do {
             (*dstPixel)[PANEL_RED] = level;
             (*dstPixel)[PANEL_GREEN] = level;
             (*dstPixel)[PANEL_BLUE] = level;
             (*dstPixel)[PANEL_ALPHA] = ~0;
             dstPixel += PANEL_NUM_ROWS;
-        }
+        } while (--count);
     } else if (unlikely(panel.srcRow > PANEL_LAST_ROW)) {
-        while (count--) {
+        do {
             (*dstPixel)[redIndex] = panel.gammaLut[PANEL_RED][bus_rand() % 64];
             (*dstPixel)[PANEL_GREEN] = panel.gammaLut[PANEL_GREEN][bus_rand() % 64];
             (*dstPixel)[blueIndex] = panel.gammaLut[PANEL_BLUE][bus_rand() % 64];
             (*dstPixel)[PANEL_ALPHA] = ~0;
             dstPixel += PANEL_NUM_ROWS;
-        }
+        } while (--count);
     } else {
+        col = panel_reverse_addr(col, PANEL_NUM_COLS, sourceDirMask);
         uint8_t (*srcPixel)[3] = &panel.frame[panel.srcRow][col];
-        while (count--) {
+        int32_t srcDelta = sourceDirMask * 2 + 1;
+        do {
             (*dstPixel)[redIndex] = panel.gammaLut[PANEL_RED][(*srcPixel)[PANEL_RED]];
             (*dstPixel)[PANEL_GREEN] = panel.gammaLut[PANEL_GREEN][(*srcPixel)[PANEL_GREEN]];
             (*dstPixel)[blueIndex] = panel.gammaLut[PANEL_BLUE][(*srcPixel)[PANEL_BLUE]];
             (*dstPixel)[PANEL_ALPHA] = ~0;
-            srcPixel++;
+            srcPixel += srcDelta;
             dstPixel += PANEL_NUM_ROWS;
-        }
+        } while (--count);
     }
 }
 
