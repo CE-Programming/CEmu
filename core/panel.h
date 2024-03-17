@@ -389,10 +389,11 @@ typedef struct panel_params {
 } panel_params_t;
 
 typedef struct panel_state {
-    uint32_t lastScanTick, nextLineTick;
+    uint32_t lineStartTick;
     uint16_t ticksPerLine, linesPerFrame;
     uint16_t row, col, dstRow, srcRow;
-    uint8_t cmd, paramIter, paramEnd;
+    uint8_t nextRamCol, cmd, paramIter, paramEnd;
+    bool currLineBuffer;
     bool invert, tear;
     bool windowFullRgb, windowFullSpi, autoResetMemPtr, writeContinueBug;
 
@@ -402,6 +403,7 @@ typedef struct panel_state {
     uint8_t mode, pendingMode, ifRed, ifGreen, ifBlue;
 
     panel_params_t params;
+    uint8_t lineBuffers[2][240][3];
     uint8_t frame[320][240][3], display[240][320][4];
 
     /* Below state is initialized at runtime */
@@ -420,8 +422,8 @@ bool panel_save(FILE *image);
 void panel_hw_reset(void);
 bool panel_hsync(void);
 void panel_vsync(void);
-void panel_refresh_pixels_until(uint32_t currTick);
-void panel_refresh_pixels(uint16_t count);
+void panel_clock_pixels_until(uint32_t currTick);
+void panel_clock_pixels(uint32_t clocks);
 void panel_update_pixel_rgb(uint8_t r, uint8_t g, uint8_t b);
 
 uint8_t panel_spi_select(uint32_t* rxData);
