@@ -164,20 +164,20 @@ static void lcd_process_pixel(uint32_t *ticks, uint8_t red, uint8_t green, uint8
     if (likely(lcd.curRow < lcd.LPP)) {
         if (!likely(lcd.curCol) && likely(panel.displayMode == PANEL_DM_RGB)) {
             if (!likely(lcd.curRow)) {
-                for (v = lcd.VBP; v; v--) {
+                for (v = (lcd.VSW - 1) + lcd.VBP; v; v--) {
                     if (!panel_hsync()) {
                         break;
                     }
-                    panel_refresh_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
+                    panel_clock_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
             panel_hsync();
-            panel_refresh_pixels(lcd.HSW + lcd.HBP);
+            panel_clock_pixels(lcd.HSW + lcd.HBP);
         }
         if (likely(!sched_active(SCHED_PANEL))) {
-            panel_refresh_pixels(1);
+            panel_clock_pixels(1);
         } else {
-            panel_refresh_pixels_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, *ticks));
+            panel_clock_pixels_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, *ticks));
         }
         if (likely(lcd.curCol < lcd.PPL && panel.params.RAMCTRL.RM)) {
             if (!likely(lcd.control & 1 << 11)) {
@@ -193,13 +193,13 @@ static void lcd_process_pixel(uint32_t *ticks, uint8_t red, uint8_t green, uint8
             lcd.curCol = 0;
             lcd.curRow++;
             if (likely(panel.displayMode == PANEL_DM_RGB)) {
-                panel_refresh_pixels(lcd.HFP);
+                panel_clock_pixels(lcd.HFP);
                 if (unlikely(lcd.curRow >= lcd.LPP)) {
                     for (v = lcd.VFP; v; v--) {
                         if (!panel_hsync()) {
                             break;
                         }
-                        panel_refresh_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
+                        panel_clock_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                     }
                 }
             }
