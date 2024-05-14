@@ -6,6 +6,7 @@
 #include "../../core/emu.h"
 #include "../../core/lcd.h"
 #include "../../core/link.h"
+#include "../../core/panel.h"
 #include "../../core/debug/debug.h"
 
 #include <emscripten.h>
@@ -86,7 +87,7 @@ void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path) {
 }
 
 uint8_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
-    return &(spi.display[0][0][0]);
+    return &(panel.display[0][0][0]);
 }
 
 int EMSCRIPTEN_KEEPALIVE emsc_set_main_loop_timing(int mode, int value) {
@@ -118,7 +119,8 @@ int main(int argc, char* argv[]) {
         debug_init();
         debug_flag(DBG_SOFT_COMMANDS, true);
 #endif
-        lcd.spi = true;
+        emu_set_lcd_spi(1);
+        emu_set_lcd_gamma(1);
         EM_ASM(
             emul_is_inited = true;
             emul_is_paused = false;
