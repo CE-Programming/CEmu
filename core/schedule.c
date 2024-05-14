@@ -77,7 +77,7 @@ static inline uint32_t floor_log2(uint32_t value) {
         unreachable();
     }
     uint32_t count;
-#if __has_builtin(__builtin_clz)
+#if __has_builtin(__builtin_clz) || (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
     count = 31 - __builtin_clz(value);
 #elif defined(_MSC_VER)
     _BitScanReverse(&count, value);
@@ -406,7 +406,7 @@ static void sched_second(enum sched_item_id id) {
 }
 
 void sched_rewind_cpu(uint8_t duration) {
-#if __has_builtin(__builtin_sub_overflow)
+#if __has_builtin(__builtin_sub_overflow) || (__GNUC__ >= 5)
     if (likely(!__builtin_sub_overflow(cpu.cycles, duration, &cpu.cycles))) {
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
     if (likely(!_subborrow_u32(0, cpu.cycles, duration, &cpu.cycles))) {
