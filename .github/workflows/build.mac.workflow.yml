@@ -21,10 +21,10 @@ jobs:
             qtver: "5.15.2"
             qtvershort: "5_intel"
           - os: macos-12
-            qtver: "6.6.1"
+            qtver: "6.6.3"
             qtvershort: "6_intel"
           - os: macos-14
-            qtver: "6.6.1"
+            qtver: "6.6.3"
             qtvershort: "6_arm"
 
     steps:
@@ -40,6 +40,8 @@ jobs:
 
     - name: Install Qt
       uses: jurplel/install-qt-action@b3ea5275e37b734d027040e2c7fe7a10ea2ef946 # v3.3.0
+      env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
       with:
           target: desktop
           version: "${{ matrix.qtver }}"
