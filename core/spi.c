@@ -14,9 +14,9 @@
 spi_state_t spi;
 
 static uint8_t null_spi_select(uint32_t* rxData) {
-    (void)rxData;
-    /* Set the device frame to the transfer size, to reduce scheduling */
-    return (spi.cr1 >> 16 & 0x1F) + 1;
+    /* Hack to make OS 5.7.0 happy without a coprocessor */
+    *rxData = 0xC3;
+    return 8;
 }
 
 static uint8_t null_spi_transfer(uint32_t txData, uint32_t* rxData) {
@@ -96,11 +96,10 @@ static void spi_event(enum sched_item_id id) {
     if (unlikely(spi.cr0 >> 7 & 1)) {
         spi.rxFrame |= spi.txFrame >> (32 - bitCount);
     }
-    /* For working receives, use the following:
-    else if (asic.spiRxAllowed) {
+    /* For now, allow only receives from coprocessor */
+    else if (spi.arm) {
         spi.rxFrame |= spi.deviceFrame >> (32 - bitCount);
     }
-    */
     spi.deviceFrame <<= bitCount;
     spi.deviceFrame |= spi.txFrame >> (32 - bitCount);
     spi.txFrame <<= bitCount;
