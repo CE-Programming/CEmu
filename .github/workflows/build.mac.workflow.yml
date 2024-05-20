@@ -15,9 +15,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-12, macos-14]
+        os: [macos-12, macos-14]
         include:
-          - os: macos-11
+          - os: macos-12
             qtver: "5.15.2"
             qtvershort: "5_intel"
           - os: macos-12
