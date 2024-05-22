@@ -390,8 +390,9 @@ typedef struct panel_params {
 
 typedef struct panel_state {
     uint32_t lineStartTick;
-    uint16_t ticksPerLine, linesPerFrame;
-    uint16_t row, col, dstRow, srcRow;
+    uint16_t ticksPerLine, linesPerFrame, horizBackPorch;
+    int16_t col;
+    uint16_t row, dstRow, srcRow;
     uint8_t nextRamCol, cmd, paramIter, paramEnd;
     bool currLineBuffer;
     bool invert, tear;
@@ -399,8 +400,7 @@ typedef struct panel_state {
 
     panel_mem_ptr_t memPtrs[2];
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
-    uint8_t displayMode, horizBackPorch;
-    uint8_t mode, pendingMode, ifRed, ifGreen, ifBlue;
+    uint8_t displayMode, mode, pendingMode, ifRed, ifGreen, ifBlue;
 
     panel_params_t params;
     uint8_t lineBuffers[2][240][3];
@@ -408,6 +408,7 @@ typedef struct panel_state {
 
     /* Below state is initialized at runtime */
     uint8_t gammaLut[3][64];
+    void (*clock_pixel)(uint8_t red, uint8_t green, uint8_t blue);
     uint8_t blankLevel;
     bool accurateGamma;
     bool gammaDirty;
@@ -422,9 +423,8 @@ bool panel_save(FILE *image);
 void panel_hw_reset(void);
 bool panel_hsync(void);
 void panel_vsync(void);
-void panel_clock_pixels_until(uint32_t currTick);
-void panel_clock_pixels(uint32_t clocks);
-void panel_update_pixel_rgb(uint8_t r, uint8_t g, uint8_t b);
+void panel_clock_porch(uint32_t clocks);
+void panel_scan_until(uint32_t currTick);
 
 uint8_t panel_spi_select(uint32_t* rxData);
 uint8_t panel_spi_transfer(uint32_t txData, uint32_t* rxData);

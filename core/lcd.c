@@ -10,6 +10,7 @@
 #include "interrupt.h"
 #include "panel.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -162,45 +163,43 @@ static void lcd_process_pixel(uint32_t *ticks, uint8_t red, uint8_t green, uint8
     uint32_t v;
     *ticks += lcd.PCD * 2;
     if (likely(lcd.curRow < lcd.LPP)) {
-        if (!likely(lcd.curCol) && likely(panel.displayMode == PANEL_DM_RGB)) {
+        if (!likely(lcd.curCol)) {
             if (!likely(lcd.curRow)) {
+                panel_clock_porch(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 for (v = (lcd.VSW - 1) + lcd.VBP; v; v--) {
                     if (!panel_hsync()) {
                         break;
                     }
-                    panel_clock_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
+                    panel_clock_porch(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
             panel_hsync();
-            panel_clock_pixels(lcd.HSW + lcd.HBP);
+            panel_clock_porch(lcd.HSW + lcd.HBP);
         }
-        if (likely(!sched_active(SCHED_PANEL))) {
-            panel_clock_pixels(1);
-        } else {
-            panel_clock_pixels_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, *ticks));
+
+        if (unlikely(sched_active(SCHED_PANEL))) {
+            panel_scan_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, *ticks));
         }
-        if (likely(lcd.curCol < lcd.PPL && panel.params.RAMCTRL.RM)) {
-            if (!likely(lcd.control & 1 << 11)) {
-                red = green = blue = 0;
-            } else if (likely(lcd.BGR)) {
-                uint8_t temp = red;
-                red = blue;
-                blue = temp;
-            }
-            panel_update_pixel_rgb(red, green, blue);
+        assert(lcd.curCol < lcd.PPL);
+        if (!likely(lcd.control & 1 << 11)) {
+            red = green = blue = 0;
+        } else if (likely(lcd.BGR)) {
+            uint8_t temp = red;
+            red = blue;
+            blue = temp;
         }
+        panel.clock_pixel(red, green, blue);
+
         if (unlikely(++lcd.curCol >= lcd.PPL)) {
+            panel_clock_porch(lcd.HFP);
             lcd.curCol = 0;
             lcd.curRow++;
-            if (likely(panel.displayMode == PANEL_DM_RGB)) {
-                panel_clock_pixels(lcd.HFP);
-                if (unlikely(lcd.curRow >= lcd.LPP)) {
-                    for (v = lcd.VFP; v; v--) {
-                        if (!panel_hsync()) {
-                            break;
-                        }
-                        panel_clock_pixels(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
+            if (unlikely(lcd.curRow >= lcd.LPP)) {
+                for (v = lcd.VFP; v; v--) {
+                    if (!panel_hsync()) {
+                        break;
                     }
+                    panel_clock_porch(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
             *ticks += (lcd.HFP + lcd.HSW + lcd.HBP) * lcd.PCD * 2;
