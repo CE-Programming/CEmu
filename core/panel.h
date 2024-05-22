@@ -33,7 +33,8 @@ enum panel_mode {
 enum panel_display_mode {
     PANEL_DM_MCU = 0,
     PANEL_DM_RGB = 1,
-    PANEL_DM_VSYNC = 2
+    PANEL_DM_VSYNC = 2,
+    PANEL_DM_RESERVED = 3
 };
 
 typedef struct panel_mem_ptr {

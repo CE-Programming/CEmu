@@ -168,6 +168,10 @@ static inline int32_t panel_ram_col(void) {
     return panel.col + panel.horizBackPorch - 17;
 }
 
+static inline bool panel_next_dm_is_mcu(void) {
+    return panel.params.RAMCTRL.DM == PANEL_DM_MCU || panel.params.RAMCTRL.DM == PANEL_DM_RESERVED;
+}
+
 static inline uint32_t panel_reverse_addr(uint32_t addr, uint32_t upperBound, uint32_t dirMask) {
     assert(dirMask == 0 || dirMask == ~0);
     return (addr ^ dirMask) + (upperBound & dirMask);
@@ -502,7 +506,7 @@ static uint32_t panel_start_frame() {
     panel.topArea = panel.params.VSCRDEF.TFA & PANEL_ADDR_MASK;
     panel.bottomArea = (PANEL_LAST_ROW - panel.params.VSCRDEF.BFA) & PANEL_ADDR_MASK;
     panel.scrollStart = panel.params.VSCRSADD.VSP & PANEL_ADDR_MASK;
-    panel.displayMode = panel.params.RAMCTRL.DM;
+    panel.displayMode = panel.params.RAMCTRL.DM != PANEL_DM_RESERVED ? panel.params.RAMCTRL.DM : PANEL_DM_MCU;
 
     panel_generate_luts();
 
@@ -607,7 +611,7 @@ static void panel_event(enum sched_item_id id) {
     panel_scan_until(0);
 
     /* If the new display mode is MCU, start the next frame now */
-    if (panel.params.RAMCTRL.DM == PANEL_DM_MCU) {
+    if (panel_next_dm_is_mcu()) {
         sched_repeat(id, panel_start_frame());
     }
 }
@@ -1065,7 +1069,7 @@ static void panel_write_param(uint8_t value) {
         ((uint8_t*)&panel.params)[index] = value;
         if (unlikely(index == offsetof(panel_params_t, RAMCTRL))) {
             /* Handle display mode switch from RGB to MCU */
-            if (unlikely(panel.params.RAMCTRL.DM == PANEL_DM_MCU) &&
+            if (unlikely(panel_next_dm_is_mcu()) &&
                 panel.displayMode == PANEL_DM_RGB) {
                 sched_set(SCHED_PANEL, panel_start_frame());
             }
