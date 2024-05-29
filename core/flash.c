@@ -75,7 +75,8 @@ uint32_t flash_touch_cache(uint32_t addr) {
             return 3;
         } else {
             /* Handle a cache miss by replacing least-recently-used */
-            set->lru = tag;
+            set->lru = set->mru;
+            set->mru = tag;
             cpu.flashCacheMisses++;
             /* Supposedly this takes from 195-201 cycles, but typically seems to be 196-197 */
             cpu.flashDelayCycles += 195;
