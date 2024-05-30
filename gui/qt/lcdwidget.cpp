@@ -177,9 +177,9 @@ void LCDWidget::draw() {
         m_mutex.lock();
         m_blendedFrame.swap(m_renderedFrame);
         emu_lcd_drawframe(m_renderedFrame.bits());
-        if (backlight.factor < 1) {
+        if (!lcd.spi && backlight.factor < 1.0f) {
             QPainter c(&m_renderedFrame);
-            c.fillRect(c.window(), QColor(0, 0, 0, (1 - backlight.factor) * 255));
+            c.fillRect(c.window(), QColor(0, 0, 0, (1.0f - backlight.factor) * 255.0f));
         }
         if (m_responseMode) {
             QPainter c(&m_blendedFrame);

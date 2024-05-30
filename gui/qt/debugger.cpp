@@ -15,7 +15,7 @@
 #include "../../core/control.h"
 #include "../../core/flash.h"
 #include "../../core/lcd.h"
-#include "../../core/spi.h"
+#include "../../core/panel.h"
 #include "../../core/backlight.h"
 #include "../../core/timers.h"
 #include "../../core/usb/usb.h"
@@ -562,7 +562,8 @@ void MainWindow::debugSync() {
     }
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
-    backlight.factor = (310.0f - static_cast<float>(backlight.brightness)) / 160.0f;
+    backlight.factor = (310u - backlight.brightness) / 160.0f;
+    panel.gammaDirty = true;
 
     lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
     lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));

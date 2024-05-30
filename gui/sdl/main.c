@@ -131,7 +131,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         emu_run(actual_ticks);
 
         if (control.ports[5] & 1 << 4) {
-            uint8_t brightness = backlight.factor < 1 ? backlight.factor * 255 : 255;
+            uint8_t brightness = (!cemu->spi && backlight.factor < 1.0f) ? (uint8_t)(backlight.factor * 255.0f) : 255;
             SDL_SetTextureColorMod(sdl->texture, brightness, brightness, brightness);
             SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
         } else {

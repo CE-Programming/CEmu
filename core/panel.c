@@ -1,4 +1,5 @@
 #include "panel.h"
+#include "backlight.h"
 #include "bus.h"
 #include "lcd.h"
 #include "schedule.h"
@@ -435,7 +436,9 @@ static void panel_generate_luts(void) {
     if (unlikely(panel.gammaDirty)) {
         panel.gammaDirty = false;
 
+        float backlightFactor = backlight.factor < 1.0f ? backlight.factor : 1.0f;
         if (panel.accurateGamma) {
+            backlightFactor *= 255.0f;
             float gamma_pos[64], gamma_neg[64];
             panel_generate_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
             panel_generate_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
@@ -455,11 +458,12 @@ static void panel_generate_luts(void) {
                 float diff = gamma - piece->gamma;
                 float grayscale = ((piece->a * diff + piece->b) * diff + piece->c) * diff + piece->d;
                 assert(grayscale >= 0.0f && grayscale < 256.0f / 255.0f);
-                panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(grayscale * 255.0f);
+                panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(grayscale * backlightFactor);
             }
         } else {
+            backlightFactor *= 4.0625f;
             for (uint8_t c = 0; c < 64; c++) {
-                panel.gammaLut[PANEL_GREEN][c] = c << 2 | c >> 4;
+                panel.gammaLut[PANEL_GREEN][c] = (uint8_t)(c * backlightFactor);
             }
         }
 

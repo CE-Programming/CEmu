@@ -1,5 +1,6 @@
 #include "backlight.h"
 #include "emu.h"
+#include "panel.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -58,6 +59,7 @@ static void backlight_write(const uint16_t pio, const uint8_t byte, bool poke) {
     }
 
     backlight.factor = (310u - backlight.brightness) / 160.0f;
+    panel.gammaDirty = true;
 }
 
 static const eZ80portrange_t device = {
