@@ -407,6 +407,9 @@ typedef struct panel_state {
     uint8_t lineBuffers[2][240][3];
     uint8_t frame[320][240][3], display[240][320][4];
 
+    /* Below state is not affected by reset */
+    uint32_t clockRate;
+
     /* Below state is initialized at runtime */
     uint8_t gammaLut[3][64];
     void (*clock_pixel)(uint8_t red, uint8_t green, uint8_t blue);
@@ -417,11 +420,13 @@ typedef struct panel_state {
 
 extern panel_state_t panel;
 
+void init_panel(void);
 void panel_reset(void);
 bool panel_restore(FILE *image);
 bool panel_save(FILE *image);
 
 void panel_hw_reset(void);
+void panel_update_clock_rate(void);
 bool panel_hsync(void);
 void panel_vsync(void);
 void panel_clock_porch(uint32_t clocks);

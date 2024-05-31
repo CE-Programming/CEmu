@@ -575,8 +575,19 @@ void MainWindow::debugSync() {
     set_reset(ui->checkBEPO->isChecked(), 0x400u, lcd.control);
     set_reset(ui->checkBEBO->isChecked(), 0x200u, lcd.control);
     set_reset(ui->checkBGR->isChecked(), 0x100u, lcd.control);
+    uint32_t panelClockRate = static_cast<uint32_t>(ui->lcdFreqView->text().toDouble() * 1e6);
+    if (panelClockRate < 9500000) {
+        panelClockRate = 9500000;
+    }
+    if (panelClockRate > 10500000) {
+        panelClockRate = 10500000;
+    }
+    if (panelClockRate != panel.clockRate) {
+        panel.clockRate = panelClockRate;
+        panel_update_clock_rate();
+    }
 
-    set_cpu_clock(static_cast<uint32_t>(ui->freqView->text().toUInt() * 1e6));
+    set_cpu_clock(static_cast<uint32_t>(ui->freqView->text().toDouble() * 1e6));
 
     lcd_update();
 
@@ -752,6 +763,10 @@ void MainWindow::debugPopulate() {
     tmp = int2hex(lcd.upcurr, 6);
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? m_cNone : m_cBack);
     ui->lcdcurrView->setText(tmp);
+
+    tmp = QString::number(panel.clockRate / 1e6);
+    ui->lcdFreqView->setPalette(tmp == ui->lcdFreqView->text() ? m_cNone : m_cBack);
+    ui->lcdFreqView->setText(tmp);
 
     tmp = QString::number(sched_get_clock_rate(CLOCK_CPU) / 1e6);
     ui->freqView->setPalette(tmp == ui->freqView->text() ? m_cNone : m_cBack);

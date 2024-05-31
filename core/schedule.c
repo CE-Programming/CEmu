@@ -37,7 +37,7 @@
 # endif
 #endif
 
-#define SCHED_INACTIVE_FLAG (1ULL << 63)
+#define SCHED_INACTIVE_FLAG (UINT64_C(1) << 63)
 
 sched_state_t sched;
 
@@ -165,6 +165,10 @@ static inline uint64_t div_floor(uint64_t dividend, struct sched_clock *clock) {
 
     assert(quotient == dividend / clock->tick_unit);
     return quotient;
+}
+
+static inline uint64_t div_round(uint64_t dividend, struct sched_clock *clock) {
+    return div_floor(dividend + (clock->tick_unit / 2), clock);
 }
 
 static inline uint64_t div_ceil(uint64_t dividend, struct sched_clock *clock) {
@@ -457,10 +461,23 @@ bool sched_set_clock(enum clock_id clock, uint32_t new_rate) {
     struct sched_item *item;
 
     assert(clock >= CLOCK_CPU && clock < CLOCK_48M);
-    if (new_rate <= (SCHED_BASE_CLOCK_RATE >> 32) || (SCHED_BASE_CLOCK_RATE % new_rate) != 0) {
+    if (new_rate <= (SCHED_BASE_CLOCK_RATE >> 32)) {
         return false;
     }
     struct sched_clock new_clock = { .tick_unit = (uint32_t)(SCHED_BASE_CLOCK_RATE / new_rate) };
+    uint32_t remainder = (uint32_t)(SCHED_BASE_CLOCK_RATE % new_rate);
+    if (clock == CLOCK_CPU) {
+        /* Don't allow non-integer CPU clock rates */
+        if (remainder != 0) {
+            return false;
+        }
+    } else {
+        /* Round up the tick unit */
+        new_clock.tick_unit += (remainder * 2 >= new_rate);
+        if (new_clock.tick_unit == 0) {
+            return false;
+        }
+    }
     update_reciprocal(&new_clock);
     uint32_t base_tick = muldiv_floor(cpu.cycles, &sched.clocks[CLOCK_CPU], &new_clock);
     for (id = 0; id < SCHED_NUM_ITEMS; id++) {
@@ -492,7 +509,7 @@ void sched_set_item_clock(enum sched_item_id id, enum clock_id clock) {
 }
 
 uint32_t sched_get_clock_rate(enum clock_id clock) {
-    return (uint32_t)div_floor(SCHED_BASE_CLOCK_RATE, &sched.clocks[clock]);
+    return (uint32_t)div_round(SCHED_BASE_CLOCK_RATE, &sched.clocks[clock]);
 }
 
 void sched_reset(void) {

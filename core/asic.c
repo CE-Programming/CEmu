@@ -62,6 +62,7 @@ static void plug_devices(void) {
     port_map[0xD] = init_spi();
     port_map[0xE] = init_uart();
     port_map[0xF] = init_fxxx();
+    init_panel();
 
     reset_proc_count = 0;
 

@@ -11,7 +11,7 @@ extern "C" {
 
 /* All clock rates must be a factor of this value, and greater than 1 */
 /* If events at 1 Hz are required, schedule them relative to SCHED_SECOND */
-#define SCHED_BASE_CLOCK_RATE ((uint64_t)7680000000ULL)
+#define SCHED_BASE_CLOCK_RATE UINT64_C(7680000000)
 
 enum clock_id { CLOCK_CPU, CLOCK_PANEL, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M,
                 CLOCK_3M, CLOCK_1M, CLOCK_32K, CLOCK_NUM_ITEMS };

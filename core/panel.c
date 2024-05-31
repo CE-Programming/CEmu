@@ -835,8 +835,8 @@ static void panel_update_rgb_clock_method(void) {
     }
 }
 
-static void panel_update_clock_rate(void) {
-    sched_set_clock(CLOCK_PANEL, 10000000 >> panel.params.FRCTRL1.DIV);
+void panel_update_clock_rate(void) {
+    sched_set_clock(CLOCK_PANEL, panel.clockRate >> panel.params.FRCTRL1.DIV);
 }
 
 void panel_hw_reset(void) {
@@ -1213,8 +1213,12 @@ uint8_t panel_spi_transfer(uint32_t txData, uint32_t* rxData) {
 void panel_spi_deselect(void) {
 }
 
+void init_panel(void) {
+    panel.clockRate = 9800000;
+}
+
 void panel_reset(void) {
-    memset(&panel, 0, offsetof(panel_state_t, gammaLut));
+    memset(&panel, 0, offsetof(panel_state_t, display));
     memset(&panel.display, 0xFF, sizeof(panel.display));
 
     sched_init_event(SCHED_PANEL, CLOCK_PANEL, panel_event);
