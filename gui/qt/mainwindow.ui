@@ -2985,7 +2985,7 @@
                 </widget>
                </item>
                <item row="2" column="3">
-                <widget class="QCheckBox" name="checkDma">
+                <widget class="QCheckBox" name="checkDebugDma">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -9540,7 +9540,7 @@ QPushButton:pressed {
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_16">
                  <item>
-                  <widget class="QCheckBox" name="checkSpi">
+                  <widget class="QCheckBox" name="checkDma">
                    <property name="enabled">
                     <bool>true</bool>
                    </property>
@@ -9548,7 +9548,7 @@ QPushButton:pressed {
                     <enum>Qt::NoFocus</enum>
                    </property>
                    <property name="text">
-                    <string>Emulate physical LCD SPI drawing</string>
+                    <string>Emulate DMA to LCD memory</string>
                    </property>
                   </widget>
                  </item>

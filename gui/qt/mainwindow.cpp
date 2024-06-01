@@ -248,7 +248,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkDisasmAddr, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmAddrCol);
     connect(ui->checkDisasmImplict, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmImplict);
     connect(ui->checkDisasmUppercase, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmUppercase);
-    connect(ui->checkDma, &QCheckBox::toggled, this, &MainWindow::setLcdDma);
+    connect(ui->checkDebugDma, &QCheckBox::toggled, this, &MainWindow::setDebugLcdDma);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
 
     // debug files
@@ -371,7 +371,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
     connect(ui->comboBoxAsicRev, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setAsicRevision);
     connect(ui->checkPythonEdition, &QCheckBox::stateChanged, this, &MainWindow::setPythonEdition);
-    connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
+    connect(ui->checkDma, &QCheckBox::toggled, this, &MainWindow::setLcdDma);
     connect(ui->checkGamma, &QCheckBox::toggled, this, &MainWindow::setLcdGamma);
     connect(ui->checkResponse, &QCheckBox::toggled, this, &MainWindow::setLcdResponse);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setTop);
@@ -571,7 +571,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setStatusInterval(m_config->value(SETTING_STATUS_INTERVAL, 1).toInt());
     setLcdScale(m_config->value(SETTING_SCREEN_SCALE, 100).toInt());
     setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
-    setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
+    setLcdDma(m_config->value(SETTING_SCREEN_DMA, true).toBool());
     setLcdGamma(m_config->value(SETTING_SCREEN_GAMMA, true).toBool());
     setLcdResponse(m_config->value(SETTING_SCREEN_RESPONSE, true).toBool());
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
@@ -593,7 +593,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setAllowAnyRev(m_config->value(SETTING_DEBUGGER_ALLOW_ANY_REV, false).toBool());
     setPythonEdition(qvariant_cast<Qt::CheckState>(m_config->value(SETTING_PYTHON_EDITION, Qt::PartiallyChecked)));
     setNormalOs(m_config->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
-    setLcdDma(m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
+    setDebugLcdDma(!m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(m_config->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(m_config->value(SETTING_RECENT_SAVE, true).toBool());
     setDockGroupDrag(m_config->value(SETTING_WINDOW_GROUP_DRAG, false).toBool());

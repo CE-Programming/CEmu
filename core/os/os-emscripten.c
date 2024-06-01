@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
         debug_init();
         debug_flag(DBG_SOFT_COMMANDS, true);
 #endif
-        emu_set_lcd_spi(1);
+        emu_set_lcd_dma(1);
         emu_set_lcd_gamma(1);
         EM_ASM(
             emul_is_inited = true;

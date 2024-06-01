@@ -177,13 +177,13 @@ void LCDWidget::draw() {
         m_mutex.lock();
         m_blendedFrame.swap(m_renderedFrame);
         emu_lcd_drawframe(m_renderedFrame.bits());
-        if (!lcd.spi && backlight.factor < 1.0f) {
+        if (!lcd.useDma && backlight.factor < 1.0f) {
             QPainter c(&m_renderedFrame);
             c.fillRect(c.window(), QColor(0, 0, 0, (1.0f - backlight.factor) * 255.0f));
         }
         if (m_responseMode) {
             QPainter c(&m_blendedFrame);
-            if (lcd.spi && panel.params.GATECTRL.SM) {
+            if (lcd.useDma && panel.params.GATECTRL.SM) {
                 c.setClipRegion(m_interlaceRight);
                 c.setOpacity(0.4);
                 c.drawImage(QPoint(0, 0), m_renderedFrame);

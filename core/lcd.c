@@ -51,8 +51,8 @@ void emu_set_lcd_callback(void (*callback)(void*), void *data) {
     lcd.gui_callback_data = data;
 }
 
-void emu_set_lcd_spi(int enable) {
-    lcd.spi = enable;
+void emu_set_lcd_dma(int enable) {
+    lcd.useDma = enable;
 }
 
 void emu_set_lcd_gamma(int enable) {
@@ -61,13 +61,15 @@ void emu_set_lcd_gamma(int enable) {
 }
 
 void emu_lcd_drawframe(void *output) {
-    if (lcd.control & 1 << 11) {
-        emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE, lcd.spi);
+    if (lcd.useDma) {
+        memcpy(output, panel.display, sizeof(panel.display));
+    } else if (lcd.control & 1 << 11) {
+        emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE);
     }
 }
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size, int use_spi) {
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size) {
     bool bebo;
     uint_fast8_t mode;
     uint32_t word, color;
@@ -75,11 +77,6 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
     uint32_t *out_end;
     uint32_t *dat;
     uint32_t *dat_end;
-
-    if (use_spi) {
-        memcpy(output, panel.display, sizeof(panel.display));
-        return;
-    }
 
     _rgb = lcd_control & (1 << 8);
     bebo = lcd_control & (1 << 9);
@@ -316,7 +313,7 @@ static void lcd_event(enum sched_item_id id) {
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
                         lcd.HSW) * lcd.PCD + 1;
             lcd.prefill = true;
-            if (lcd.spi) {
+            if (lcd.useDma) {
                 lcd.pos = 0;
                 lcd.curRow = lcd.curCol = 0;
                 panel_vsync();
@@ -373,7 +370,7 @@ static uint32_t lcd_dma(enum sched_item_id id) {
 }
 
 void lcd_reset(void) {
-    memset(&lcd, 0, offsetof(lcd_state_t, spi));
+    memset(&lcd, 0, offsetof(lcd_state_t, useDma));
     lcd_update();
 
     sched_init_event(SCHED_LCD, CLOCK_24M, lcd_event);
@@ -640,7 +637,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
-    memset(&lcd, 0, offsetof(lcd_state_t, spi));
+    memset(&lcd, 0, offsetof(lcd_state_t, useDma));
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }

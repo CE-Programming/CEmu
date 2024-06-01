@@ -15,7 +15,7 @@ typedef struct {
 typedef struct {
     char *rom;
     char *image;
-    int spi;
+    int dma;
     int gamma;
     int limit;
     int fullscreen;
@@ -53,7 +53,7 @@ void sdl_update_lcd(void *data) {
 void sdl_cemu_configure(cemu_sdl_t *cemu) {
     emu_set_run_rate(1000);
     emu_set_lcd_callback(sdl_update_lcd, &cemu->sdl);
-    emu_set_lcd_spi(cemu->spi);
+    emu_set_lcd_dma(cemu->dma);
     emu_set_lcd_gamma(cemu->gamma);
 }
 
@@ -131,7 +131,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         emu_run(actual_ticks);
 
         if (control.ports[5] & 1 << 4) {
-            uint8_t brightness = (!cemu->spi && backlight.factor < 1.0f) ? (uint8_t)(backlight.factor * 255.0f) : 255;
+            uint8_t brightness = (!cemu->dma && backlight.factor < 1.0f) ? (uint8_t)(backlight.factor * 255.0f) : 255;
             SDL_SetTextureColorMod(sdl->texture, brightness, brightness, brightness);
             SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
         } else {
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
     cemu.fullscreen = 0;
     cemu.image = NULL;
     cemu.rom = NULL;
-    cemu.spi = 0;
+    cemu.dma = 1;
     cemu.gamma = 0;
 
     for (;;) {
@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
             {"rom",        required_argument, 0,  'r' },
             {"image",      required_argument, 0,  'i' },
             {"limit",      required_argument, 0,  'l' },
-            {"spi",        no_argument,       0,  's' },
+            {"nodma",      no_argument,       0,  'd' },
             {"gamma",      no_argument,       0,  'g' },
             {"keymap",     required_argument, 0,  'k' },
             {"asic",       required_argument, 0,  'a' },
@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
             {}
         };
 
-        c = getopt_long(argc, argv, "fr:i:l:sgk:a:", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:l:dgk:a:pP", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -254,9 +254,9 @@ int main(int argc, char **argv) {
                 cemu.limit = number;
                 break;
 
-            case 's':
-                fprintf(stdout, "spi: yes\n");
-                cemu.spi = 1;
+            case 'd':
+                fprintf(stdout, "dma: no\n");
+                cemu.dma = 0;
                 break;
 
             case 'g':

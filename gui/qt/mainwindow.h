@@ -414,10 +414,10 @@ private:
     void setSkinToggle(bool state);
     void setGuiSkip(int value);
     void setLcdScale(int value);
-    void setLcdSpi(bool state);
+    void setLcdDma(bool state);
     void setLcdGamma(bool state);
     void setLcdResponse(bool state);
-    void setLcdDma(bool state);
+    void setDebugLcdDma(bool state);
     void setTop(bool state);
     void setDockGroupDrag(bool state);
     void setMenuBarState(bool state);
@@ -739,7 +739,7 @@ private:
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;
-    static const QString SETTING_SCREEN_SPI;
+    static const QString SETTING_SCREEN_DMA;
     static const QString SETTING_SCREEN_GAMMA;
     static const QString SETTING_SCREEN_RESPONSE;
     static const QString SETTING_KEYPAD_KEYMAP;
