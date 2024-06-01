@@ -218,8 +218,9 @@ static void lcd_process_half(uint32_t *ticks, uint16_t pixel) {
     }
 }
 
-static void lcd_process_index(uint32_t *ticks, uint8_t index) {
-    lcd_process_half(ticks, lcd.palette[index]);
+static inline void lcd_process_index(uint32_t *ticks, uint8_t index) {
+    uint16_t pixel = lcd.palette[index];
+    lcd_process_pixel(ticks, pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
 }
 
 static void lcd_fill_bytes(uint8_t bytes) {
@@ -228,38 +229,43 @@ static void lcd_fill_bytes(uint8_t bytes) {
     lcd.upcurr += bytes;
 }
 
-static uint32_t lcd_drain_word(uint8_t *pos) {
+static inline uint32_t lcd_drain_word(uint8_t *pos) {
     uint32_t word = 0;
-    if (unlikely(lcd.BEBO)) {
-        word |= lcd.fifo[(*pos)++] << 24;
-        word |= lcd.fifo[(*pos)++] << 16;
-        word |= lcd.fifo[(*pos)++] <<  8;
-        word |= lcd.fifo[(*pos)++] <<  0;
-    } else {
-        word |= lcd.fifo[(*pos)++] <<  0;
-        word |= lcd.fifo[(*pos)++] <<  8;
-        word |= lcd.fifo[(*pos)++] << 16;
-        word |= lcd.fifo[(*pos)++] << 24;
-    }
+    size_t index = *pos;
+    assert((index & 3) == 0);
+    word |= lcd.fifo[index++] <<  0;
+    word |= lcd.fifo[index++] <<  8;
+    word |= lcd.fifo[index++] << 16;
+    word |= lcd.fifo[index++] << 24;
+    *pos = (uint8_t)index;
     return word;
 }
 
 static uint32_t lcd_words(uint8_t words) {
+    assert(words > 0);
     uint32_t ticks = 0;
     uint8_t pos = lcd.pos, bit, bpp = 1 << lcd.LCDBPP;
-    while (words--) {
-        uint32_t word = lcd_drain_word(&pos);
-        if (unlikely(lcd.LCDBPP == 5)) {
-            lcd_process_pixel(&ticks, word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
-        } else if (unlikely(lcd.LCDBPP >= 4)) {
-            lcd_process_half(&ticks, word);
-            lcd_process_half(&ticks, word >> 16);
-        } else {
+    if (bpp <= 8) {
+        uint8_t mask = (1 << bpp) - 1;
+        uint8_t bi = (lcd.BEBO ? 24 : 0) ^ (lcd.BEPO ? 8 - bpp : 0);
+        do {
+            uint32_t word = lcd_drain_word(&pos);
             for (bit = 0; bit < 32; bit += bpp) {
-                lcd_process_index(&ticks,
-                                  word >> (bit ^ (unlikely(lcd.BEPO) ? 8 - bpp : 0)) & ((1 << bpp) - 1));
+                lcd_process_index(&ticks, word >> (bit ^ bi) & mask);
             }
-        }
+        } while (--words);
+    } else if (likely(bpp != 32)) {
+        uint8_t bi = lcd.BEBO ? 16 : 0;
+        do {
+            uint32_t word = lcd_drain_word(&pos);
+            lcd_process_half(&ticks, word >> bi);
+            lcd_process_half(&ticks, word >> (16 ^ bi));
+        } while (--words);
+    } else {
+        do {
+            uint32_t word = lcd_drain_word(&pos);
+            lcd_process_pixel(&ticks, word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
+        } while (--words);
     }
     return ticks;
 }
