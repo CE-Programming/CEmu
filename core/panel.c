@@ -12,7 +12,7 @@
 panel_state_t panel;
 
 static void panel_update_rgb_clock_method(void);
-static void panel_clock_pixel_ram_bypass(uint8_t red, uint8_t green, uint8_t blue);
+static void panel_clock_pixel_ram_bypass(uint16_t bgr565);
 
 #define GAMMA_PARAMS(j0, j1, v0, v1, v2, v20, v43, v61, v62, v63, v4, v6, v13, v27, v36, v50, v57, v59) \
     { .V0 = 129-v0, .V63 = 23-v63, .V1 = 128-v1, .V2 = 128-v2, .V4 = 57-v4, .V6 = 47-v6, .V13 = 21-v13, \
@@ -95,30 +95,49 @@ static const panel_gamma_t gamma_presets[4][2] = {
 
 #undef GAMMA_PARAMS
 
-static const uint8_t epfLut12[4][16] = {
-    { 0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x24, 0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C },
-    { 0x03, 0x07, 0x0B, 0x0F, 0x13, 0x17, 0x1B, 0x1F, 0x23, 0x27, 0x2B, 0x2F, 0x33, 0x37, 0x3B, 0x3F },
-    { 0x00, 0x04, 0x08, 0x0C, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 0x2E, 0x33, 0x37, 0x3B, 0x3F },
-    { 0x00, 0x04, 0x08, 0x0C, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 0x2E, 0x33, 0x37, 0x3B, 0x3F }
+static inline uint32_t panel_bgr444_epf0(uint16_t bgr444) {
+    return (bgr444 << 6 & 0x3C000) | (bgr444 << 4 & 0xF00) | (bgr444 << 2 & 0x3C);
+}
+
+static inline uint32_t panel_bgr444_epf1(uint16_t bgr444) {
+    return panel_bgr444_epf0(bgr444) + 0x30C3;
+}
+
+static inline uint32_t panel_bgr444_epf23(uint16_t bgr444) {
+    uint32_t bgr666 = panel_bgr444_epf0(bgr444);
+    return bgr666 + (bgr666 >> 4 & 0x30C3);
+}
+
+static const uint32_t (*panel_bgr444_epf_funcs[])(uint16_t bgr444) = {
+    panel_bgr444_epf0,
+    panel_bgr444_epf1,
+    panel_bgr444_epf23,
+    panel_bgr444_epf23
 };
 
-static const uint8_t epfLut16[4][64] = {
-    { 0x00, 0x00, 0x02, 0x02, 0x04, 0x04, 0x06, 0x06, 0x08, 0x08, 0x0A, 0x0A, 0x0C, 0x0C, 0x0E, 0x0E,
-      0x10, 0x10, 0x12, 0x12, 0x14, 0x14, 0x16, 0x16, 0x18, 0x18, 0x1A, 0x1A, 0x1C, 0x1C, 0x1E, 0x1E,
-      0x20, 0x20, 0x22, 0x22, 0x24, 0x24, 0x26, 0x26, 0x28, 0x28, 0x2A, 0x2A, 0x2C, 0x2C, 0x2E, 0x2E,
-      0x30, 0x30, 0x32, 0x32, 0x34, 0x34, 0x36, 0x36, 0x38, 0x38, 0x3A, 0x3A, 0x3C, 0x3C, 0x3E, 0x3E },
-    { 0x01, 0x01, 0x03, 0x03, 0x05, 0x05, 0x07, 0x07, 0x09, 0x09, 0x0B, 0x0B, 0x0D, 0x0D, 0x0F, 0x0F,
-      0x11, 0x11, 0x13, 0x13, 0x15, 0x15, 0x17, 0x17, 0x19, 0x19, 0x1B, 0x1B, 0x1D, 0x1D, 0x1F, 0x1F,
-      0x21, 0x21, 0x23, 0x23, 0x25, 0x25, 0x27, 0x27, 0x29, 0x29, 0x2B, 0x2B, 0x2D, 0x2D, 0x2F, 0x2F,
-      0x31, 0x31, 0x33, 0x33, 0x35, 0x35, 0x37, 0x37, 0x39, 0x39, 0x3B, 0x3B, 0x3D, 0x3D, 0x3F, 0x3F },
-    { 0x00, 0x00, 0x02, 0x02, 0x04, 0x04, 0x06, 0x06, 0x08, 0x08, 0x0A, 0x0A, 0x0C, 0x0C, 0x0E, 0x0E,
-      0x10, 0x10, 0x12, 0x12, 0x14, 0x14, 0x16, 0x16, 0x18, 0x18, 0x1A, 0x1A, 0x1C, 0x1C, 0x1E, 0x1E,
-      0x21, 0x21, 0x23, 0x23, 0x25, 0x25, 0x27, 0x27, 0x29, 0x29, 0x2B, 0x2B, 0x2D, 0x2D, 0x2F, 0x2F,
-      0x31, 0x31, 0x33, 0x33, 0x35, 0x35, 0x37, 0x37, 0x39, 0x39, 0x3B, 0x3B, 0x3D, 0x3D, 0x3F, 0x3F },
-    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-      0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
-      0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
-      0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F }
+static inline uint32_t panel_bgr565_epf0(uint16_t bgr565) {
+    uint32_t bgr666 = bgr565 + (bgr565 & 0xF800);
+    return bgr666 << 1;
+}
+
+static inline uint32_t panel_bgr565_epf1(uint16_t bgr565) {
+    return panel_bgr565_epf0(bgr565) + 0x1001;
+}
+
+static inline uint32_t panel_bgr565_epf2(uint16_t bgr565) {
+    uint32_t bgr666 = panel_bgr565_epf0(bgr565);
+    return bgr666 + (bgr666 >> 5 & 0x1001);
+}
+
+static inline uint32_t panel_bgr565_epf3(uint16_t bgr565) {
+    return panel_bgr565_epf0(bgr565) + (bgr565 & 0x20 ? 0x1001 : 0);
+}
+
+static const uint32_t (*panel_bgr565_epf_funcs[])(uint16_t bgr565) = {
+    panel_bgr565_epf0,
+    panel_bgr565_epf1,
+    panel_bgr565_epf2,
+    panel_bgr565_epf3
 };
 
 static inline uint32_t panel_col_scan_reverse_mask(void) {
@@ -171,6 +190,14 @@ static inline int32_t panel_ram_col(void) {
 
 static inline bool panel_next_dm_is_mcu(void) {
     return panel.params.RAMCTRL.DM == PANEL_DM_MCU || panel.params.RAMCTRL.DM == PANEL_DM_RESERVED;
+}
+
+static inline size_t panel_rgb_epf(void) {
+    size_t epf = panel.params.RAMCTRL.EPF;
+    if (panel.params.COLMOD.RGB != 5) {
+        epf = 2;
+    }
+    return epf;
 }
 
 static inline uint32_t panel_reverse_addr(uint32_t addr, uint32_t upperBound, uint32_t dirMask) {
@@ -645,7 +672,8 @@ static inline bool panel_set_window_full(void) {
     }
 }
 
-static void panel_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
+static void panel_update_pixel_18bpp(uint32_t bgr666) {
+    assert(bgr666 <= 0x3FFFF);
     panel_mem_ptr_t *memPtr = &panel.memPtrs[panel.params.RAMCTRL.RM];
     uint32_t row, col;
     uint32_t xLimit = panel.params.CASET.XE & PANEL_ADDR_MASK;
@@ -723,39 +751,26 @@ write_pixel:
             }
         }
         uint8_t *pixel = panel.frame[row][col];
-        pixel[PANEL_RED] = red;
-        pixel[PANEL_GREEN] = green;
-        pixel[PANEL_BLUE] = blue;
+        pixel[PANEL_RED] = bgr666 & 0x3F;
+        pixel[PANEL_GREEN] = bgr666 >> 6 & 0x3F;
+        pixel[PANEL_BLUE] = bgr666 >> 12;
     }
 }
 
-static void panel_update_pixel_18bpp(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 64 && green < 64 && blue < 64);
-    panel_update_pixel(red, green, blue);
+static inline void panel_update_pixel_16bpp(uint16_t bgr565) {
+    panel_update_pixel_18bpp(panel_bgr565_epf_funcs[panel.params.RAMCTRL.EPF](bgr565));
 }
 
-static void panel_update_pixel_16bpp(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 32 && green < 64 && blue < 32);
-    const uint8_t *lut = epfLut16[panel.params.RAMCTRL.EPF];
-    panel_update_pixel(lut[red << 1 | (green & 1)], green, lut[blue << 1 | (green & 1)]);
+static inline void panel_update_pixel_12bpp(uint16_t bgr444) {
+    panel_update_pixel_18bpp(panel_bgr444_epf_funcs[panel.params.RAMCTRL.EPF](bgr444));
 }
 
-static void panel_update_pixel_12bpp(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 16 && green < 16 && blue < 16);
-    const uint8_t *lut = epfLut12[panel.params.RAMCTRL.EPF];
-    panel_update_pixel(lut[red], lut[green], lut[blue]);
-}
-
-static void panel_clock_pixel_ignore(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 32 && green < 64 && blue < 32);
-    (void)red;
-    (void)green;
-    (void)blue;
+static void panel_clock_pixel_ignore(uint16_t bgr565) {
+    (void)bgr565;
     panel.col += (panel.displayMode == PANEL_DM_RGB);
 }
 
-static void panel_clock_pixel_ram_bypass(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 32 && green < 64 && blue < 32);
+static void panel_clock_pixel_ram_bypass(uint16_t bgr565) {
     uint32_t col = panel.col;
     panel.col += (panel.displayMode == PANEL_DM_RGB);
     if (likely(col < PANEL_NUM_COLS)) {
@@ -766,51 +781,51 @@ static void panel_clock_pixel_ram_bypass(uint8_t red, uint8_t green, uint8_t blu
                 memset(dstPixel, panel.blankLevel, sizeof(*dstPixel));
                 return;
             }
-            red = panel.ifRed;
-            green = panel.ifGreen;
-            blue = panel.ifBlue;
         } else {
-            const uint8_t *lut = epfLut16[panel.params.COLMOD.RGB == 5 ? panel.params.RAMCTRL.EPF : 2];
-            panel.ifRed = red = lut[red << 1 | (green & 1)];
-            panel.ifGreen = green;
-            panel.ifBlue = blue = lut[blue << 1 | (green & 1)];
+            panel.ifPixel = panel_bgr565_epf_funcs[panel_rgb_epf()](bgr565);
         }
         size_t redIndex = panel_bgr_enabled() ? PANEL_BLUE : PANEL_RED;
         size_t blueIndex = PANEL_RED + PANEL_BLUE - redIndex;
-        (*dstPixel)[redIndex] = panel.gammaLut[PANEL_RED][red];
-        (*dstPixel)[PANEL_GREEN] = panel.gammaLut[PANEL_GREEN][green];
-        (*dstPixel)[blueIndex] = panel.gammaLut[PANEL_BLUE][blue];
+        assert(panel.ifPixel <= 0x3FFFF);
+        (*dstPixel)[redIndex] = panel.gammaLut[PANEL_RED][panel.ifPixel & 0x3F];
+        (*dstPixel)[PANEL_GREEN] = panel.gammaLut[PANEL_GREEN][panel.ifPixel >> 6 & 0x3F];
+        (*dstPixel)[blueIndex] = panel.gammaLut[PANEL_BLUE][panel.ifPixel >> 12];
     }
 }
 
-static void panel_clock_pixel_hv(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 32 && green < 64 && blue < 32);
+static void panel_clock_pixel_hv(uint16_t bgr565) {
     uint32_t col = panel.col;
     panel.col += (panel.displayMode == PANEL_DM_RGB);
     if (likely(col < PANEL_NUM_COLS)) {
-        if (unlikely(panel.params.COLMOD.RGB == 5)) {
-            panel_update_pixel_16bpp(red, green, blue);
-        } else {
-            panel_update_pixel_18bpp((red << 1) | (red >> 4), green, (blue << 1) | (blue >> 4));
-        }
+        panel_update_pixel_18bpp(panel_bgr565_epf_funcs[panel_rgb_epf()](bgr565));
     }
 }
 
-static void panel_clock_pixel_normal(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 32 && green < 64 && blue < 32);
+static void panel_clock_pixel_epf0(uint16_t bgr565) {
     panel.col += (panel.displayMode == PANEL_DM_RGB);
-    if (unlikely(panel.params.COLMOD.RGB == 5)) {
-        panel_update_pixel_16bpp(red, green, blue);
-    } else {
-        panel_update_pixel_18bpp((red << 1) | (red >> 4), green, (blue << 1) | (blue >> 4));
-    }
+    panel_update_pixel_18bpp(panel_bgr565_epf0(bgr565));
+}
+
+static void panel_clock_pixel_epf1(uint16_t bgr565) {
+    panel.col += (panel.displayMode == PANEL_DM_RGB);
+    panel_update_pixel_18bpp(panel_bgr565_epf1(bgr565));
+}
+
+static void panel_clock_pixel_epf2(uint16_t bgr565) {
+    panel.col += (panel.displayMode == PANEL_DM_RGB);
+    panel_update_pixel_18bpp(panel_bgr565_epf2(bgr565));
+}
+
+static void panel_clock_pixel_epf3(uint16_t bgr565) {
+    panel.col += (panel.displayMode == PANEL_DM_RGB);
+    panel_update_pixel_18bpp(panel_bgr565_epf3(bgr565));
 }
 
 void panel_clock_porch(uint32_t clocks) {
     assert(clocks > 0);
     if (unlikely(panel_hv_mode_enabled()) && panel.clock_pixel != panel_clock_pixel_ignore) {
         do {
-            panel.clock_pixel(0, 0, 0);
+            panel.clock_pixel(0);
         } while (--clocks);
     } else if (likely(panel.displayMode == PANEL_DM_RGB)) {
         panel.col += clocks;
@@ -818,6 +833,13 @@ void panel_clock_porch(uint32_t clocks) {
 }
 
 static void panel_update_rgb_clock_method(void) {
+    static const void (*panel_clock_pixel_epf_funcs[])(uint16_t bgr565) = {
+        panel_clock_pixel_epf0,
+        panel_clock_pixel_epf1,
+        panel_clock_pixel_epf2,
+        panel_clock_pixel_epf3
+    };
+
     if (!panel.params.RAMCTRL.RM) {
         panel.clock_pixel = panel_clock_pixel_ignore;
     } else if (panel_ram_bypass_enabled()) {
@@ -831,7 +853,7 @@ static void panel_update_rgb_clock_method(void) {
     } else if (panel_hv_mode_enabled()) {
         panel.clock_pixel = panel.row < PANEL_NUM_ROWS ? panel_clock_pixel_hv : panel_clock_pixel_ignore;
     } else {
-        panel.clock_pixel = panel_clock_pixel_normal;
+        panel.clock_pixel = panel_clock_pixel_epf_funcs[panel_rgb_epf()];
     }
 }
 
@@ -1071,7 +1093,9 @@ static void panel_write_param(uint8_t value) {
         index ^= (index < offsetof(panel_params_t, MADCTL));
         uint8_t oldValue = ((uint8_t*)&panel.params)[index];
         ((uint8_t*)&panel.params)[index] = value;
-        if (unlikely(index == offsetof(panel_params_t, RAMCTRL))) {
+        if (unlikely(index == offsetof(panel_params_t, COLMOD))) {
+            panel_update_rgb_clock_method();
+        } else if (unlikely(index == offsetof(panel_params_t, RAMCTRL))) {
             /* Handle display mode switch from RGB to MCU */
             if (unlikely(panel_next_dm_is_mcu()) &&
                 panel.displayMode == PANEL_DM_RGB) {
@@ -1086,6 +1110,8 @@ static void panel_write_param(uint8_t value) {
                     panel_update_rgb_clock_method();
                 }
             }
+        } else if (unlikely(index == offsetof(panel_params_t, RAMCTRL) + 1)) {
+            panel_update_rgb_clock_method();
         } else if (unlikely(index == offsetof(panel_params_t, RGBCTRL))) {
             if ((value ^ oldValue) & (1 << 7 | 1 << 5)) {
                 /* Handle updates to WO and RCM */
@@ -1128,21 +1154,22 @@ static void panel_write_param(uint8_t value) {
         switch (panel.params.COLMOD.MCU) {
             default:
             case 6: /* 18bpp */
+                value >>= 2;
                 switch (panel.paramIter++) {
                     case 0:
-                        panel.ifBlue = value >> 2;
+                        panel.ifPixel = value << 12;
                         break;
                     case 1:
-                        panel.ifGreen = value >> 2;
+                        panel.ifPixel |= value << 6;
                         break;
                     case 2:
-                        panel.ifRed = value >> 2;
+                        panel.ifPixel |= value;
                         if (unlikely(panel.cmd == 0x2C)) {
                             panel_reset_mem_ptr();
                         }
                         panel.windowFullSpi = false;
                         panel_spi_catchup();
-                        panel_update_pixel_18bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel_update_pixel_18bpp(panel.ifPixel);
                         panel.writeContinueBug = false;
                         panel.paramIter = 0;
                         break;
@@ -1150,11 +1177,11 @@ static void panel_write_param(uint8_t value) {
                 break;
             case 5: /* 16bpp */
                 if (panel.paramIter ^ panel.params.RAMCTRL.ENDIAN) {
-                    panel.ifGreen = (panel.ifGreen & 0x38) | value >> 5;
-                    panel.ifRed = value & 0x1F;
+                    panel.ifPixel &= ~0xFF;
+                    panel.ifPixel |= value;
                 } else {
-                    panel.ifBlue = value >> 3;
-                    panel.ifGreen = (panel.ifGreen & 7) | (value << 3 & 0x38);
+                    panel.ifPixel &= ~0xFF00;
+                    panel.ifPixel |= value << 8;
                 }
 
                 if (!(panel.paramIter ^= 1)) {
@@ -1163,32 +1190,30 @@ static void panel_write_param(uint8_t value) {
                     }
                     panel.windowFullSpi = false;
                     panel_spi_catchup();
-                    panel_update_pixel_16bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                    panel_update_pixel_16bpp(panel.ifPixel);
                     panel.writeContinueBug = false;
                 }
                 break;
             case 3: /* 12bpp */
                 switch (panel.paramIter++) {
                     case 0:
-                        panel.ifBlue = value >> 4;
-                        panel.ifGreen = value & 0xF;
+                        panel.ifPixel = value << 4;
                         break;
                     case 1:
-                        panel.ifRed = value >> 4;
+                        panel.ifPixel |= value >> 4;
                         if (unlikely(panel.cmd == 0x2C)) {
                             panel_reset_mem_ptr();
                         }
                         panel.windowFullSpi = false;
                         panel_spi_catchup();
-                        panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel_update_pixel_12bpp(panel.ifPixel);
                         panel.writeContinueBug = false;
-                        panel.ifBlue = value & 0xF;
+                        panel.ifPixel = value << 8;
                         break;
                     case 2:
-                        panel.ifGreen = value >> 4;
-                        panel.ifRed = value & 0xF;
+                        panel.ifPixel |= value;
                         panel_spi_catchup();
-                        panel_update_pixel_12bpp(panel.ifRed, panel.ifGreen, panel.ifBlue);
+                        panel_update_pixel_12bpp(panel.ifPixel);
                         panel.paramIter = 0;
                         break;
                 }

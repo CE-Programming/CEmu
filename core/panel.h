@@ -401,7 +401,8 @@ typedef struct panel_state {
 
     panel_mem_ptr_t memPtrs[2];
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
-    uint8_t displayMode, mode, pendingMode, ifRed, ifGreen, ifBlue;
+    uint8_t displayMode, mode, pendingMode;
+    uint32_t ifPixel;
 
     panel_params_t params;
     uint8_t lineBuffers[2][240][3];
@@ -412,7 +413,7 @@ typedef struct panel_state {
 
     /* Below state is initialized at runtime */
     uint8_t gammaLut[3][64];
-    void (*clock_pixel)(uint8_t red, uint8_t green, uint8_t blue);
+    void (*clock_pixel)(uint16_t bgr565);
     uint8_t blankLevel;
     bool accurateGamma;
     bool gammaDirty;

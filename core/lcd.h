@@ -57,8 +57,8 @@ typedef struct lcd_state {
 
     /* Internal */
     bool prefill;
-    uint8_t pos, fifo[256];
-    uint32_t curCol, curRow;
+    uint8_t pos;
+    uint32_t curCol, curRow, fifo[64];
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
