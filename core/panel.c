@@ -12,6 +12,7 @@
 panel_state_t panel;
 
 static void panel_update_rgb_clock_method(void);
+static void panel_update_write_pixel_method(void);
 static void panel_clock_pixel_ram_bypass(uint16_t bgr565);
 
 #define GAMMA_PARAMS(j0, j1, v0, v1, v2, v20, v43, v61, v62, v63, v4, v6, v13, v27, v36, v50, v57, v59) \
@@ -593,7 +594,7 @@ bool panel_hsync(void) {
     return panel_hv_mode_enabled();
 }
 
-static void panel_reset_mem_ptr(void) {
+static void panel_reset_mem_ptr(panel_mem_ptr_t *memPtr) {
     uint32_t xDirMask, yDirMask, xBound, yBound;
     if (likely(panel_row_col_addr_swap())) {
         xDirMask = panel_row_addr_reverse_mask();
@@ -606,23 +607,16 @@ static void panel_reset_mem_ptr(void) {
         yDirMask = panel_row_addr_reverse_mask();
         yBound = PANEL_NUM_ROWS;
     }
-    panel_mem_ptr_t *memPtr = &panel.memPtrs[panel.params.RAMCTRL.RM];
     memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, xBound, xDirMask) & PANEL_ADDR_MASK;
     memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, yBound, yDirMask) & PANEL_ADDR_MASK;
-    if (panel.params.RAMCTRL.RM) {
-        panel.windowFullRgb = false;
-        panel_update_rgb_clock_method();
-    } else {
-        assert(panel.cmd == 0x2C);
-        panel.cmd = 0x3C;
-        panel.autoResetMemPtr = false;
-    }
 }
 
 void panel_vsync(void) {
     if (likely(panel.params.RAMCTRL.RM && panel.params.RAMCTRL.WEMODE1)) {
         /* Frame memory pointer for RGB interface resets on vsync */
-        panel_reset_mem_ptr();
+        panel_reset_mem_ptr(&panel.rgbMemPtr);
+        panel.windowFullRgb = false;
+        panel_update_rgb_clock_method();
     }
 
     /* Accept vsync only if the frame has finished scanning */
@@ -647,6 +641,12 @@ static void panel_event(enum sched_item_id id) {
     }
 }
 
+static void panel_spi_catchup(void) {
+    if (sched_active(SCHED_PANEL)) {
+        panel_scan_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_SPI, 0));
+    }
+}
+
 void panel_scan_until(uint32_t currTick) {
     int32_t col = panel.lineStartTick - currTick;
     while (unlikely(col >= panel.ticksPerLine)) {
@@ -657,92 +657,34 @@ void panel_scan_until(uint32_t currTick) {
     panel.col = col;
 }
 
-static inline bool panel_set_window_full(void) {
+static bool panel_next_y_addr(panel_mem_ptr_t *memPtr, uint32_t yBound, uint32_t yDirMask) {
+    uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
+    if (yLimit >= yBound) {
+        yLimit = yBound - 1;
+    }
+    yLimit = panel_reverse_addr(yLimit, yBound, yDirMask);
+    if (likely(memPtr->yAddr != yLimit)) {
+        memPtr->yAddr = (memPtr->yAddr + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
+        return true;
+    }
     if (panel.params.RAMCTRL.RM && panel.params.RAMCTRL.WEMODE1) {
         panel.windowFullRgb = true;
         panel_update_rgb_clock_method();
-        return true;
-    } else if (!panel.params.RAMCTRL.RM && !panel.params.RAMCTRL.WEMODE0) {
-        assert(panel.cmd == 0x3C);
-        panel.cmd = 0x00;
-        panel.windowFullSpi = true;
-        return true;
-    } else {
         return false;
     }
+    if (!panel.params.RAMCTRL.RM && !panel.params.RAMCTRL.WEMODE0) {
+        assert(panel.cmd == 0x2C || panel.cmd == 0x3C);
+        panel.cmd = 0x00;
+        panel.windowFullSpi = true;
+        return false;
+    }
+    memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, yBound, yDirMask) & PANEL_ADDR_MASK;
+    return true;
 }
 
-static void panel_update_pixel_18bpp(uint32_t bgr666) {
-    assert(bgr666 <= 0x3FFFF);
-    panel_mem_ptr_t *memPtr = &panel.memPtrs[panel.params.RAMCTRL.RM];
-    uint32_t row, col;
-    uint32_t xLimit = panel.params.CASET.XE & PANEL_ADDR_MASK;
-    if (likely(panel_row_col_addr_swap())) {
-        if (xLimit > PANEL_LAST_ROW) {
-            xLimit = PANEL_LAST_ROW;
-        }
-        uint32_t xDirMask = panel_row_addr_reverse_mask();
-        xLimit = panel_reverse_addr(xLimit, PANEL_NUM_ROWS, xDirMask);
-        row = memPtr->xAddr;
-        col = memPtr->yAddr;
-        if (unlikely(row == xLimit)) {
-            uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
-            if (yLimit > PANEL_LAST_COL) {
-                yLimit = PANEL_LAST_COL;
-            }
-            uint32_t yDirMask = panel_col_addr_reverse_mask();
-            yLimit = panel_reverse_addr(yLimit, PANEL_NUM_COLS, yDirMask);
-            if (unlikely(col == yLimit)) {
-                if (panel_set_window_full()) {
-                    if (unlikely(panel.writeContinueBug)) return;
-                    goto write_pixel;
-                }
-                memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_COLS, yDirMask) & PANEL_ADDR_MASK;
-            } else {
-                memPtr->yAddr = (col + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
-            }
-            if (unlikely(panel.writeContinueBug)) {
-                col = memPtr->yAddr;
-            }
-            memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_ROWS, xDirMask) & PANEL_ADDR_MASK;
-        } else {
-            memPtr->xAddr = (row + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
-        }
-    } else {
-        if (xLimit > PANEL_LAST_COL) {
-            xLimit = PANEL_LAST_COL;
-        }
-        uint32_t xDirMask = panel_col_addr_reverse_mask();
-        xLimit = panel_reverse_addr(xLimit, PANEL_NUM_COLS, xDirMask);
-        col = memPtr->xAddr;
-        row = memPtr->yAddr;
-        if (unlikely(col == xLimit)) {
-            uint32_t yLimit = panel.params.RASET.YE & PANEL_ADDR_MASK;
-            if (yLimit > PANEL_LAST_ROW) {
-                yLimit = PANEL_LAST_ROW;
-            }
-            uint32_t yDirMask = panel_row_addr_reverse_mask();
-            yLimit = panel_reverse_addr(yLimit, PANEL_NUM_ROWS, yDirMask);
-            if (unlikely(row == yLimit)) {
-                if (panel_set_window_full()) {
-                    if (unlikely(panel.writeContinueBug)) return;
-                    goto write_pixel;
-                }
-                memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, PANEL_NUM_ROWS, yDirMask) & PANEL_ADDR_MASK;
-            } else {
-                memPtr->yAddr = (row + (yDirMask * 2 + 1)) & PANEL_ADDR_MASK;
-            }
-            if (unlikely(panel.writeContinueBug)) {
-                row = memPtr->yAddr;
-            }
-            memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_COLS, xDirMask) & PANEL_ADDR_MASK;
-        } else {
-            memPtr->xAddr = (col + (xDirMask * 2 + 1)) & PANEL_ADDR_MASK;
-        }
-    }
 
-write_pixel:
-    col &= 0xFF;
+static inline void panel_write_pixel(uint32_t row, uint8_t col, uint32_t bgr666) {
+    assert(bgr666 <= 0x3FFFF);
     if (likely(row < PANEL_NUM_ROWS && col < PANEL_NUM_COLS)) {
         if (unlikely(row == panel.srcRow)) {
             uint8_t colWithinHalf = (col < 120 ? col : col - 120) << 1;
@@ -757,12 +699,108 @@ write_pixel:
     }
 }
 
-static inline void panel_update_pixel_16bpp(uint16_t bgr565) {
-    panel_update_pixel_18bpp(panel_bgr565_epf_funcs[panel.params.RAMCTRL.EPF](bgr565));
+static void panel_write_pixel_reset_ptr(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    panel.autoResetMemPtr = false;
+    panel.firstSpiPixel = false;
+    panel.windowFullSpi = false;
+    panel_update_write_pixel_method();
+    panel_reset_mem_ptr(memPtr);
+    panel.write_pixel(memPtr, bgr666);
 }
 
-static inline void panel_update_pixel_12bpp(uint16_t bgr444) {
-    panel_update_pixel_18bpp(panel_bgr444_epf_funcs[panel.params.RAMCTRL.EPF](bgr444));
+static void panel_write_pixel_continue_bug(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    panel.firstSpiPixel = false;
+    panel.windowFullSpi = false;
+    panel_update_write_pixel_method();
+    uint32_t xAddr = memPtr->xAddr;
+    if (likely(xAddr != panel.xLimit)) {
+        panel.write_pixel(memPtr, bgr666);
+        return;
+    }
+    /* Write Continue bug */
+    /* If the first write wraps on X, write goes to the new Y address */
+    /* If it also wraps on Y and fills the window, the write is discarded */
+    uint32_t row;
+    uint8_t col;
+    if (panel_row_col_addr_swap()) {
+        if (!likely(panel_next_y_addr(memPtr, PANEL_NUM_COLS, panel_col_addr_reverse_mask()))) {
+            return;
+        }
+        memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_ROWS, panel_row_addr_reverse_mask());
+        row = xAddr;
+        col = memPtr->yAddr;
+    } else {
+        if (!likely(panel_next_y_addr(memPtr, PANEL_NUM_ROWS, panel_row_addr_reverse_mask()))) {
+            return;
+        }
+        memPtr->xAddr = panel_reverse_addr(panel.params.CASET.XS, PANEL_NUM_COLS, panel_col_addr_reverse_mask());
+        col = xAddr;
+        row = memPtr->yAddr;
+    }
+    panel_write_pixel(row, col, bgr666);
+}
+
+static void panel_write_pixel_row_inc(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    uint32_t row = memPtr->xAddr;
+    uint8_t col = memPtr->yAddr;
+    if (likely(row != panel.xLimit)) {
+        memPtr->xAddr = (row + 1) & PANEL_ADDR_MASK;
+    } else if (likely(panel_next_y_addr(memPtr, PANEL_NUM_COLS, panel_col_addr_reverse_mask()))) {
+        memPtr->xAddr = panel.params.CASET.XS & PANEL_ADDR_MASK;
+    }
+    panel_write_pixel(row, col, bgr666);
+}
+
+static void panel_write_pixel_row_dec(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    uint32_t row = memPtr->xAddr;
+    uint8_t col = memPtr->yAddr;
+    if (likely(row != panel.xLimit)) {
+        memPtr->xAddr = (row - 1) & PANEL_ADDR_MASK;
+    } else if (likely(panel_next_y_addr(memPtr, PANEL_NUM_COLS, panel_col_addr_reverse_mask()))) {
+        memPtr->xAddr = (PANEL_LAST_ROW - panel.params.CASET.XS) & PANEL_ADDR_MASK;
+    }
+    panel_write_pixel(row, col, bgr666);
+}
+
+static void panel_write_pixel_col_inc(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    uint32_t col = memPtr->xAddr;
+    uint32_t row = memPtr->yAddr;
+    if (likely(col != panel.xLimit)) {
+        memPtr->xAddr = (col + 1) & PANEL_ADDR_MASK;
+    } else if (likely(panel_next_y_addr(memPtr, PANEL_NUM_ROWS, panel_row_addr_reverse_mask()))) {
+        memPtr->xAddr = panel.params.CASET.XS & PANEL_ADDR_MASK;
+    }
+    panel_write_pixel(row, col, bgr666);
+}
+
+static void panel_write_pixel_col_dec(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    uint32_t col = memPtr->xAddr;
+    uint32_t row = memPtr->yAddr;
+    if (likely(col != panel.xLimit)) {
+        memPtr->xAddr = (col - 1) & PANEL_ADDR_MASK;
+    } else if (likely(panel_next_y_addr(memPtr, PANEL_NUM_ROWS, panel_row_addr_reverse_mask()))) {
+        memPtr->xAddr = (PANEL_LAST_COL - panel.params.CASET.XS) & PANEL_ADDR_MASK;
+    }
+    panel_write_pixel(row, col, bgr666);
+}
+
+static inline void panel_write_pixel_18bpp(uint32_t bgr666) {
+    panel_spi_catchup();
+    panel.write_pixel(&panel.spiMemPtr, bgr666);
+}
+
+static inline void panel_write_pixel_16bpp(uint16_t bgr565) {
+    panel_spi_catchup();
+    panel.write_pixel(&panel.spiMemPtr, panel_bgr565_epf_funcs[panel.params.RAMCTRL.EPF](bgr565));
+}
+
+static inline void panel_write_pixel_12bpp(uint16_t bgr444) {
+    panel_spi_catchup();
+    panel.write_pixel(&panel.spiMemPtr, panel_bgr444_epf_funcs[panel.params.RAMCTRL.EPF](bgr444));
+}
+
+static inline void panel_write_pixel_rgb(uint32_t bgr666) {
+    panel.write_pixel(&panel.rgbMemPtr, bgr666);
 }
 
 static void panel_clock_pixel_ignore(uint16_t bgr565) {
@@ -797,28 +835,28 @@ static void panel_clock_pixel_hv(uint16_t bgr565) {
     uint32_t col = panel.col;
     panel.col += (panel.displayMode == PANEL_DM_RGB);
     if (likely(col < PANEL_NUM_COLS)) {
-        panel_update_pixel_18bpp(panel_bgr565_epf_funcs[panel_rgb_epf()](bgr565));
+        panel_write_pixel_rgb(panel_bgr565_epf_funcs[panel_rgb_epf()](bgr565));
     }
 }
 
 static void panel_clock_pixel_epf0(uint16_t bgr565) {
     panel.col += (panel.displayMode == PANEL_DM_RGB);
-    panel_update_pixel_18bpp(panel_bgr565_epf0(bgr565));
+    panel_write_pixel_rgb(panel_bgr565_epf0(bgr565));
 }
 
 static void panel_clock_pixel_epf1(uint16_t bgr565) {
     panel.col += (panel.displayMode == PANEL_DM_RGB);
-    panel_update_pixel_18bpp(panel_bgr565_epf1(bgr565));
+    panel_write_pixel_rgb(panel_bgr565_epf1(bgr565));
 }
 
 static void panel_clock_pixel_epf2(uint16_t bgr565) {
     panel.col += (panel.displayMode == PANEL_DM_RGB);
-    panel_update_pixel_18bpp(panel_bgr565_epf2(bgr565));
+    panel_write_pixel_rgb(panel_bgr565_epf2(bgr565));
 }
 
 static void panel_clock_pixel_epf3(uint16_t bgr565) {
     panel.col += (panel.displayMode == PANEL_DM_RGB);
-    panel_update_pixel_18bpp(panel_bgr565_epf3(bgr565));
+    panel_write_pixel_rgb(panel_bgr565_epf3(bgr565));
 }
 
 void panel_clock_porch(uint32_t clocks) {
@@ -857,6 +895,29 @@ static void panel_update_rgb_clock_method(void) {
     }
 }
 
+static void panel_update_write_pixel_method(void) {
+    if (unlikely(panel.firstSpiPixel)) {
+        assert(panel.params.RAMCTRL.RM == 0);
+        panel.write_pixel = (panel.cmd == 0x2C || panel.autoResetMemPtr) ? panel_write_pixel_reset_ptr : panel_write_pixel_continue_bug;
+        return;
+    }
+    uint32_t xBound, xDirMask;
+    if (panel_row_col_addr_swap()) {
+        xBound = PANEL_NUM_ROWS;
+        xDirMask = panel_row_addr_reverse_mask();
+        panel.write_pixel = xDirMask ? panel_write_pixel_row_dec : panel_write_pixel_row_inc;
+    } else {
+        xBound = PANEL_NUM_COLS;
+        xDirMask = panel_col_addr_reverse_mask();
+        panel.write_pixel = xDirMask ? panel_write_pixel_col_dec : panel_write_pixel_col_inc;
+    }
+    uint32_t xLimit = panel.params.CASET.XE & PANEL_ADDR_MASK;
+    if (xLimit >= xBound) {
+        xLimit = xBound - 1;
+    }
+    panel.xLimit = panel_reverse_addr(xLimit, xBound, xDirMask);
+}
+
 void panel_update_clock_rate(void) {
     sched_set_clock(CLOCK_PANEL, panel.clockRate >> panel.params.FRCTRL1.DIV);
 }
@@ -869,7 +930,7 @@ void panel_hw_reset(void) {
     panel.invert = panel.tear = false;
     panel.windowFullRgb = panel.windowFullSpi = false;
     panel.autoResetMemPtr = true;
-    memset(&panel.memPtrs, 0, sizeof(panel.memPtrs));
+    panel.spiMemPtr = panel.rgbMemPtr = (panel_mem_ptr_t){ .xAddr = 0, .yAddr = 0 };
     /* The display mode is reset to MCU interface, so start the frame and schedule it */
     uint32_t ticksPerFrame = panel_start_frame();
     panel_update_clock_rate();
@@ -886,12 +947,6 @@ static void panel_sw_reset(void) {
     if (panel.params.MADCTL.MV) {
         panel.params.CASET.XE = PANEL_LAST_ROW;
         panel.params.RASET.YE = PANEL_LAST_COL;
-    }
-}
-
-static void panel_spi_catchup(void) {
-    if (sched_active(SCHED_PANEL)) {
-        panel_scan_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_SPI, 0));
     }
 }
 
@@ -954,11 +1009,15 @@ static void panel_write_cmd(uint8_t value) {
         PANEL_CMD_CASE(0x2B, RASET)
             break;
         case 0x2C:
+        case 0x3C:
             if (unlikely(panel.params.RAMCTRL.RM || (!panel.params.RAMCTRL.WEMODE0 && panel.windowFullSpi))) {
                 panel.cmd = 0x00;
             } else {
-                panel.autoResetMemPtr = false;
-                panel.writeContinueBug = false;
+                if (panel.cmd == 0x2C) {
+                    panel.autoResetMemPtr = false;
+                }
+                panel.firstSpiPixel = true;
+                panel_update_write_pixel_method();
             }
             break;
         PANEL_CMD_CASE(0x30, PTLAR)
@@ -983,16 +1042,6 @@ static void panel_write_cmd(uint8_t value) {
             panel.pendingMode |= PANEL_MODE_IDLE;
             break;
         PANEL_CMD_CASE(0x3A, COLMOD)
-            break;
-        case 0x3C:
-            if (unlikely(panel.params.RAMCTRL.RM || (!panel.params.RAMCTRL.WEMODE0 && panel.windowFullSpi))) {
-                panel.cmd = 0x00;
-            } else if (unlikely(panel.autoResetMemPtr)) {
-                panel.cmd = 0x2C;
-                panel.writeContinueBug = false;
-            } else {
-                panel.writeContinueBug = true;
-            }
             break;
         PANEL_CMD_CASE(0x44, TESCAN)
             break;
@@ -1093,9 +1142,13 @@ static void panel_write_param(uint8_t value) {
         index ^= (index < offsetof(panel_params_t, MADCTL));
         uint8_t oldValue = ((uint8_t*)&panel.params)[index];
         ((uint8_t*)&panel.params)[index] = value;
-        if (unlikely(index == offsetof(panel_params_t, COLMOD))) {
+        if (index >= offsetof(panel_params_t, CASET.XE) && index < offsetof(panel_params_t, CASET.XE) + sizeof(uint16_t)) {
+            panel_update_write_pixel_method();
+        } else if (index == offsetof(panel_params_t, MADCTL)) {
+            panel_update_write_pixel_method();
+        } else if (index == offsetof(panel_params_t, COLMOD)) {
             panel_update_rgb_clock_method();
-        } else if (unlikely(index == offsetof(panel_params_t, RAMCTRL))) {
+        } else if (index == offsetof(panel_params_t, RAMCTRL)) {
             /* Handle display mode switch from RGB to MCU */
             if (unlikely(panel_next_dm_is_mcu()) &&
                 panel.displayMode == PANEL_DM_RGB) {
@@ -1104,30 +1157,32 @@ static void panel_write_param(uint8_t value) {
             if ((value ^ oldValue) & 1 << 4) {
                 if (panel.params.RAMCTRL.RM) {
                     /* Handle frame memory pointer reset when switching to RGB interface */
-                    panel_reset_mem_ptr();
-                    panel.writeContinueBug = false;
-                } else {
-                    panel_update_rgb_clock_method();
+                    panel_reset_mem_ptr(&panel.rgbMemPtr);;
+                    panel.windowFullRgb = false;
+                    panel.firstSpiPixel = false;
+                    panel_update_write_pixel_method();
                 }
+                panel_update_rgb_clock_method();
             }
-        } else if (unlikely(index == offsetof(panel_params_t, RAMCTRL) + 1)) {
+        } else if (index == offsetof(panel_params_t, RAMCTRL) + 1) {
             panel_update_rgb_clock_method();
-        } else if (unlikely(index == offsetof(panel_params_t, RGBCTRL))) {
+        } else if (index == offsetof(panel_params_t, RGBCTRL)) {
             if ((value ^ oldValue) & (1 << 7 | 1 << 5)) {
                 /* Handle updates to WO and RCM */
                 panel_update_rgb_clock_method();
             }
-        } else if (unlikely(index == offsetof(panel_params_t, FRCTRL1))) {
+        } else if (index == offsetof(panel_params_t, FRCTRL1)) {
             if ((value ^ oldValue) & 3) {
                 panel_update_clock_rate();
             }
-        } else if (unlikely(index == offsetof(panel_params_t, LCMCTRL))) {
+        } else if (index == offsetof(panel_params_t, LCMCTRL)) {
             if ((value ^ oldValue) & 1 << 4) {
                 panel_spi_catchup();
                 panel_buffer_pixels();
                 panel_invert_luts();
             }
-        } else if (unlikely(index >= offsetof(panel_params_t, GAMSET))) {
+            panel_update_write_pixel_method();
+        } else if (index >= offsetof(panel_params_t, GAMSET)) {
             if (unlikely(index == offsetof(panel_params_t, GAMSET))) {
                 const panel_gamma_t *gamma_preset;
                 switch (panel.params.GAMSET.GC) {
@@ -1164,13 +1219,7 @@ static void panel_write_param(uint8_t value) {
                         break;
                     case 2:
                         panel.ifPixel |= value;
-                        if (unlikely(panel.cmd == 0x2C)) {
-                            panel_reset_mem_ptr();
-                        }
-                        panel.windowFullSpi = false;
-                        panel_spi_catchup();
-                        panel_update_pixel_18bpp(panel.ifPixel);
-                        panel.writeContinueBug = false;
+                        panel_write_pixel_18bpp(panel.ifPixel);
                         panel.paramIter = 0;
                         break;
                 }
@@ -1185,13 +1234,7 @@ static void panel_write_param(uint8_t value) {
                 }
 
                 if (!(panel.paramIter ^= 1)) {
-                    if (unlikely(panel.cmd == 0x2C)) {
-                        panel_reset_mem_ptr();
-                    }
-                    panel.windowFullSpi = false;
-                    panel_spi_catchup();
-                    panel_update_pixel_16bpp(panel.ifPixel);
-                    panel.writeContinueBug = false;
+                    panel_write_pixel_16bpp(panel.ifPixel);
                 }
                 break;
             case 3: /* 12bpp */
@@ -1201,19 +1244,12 @@ static void panel_write_param(uint8_t value) {
                         break;
                     case 1:
                         panel.ifPixel |= value >> 4;
-                        if (unlikely(panel.cmd == 0x2C)) {
-                            panel_reset_mem_ptr();
-                        }
-                        panel.windowFullSpi = false;
-                        panel_spi_catchup();
-                        panel_update_pixel_12bpp(panel.ifPixel);
-                        panel.writeContinueBug = false;
+                        panel_write_pixel_12bpp(panel.ifPixel);
                         panel.ifPixel = value << 8;
                         break;
                     case 2:
                         panel.ifPixel |= value;
-                        panel_spi_catchup();
-                        panel_update_pixel_12bpp(panel.ifPixel);
+                        panel_write_pixel_12bpp(panel.ifPixel);
                         panel.paramIter = 0;
                         break;
                 }
@@ -1259,6 +1295,7 @@ bool panel_restore(FILE *image) {
         panel.gammaDirty = true;
         panel_generate_luts();
         panel_update_rgb_clock_method();
+        panel_update_write_pixel_method();
         return true;
     }
     return false;
