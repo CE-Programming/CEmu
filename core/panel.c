@@ -12,7 +12,6 @@
 panel_state_t panel;
 
 static void panel_update_rgb_clock_method(void);
-static void panel_update_write_pixel_method(void);
 static void panel_clock_pixel_ram_bypass(uint16_t bgr565);
 
 #define GAMMA_PARAMS(j0, j1, v0, v1, v2, v20, v43, v61, v62, v63, v4, v6, v13, v27, v36, v50, v57, v59) \
@@ -675,7 +674,7 @@ static bool panel_next_y_addr(panel_mem_ptr_t *memPtr, uint32_t yBound, uint32_t
     if (!panel.params.RAMCTRL.RM && !panel.params.RAMCTRL.WEMODE0) {
         assert(panel.cmd == 0x2C || panel.cmd == 0x3C);
         panel.cmd = 0x00;
-        panel.windowFullSpi = true;
+        panel.spiMemFlags = PANEL_SPI_WINDOW_FULL;
         return false;
     }
     memPtr->yAddr = panel_reverse_addr(panel.params.RASET.YS, yBound, yDirMask) & PANEL_ADDR_MASK;
@@ -700,21 +699,18 @@ static inline void panel_write_pixel(uint32_t row, uint8_t col, uint32_t bgr666)
 }
 
 static void panel_write_pixel_reset_ptr(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
-    panel.autoResetMemPtr = false;
-    panel.firstSpiPixel = false;
-    panel.windowFullSpi = false;
-    panel_update_write_pixel_method();
     panel_reset_mem_ptr(memPtr);
-    panel.write_pixel(memPtr, bgr666);
+    panel.spiMemFlags = 0;
+    panel.write_pixel_spi = panel.write_pixel_rgb;
+    panel.write_pixel_spi(memPtr, bgr666);
 }
 
 static void panel_write_pixel_continue_bug(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
-    panel.firstSpiPixel = false;
-    panel.windowFullSpi = false;
-    panel_update_write_pixel_method();
+    panel.spiMemFlags = 0;
+    panel.write_pixel_spi = panel.write_pixel_rgb;
     uint32_t xAddr = memPtr->xAddr;
     if (likely(xAddr != panel.xLimit)) {
-        panel.write_pixel(memPtr, bgr666);
+        panel.write_pixel_spi(memPtr, bgr666);
         return;
     }
     /* Write Continue bug */
@@ -786,21 +782,21 @@ static void panel_write_pixel_col_dec(panel_mem_ptr_t *memPtr, uint32_t bgr666) 
 
 static inline void panel_write_pixel_18bpp(uint32_t bgr666) {
     panel_spi_catchup();
-    panel.write_pixel(&panel.spiMemPtr, bgr666);
+    panel.write_pixel_spi(&panel.spiMemPtr, bgr666);
 }
 
 static inline void panel_write_pixel_16bpp(uint16_t bgr565) {
     panel_spi_catchup();
-    panel.write_pixel(&panel.spiMemPtr, panel_bgr565_epf_funcs[panel.params.RAMCTRL.EPF](bgr565));
+    panel.write_pixel_spi(&panel.spiMemPtr, panel_bgr565_epf_funcs[panel.params.RAMCTRL.EPF](bgr565));
 }
 
 static inline void panel_write_pixel_12bpp(uint16_t bgr444) {
     panel_spi_catchup();
-    panel.write_pixel(&panel.spiMemPtr, panel_bgr444_epf_funcs[panel.params.RAMCTRL.EPF](bgr444));
+    panel.write_pixel_spi(&panel.spiMemPtr, panel_bgr444_epf_funcs[panel.params.RAMCTRL.EPF](bgr444));
 }
 
 static inline void panel_write_pixel_rgb(uint32_t bgr666) {
-    panel.write_pixel(&panel.rgbMemPtr, bgr666);
+    panel.write_pixel_rgb(&panel.rgbMemPtr, bgr666);
 }
 
 static void panel_clock_pixel_ignore(uint16_t bgr565) {
@@ -895,21 +891,21 @@ static void panel_update_rgb_clock_method(void) {
     }
 }
 
-static void panel_update_write_pixel_method(void) {
-    if (unlikely(panel.firstSpiPixel)) {
-        assert(panel.params.RAMCTRL.RM == 0);
-        panel.write_pixel = (panel.cmd == 0x2C || panel.autoResetMemPtr) ? panel_write_pixel_reset_ptr : panel_write_pixel_continue_bug;
-        return;
-    }
+static void panel_set_first_spi_write_pixel_method(void) {
+    assert(panel.spiMemFlags & PANEL_SPI_FIRST_PIXEL);
+    panel.write_pixel_spi = (panel.cmd == 0x2C || (panel.spiMemFlags & PANEL_SPI_AUTO_RESET)) ? panel_write_pixel_reset_ptr : panel_write_pixel_continue_bug;
+}
+
+static void panel_update_rgb_write_pixel_method(void) {
     uint32_t xBound, xDirMask;
     if (panel_row_col_addr_swap()) {
         xBound = PANEL_NUM_ROWS;
         xDirMask = panel_row_addr_reverse_mask();
-        panel.write_pixel = xDirMask ? panel_write_pixel_row_dec : panel_write_pixel_row_inc;
+        panel.write_pixel_rgb = xDirMask ? panel_write_pixel_row_dec : panel_write_pixel_row_inc;
     } else {
         xBound = PANEL_NUM_COLS;
         xDirMask = panel_col_addr_reverse_mask();
-        panel.write_pixel = xDirMask ? panel_write_pixel_col_dec : panel_write_pixel_col_inc;
+        panel.write_pixel_rgb = xDirMask ? panel_write_pixel_col_dec : panel_write_pixel_col_inc;
     }
     uint32_t xLimit = panel.params.CASET.XE & PANEL_ADDR_MASK;
     if (xLimit >= xBound) {
@@ -924,12 +920,13 @@ void panel_update_clock_rate(void) {
 
 void panel_hw_reset(void) {
     memcpy(&panel.params, &panel_reset_params, sizeof(panel_params_t));
+    panel_update_rgb_write_pixel_method();
     panel.gammaDirty = true;
     panel.pendingMode = PANEL_MODE_SLEEP | PANEL_MODE_OFF;
     panel.cmd = panel.paramIter = panel.paramEnd = 0;
     panel.invert = panel.tear = false;
-    panel.windowFullRgb = panel.windowFullSpi = false;
-    panel.autoResetMemPtr = true;
+    panel.windowFullRgb = false;
+    panel.spiMemFlags = PANEL_SPI_AUTO_RESET;
     panel.spiMemPtr = panel.rgbMemPtr = (panel_mem_ptr_t){ .xAddr = 0, .yAddr = 0 };
     /* The display mode is reset to MCU interface, so start the frame and schedule it */
     uint32_t ticksPerFrame = panel_start_frame();
@@ -948,6 +945,7 @@ static void panel_sw_reset(void) {
         panel.params.CASET.XE = PANEL_LAST_ROW;
         panel.params.RASET.YE = PANEL_LAST_COL;
     }
+    panel_update_rgb_write_pixel_method();
 }
 
 static void panel_write_cmd(uint8_t value) {
@@ -1010,14 +1008,14 @@ static void panel_write_cmd(uint8_t value) {
             break;
         case 0x2C:
         case 0x3C:
-            if (unlikely(panel.params.RAMCTRL.RM || (!panel.params.RAMCTRL.WEMODE0 && panel.windowFullSpi))) {
+            if (unlikely(panel.params.RAMCTRL.RM || (!panel.params.RAMCTRL.WEMODE0 && (panel.spiMemFlags & PANEL_SPI_WINDOW_FULL)))) {
                 panel.cmd = 0x00;
             } else {
                 if (panel.cmd == 0x2C) {
-                    panel.autoResetMemPtr = false;
+                    panel.spiMemFlags &= ~PANEL_SPI_AUTO_RESET;
                 }
-                panel.firstSpiPixel = true;
-                panel_update_write_pixel_method();
+                panel.spiMemFlags |= PANEL_SPI_FIRST_PIXEL;
+                panel_set_first_spi_write_pixel_method();
             }
             break;
         PANEL_CMD_CASE(0x30, PTLAR)
@@ -1143,9 +1141,9 @@ static void panel_write_param(uint8_t value) {
         uint8_t oldValue = ((uint8_t*)&panel.params)[index];
         ((uint8_t*)&panel.params)[index] = value;
         if (index >= offsetof(panel_params_t, CASET.XE) && index < offsetof(panel_params_t, CASET.XE) + sizeof(uint16_t)) {
-            panel_update_write_pixel_method();
+            panel_update_rgb_write_pixel_method();
         } else if (index == offsetof(panel_params_t, MADCTL)) {
-            panel_update_write_pixel_method();
+            panel_update_rgb_write_pixel_method();
         } else if (index == offsetof(panel_params_t, COLMOD)) {
             panel_update_rgb_clock_method();
         } else if (index == offsetof(panel_params_t, RAMCTRL)) {
@@ -1159,8 +1157,6 @@ static void panel_write_param(uint8_t value) {
                     /* Handle frame memory pointer reset when switching to RGB interface */
                     panel_reset_mem_ptr(&panel.rgbMemPtr);;
                     panel.windowFullRgb = false;
-                    panel.firstSpiPixel = false;
-                    panel_update_write_pixel_method();
                 }
                 panel_update_rgb_clock_method();
             }
@@ -1181,7 +1177,7 @@ static void panel_write_param(uint8_t value) {
                 panel_buffer_pixels();
                 panel_invert_luts();
             }
-            panel_update_write_pixel_method();
+            panel_update_rgb_write_pixel_method();
         } else if (index >= offsetof(panel_params_t, GAMSET)) {
             if (unlikely(index == offsetof(panel_params_t, GAMSET))) {
                 const panel_gamma_t *gamma_preset;
@@ -1295,7 +1291,12 @@ bool panel_restore(FILE *image) {
         panel.gammaDirty = true;
         panel_generate_luts();
         panel_update_rgb_clock_method();
-        panel_update_write_pixel_method();
+        panel_update_rgb_write_pixel_method();
+        if (panel.spiMemFlags & PANEL_SPI_FIRST_PIXEL) {
+            panel_set_first_spi_write_pixel_method();
+        } else {
+            panel.write_pixel_spi = panel.write_pixel_rgb;
+        }
         return true;
     }
     return false;

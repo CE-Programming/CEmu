@@ -37,6 +37,12 @@ enum panel_display_mode {
     PANEL_DM_RESERVED = 3
 };
 
+enum panel_spi_mem_flags {
+    PANEL_SPI_FIRST_PIXEL = 1 << 0,
+    PANEL_SPI_WINDOW_FULL = 1 << 1,
+    PANEL_SPI_AUTO_RESET  = 1 << 2
+};
+
 typedef struct panel_mem_ptr {
     uint16_t xAddr;
     uint16_t yAddr;
@@ -395,13 +401,11 @@ typedef struct panel_state {
     int16_t col;
     uint16_t row, dstRow, srcRow;
     uint8_t nextRamCol, cmd, paramIter, paramEnd;
-    bool currLineBuffer;
-    bool invert, tear;
-    bool windowFullRgb, windowFullSpi, autoResetMemPtr, firstSpiPixel;
+    bool invert, tear, currLineBuffer, windowFullRgb;
 
     panel_mem_ptr_t spiMemPtr, rgbMemPtr;
     uint16_t partialStart, partialEnd, topArea, bottomArea, scrollStart;
-    uint8_t displayMode, mode, pendingMode;
+    uint8_t displayMode, mode, pendingMode, spiMemFlags;
     uint32_t ifPixel;
 
     panel_params_t params;
@@ -414,7 +418,8 @@ typedef struct panel_state {
     /* Below state is initialized at runtime */
     uint8_t gammaLut[3][64];
     void (*clock_pixel)(uint16_t bgr565);
-    void (*write_pixel)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
+    void (*write_pixel_spi)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
+    void (*write_pixel_rgb)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
     uint32_t xLimit;
     uint8_t blankLevel;
     bool accurateGamma;
