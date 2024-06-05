@@ -418,9 +418,10 @@ typedef struct panel_state {
     /* Below state is initialized at runtime */
     uint8_t gammaLut[3][64];
     void (*clock_pixel)(uint16_t bgr565);
-    void (*write_pixel_spi)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
-    void (*write_pixel_rgb)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
-    uint32_t xLimit;
+    void (*write_pixel)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
+    panel_mem_ptr_t windowStart, windowEnd;
+    uint8_t (*windowBasePtr)[3];
+    int8_t xDir, yDir;
     uint8_t blankLevel;
     bool accurateGamma;
     bool gammaDirty;
