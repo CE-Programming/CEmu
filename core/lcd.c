@@ -297,12 +297,13 @@ static uint32_t lcd_words(uint8_t words) {
 static void lcd_event(enum sched_item_id id) {
     uint32_t duration;
     sched_process_pending_dma(0);
-    if ((lcd.control >> 12 & 3) == lcd.compare) {
-        lcd.ris |= 1 << 3;
-    }
+    enum lcd_comp compare = lcd.control >> 12 & 3;
     switch (lcd.compare) {
         case LCD_FRONT_PORCH:
             if (lcd.VFP) {
+                if (compare == LCD_FRONT_PORCH) {
+                    lcd.ris |= 1 << 3;
+                }
                 duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
                 lcd.compare = LCD_SYNC;
                 break;
@@ -311,6 +312,9 @@ static void lcd_event(enum sched_item_id id) {
         default:
             fallthrough;
         case LCD_SYNC:
+            if (compare == LCD_SYNC) {
+                lcd.ris |= 1 << 3;
+            }
             lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
             lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
             lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;
@@ -360,12 +364,18 @@ static void lcd_event(enum sched_item_id id) {
             break;
         case LCD_BACK_PORCH:
             if (lcd.VBP) {
+                if (compare == LCD_BACK_PORCH) {
+                    lcd.ris |= 1 << 3;
+                }
                 duration = lcd.VBP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
                 lcd.compare = LCD_ACTIVE_VIDEO;
                 break;
             }
             fallthrough;
         case LCD_ACTIVE_VIDEO:
+            if (compare == LCD_ACTIVE_VIDEO) {
+                lcd.ris |= 1 << 3;
+            }
             duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             if (!lcd.prefill) {
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, (lcd.HSW + lcd.HBP) * lcd.PCD, 0);
