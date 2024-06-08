@@ -536,7 +536,7 @@ static uint32_t panel_start_frame() {
     panel.partialStart = panel.params.PTLAR.PSL & PANEL_ADDR_MASK;
     panel.partialEnd = panel.params.PTLAR.PEL & PANEL_ADDR_MASK;
     panel.topArea = panel.params.VSCRDEF.TFA & PANEL_ADDR_MASK;
-    panel.bottomArea = (PANEL_LAST_ROW - panel.params.VSCRDEF.BFA) & PANEL_ADDR_MASK;
+    panel.bottomArea = PANEL_LAST_ROW - (panel.params.VSCRDEF.BFA & PANEL_ADDR_MASK);
     panel.scrollStart = panel.params.VSCRSADD.VSP & PANEL_ADDR_MASK;
     panel.displayMode = panel.params.RAMCTRL.DM != PANEL_DM_RESERVED ? panel.params.RAMCTRL.DM : PANEL_DM_MCU;
 
