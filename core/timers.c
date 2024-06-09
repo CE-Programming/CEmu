@@ -40,7 +40,6 @@ static void gpt_restore_state(enum sched_item_id id) {
 
 static uint64_t gpt_next_event(enum sched_item_id id) {
     int index = id - SCHED_TIMER1;
-    struct sched_item *item = &sched.items[id];
     timer_state_t *timer = &gpt.timer[index];
     uint64_t delay;
     gpt.reset &= ~(1 << index);
@@ -65,13 +64,15 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
         if (status) {
             if (!sched_active(SCHED_TIMER_DELAY)) {
                 sched_repeat_relative(SCHED_TIMER_DELAY, id, 0, 2);
+                delay = 2;
+            } else {
+                delay = sched_ticks_remaining_relative(SCHED_TIMER_DELAY, id, 0);
             }
-            delay = sched_cycle(SCHED_TIMER_DELAY) - sched_cycle(id);
             assert(delay <= 2);
             gpt.delayStatus |= status << (((2 - delay)*3 + index)*3);
             gpt.delayIntrpt |= 1 << (3*(4 - delay) + index);
         }
-        item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
+        sched_set_item_clock(id, (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU);
         if (gpt.reset & 1 << index) {
             next = 0;
             timer->counter = counter;
@@ -93,7 +94,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
 
 static void gpt_refresh(enum sched_item_id id) {
     uint64_t next_event;
-    sched.items[id].clock = CLOCK_CPU;
+    sched_set_item_clock(id, CLOCK_CPU);
     sched_set(id, 0); /* dummy activate to current cycle */
     next_event = gpt_next_event(id);
     if (next_event) {
@@ -168,14 +169,13 @@ void gpt_reset() {
     enum sched_item_id id;
     memset(&gpt, 0, sizeof(gpt));
     gpt.revision = 0x00010801;
-    sched.items[SCHED_TIMER_DELAY].callback.event = gpt_delay;
-    sched.items[SCHED_TIMER_DELAY].clock = CLOCK_CPU;
+
+    sched_init_event(SCHED_TIMER_DELAY, CLOCK_CPU, gpt_delay);
     for (id = SCHED_TIMER1; id <= SCHED_TIMER3; id++) {
-        sched.items[id].callback.event = gpt_event;
+        sched_init_event(id, CLOCK_CPU, gpt_event);
         gpt_refresh(id);
     }
-    sched.items[SCHED_OSTIMER].callback.event = ost_event;
-    sched.items[SCHED_OSTIMER].clock = CLOCK_32K;
+    sched_init_event(SCHED_OSTIMER, CLOCK_32K, ost_event);
     sched_set(SCHED_OSTIMER, 0);
     gui_console_printf("[CEmu] GPT reset.\n");
 }

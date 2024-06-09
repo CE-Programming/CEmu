@@ -57,16 +57,18 @@ typedef struct lcd_state {
 
     /* Internal */
     bool prefill;
-    uint8_t pos, fifo[256];
-    uint32_t curCol, curRow;
+    uint8_t pos;
+    uint32_t curCol, curRow, fifo[64];
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
+
+    /* Everything above here goes into the state */
     uint32_t *data;                /* Pointer to start of data to start extracting from */
     uint32_t *data_end;            /* End pointer that is allowed access */
 
     /* Everything after here persists through reset! */
-    int spi;
+    int useDma;
     void (*gui_callback)(void*);
     void *gui_callback_data;
 } lcd_state_t;
@@ -80,15 +82,17 @@ bool lcd_restore(FILE *image);
 bool lcd_save(FILE *image);
 void lcd_update(void);
 void lcd_disable(void);
+void lcd_gui_event(void);
 
 /* api functions */
 void emu_lcd_drawframe(void *output);
 void emu_set_lcd_callback(void (*callback)(void*), void *data);
-void emu_set_lcd_spi(int enable);
+void emu_set_lcd_dma(int enable);
+void emu_set_lcd_gamma(int enable);
 
 /* advanced api functions */
 void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t lcd_control, bool mask);
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size, int spi);
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size);
 
 #ifdef __cplusplus
 }

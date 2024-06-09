@@ -15,7 +15,7 @@ static uart_transfer_t loopback_transfer;
 static bool loopback_available = false;
 
 static bool bit_parity(uint8_t byte) {
-#if __has_builtin(__builtin_parity)
+#if __has_builtin(__builtin_parity) || (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
     return __builtin_parity(byte);
 #else
     byte ^= byte >> 4;
@@ -467,8 +467,7 @@ void uart_reset(void) {
 
     uart_set_device_funcs();
 
-    sched.items[SCHED_UART].callback.event = uart_event;
-    sched.items[SCHED_UART].clock = CLOCK_3M;
+    sched_init_event(SCHED_UART, CLOCK_3M, uart_event);
     uart_set_timer(true);
 }
 

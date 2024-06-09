@@ -15,7 +15,7 @@
 #include "../../core/control.h"
 #include "../../core/flash.h"
 #include "../../core/lcd.h"
-#include "../../core/spi.h"
+#include "../../core/panel.h"
 #include "../../core/backlight.h"
 #include "../../core/timers.h"
 #include "../../core/usb/usb.h"
@@ -562,7 +562,8 @@ void MainWindow::debugSync() {
     }
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
-    backlight.factor = (310.0f - static_cast<float>(backlight.brightness)) / 160.0f;
+    backlight.factor = (310u - backlight.brightness) / 160.0f;
+    panel.gammaDirty = true;
 
     lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
     lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
@@ -574,8 +575,19 @@ void MainWindow::debugSync() {
     set_reset(ui->checkBEPO->isChecked(), 0x400u, lcd.control);
     set_reset(ui->checkBEBO->isChecked(), 0x200u, lcd.control);
     set_reset(ui->checkBGR->isChecked(), 0x100u, lcd.control);
+    uint32_t panelClockRate = static_cast<uint32_t>(ui->lcdFreqView->text().toDouble() * 1e6);
+    if (panelClockRate < 9500000) {
+        panelClockRate = 9500000;
+    }
+    if (panelClockRate > 10500000) {
+        panelClockRate = 10500000;
+    }
+    if (panelClockRate != panel.clockRate) {
+        panel.clockRate = panelClockRate;
+        panel_update_clock_rate();
+    }
 
-    set_cpu_clock(static_cast<uint32_t>(ui->freqView->text().toUInt() * 1e6));
+    set_cpu_clock(static_cast<uint32_t>(ui->freqView->text().toDouble() * 1e6));
 
     lcd_update();
 
@@ -752,7 +764,11 @@ void MainWindow::debugPopulate() {
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? m_cNone : m_cBack);
     ui->lcdcurrView->setText(tmp);
 
-    tmp = QString::number(sched.clockRates[CLOCK_CPU] / 1e6);
+    tmp = QString::number(panel.clockRate / 1e6);
+    ui->lcdFreqView->setPalette(tmp == ui->lcdFreqView->text() ? m_cNone : m_cBack);
+    ui->lcdFreqView->setText(tmp);
+
+    tmp = QString::number(sched_get_clock_rate(CLOCK_CPU) / 1e6);
     ui->freqView->setPalette(tmp == ui->freqView->text() ? m_cNone : m_cBack);
     ui->freqView->setText(tmp);
 

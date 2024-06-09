@@ -30,7 +30,7 @@ void VisualizerDisplayWidget::draw() {
     }
 
     emu_set_lcd_ptrs(&m_data, &m_data_end, m_width, m_height, m_upbase, m_control, false);
-    emu_lcd_drawmem(m_image->bits(), m_data, m_data_end, m_control, m_size, 0);
+    emu_lcd_drawmem(m_image->bits(), m_data, m_data_end, m_control, m_size);
     update();
 }
 

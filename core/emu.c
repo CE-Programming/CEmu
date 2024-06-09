@@ -258,8 +258,8 @@ void emu_run(uint64_t ticks) {
     }
 }
 
-void emu_set_run_rate(uint32_t rate) {
-    sched_set_clock(CLOCK_RUN, rate);
+bool emu_set_run_rate(uint32_t rate) {
+    return sched_set_clock(CLOCK_RUN, rate);
 }
 
 uint32_t emu_get_run_rate() {

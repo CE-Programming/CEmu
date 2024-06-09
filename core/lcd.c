@@ -10,6 +10,7 @@
 #include "interrupt.h"
 #include "panel.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,32 +18,40 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
-static bool _rgb;
+#define c1555(w) (((w) & ~0x8000) + ((w) & 0xFFE07FE0) + ((w) >> 10 & 0x00200020))
+#define c888(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
+#define c444(w)  (((w) << 4 & 0xF000F000) | ((w) << 3 & 0x07800780) | ((w) << 1 & 0x001E001E))
 
-#define c1555(w) ((w) + ((w) & 0xFFE0) + ((w) >> 10 & 0x20))
-#define c565(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
-#define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
+static inline uint32_t rotr32(uint32_t val, uint_fast8_t amount) {
+    return (val >> amount) | (val << (-amount & 31));
+}
 
-static uint32_t lcd_bgr16out(uint32_t bgr16) {
-    uint8_t r, g, b;
+static inline uint32_t lcd_next_word(uint32_t **dat) {
+    uint32_t word = **dat;
+    (*dat)++;
+    return word;
+}
 
-    r = (bgr16 >> 10) & 0x3E;
-    g = bgr16 >> 5 & 0x3F;
-    b = (bgr16 << 1) & 0x3E;
+static inline lcd_bgr565swap(uint32_t bgr565, uint32_t mask) {
+    uint32_t diff = (bgr565 ^ (bgr565 >> 11)) & mask;
+    return bgr565 ^ diff ^ (diff << 11);
+}
 
-    r |= r >> 5;
-    r = (uint8_t)((r << 2) | (r >> 4));
+static inline lcd_bgr888swap(uint32_t bgr888, uint32_t mask) {
+    uint32_t diff = (bgr888 ^ (bgr888 >> 16)) & mask;
+    return bgr888 ^ diff ^ (diff << 16);
+}
 
-    g = (uint8_t)((g << 2) | (g >> 4));
+static inline uint32_t lcd_abgr8888out(uint32_t abgr8888) {
+    return abgr8888 | (abgr8888 >> 5 & 0x040004) | (abgr8888 >> 6 & 0x030303);
+}
 
-    b |= b >> 5;
-    b = (uint8_t)((b << 2) | (b >> 4));
+static inline uint32_t lcd_bgr565out(uint32_t bgr565) {
+    return lcd_abgr8888out(UINT32_C(0xFF000000) | (bgr565 << 8 & 0xF80000) | (bgr565 << 5 & 0xFC00) | (bgr565 << 3 & 0xF8));
+}
 
-    if (_rgb) {
-        return r | (g << 8) | (b << 16) | (255 << 24);
-    } else {
-        return b | (g << 8) | (r << 16) | (255 << 24);
-    }
+static inline uint32_t lcd_bgr888out(uint32_t bgr888) {
+    return lcd_abgr8888out(UINT32_C(0xFF000000) | (bgr888 & 0xF8FCF8));
 }
 
 void emu_set_lcd_callback(void (*callback)(void*), void *data) {
@@ -50,32 +59,34 @@ void emu_set_lcd_callback(void (*callback)(void*), void *data) {
     lcd.gui_callback_data = data;
 }
 
-void emu_set_lcd_spi(int enable) {
-    lcd.spi = enable;
+void emu_set_lcd_dma(int enable) {
+    lcd.useDma = enable;
+}
+
+void emu_set_lcd_gamma(int enable) {
+    panel.accurateGamma = enable;
+    panel.gammaDirty = true;
 }
 
 void emu_lcd_drawframe(void *output) {
-    if (lcd.control & 1 << 11) {
-        emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE, lcd.spi);
+    if (lcd.useDma) {
+        memcpy(output, panel.display, sizeof(panel.display));
+    } else if (lcd.control & 1 << 11) {
+        emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE);
     }
 }
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size, int use_spi) {
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_control, int size) {
     bool bebo;
     uint_fast8_t mode;
-    uint32_t word, color;
+    uint32_t word, color, bgr;
     uint32_t *out;
     uint32_t *out_end;
     uint32_t *dat;
     uint32_t *dat_end;
 
-    if (use_spi) {
-        memcpy(output, panel.display, sizeof(panel.display));
-        return;
-    }
-
-    _rgb = lcd_control & (1 << 8);
+    bgr = lcd_control & (1 << 8) ? 0x001F001F : 0;
     bebo = lcd_control & (1 << 9);
     mode = lcd_control >> 1 & 7;
     out = output;
@@ -94,47 +105,53 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
         if (!bepo) { bi ^= 8 - bpp; }
         do {
             uint_fast8_t bitpos = 32;
-            word = *dat++;
+            word = lcd_next_word(&dat);
             do {
                 color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                *out++ = lcd_bgr16out(c1555(color));
+                color |= (uint32_t)lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask] << 16;
+                color = lcd_bgr565swap(c1555(color), bgr);
+                *out++ = lcd_bgr565out(color);
+                if (out == out_end) break;
+                *out++ = lcd_bgr565out(color >> 16);
             } while (bitpos && out != out_end);
         } while (dat < dat_end);
 
     } else if (mode == 4) {
+        uint_fast8_t bi = bebo ? 16 : 0;
         do {
-            word = *dat++;
-            if (bebo) { word = word << 16 | word >> 16; }
-            *out++ = lcd_bgr16out(c1555(word));
+            word = rotr32(lcd_next_word(&dat), bi);
+            word = lcd_bgr565swap(c1555(word), bgr);
+            *out++ = lcd_bgr565out(word);
             if (out == out_end) break;
-            word >>= 16;
-            *out++ = lcd_bgr16out(c1555(word));
+            *out++ = lcd_bgr565out(word >> 16);
         } while (dat < dat_end);
 
     } else if (mode == 5) {
+        bgr = bgr ? 0xFF : 0;
         do {
-            word = *dat++;
-            *out++ = lcd_bgr16out(c565(word));
+            word = lcd_next_word(&dat);
+            word = lcd_bgr888swap(word, bgr);
+            *out++ = lcd_bgr888out(word);
         } while (dat < dat_end);
 
     } else if (mode == 6) {
+        uint_fast8_t bi = bebo ? 16 : 0;
         do {
-            word = *dat++;
-            if (bebo) { word = word << 16 | word >> 16; }
-            *out++ = lcd_bgr16out(word);
+            word = rotr32(lcd_next_word(&dat), bi);
+            word = lcd_bgr565swap(word, bgr);
+            *out++ = lcd_bgr565out(word);
             if (out == out_end) break;
-            word >>= 16;
-            *out++ = lcd_bgr16out(word);
+            *out++ = lcd_bgr565out(word >> 16);
         } while (dat < dat_end);
 
     } else { /* mode == 7 */
+        uint_fast8_t bi = bebo ? 16 : 0;
         do {
-            word = *dat++;
-            if (bebo) { word = word << 16 | word >> 16; }
-            *out++ = lcd_bgr16out(c12(word));
+            word = rotr32(lcd_next_word(&dat), bi);
+            word = lcd_bgr565swap(c444(word), bgr);
+            *out++ = lcd_bgr565out(word);
             if (out == out_end) break;
-            word >>= 16;
-            *out++ = lcd_bgr16out(c12(word));
+            *out++ = lcd_bgr565out(word >> 16);
         } while (dat < dat_end);
     }
 
@@ -142,7 +159,7 @@ draw_black:
     while (out < out_end) { *out++ = 0xFF000000 | (unsigned int)(bus_rand() << (bus_rand() & 0x18)); }
 }
 
-static void lcd_gui_event(void) {
+void lcd_gui_event(void) {
     if (lcd.gui_callback) {
         lcd.gui_callback(lcd.gui_callback_data);
     }
@@ -153,106 +170,126 @@ void lcd_free(void) {
     lcd.gui_callback_data = NULL;
 }
 
-static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
-    uint32_t v, h, ticks = 1;
+static uint32_t lcd_process_pixel(uint32_t ticks, uint16_t bgr565) {
+    uint32_t v;
+    ticks += lcd.PCD * 2;
     if (likely(lcd.curRow < lcd.LPP)) {
         if (!likely(lcd.curCol)) {
             if (!likely(lcd.curRow)) {
-                for (v = lcd.VBP; v; v--) {
-                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && panel_refresh_pixel(); h--) {
-                    }
+                panel_clock_porch(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
+                for (v = (lcd.VSW - 1) + lcd.VBP; v; v--) {
                     if (!panel_hsync()) {
                         break;
                     }
+                    panel_clock_porch(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
-            }
-            for (h = lcd.HBP; h && panel_refresh_pixel(); h--) {
-            }
-        }
-        panel_refresh_pixel();
-        if (likely(lcd.curCol < lcd.PPL && panel.ifCtl & PANEL_IC_CTRL_DATA)) {
-            if (!likely(lcd.control & 1 << 11)) {
-                red = green = blue = 0;
-            } else if (likely(lcd.BGR)) {
-                uint8_t temp = red;
-                red = blue;
-                blue = temp;
-            }
-            panel_update_pixel_16bpp(red, green, blue);
-        }
-        if (unlikely(++lcd.curCol >= lcd.PPL)) {
-            for (h = lcd.HFP; h && panel_refresh_pixel(); h--) {
             }
             panel_hsync();
-            if (unlikely(++lcd.curRow >= lcd.LPP)) {
+            panel_clock_porch(lcd.HSW + lcd.HBP);
+        }
+
+        if (unlikely(sched_active(SCHED_PANEL))) {
+            panel_scan_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, ticks));
+        }
+        assert(lcd.curCol < lcd.PPL);
+        panel.clock_pixel(bgr565);
+
+        if (unlikely(++lcd.curCol >= lcd.PPL)) {
+            panel_clock_porch(lcd.HFP);
+            lcd.curCol = 0;
+            lcd.curRow++;
+            if (unlikely(lcd.curRow >= lcd.LPP)) {
                 for (v = lcd.VFP; v; v--) {
-                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && panel_refresh_pixel(); h--) {
-                    }
                     if (!panel_hsync()) {
                         break;
                     }
+                    panel_clock_porch(lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP);
                 }
             }
-            lcd.curCol = 0;
-            ticks += lcd.HFP + lcd.HSW + lcd.HBP;
+            ticks += (lcd.HFP + lcd.HSW + lcd.HBP) * lcd.PCD * 2;
         }
     }
-    return ticks * lcd.PCD * 2;
+    return ticks;
 }
 
-static uint32_t lcd_process_half(uint16_t pixel) {
-    switch (lcd.LCDBPP) {
-        default: /* 1555 */
-            return lcd_process_pixel(pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
-        case 6: /* 565 */
-            return lcd_process_pixel(pixel & 0x1F, pixel >> 5 & 0x3F, pixel >> 11 & 0x1F);
-        case 7: /* 444 */
-            return lcd_process_pixel(pixel << 1 & 0x1E, pixel >> 2 & 0x3C, pixel >> 7 & 0x1E);
-    }
-}
-
-static uint32_t lcd_process_index(uint8_t index) {
-    return lcd_process_half(lcd.palette[index]);
-}
-
-static void lcd_fill_bytes(uint8_t bytes) {
-    mem_dma_cpy(&lcd.fifo[lcd.pos], lcd.upcurr, bytes);
+static inline void lcd_fill_bytes(uint8_t bytes) {
+    assert((bytes % sizeof(uint32_t)) == 0);
+    mem_dma_cpy(&lcd.fifo[lcd.pos / sizeof(uint32_t)], lcd.upcurr, bytes);
     lcd.pos += bytes;
     lcd.upcurr += bytes;
 }
 
-static uint32_t lcd_drain_word(uint8_t *pos) {
-    uint32_t word = 0;
-    if (unlikely(lcd.BEBO)) {
-        word |= lcd.fifo[(*pos)++] << 24;
-        word |= lcd.fifo[(*pos)++] << 16;
-        word |= lcd.fifo[(*pos)++] <<  8;
-        word |= lcd.fifo[(*pos)++] <<  0;
-    } else {
-        word |= lcd.fifo[(*pos)++] <<  0;
-        word |= lcd.fifo[(*pos)++] <<  8;
-        word |= lcd.fifo[(*pos)++] << 16;
-        word |= lcd.fifo[(*pos)++] << 24;
-    }
-    return word;
-}
-
 static uint32_t lcd_words(uint8_t words) {
+    assert(words > 0);
     uint32_t ticks = 0;
-    uint8_t pos = lcd.pos, bit, bpp = 1 << lcd.LCDBPP;
-    while (words--) {
-        uint32_t word = lcd_drain_word(&pos);
-        if (unlikely(lcd.LCDBPP == 5)) {
-            ticks += lcd_process_pixel(word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
-        } else if (unlikely(lcd.LCDBPP >= 4)) {
-            ticks += lcd_process_half(word);
-            ticks += lcd_process_half(word >> 16);
-        } else {
-            for (bit = 0; bit < 32; bit += bpp) {
-                ticks += lcd_process_index(word >> (bit ^ (unlikely(lcd.BEPO) ? 8 - bpp : 0)) &
-                                           ((1 << bpp) - 1));
+    if (likely(lcd.control >> 11 & 1)) {
+        uint32_t bgr = lcd.BGR ? 0x001F001F : 0;
+        uint32_t *dat = &lcd.fifo[lcd.pos / sizeof(uint32_t)];
+        switch (lcd.LCDBPP) {
+            case 4: {
+                uint_fast8_t bi = lcd.BEBO ? 16 : 0;
+                do {
+                    uint32_t word = rotr32(lcd_next_word(&dat), bi);
+                    word = lcd_bgr565swap(c1555(word), bgr);
+                    ticks = lcd_process_pixel(ticks, word);
+                    ticks = lcd_process_pixel(ticks, word >> 16);
+                } while (--words);
+                break;
+            }
+
+            case 5:
+                do {
+                    uint32_t word = lcd_next_word(&dat);
+                    word = lcd_bgr565swap(c888(word), bgr);
+                    ticks = lcd_process_pixel(ticks, word);
+                } while (--words);
+                break;
+
+            case 6: {
+                uint_fast8_t bi = lcd.BEBO ? 16 : 0;
+                do {
+                    uint32_t word = rotr32(lcd_next_word(&dat), bi);
+                    word = lcd_bgr565swap(word, bgr);
+                    ticks = lcd_process_pixel(ticks, word);
+                    ticks = lcd_process_pixel(ticks, word >> 16);
+                } while (--words);
+                break;
+            }
+
+            case 7: {
+                uint_fast8_t bi = lcd.BEBO ? 16 : 0;
+                do {
+                    uint32_t word = rotr32(lcd_next_word(&dat), bi);
+                    word = lcd_bgr565swap(c444(word), bgr);
+                    ticks = lcd_process_pixel(ticks, word);
+                    ticks = lcd_process_pixel(ticks, word >> 16);
+                } while (--words);
+                break;
+            }
+
+            default: {
+                uint_fast8_t bpp = 1 << lcd.LCDBPP;
+                uint_fast8_t mask = (1 << bpp) - 1;
+                uint_fast8_t bi = (lcd.BEBO ? 0 : 24) ^ (lcd.BEPO ? 0 : 8 - bpp);
+                do {
+                    uint_fast8_t bitpos = 32;
+                    uint32_t word = lcd_next_word(&dat);
+                    do {
+                        uint32_t pixel = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                        pixel |= (uint32_t)lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask] << 16;
+                        pixel = lcd_bgr565swap(c1555(pixel), bgr);
+                        ticks = lcd_process_pixel(ticks, pixel);
+                        ticks = lcd_process_pixel(ticks, pixel >> 16);
+                    } while (bitpos);
+                } while (--words);
+                break;
             }
         }
+    } else {
+        uint32_t pixels = words << (5 - lcd.BPP);
+        do {
+            ticks = lcd_process_pixel(ticks, 0);
+        } while (--pixels);
     }
     return ticks;
 }
@@ -260,12 +297,13 @@ static uint32_t lcd_words(uint8_t words) {
 static void lcd_event(enum sched_item_id id) {
     uint32_t duration;
     sched_process_pending_dma(0);
-    if ((lcd.control >> 12 & 3) == lcd.compare) {
-        lcd.ris |= 1 << 3;
-    }
+    enum lcd_comp compare = lcd.control >> 12 & 3;
     switch (lcd.compare) {
         case LCD_FRONT_PORCH:
             if (lcd.VFP) {
+                if (compare == LCD_FRONT_PORCH) {
+                    lcd.ris |= 1 << 3;
+                }
                 duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
                 lcd.compare = LCD_SYNC;
                 break;
@@ -274,7 +312,9 @@ static void lcd_event(enum sched_item_id id) {
         default:
             fallthrough;
         case LCD_SYNC:
-            lcd_gui_event();
+            if (compare == LCD_SYNC) {
+                lcd.ris |= 1 << 3;
+            }
             lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
             lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
             lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;
@@ -307,11 +347,13 @@ static void lcd_event(enum sched_item_id id) {
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
                         lcd.HSW) * lcd.PCD + 1;
             lcd.prefill = true;
-            if (lcd.spi) {
+            if (lcd.useDma) {
                 lcd.pos = 0;
                 lcd.curRow = lcd.curCol = 0;
                 panel_vsync();
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
+            } else {
+                lcd_gui_event();
             }
             lcd.compare = LCD_LNBU;
             break;
@@ -322,15 +364,21 @@ static void lcd_event(enum sched_item_id id) {
             break;
         case LCD_BACK_PORCH:
             if (lcd.VBP) {
+                if (compare == LCD_BACK_PORCH) {
+                    lcd.ris |= 1 << 3;
+                }
                 duration = lcd.VBP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
                 lcd.compare = LCD_ACTIVE_VIDEO;
                 break;
             }
             fallthrough;
         case LCD_ACTIVE_VIDEO:
+            if (compare == LCD_ACTIVE_VIDEO) {
+                lcd.ris |= 1 << 3;
+            }
             duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             if (!lcd.prefill) {
-                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
+                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, (lcd.HSW + lcd.HBP) * lcd.PCD, 0);
             }
             lcd.compare = LCD_FRONT_PORCH;
             break;
@@ -349,7 +397,7 @@ static uint32_t lcd_dma(enum sched_item_id id) {
         if ((lcd.prefill = lcd.pos)) {
             sched_repeat(id, lcd.pos == 128 ? 22 : 19);
         } else if (lcd.compare == LCD_FRONT_PORCH) {
-            sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
+            sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, (lcd.HSW + lcd.HBP) * lcd.PCD, 0);
         }
         return lcd.pos & 64 ? 18 : 19;
     }
@@ -362,15 +410,11 @@ static uint32_t lcd_dma(enum sched_item_id id) {
 }
 
 void lcd_reset(void) {
-    memset(&lcd, 0, offsetof(lcd_state_t, spi));
+    memset(&lcd, 0, offsetof(lcd_state_t, useDma));
     lcd_update();
 
-    sched.items[SCHED_LCD].callback.event = lcd_event;
-    sched.items[SCHED_LCD].clock = CLOCK_24M;
-    sched_clear(SCHED_LCD);
-    sched.items[SCHED_LCD_DMA].callback.dma = lcd_dma;
-    sched.items[SCHED_LCD_DMA].clock = CLOCK_48M;
-    sched_clear(SCHED_LCD_DMA);
+    sched_init_event(SCHED_LCD, CLOCK_24M, lcd_event);
+    sched_init_dma(SCHED_LCD_DMA, CLOCK_48M, lcd_dma);
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -633,27 +677,17 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
-    memset(&lcd, 0, offsetof(lcd_state_t, spi));
+    memset(&lcd, 0, offsetof(lcd_state_t, useDma));
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }
 
 bool lcd_save(FILE *image) {
-    lcd_state_t sanatizedLcd;
-    memcpy(&sanatizedLcd, &lcd, sizeof(lcd_state_t));
-    sanatizedLcd.gui_callback = NULL;
-    sanatizedLcd.gui_callback_data = NULL;
-    sanatizedLcd.data = NULL;
-    sanatizedLcd.data_end = NULL;
-    return fwrite(&sanatizedLcd, sizeof(lcd_state_t), 1, image) == 1;
+    return fwrite(&lcd, offsetof(lcd_state_t, data), 1, image) == 1;
 }
 
 bool lcd_restore(FILE *image) {
-    bool ret = fread(&lcd, sizeof(lcd), 1, image) == 1;
-    lcd.gui_callback = NULL;
-    lcd.gui_callback_data = NULL;
-    lcd.data = NULL;
-    lcd.data_end = NULL;
+    bool ret = fread(&lcd, offsetof(lcd_state_t, data), 1, image) == 1;
     lcd_update();
     return ret;
 }

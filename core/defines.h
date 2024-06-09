@@ -16,17 +16,23 @@
 # endif
 #endif
 
-#if __has_builtin(__builtin_expect)
+#if __has_builtin(__builtin_expect) || (__GNUC__ >= 3)
 # define unlikely(x) __builtin_expect(x, 0)
 #else
 # define unlikely(x) (x)
 #endif
 #define likely(x) !unlikely(!(x))
 
-#if __has_builtin(__builtin_unreachable)
-# define unreachable __builtin_unreachable
-#else
-# define unreachable abort
+#include <stddef.h>
+#ifndef unreachable
+# if __has_builtin(__builtin_unreachable) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
+#  define unreachable() __builtin_unreachable()
+# elif defined(_MSC_VER)
+#  define unreachable() __assume(0)
+# else
+#  include <stdlib.h>
+#  define unreachable() abort()
+# endif
 #endif
 
 #ifdef _MSC_VER

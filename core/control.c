@@ -126,7 +126,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             break;
         case 0x05:
-            if (control.ports[index] & (1 << 6) && !(byte & (1 << 6))) {
+            if ((control.ports[index] & ~byte) & (1 << 6)) {
                 cpu_crash("resetting bit 6 of port 5");
             }
             control.ports[index] = byte & 0x1F;
