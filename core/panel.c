@@ -109,7 +109,7 @@ static inline uint32_t panel_bgr444_epf23(uint16_t bgr444) {
     return bgr666 + (bgr666 >> 4 & 0x30C3);
 }
 
-static const uint32_t (*panel_bgr444_epf_funcs[])(uint16_t bgr444) = {
+static uint32_t (*const panel_bgr444_epf_funcs[])(uint16_t bgr444) = {
     panel_bgr444_epf0,
     panel_bgr444_epf1,
     panel_bgr444_epf23,
@@ -134,7 +134,7 @@ static inline uint32_t panel_bgr565_epf3(uint16_t bgr565) {
     return panel_bgr565_epf0(bgr565) + (bgr565 & 0x20 ? 0x1001 : 0);
 }
 
-static const uint32_t (*panel_bgr565_epf_funcs[])(uint16_t bgr565) = {
+static uint32_t (*const panel_bgr565_epf_funcs[])(uint16_t bgr565) = {
     panel_bgr565_epf0,
     panel_bgr565_epf1,
     panel_bgr565_epf2,
@@ -891,7 +891,7 @@ void panel_clock_porch(uint32_t clocks) {
 }
 
 static void panel_update_rgb_clock_method(void) {
-    static const void (*panel_clock_pixel_epf_funcs[])(uint16_t bgr565) = {
+    static void (*const panel_clock_pixel_epf_funcs[])(uint16_t bgr565) = {
         panel_clock_pixel_epf0,
         panel_clock_pixel_epf1,
         panel_clock_pixel_epf2,
