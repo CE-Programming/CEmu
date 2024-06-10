@@ -1770,13 +1770,14 @@ void MainWindow::showAbout() {
                          "<br>CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.<br><br>")
                          .arg(QStringLiteral("<img src=':/icons/resources/icons/icon.png' align='right'>"),
                               QStringLiteral(CEMU_VERSION " <small><i>(git: " CEMU_GIT_SHA ")</i></small>"),
-                              QStringLiteral("Matt Waltz (<a href='https://github.com/mateoconlechuga'>MateoConLechuga</a>)<br>"
-                                             "Jacob Young (<a href='https://github.com/jacobly0'>jacobly0</a>)<br>"
-                                             "Adrien Bertrand (<a href='https://github.com/adriweb'>adriweb</a>)<br>"),
-                              QStringLiteral("Zachary Wassall (<a href='https://github.com/runer112'>Runer112</a>)<br>"
-                                             "Albert Huang (<a href='https://github.com/alberthdev'>alberthdev</a>)<br>"
-                                             "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
-                                             "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"),
+                              QStringLiteral("- Matt Waltz (<a href='https://github.com/mateoconlechuga'>MateoConLechuga</a>)<br>"
+                                             "- Jacob Young (<a href='https://github.com/jacobly0'>jacobly0</a>)<br>"
+                                             "- Brendan Fletcher (<a href='https://github.com/calc84maniac'>calc84maniac</a>)<br>"
+                                             "- Adrien Bertrand (<a href='https://github.com/adriweb'>adriweb</a>)<br>"),
+                              QStringLiteral("- Zachary Wassall (<a href='https://github.com/runer112'>Runer112</a>)<br>"
+                                             "- Albert Huang (<a href='https://github.com/alberthdev'>alberthdev</a>)<br>"
+                                             "- Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
+                                             "- Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"),
                               QStringLiteral("Matt Waltz (ES), Adrien Bertrand (FR), Stephan Paternotte &amp; Peter Tillema (NL), Jerry23011 (ZH)<br>"),
                               QStringLiteral("<a href='https://github.com/KnightOS/z80e'>z80e</a>, "
                                              "<a href='https://github.com/nspire-emus/firebird'>Firebird Emu</a>, "

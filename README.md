@@ -46,6 +46,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Memory viewer/editor
 * CPU state/registers viewer/editor
 * LCD state/parameters viewer/editor
+* Advanced LCD parameters emulation (gamma, response time, ...)
 * Tracking of flash cache misses and average access time
 * Memory visualizer (as fully customizable virtual LCDs)
 * Stack viewer
