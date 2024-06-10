@@ -32,12 +32,12 @@ static inline uint32_t lcd_next_word(uint32_t **dat) {
     return word;
 }
 
-static inline lcd_bgr565swap(uint32_t bgr565, uint32_t mask) {
+static inline uint32_t lcd_bgr565swap(uint32_t bgr565, uint32_t mask) {
     uint32_t diff = (bgr565 ^ (bgr565 >> 11)) & mask;
     return bgr565 ^ diff ^ (diff << 11);
 }
 
-static inline lcd_bgr888swap(uint32_t bgr888, uint32_t mask) {
+static inline uint32_t lcd_bgr888swap(uint32_t bgr888, uint32_t mask) {
     uint32_t diff = (bgr888 ^ (bgr888 >> 16)) & mask;
     return bgr888 ^ diff ^ (diff << 16);
 }
