@@ -99,14 +99,6 @@ typedef struct panel_gamma {
 typedef struct panel_params {
     /* Word params */
     struct {
-        uint16_t XS;
-        uint16_t XE;
-    } CASET;
-    struct {
-        uint16_t YS;
-        uint16_t YE;
-    } RASET;
-    struct {
         uint16_t PSL;
         uint16_t PEL;
     } PTLAR;
@@ -121,6 +113,14 @@ typedef struct panel_params {
     struct {
         uint16_t N;
     } TESCAN;
+    struct {
+        uint16_t XS;
+        uint16_t XE;
+    } CASET;
+    struct {
+        uint16_t YS;
+        uint16_t YE;
+    } RASET;
     /* Byte params */
     struct {
         uint8_t : 2;

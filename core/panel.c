@@ -21,12 +21,12 @@ static void panel_reset_mem_ptr(panel_mem_ptr_t *memPtr);
       .V57 = 44-v57, .V59 = 34-v59, .V61 = 64-v61, .V62 = 64-v62 }
 
 static const panel_params_t panel_reset_params = {
-    .CASET = { .XS = 0, .XE = PANEL_LAST_COL },
-    .RASET = { .YS = 0, .YE = PANEL_LAST_ROW },
     .PTLAR = { .PSL = 0, .PEL = PANEL_LAST_ROW },
     .VSCRDEF = { .TFA = 0, .VSA = PANEL_NUM_ROWS, .BFA = 0 },
     .VSCRSADD = { .VSP = 0 },
     .TESCAN = { .N = 0 },
+    .CASET = {.XS = 0, .XE = PANEL_LAST_COL },
+    .RASET = {.YS = 0, .YE = PANEL_LAST_ROW },
     .MADCTL = { .MH = 0, .RGB = 0, .ML = 0, .MV = 0, .MX = 0, .MY = 0 },
     .COLMOD = { .MCU = 6, .RGB = 6 },
     .DISBV = { .DBV = 0 },
@@ -1181,9 +1181,8 @@ static void panel_write_param(uint8_t value) {
         index ^= (index < offsetof(panel_params_t, MADCTL));
         uint8_t oldValue = ((uint8_t*)&panel.params)[index];
         ((uint8_t*)&panel.params)[index] = value;
-        if (index >= offsetof(panel_params_t, CASET) && index < offsetof(panel_params_t, RASET) + sizeof(panel.params.RASET)) {
-            panel_update_write_pixel_bounds();
-        } else if (index == offsetof(panel_params_t, MADCTL)) {
+        if (index >= offsetof(panel_params_t, CASET) && index < offsetof(panel_params_t, COLMOD)) {
+            /* CASET, RASET, MADCTL */
             panel_update_write_pixel_bounds();
         } else if (index == offsetof(panel_params_t, COLMOD)) {
             panel_update_rgb_clock_method();
