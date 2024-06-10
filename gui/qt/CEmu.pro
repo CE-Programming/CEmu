@@ -249,6 +249,7 @@ SOURCES += \
     tivars_lib_cpp/src/TypeHandlers/TH_Tokenized.cpp \
     tivars_lib_cpp/src/TypeHandlers/TH_GenericComplex.cpp \
     tivars_lib_cpp/src/TypeHandlers/TH_Matrix.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_GDB.cpp \
     tivars_lib_cpp/src/TypeHandlers/TH_GenericReal.cpp \
     tivars_lib_cpp/src/TypeHandlers/TH_GenericAppVar.cpp \
     tivars_lib_cpp/src/TypeHandlers/TH_TempEqu.cpp \

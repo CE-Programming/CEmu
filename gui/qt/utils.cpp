@@ -68,7 +68,7 @@ std::string calc_var_content_string(const calc_var_t &var) {
     }
     const options_t opts = (calc_var_is_prog(&var) || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();
-    return func(data_t(var.data, var.data + var.size), opts);
+    return func(data_t(var.data, var.data + var.size), opts, nullptr);
 }
 
 int utf8_strlen(const std::string &str) {
