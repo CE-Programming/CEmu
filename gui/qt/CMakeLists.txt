@@ -36,11 +36,22 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
 message(STATUS "Detected system: ${CMAKE_SYSTEM_NAME} - host processor: ${CMAKE_HOST_SYSTEM_PROCESSOR} - CXX_COMPILER: ${CMAKE_CXX_COMPILER_ID}")
 
-# C11 and C++14
+# C11, and C++20 if supported otherwise C++14
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include(CheckCXXCompilerFlag)
+if(MSVC)
+    CHECK_CXX_COMPILER_FLAG("/std:c++20" COMPILER_SUPPORTS_CXX20)
+else()
+    CHECK_CXX_COMPILER_FLAG("-std=c++2a" COMPILER_SUPPORTS_CXX20)
+endif()
+if(COMPILER_SUPPORTS_CXX20)
+    set(CMAKE_CXX_STANDARD 20)
+    add_definitions(-DTH_GDB_SUPPORT=1)
+else()
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
 
 # Sane flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -163,6 +174,7 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     tivars_lib_cpp/src/TypeHandlers/STH_ExactRadical.cpp
     tivars_lib_cpp/src/TypeHandlers/STH_FP.cpp
     tivars_lib_cpp/src/TypeHandlers/STH_PythonAppVar.cpp
+    tivars_lib_cpp/src/TypeHandlers/TH_GDB.cpp
     tivars_lib_cpp/src/TypeHandlers/TH_GenericAppVar.cpp
     tivars_lib_cpp/src/TypeHandlers/TH_GenericComplex.cpp
     tivars_lib_cpp/src/TypeHandlers/TH_GenericList.cpp
