@@ -69,7 +69,7 @@ DEFINES += LIB_ARCHIVE_SUPPORT PNG_SUPPORT GLOB_SUPPORT
 
 CONFIG(release, debug|release) {
     #This is a release build
-    DEFINES += QT_NO_DEBUG_OUTPUT
+    DEFINES += QT_NO_DEBUG_OUTPUT NDEBUG
 } else {
     #This is a debug build
     GLOBAL_FLAGS += -g3

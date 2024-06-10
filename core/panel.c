@@ -202,7 +202,7 @@ static inline size_t panel_rgb_epf(void) {
 }
 
 static inline uint32_t panel_reverse_addr(uint32_t addr, uint32_t upperBound, uint32_t dirMask) {
-    assert(dirMask == 0 || dirMask == ~0);
+    assert(dirMask == 0 || ~dirMask == 0);
     return (addr ^ dirMask) + (upperBound & dirMask);
 }
 
@@ -698,6 +698,7 @@ static void panel_write_pixel_row(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
 }
 
 static void panel_write_pixel_row_oob(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    (void)bgr666;
     uint16_t row = memPtr->xAddr;
     if (likely(row != panel.windowEnd.xAddr)) {
         memPtr->xAddr = (row + panel.xDir) & PANEL_ADDR_MASK;
@@ -735,6 +736,7 @@ static void panel_write_pixel_col(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
 }
 
 static void panel_write_pixel_col_oob(panel_mem_ptr_t *memPtr, uint32_t bgr666) {
+    (void)bgr666;
     uint16_t col = memPtr->xAddr;
     if (likely(col != panel.windowEnd.xAddr)) {
         memPtr->xAddr = (col + panel.xDir) & PANEL_ADDR_MASK;
