@@ -3,14 +3,13 @@
 CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
 CEmu works natively on Windows, macOS, and Linux. For performance and portability, the core is programmed in C and its customizable GUI in C++ with Qt.
 
-<a href="https://i.imgur.com/7QsJd5L.png"><img src="https://i.imgur.com/mTC6yXp.png" /></a>
+<a href="https://i.imgur.com/6lMva88.png"><img src="https://i.imgur.com/6lMva88.png" /></a>
 
 _Note: CEmu is not a TI product nor is it TI-endorsed/affiliated. If you need an official TI CE emulator, TI-SmartView™ CE is for you._
 
 ## Downloads
-Development builds are available here: https://ce-programming.github.io/CEmu/download
-
-Official stable releases are available here: https://github.com/CE-Programming/CEmu/releases
+Official stable releases are available here: https://github.com/CE-Programming/CEmu/releases  
+Development builds are available on the auto-updating ["nightly" pre-release](https://github.com/CE-Programming/CEmu/releases/tag/nightly).
 
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
@@ -64,11 +63,12 @@ _Note that Release builds have an update checking feature, which is disabled in 
 
 ## How to build
 
-You can find information for building CEmu yourself from the source on [this](https://github.com/CE-Programming/CEmu/wiki/Building-CEmu) wiki page. If you encounter any problems, feel free to open an [issue](https://github.com/CE-Programming/CEmu/issues)!
+You can find information for building CEmu yourself from the source on [this wiki page](https://github.com/CE-Programming/CEmu/wiki/Building-CEmu).  
+If you encounter any problems, feel free to open an [issue](https://github.com/CE-Programming/CEmu/issues)!
 
 ## Getting Help
 
-You can join us on the `CE Programming` Discord server in the `#cemu-dev` channel: [Discord Chat Link](https://discord.gg/CyUmEx9zmQ).\
+You can join us on the `CE Programming` Discord server in the `#cemu-emulator` channel: [Discord Chat Link](https://discord.gg/CyUmEx9zmQ).\
 If you prefer IRC, the chat is also bridged to the EFNet `#cemu-dev` channel (you can use a web client like [IRCCloud](https://www.irccloud.com/irc/efnet/channel/cemu-dev), if you don't want to use a local application).
 
 Depending on how active the channel is you might not get a response.\
