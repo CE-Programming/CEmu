@@ -36,9 +36,9 @@ jobs:
         sudo apt install -y cmake ninja-build libarchive-dev libzstd-dev zlib1g-dev libgl1-mesa-dev nettle-dev libacl1-dev liblz4-dev libc6-dev
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@43ec12788e42f375acfcb2cec059edfb9572fbaa # v3
+      uses: jurplel/install-qt-action@f03f05556819ceb3781ee2f455ec44c339d683c0 # v4
       with:
-        version: 6.6.1
+        version: 6.7.1
         target: desktop
         setup-python: false
         cache: true
