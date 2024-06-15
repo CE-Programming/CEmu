@@ -339,8 +339,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(this, &MainWindow::setLcdResponseMode, ui->lcd, &LCDWidget::setResponseMode);
     connect(this, &MainWindow::setLcdFrameskip, ui->lcd, &LCDWidget::setFrameskip);
     connect(ui->statusInterval, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setStatusInterval);
-    connect(&m_timerEmu, &QTimer::timeout, [this]{ m_timerEmuTriggered = true; });
-    connect(&m_timerFps, &QTimer::timeout, [this]{ m_timerFpsTriggered = true; });
+    connect(&m_timerEmu, &QTimer::timeout, [this]{ if (std::exchange(m_timerEmuTriggered, true)) timeoutEmuSpeed(); });
+    connect(&m_timerFps, &QTimer::timeout, [this]{ if (std::exchange(m_timerFpsTriggered, true)) timeoutFpsSpeed(); });
 
     // screen capture
     connect(ui->buttonSavePNG, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -1569,21 +1569,29 @@ void MainWindow::showEmuSpeed(double emuTime) {
         int speed = (int)round(emuRunCount / emuRunTime);
         m_speedLabel.setText(QStringLiteral("  ") + tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
         emuRunTime = emuRunCount = 0;
-        m_timerEmuTriggered = !m_timerEmuTriggerable;
+        m_timerEmuTriggered = false;
     }
+}
+
+void MainWindow::timeoutEmuSpeed() {
+    m_speedLabel.setText(QStringLiteral("  ") + tr("Emulated Speed: ") + tr("N/A"));
 }
 
 void MainWindow::showFpsSpeed(double emuFps, double guiFps) {
     static double guiFpsPrev = 0;
     static double emuFpsPrev = 0;
-    if (emuFps < emuFpsPrev - 0.01 || emuFps > emuFpsPrev + 0.01) {
+    if (emuFps && (emuFps < emuFpsPrev - 0.01 || emuFps > emuFpsPrev + 0.01)) {
         ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
         emuFpsPrev = emuFps;
     }
     if (guiFps < guiFpsPrev - 0.01 || guiFps > guiFpsPrev + 0.01) {
-        m_fpsLabel.setText("FPS: " + QString::number(guiFps, 'f', 2));
+        m_fpsLabel.setText("FPS: " + (guiFps ? QString::number(guiFps, 'f', 2) : tr("N/A")));
         guiFpsPrev = guiFps;
     }
+}
+
+void MainWindow::timeoutFpsSpeed() {
+    showFpsSpeed(0.0, 0.0);
 }
 
 void MainWindow::lcdUpdate(double emuFps) {
@@ -1594,7 +1602,7 @@ void MainWindow::lcdUpdate(double emuFps) {
     if (m_timerFpsTriggered && guiFrameTime > 0) {
         showFpsSpeed(emuFps, guiFrameCount / guiFrameTime);
         guiFrameTime = guiFrameCount = 0;
-        m_timerFpsTriggered = !m_timerFpsTriggerable;
+        m_timerFpsTriggered = false;
     }
 }
 

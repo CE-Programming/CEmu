@@ -446,7 +446,9 @@ private:
     void setEmuSpeed(int value);
     void setThrottle(int mode);
     void showEmuSpeed(double emuTime);
+    void timeoutEmuSpeed();
     void showFpsSpeed(double emuFps, double guiFps);
+    void timeoutFpsSpeed();
     void showStatusMsg(const QString &str);
 
     // debug settings
@@ -701,8 +703,6 @@ private:
     QString m_pathImage;
     QTimer m_timerEmu;
     QTimer m_timerFps;
-    bool m_timerEmuTriggerable = true;
-    bool m_timerFpsTriggerable = true;
     bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
 

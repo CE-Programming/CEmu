@@ -736,18 +736,18 @@ void MainWindow::setGuiSkip(int value) {
 void MainWindow::setStatusInterval(int value) {
     m_config->setValue(SETTING_STATUS_INTERVAL, value);
     ui->statusInterval->setValue(value);
-    m_timerFps.stop();
-    m_timerEmu.stop();
-    m_timerFpsTriggered = true;
-    m_timerEmuTriggered = true;
-    m_timerEmuTriggerable = true;
-    m_timerFpsTriggerable = true;
     if (!value) {
-        m_timerEmuTriggerable = false;
-        m_timerFpsTriggerable = false;
+        m_timerEmu.stop();
+        m_timerFps.stop();
+        m_timerEmuTriggered = false;
+        m_timerFpsTriggered = false;
+        timeoutEmuSpeed();
+        timeoutFpsSpeed();
     } else {
-        m_timerFps.start(value * 1000);
+        m_timerEmuTriggered = true;
+        m_timerFpsTriggered = true;
         m_timerEmu.start(value * 1000);
+        m_timerFps.start(value * 1000);
     }
 }
 
