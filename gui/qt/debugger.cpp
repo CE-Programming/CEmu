@@ -280,6 +280,7 @@ void MainWindow::debugRaise() {
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
     connect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
     connect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
+    ui->lcd->disableBlend();
 }
 
 void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
@@ -396,6 +397,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
                 debug.stepBasic = false;
                 debug.stepBasicNext = false;
                 prevReason = reason;
+                ui->lcd->disableBlend();
                 return;
             }
         }
@@ -499,6 +501,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             return;
         case DBG_BASIC_USER:
             debugBasicRaise();
+            ui->lcd->disableBlend();
             return;
     }
 

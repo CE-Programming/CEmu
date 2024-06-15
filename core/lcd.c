@@ -54,7 +54,7 @@ static inline uint32_t lcd_bgr888out(uint32_t bgr888) {
     return lcd_abgr8888out(UINT32_C(0xFF000000) | (bgr888 & 0xF8FCF8));
 }
 
-void emu_set_lcd_callback(void (*callback)(void*), void *data) {
+void emu_set_lcd_callback(bool (*callback)(void*), void *data) {
     lcd.gui_callback = callback;
     lcd.gui_callback_data = data;
 }
@@ -159,10 +159,11 @@ draw_black:
     while (out < out_end) { *out++ = 0xFF000000 | (unsigned int)(bus_rand() << (bus_rand() & 0x18)); }
 }
 
-void lcd_gui_event(void) {
+bool lcd_gui_event(void) {
     if (lcd.gui_callback) {
-        lcd.gui_callback(lcd.gui_callback_data);
+        return lcd.gui_callback(lcd.gui_callback_data);
     }
+    return true;
 }
 
 void lcd_free(void) {
@@ -353,7 +354,8 @@ static void lcd_event(enum sched_item_id id) {
                 panel_vsync();
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
             } else {
-                lcd_gui_event();
+                (void)lcd_gui_event();
+                panel.skipFrame = true;
             }
             lcd.compare = LCD_LNBU;
             break;

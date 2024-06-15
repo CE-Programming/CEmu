@@ -56,6 +56,7 @@ EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SI
                                         m_debug{false} {
     assert(emu == nullptr);
     emu = this;
+    std::fill(m_perfArray, m_perfArray + PerfArraySize, m_lastTime);
 }
 
 void EmuThread::run() {
@@ -126,8 +127,6 @@ void EmuThread::writeConsole(int console, const char *format, va_list args) {
 }
 
 void EmuThread::doStuff() {
-    const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
-
     while (!m_reqQueue.isEmpty()) {
         int req = m_reqQueue.dequeue();
         switch (+req) {
@@ -179,8 +178,6 @@ void EmuThread::doStuff() {
             m_keyQueue.dequeue();
         }
     }
-
-    m_lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 
 void EmuThread::throttleWait() {
@@ -189,29 +186,42 @@ void EmuThread::throttleWait() {
     {
         std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
         speed = m_speed;
-        if (!speed) {
-            sendSpeed(0);
-            m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0; });
+        throttle = m_throttle;
+        if (!speed && throttle) {
+            emit sendSpeed(0);
+            m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0 || !m_throttle; });
             speed = m_speed;
+            throttle = m_throttle;
             m_lastTime = std::chrono::steady_clock::now();
         }
-        throttle = m_throttle;
     }
-    std::chrono::duration<int, std::ratio<100, 60>> unit(1);
-    std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                                                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
-    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = m_lastTime + interval;
-    if (throttle && cur_time < next_time) {
-        sendSpeed(speed);
-        m_lastTime = next_time;
-        std::this_thread::sleep_until(next_time);
-    } else {
-        if (m_lastTime != cur_time) {
-            sendSpeed(unit / (cur_time - m_lastTime));
-            m_lastTime = cur_time;
-        }
+    double run_rate = sched_get_clock_rate_precise(CLOCK_RUN);
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
+    if (!throttle) {
+        m_lastTime = cur_time;
         std::this_thread::yield();
+    } else {
+        std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
+                                                     (std::chrono::duration<double>(100 / (speed * run_rate))));
+        std::chrono::steady_clock::time_point next_time = m_lastTime + interval;
+        std::chrono::steady_clock::time_point tolerance_time = m_lastTime + std::chrono::milliseconds(30);
+        if (cur_time < std::max(next_time, tolerance_time)) {
+            m_lastTime = next_time;
+            if (cur_time < next_time) {
+                std::this_thread::sleep_until(next_time);
+            }
+        } else {
+            m_lastTime = cur_time;
+            std::this_thread::yield();
+        }
     }
+    std::chrono::steady_clock::time_point timeNUnitsAgo = m_perfArray[m_perfIndex];
+    m_perfArray[m_perfIndex] = m_lastTime;
+    if (++m_perfIndex == PerfArraySize) {
+        m_perfIndex = 0;
+    }
+    std::chrono::duration<double> diff = m_lastTime - timeNUnitsAgo;
+    emit sendSpeed(diff.count() * run_rate * (1.0 / PerfArraySize));
 }
 
 void EmuThread::unblock() {
@@ -324,6 +334,9 @@ void EmuThread::setSpeed(int value) {
 void EmuThread::setThrottle(bool state) {
     std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
     m_throttle = state;
+    if (!state) {
+        m_cvSpeed.notify_one();
+    }
 }
 
 void EmuThread::setAsicRev(int rev) {

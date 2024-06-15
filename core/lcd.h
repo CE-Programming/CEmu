@@ -69,7 +69,7 @@ typedef struct lcd_state {
 
     /* Everything after here persists through reset! */
     int useDma;
-    void (*gui_callback)(void*);
+    bool (*gui_callback)(void*);
     void *gui_callback_data;
 } lcd_state_t;
 
@@ -82,11 +82,11 @@ bool lcd_restore(FILE *image);
 bool lcd_save(FILE *image);
 void lcd_update(void);
 void lcd_disable(void);
-void lcd_gui_event(void);
+bool lcd_gui_event(void);
 
 /* api functions */
 void emu_lcd_drawframe(void *output);
-void emu_set_lcd_callback(void (*callback)(void*), void *data);
+void emu_set_lcd_callback(bool (*callback)(void*), void *data);
 void emu_set_lcd_dma(int enable);
 void emu_set_lcd_gamma(int enable);
 

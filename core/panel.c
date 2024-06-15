@@ -300,7 +300,12 @@ static bool panel_start_line(uint16_t row) {
             return false;
         }
         return true;
+    } else if (unlikely(panel.skipFrame)) {
+        panel.nextRamCol = PANEL_NUM_COLS;
+        panel.srcRow = panel.dstRow = -1;
+        return true;
     }
+
     /* Partial mode */
     if (unlikely(panel.mode & PANEL_MODE_PARTIAL) &&
         panel.partialStart > panel.partialEnd ?
@@ -527,8 +532,6 @@ static uint32_t panel_start_frame() {
         sched_clear(SCHED_PANEL);
     }
 
-    lcd_gui_event();
-
     if ((panel.mode ^ panel.pendingMode) & PANEL_MODE_IDLE) {
         panel.gammaDirty = true;
     }
@@ -584,6 +587,9 @@ static uint32_t panel_start_frame() {
     uint32_t ticksPerFrame = (horizBackPorch + panel.ticksPerLine) * (vertBackPorch + panel.linesPerFrame);
     panel.lineStartTick = ticksPerFrame + panel.ticksPerLine;
     panel_start_line(-vertBackPorch);
+
+    panel.skipFrame = !lcd_gui_event();
+
     return ticksPerFrame;
 }
 
@@ -903,7 +909,7 @@ static void panel_update_rgb_clock_method(void) {
     if (!panel.params.RAMCTRL.RM) {
         panel.clock_pixel = panel_clock_pixel_ignore;
     } else if (panel_ram_bypass_enabled()) {
-        if (!(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF)) && panel.displayMode == PANEL_DM_RGB && panel.row < PANEL_NUM_ROWS) {
+        if (!(panel.mode & (PANEL_MODE_SLEEP | PANEL_MODE_OFF)) && panel.displayMode == PANEL_DM_RGB && panel.row < PANEL_NUM_ROWS && !panel.skipFrame) {
             panel.clock_pixel = panel_clock_pixel_ram_bypass;
         } else {
             panel.clock_pixel = panel_clock_pixel_ignore;

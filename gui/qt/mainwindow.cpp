@@ -1560,9 +1560,15 @@ void MainWindow::showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev,
     setCalcSkinTopFromType(python);
 }
 
-void MainWindow::showEmuSpeed(int speed) {
-    if (m_timerEmuTriggered) {
+void MainWindow::showEmuSpeed(double emuTime) {
+    static double emuRunTime = 0;
+    static int emuRunCount = 0;
+    emuRunTime += emuTime;
+    emuRunCount += 100;
+    if (m_timerEmuTriggered && emuRunTime > 0) {
+        int speed = (int)round(emuRunCount / emuRunTime);
         m_speedLabel.setText(QStringLiteral("  ") + tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
+        emuRunTime = emuRunCount = 0;
         m_timerEmuTriggered = !m_timerEmuTriggerable;
     }
 }
@@ -1570,20 +1576,24 @@ void MainWindow::showEmuSpeed(int speed) {
 void MainWindow::showFpsSpeed(double emuFps, double guiFps) {
     static double guiFpsPrev = 0;
     static double emuFpsPrev = 0;
-    if (emuFps < emuFpsPrev - 1 || emuFps > emuFpsPrev + 1) {
+    if (emuFps < emuFpsPrev - 0.01 || emuFps > emuFpsPrev + 0.01) {
         ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
         emuFpsPrev = emuFps;
     }
-    if (guiFps < guiFpsPrev - 1 || guiFps > guiFpsPrev + 1) {
+    if (guiFps < guiFpsPrev - 0.01 || guiFps > guiFpsPrev + 0.01) {
         m_fpsLabel.setText("FPS: " + QString::number(guiFps, 'f', 2));
         guiFpsPrev = guiFps;
     }
 }
 
 void MainWindow::lcdUpdate(double emuFps) {
-    double guiFps = ui->lcd->refresh();
-    if (m_timerFpsTriggered) {
-        showFpsSpeed(emuFps, guiFps);
+    static double guiFrameTime = 0;
+    static int guiFrameCount = 0;
+    guiFrameTime += ui->lcd->refresh();
+    guiFrameCount++;
+    if (m_timerFpsTriggered && guiFrameTime > 0) {
+        showFpsSpeed(emuFps, guiFrameCount / guiFrameTime);
+        guiFrameTime = guiFrameCount = 0;
         m_timerFpsTriggered = !m_timerFpsTriggerable;
     }
 }

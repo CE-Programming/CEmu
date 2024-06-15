@@ -15,9 +15,10 @@ public:
     explicit LCDWidget(QWidget *p = Q_NULLPTR);
     QImage getImage();
     void setMain();
-    void draw();
+    bool draw();
     void setFrameskip(int value);
     void setResponseMode(bool state);
+    void disableBlend();
 
 signals:
     void updateLcd(double emuFps);
@@ -43,9 +44,7 @@ private:
         LcdRight
     };
 
-    enum {
-        ArraySize = 50
-    };
+    static constexpr size_t PerfArraySize = 30;
 
     unsigned int m_side;
     bool m_transferDrag = false;
@@ -61,8 +60,8 @@ private:
     QString m_dragRom;
     bool m_isSendingRom;
 
-    unsigned int m_array[ArraySize];
-    int m_index = 0;
+    std::chrono::steady_clock::time_point m_perfArray[PerfArraySize];
+    size_t m_perfIndex = 0;
     bool m_responseMode = false;
     int m_skip = 0;
     int m_frameskip = 0;

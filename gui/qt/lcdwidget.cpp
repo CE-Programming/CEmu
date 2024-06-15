@@ -12,11 +12,14 @@
 #include "../../core/backlight.h"
 #include "../../core/control.h"
 
+#include <QtCore/QMetaObject>
+#include <QtCore/QMetaMethod>
 #include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QDrag>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QApplication>
+#include <math.h>
 
 LCDWidget::LCDWidget(QWidget *parent) : QWidget{parent} {
     installEventFilter(keypadBridge);
@@ -142,12 +145,15 @@ void LCDWidget::mouseMoveEvent(QMouseEvent *e) {
 }
 
 double LCDWidget::refresh() {
-    unsigned int msNFramesAgo = m_array[m_index];
-    m_array[m_index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-    double guiFps = (1e3*ArraySize) / (m_array[m_index] - msNFramesAgo);
-    m_index = (m_index + 1) % ArraySize;
+    std::chrono::steady_clock::time_point timeNFramesAgo = m_perfArray[m_perfIndex];
+    m_perfArray[m_perfIndex] = std::chrono::steady_clock::now();
+    std::chrono::duration<double> diff = m_perfArray[m_perfIndex] - timeNFramesAgo;
+    double guiFrameTime = diff.count() / PerfArraySize;
+    if (++m_perfIndex == PerfArraySize) {
+        m_perfIndex = 0;
+    }
     update();
-    return guiFps;
+    return guiFrameTime;
 }
 
 void LCDWidget::setMain() {
@@ -156,7 +162,7 @@ void LCDWidget::setMain() {
     m_blendedFrame.fill(Qt::black);
     m_currFrame = &m_renderedFrame;
     m_mutex.unlock();
-    emu_set_lcd_callback([](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); }, this);
+    emu_set_lcd_callback([](void *lcd) { return static_cast<LCDWidget*>(lcd)->draw(); }, this);
 }
 
 void LCDWidget::setResponseMode(bool state) {
@@ -168,10 +174,21 @@ void LCDWidget::setFrameskip(int value) {
     m_skip = value;
 }
 
+void LCDWidget::disableBlend() {
+    if (m_currFrame == &m_blendedFrame) {
+        m_mutex.lock();
+        m_currFrame = &m_renderedFrame;
+        m_mutex.unlock();
+        static QMetaMethod updateMethod = staticMetaObject.method(staticMetaObject.indexOfSlot("update()"));
+        updateMethod.invoke(this);
+    }
+}
+
 // called by the emu thread to draw the lcd
-void LCDWidget::draw() {
+bool LCDWidget::draw() {
     if (m_skip) {
         m_skip--;
+        disableBlend();
     } else {
         m_skip = m_frameskip;
         m_mutex.lock();
@@ -202,7 +219,17 @@ void LCDWidget::draw() {
         apng_add_frame(m_currFrame->constBits());
 #endif
         double guiFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        if (lcd.useDma && panel.displayMode != PANEL_DM_RGB && panel.lineStartTick != 0) {
+            double internalFps = sched_get_clock_rate_precise(CLOCK_PANEL) / panel.lineStartTick;
+            if (panel.displayMode != PANEL_DM_VSYNC) {
+                guiFps = internalFps;
+            } else if (unlikely(internalFps < guiFps)) {
+                guiFps /= ceil(guiFps / internalFps);
+            }
+        }
         emit updateLcd(guiFps / (m_frameskip + 1));
     }
+    // return whether next frame should be rendered
+    return m_skip == 0;
 }
 

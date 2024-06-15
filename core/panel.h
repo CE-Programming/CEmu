@@ -425,6 +425,7 @@ typedef struct panel_state {
     uint8_t blankLevel;
     bool accurateGamma;
     bool gammaDirty;
+    bool skipFrame;
 } panel_state_t;
 
 extern panel_state_t panel;

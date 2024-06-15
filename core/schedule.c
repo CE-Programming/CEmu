@@ -512,6 +512,10 @@ uint32_t sched_get_clock_rate(enum clock_id clock) {
     return (uint32_t)div_round(SCHED_BASE_CLOCK_RATE, &sched.clocks[clock]);
 }
 
+double sched_get_clock_rate_precise(enum clock_id clock) {
+    return (double)SCHED_BASE_CLOCK_RATE / sched.clocks[clock].tick_unit;
+}
+
 void sched_reset(void) {
     const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 10000000, 60, 48000000, 24000000, 12000000, 6000000, 3000000, 1000000, 32768 };
 

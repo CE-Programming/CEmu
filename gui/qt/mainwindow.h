@@ -445,7 +445,7 @@ private:
     // speed settings
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showEmuSpeed(int speed);
+    void showEmuSpeed(double emuTime);
     void showFpsSpeed(double emuFps, double guiFps);
     void showStatusMsg(const QString &str);
 

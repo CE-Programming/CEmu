@@ -39,7 +39,7 @@ asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, a
     return asic;
 }
 
-void sdl_update_lcd(void *data) {
+bool sdl_update_lcd(void *data) {
     sdl_t *sdl = (sdl_t*)data;
     void *pixels;
     int pitch;
@@ -48,6 +48,7 @@ void sdl_update_lcd(void *data) {
         emu_lcd_drawframe(pixels);
         SDL_UnlockTexture(sdl->texture);
     }
+    return true;
 }
 
 void sdl_cemu_configure(cemu_sdl_t *cemu) {

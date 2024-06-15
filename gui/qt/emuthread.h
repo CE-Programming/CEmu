@@ -79,7 +79,7 @@ signals:
     void debugCommand(int reason, uint32_t addr);
 
     // speed
-    void sendSpeed(int value);
+    void sendSpeed(double value);
 
     // state
     void sendAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev, bool python);
@@ -112,6 +112,8 @@ private:
         m_cv.wait(lock);
     }
 
+    static constexpr size_t PerfArraySize = 20;
+
     QQueue<int> m_reqQueue;
     emu_data_t m_saveType;
     emu_data_t m_loadType;
@@ -143,6 +145,9 @@ private:
 
     QQueue<quint16> m_keyQueue;
     QMutex m_keyQueueMutex;
+
+    std::chrono::steady_clock::time_point m_perfArray[PerfArraySize];
+    size_t m_perfIndex = 0;
 };
 
 #endif
