@@ -1562,11 +1562,11 @@ void MainWindow::showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev,
 
 void MainWindow::showEmuSpeed(double emuTime) {
     static double emuRunTime = 0;
-    static int emuRunCount = 0;
+    static uint32_t emuRunCount = 0;
     emuRunTime += emuTime;
-    emuRunCount += 100;
+    emuRunCount++;
     if (m_timerEmuTriggered && emuRunTime > 0) {
-        int speed = (int)round(emuRunCount / emuRunTime);
+        unsigned int speed = (unsigned int)round(emuRunCount * 100.0 / emuRunTime);
         m_speedLabel.setText(QStringLiteral("  ") + tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
         emuRunTime = emuRunCount = 0;
         m_timerEmuTriggered = false;
@@ -1596,7 +1596,7 @@ void MainWindow::timeoutFpsSpeed() {
 
 void MainWindow::lcdUpdate(double emuFps) {
     static double guiFrameTime = 0;
-    static int guiFrameCount = 0;
+    static uint32_t guiFrameCount = 0;
     guiFrameTime += ui->lcd->refresh();
     guiFrameCount++;
     if (m_timerFpsTriggered && guiFrameTime > 0) {
