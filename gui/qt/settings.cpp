@@ -893,6 +893,10 @@ void MainWindow::setFullscreen(int value) {
             ui->lcd->setParent(parentPtr);
             ui->lcd->showNormal();
             lcdAdjust();
+            if (m_fullscreen == FULLSCREEN_LCD) {
+                activateWindow();
+                raise();
+            }
             m_fullscreen = FULLSCREEN_NONE;
             break;
         case FULLSCREEN_ALL:
@@ -900,8 +904,11 @@ void MainWindow::setFullscreen(int value) {
             m_fullscreen = FULLSCREEN_ALL;
             break;
         case FULLSCREEN_LCD:
-            ui->lcd->setParent(this, Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
+            ui->lcd->setParent(this);
             ui->lcd->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+            // The order here is important, must move to the new screen before setting window flags
+            ui->lcd->setGeometry(screen()->availableGeometry());
+            ui->lcd->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
             ui->lcd->showFullScreen();
             ui->lcd->installEventFilter(keypadBridge);
             ui->lcd->setFocus();
