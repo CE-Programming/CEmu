@@ -13,6 +13,7 @@
 #include <cmath>
 #include <QtGui/QScreen>
 #include <QtGui/QStandardItemModel>
+#include <QtGui/QWindow>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
@@ -907,7 +908,7 @@ void MainWindow::setFullscreen(int value) {
             ui->lcd->setParent(this);
             ui->lcd->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
             // The order here is important, must move to the new screen before setting window flags
-            ui->lcd->setGeometry(screen()->availableGeometry());
+            ui->lcd->setGeometry(windowHandle()->screen()->availableGeometry());
             ui->lcd->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
             ui->lcd->showFullScreen();
             ui->lcd->installEventFilter(keypadBridge);
