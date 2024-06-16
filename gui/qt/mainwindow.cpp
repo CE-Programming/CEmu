@@ -367,6 +367,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkAllowGroupDrag, &QCheckBox::stateChanged, this, &MainWindow::setDockGroupDrag);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
+    connect(ui->upscaleLCD, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setLcdUpscale);
+    connect(ui->fullscreenLCD, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setLcdFullscreen);
     connect(ui->guiSkip, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setGuiSkip);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
     connect(ui->comboBoxAsicRev, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setAsicRevision);
@@ -570,6 +572,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setOptimizeRecord(m_config->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
     setStatusInterval(m_config->value(SETTING_STATUS_INTERVAL, 1).toInt());
     setLcdScale(m_config->value(SETTING_SCREEN_SCALE, 100).toInt());
+    setLcdUpscale(m_config->value(SETTING_SCREEN_UPSCALE, LCDWidget::SharpBilinear).toInt());
+    setLcdFullscreen(m_config->value(SETTING_SCREEN_FULLSCREEN, LCDWidget::PreserveAspectRatio).toInt());
     setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
     setLcdDma(m_config->value(SETTING_SCREEN_DMA, true).toBool());
     setLcdGamma(m_config->value(SETTING_SCREEN_GAMMA, true).toBool());
@@ -1197,6 +1201,8 @@ void MainWindow::resetGui() {
     ipcCloseConnected();
     m_config->remove(SETTING_SCREEN_SKIN);
     m_config->remove(SETTING_SCREEN_SCALE);
+    m_config->remove(SETTING_SCREEN_UPSCALE);
+    m_config->remove(SETTING_SCREEN_FULLSCREEN);
     m_config->remove(SETTING_WINDOW_FULLSCREEN);
     m_config->remove(SETTING_WINDOW_GEOMETRY);
     m_config->remove(SETTING_WINDOW_POSITION);

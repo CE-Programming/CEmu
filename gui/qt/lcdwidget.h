@@ -12,12 +12,26 @@ class LCDWidget : public QWidget {
   Q_OBJECT
 
 public:
+    enum UpscaleMethod {
+        NearestNeighbor,
+        Bilinear,
+        SharpBilinear
+    };
+
+    enum FullscreenArea {
+        StretchToFill,
+        PreserveAspectRatio,
+        IntegerUpscale
+    };
+
     explicit LCDWidget(QWidget *p = Q_NULLPTR);
     QImage getImage();
     void setMain();
     bool draw();
     void setFrameskip(int value);
     void setResponseMode(bool state);
+    void setUpscaleMethod(int method);
+    void setFullscreenArea(int area);
     void disableBlend();
 
 signals:
@@ -65,6 +79,9 @@ private:
     bool m_responseMode = false;
     int m_skip = 0;
     int m_frameskip = 0;
+
+    enum UpscaleMethod m_upscale = SharpBilinear;
+    enum FullscreenArea m_fullscreenArea = PreserveAspectRatio;
 };
 
 #endif

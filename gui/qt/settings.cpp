@@ -54,6 +54,8 @@ const QString MainWindow::SETTING_DEBUGGER_NORM_OS          = QStringLiteral("De
 const QString MainWindow::SETTING_PYTHON_EDITION            = QStringLiteral("python_edition");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
+const QString MainWindow::SETTING_SCREEN_UPSCALE            = QStringLiteral("Screen/upscale");
+const QString MainWindow::SETTING_SCREEN_FULLSCREEN         = QStringLiteral("Screen/fullscreen");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
 const QString MainWindow::SETTING_SCREEN_DMA                = QStringLiteral("Screen/dma");
 const QString MainWindow::SETTING_SCREEN_GAMMA              = QStringLiteral("Screen/gamma");
@@ -711,6 +713,18 @@ void MainWindow::setLcdScale(int scale) {
     m_config->setValue(SETTING_SCREEN_SCALE, roundedScale);
     ui->scaleLCD->setValue(roundedScale);
     lcdAdjust();
+}
+
+void MainWindow::setLcdUpscale(int value) {
+    m_config->setValue(SETTING_SCREEN_UPSCALE, value);
+    ui->upscaleLCD->setCurrentIndex(value);
+    ui->lcd->setUpscaleMethod(value);
+}
+
+void MainWindow::setLcdFullscreen(int value) {
+    m_config->setValue(SETTING_SCREEN_FULLSCREEN, value);
+    ui->fullscreenLCD->setCurrentIndex(value);
+    ui->lcd->setFullscreenArea(value);
 }
 
 void MainWindow::setSkinToggle(bool enable) {

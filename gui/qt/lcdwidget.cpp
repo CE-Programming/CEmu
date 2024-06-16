@@ -41,12 +41,37 @@ void LCDWidget::paintEvent(QPaintEvent*) {
     QPainter c(this);
     const QRect &cw = c.window();
 
-    // Interpolation only for < 100% scale
-    c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < LCD_WIDTH);
     if ((control.ports[5] & 1 << 4) && (lcd.control & 1 << 11)) {
-        m_mutex.lock();
-        c.drawImage(cw, *m_currFrame);
-        m_mutex.unlock();
+        QSizeF targetSize = cw.size();
+        if (isFullScreen() && m_fullscreenArea != StretchToFill) {
+            targetSize = QSizeF(LCD_WIDTH, LCD_HEIGHT).scaled(cw.size(), Qt::KeepAspectRatio);
+        }
+        QSizeF pixelSize = targetSize * c.device()->devicePixelRatioF();
+        qreal widthScale = pixelSize.width() / LCD_WIDTH;
+        qreal heightScale = pixelSize.height() / LCD_HEIGHT;
+        bool forceBilinear = m_upscale == Bilinear;
+        if (isFullScreen() && m_fullscreenArea == IntegerUpscale) {
+            /* widthScale and heightScale should be equal since we kept the aspect ratio */
+            targetSize /= widthScale;
+            widthScale = heightScale = qFloor(widthScale);
+            targetSize *= widthScale;
+            forceBilinear = false;
+        }
+        QRectF target = QRectF(QPointF(), targetSize);
+        target.moveCenter(cw.center());
+        QSize integerSize = QSize(qMax(qRound(widthScale), 1) * LCD_WIDTH, qMax(qRound(heightScale), 1) * LCD_HEIGHT);
+        bool sharpUsesBilinear = m_upscale == SharpBilinear && integerSize != pixelSize;
+        c.setRenderHint(QPainter::SmoothPixmapTransform, forceBilinear || sharpUsesBilinear);
+        if (sharpUsesBilinear && integerSize != QSize(LCD_WIDTH, LCD_HEIGHT)) {
+            m_mutex.lock();
+            QImage integerFrame = m_currFrame->scaled(integerSize);
+            m_mutex.unlock();
+            c.drawImage(target, integerFrame);
+        } else {
+            m_mutex.lock();
+            c.drawImage(target, *m_currFrame);
+            m_mutex.unlock();
+        }
     } else {
         c.fillRect(cw, Qt::black);
         c.setPen(Qt::white);
@@ -172,6 +197,14 @@ void LCDWidget::setResponseMode(bool state) {
 void LCDWidget::setFrameskip(int value) {
     m_frameskip = value;
     m_skip = value;
+}
+
+void LCDWidget::setUpscaleMethod(int value) {
+    m_upscale = static_cast<UpscaleMethod>(value);
+}
+
+void LCDWidget::setFullscreenArea(int value) {
+    m_fullscreenArea = static_cast<FullscreenArea>(value);
 }
 
 void LCDWidget::disableBlend() {
