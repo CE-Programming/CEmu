@@ -12,6 +12,7 @@
 #include "../../core/backlight.h"
 #include "../../core/control.h"
 
+#include <QtCore/QtMath>
 #include <QtCore/QMetaObject>
 #include <QtCore/QMetaMethod>
 #include <QtGui/QPainter>
