@@ -19,6 +19,11 @@ DEFINES += CEMU_GIT_SHA=\\\"$$CEMU_GIT_SHA\\\"
 DEFINES += CEMU_RELEASE=$$CEMU_RELEASE
 DEFINES += MULTITHREAD
 
+# Back up passed overrides as they may get changed internally...
+BACKUP_QMAKE_CC = $$QMAKE_CC
+BACKUP_QMAKE_CXX = $$QMAKE_CXX
+BACKUP_QMAKE_LINK = $$QMAKE_LINK
+
 # Continuous Integration (variable checked later)
 CI = $$(CI)
 
@@ -59,6 +64,12 @@ CONFIG += c++14 c++2a c++20 console
 
 # Seems to fix some LTO issues. See https://github.com/CE-Programming/CEmu/issues/366
 CONFIG += ltcg
+
+
+# Restore potentially lost compiler overrives
+QMAKE_CC = $$BACKUP_QMAKE_CC
+QMAKE_CXX = $$BACKUP_QMAKE_CXX
+QMAKE_LINK = $$BACKUP_QMAKE_LINK
 
 # Core options
 DEFINES += DEBUG_SUPPORT
