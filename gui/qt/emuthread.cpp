@@ -204,7 +204,7 @@ void EmuThread::throttleWait() {
         std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
                                                      (std::chrono::duration<double>(100 / (speed * run_rate))));
         std::chrono::steady_clock::time_point next_time = m_lastTime + interval;
-        std::chrono::steady_clock::time_point tolerance_time = m_lastTime + std::chrono::milliseconds(30);
+        std::chrono::steady_clock::time_point tolerance_time = m_lastTime + std::chrono::milliseconds(40);
         if (cur_time < std::max(next_time, tolerance_time)) {
             m_lastTime = next_time;
             if (cur_time < next_time) {
