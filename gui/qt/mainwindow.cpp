@@ -291,7 +291,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
                     m_usbContext,
                     libusb_hotplug_event(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
                                          LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-                    0,
+                    (libusb_hotplug_flag)LIBUSB_HOTPLUG_NO_FLAGS,
                     LIBUSB_HOTPLUG_MATCH_ANY,
                     LIBUSB_HOTPLUG_MATCH_ANY,
                     LIBUSB_HOTPLUG_MATCH_ANY,
