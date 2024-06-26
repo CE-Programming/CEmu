@@ -236,21 +236,20 @@ bool LCDWidget::draw() {
             c.fillRect(c.window(), QColor(0, 0, 0, (1.0f - backlight.factor) * 255.0f));
         }
         if (m_responseMode) {
-            QPainter c;
             if (lcd.useDma && panel.params.GATECTRL.SM) {
                 m_blendedFrame.reinterpretAsFormat(QImage::Format_RGBA8888_Premultiplied);
-                c.begin(&m_blendedFrame);
-                c.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-                c.drawImage(QPoint(0, 0), m_interlaceAlpha);
-                c.setCompositionMode(QPainter::CompositionMode_DestinationOver);
-                c.drawImage(QPoint(0, 0), m_renderedFrame);
-                c.end();
+                {
+                    QPainter c(&m_blendedFrame);
+                    c.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+                    c.drawImage(QPoint(0, 0), m_interlaceAlpha);
+                    c.setCompositionMode(QPainter::CompositionMode_DestinationOver);
+                    c.drawImage(QPoint(0, 0), m_renderedFrame);
+                }
                 m_blendedFrame.reinterpretAsFormat(QImage::Format_RGBX8888);
             } else {
-                c.begin(&m_blendedFrame);
+                QPainter c(&m_blendedFrame);
                 c.setOpacity(0.6);
                 c.drawImage(QPoint(0, 0), m_renderedFrame);
-                c.end();
             }
             m_currFrame = &m_blendedFrame;
         } else {
