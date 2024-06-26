@@ -8,19 +8,19 @@
 #include "../../core/panel.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
-#include "../../core/debug/debug.h"
 #include "../../core/backlight.h"
 #include "../../core/control.h"
 
 #include <QtCore/QtMath>
 #include <QtCore/QMetaObject>
 #include <QtCore/QMetaMethod>
+#include <QtCore/QTimer>
 #include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QDrag>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QApplication>
-#include <math.h>
+#include <cmath>
 
 LCDWidget::LCDWidget(QWidget *parent) : QWidget{parent} {
     installEventFilter(keypadBridge);
@@ -158,7 +158,7 @@ void LCDWidget::mouseMoveEvent(QMouseEvent *e) {
             drag->setMimeData(mimeData);
             drag->setHotSpot(e->pos() * ((double)image.rect().width() / rect().width()));
             drag->setPixmap(mymap);
-            switch (const auto tmp = drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
+            switch (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
                 case Qt::IgnoreAction:
                 case Qt::CopyAction:
                     QTimer::singleShot(1000, this, [path] { QFile::remove(path); });
