@@ -147,27 +147,30 @@ void LCDWidget::mousePressEvent(QMouseEvent *e) {
 void LCDWidget::mouseMoveEvent(QMouseEvent *e) {
     if (m_screenshotDrag)
     {
-        QDrag *drag = new QDrag(this);
-        QMimeData *mimeData = new QMimeData;
         QImage image = getImage();
-        QPixmap mymap = QPixmap::fromImage(image);
-        QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_") + randomString(5) + QStringLiteral(".png");
-        image.save(path, "PNG", 0);
-        mimeData->setImageData(image);
-        mimeData->setUrls(QList<QUrl>() << QUrl::fromLocalFile(path));
-        drag->setMimeData(mimeData);
-        drag->setHotSpot(e->pos() * ((double)image.rect().width() / rect().width()));
-        drag->setPixmap(mymap);
-        switch (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
-            case Qt::IgnoreAction:
-            case Qt::CopyAction:
-                QFile::remove(path);
-                break;
-            default:
-                break;
+        QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("CEmu_screenshot_") + randomString(5) + QStringLiteral(".png");
+        if (image.save(path, "PNG")) {
+            QDrag *drag = new QDrag(this);
+            QMimeData *mimeData = new QMimeData;
+            QPixmap mymap = QPixmap::fromImage(image);
+            mimeData->setImageData(image);
+            mimeData->setUrls(QList<QUrl>() << QUrl::fromLocalFile(path));
+            drag->setMimeData(mimeData);
+            drag->setHotSpot(e->pos() * ((double)image.rect().width() / rect().width()));
+            drag->setPixmap(mymap);
+            switch (const auto tmp = drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
+                case Qt::IgnoreAction:
+                case Qt::CopyAction:
+                    QTimer::singleShot(1000, this, [path] { QFile::remove(path); });
+                    break;
+                default:
+                    break;
+            }
+            e->accept();
+        } else {
+            e->ignore();
         }
         m_screenshotDrag = false;
-        e->accept();
     } else {
         e->ignore();
     }
