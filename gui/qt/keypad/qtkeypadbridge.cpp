@@ -126,6 +126,10 @@ Qt::KeyboardModifiers QtKeypadBridge::toModifierValue(QString m) {
 }
 
 bool QtKeypadBridge::keymapExport(const QString &path) {
+    if (!keymap) {
+        return false;
+    }
+
     QSettings config(path, QSettings::IniFormat);
     config.clear();
 

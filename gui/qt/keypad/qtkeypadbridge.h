@@ -26,6 +26,7 @@ public:
 
     explicit QtKeypadBridge(QObject *parent = Q_NULLPTR) : QObject(parent) {}
 
+    KeymapMode getKeymapMode() const { return m_mode; }
     bool setKeymap(KeymapMode map);
     void skEvent(QKeyEvent *event, bool press);
     void kEvent(QString text, int key = 0, bool repeat = false);

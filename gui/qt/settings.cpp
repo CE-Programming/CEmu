@@ -1300,6 +1300,11 @@ void MainWindow::guiImport() {
 }
 
 void MainWindow::keymapExport() {
+    if (keypadBridge->getKeymapMode() == QtKeypadBridge::KEYMAP_NATURAL) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Natural keymap is not exportable"));
+        return;
+    }
+
     QString filter = tr("Keymap Config (*.ini)");
     QString path = QFileDialog::getSaveFileName(this, tr("Save keymap configuration"),
                                                 m_dir.absolutePath(), filter, &filter);
