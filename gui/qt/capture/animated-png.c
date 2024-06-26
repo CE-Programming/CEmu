@@ -9,6 +9,9 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 #include "../../core/schedule.h"
 

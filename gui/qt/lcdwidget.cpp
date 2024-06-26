@@ -29,8 +29,11 @@ LCDWidget::LCDWidget(QWidget *parent) : QWidget{parent} {
     m_blendedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
     m_currFrame = &m_renderedFrame;
     m_mutex.unlock();
-    for (int x = 0; x < 320; x++) {
-        (x % 2 ? m_interlaceRight : m_interlaceLeft) |= QRegion(x, 0, 1, 240);
+    m_interlaceAlpha = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_Alpha8);
+    uint8_t* interlacePixels = reinterpret_cast<uint8_t*>(m_interlaceAlpha.bits());
+    for (size_t index = 0; index < LCD_WIDTH * LCD_HEIGHT; index += 2) {
+        interlacePixels[index] = 255 * 4 / 10;
+        interlacePixels[index + 1] = 255 * 6 / 10;
     }
 }
 
@@ -233,17 +236,22 @@ bool LCDWidget::draw() {
             c.fillRect(c.window(), QColor(0, 0, 0, (1.0f - backlight.factor) * 255.0f));
         }
         if (m_responseMode) {
-            QPainter c(&m_blendedFrame);
+            QPainter c;
             if (lcd.useDma && panel.params.GATECTRL.SM) {
-                c.setClipRegion(m_interlaceRight);
-                c.setOpacity(0.4);
+                m_blendedFrame.reinterpretAsFormat(QImage::Format_RGBA8888_Premultiplied);
+                c.begin(&m_blendedFrame);
+                c.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+                c.drawImage(QPoint(0, 0), m_interlaceAlpha);
+                c.setCompositionMode(QPainter::CompositionMode_DestinationOver);
                 c.drawImage(QPoint(0, 0), m_renderedFrame);
-                c.setClipRegion(m_interlaceLeft);
-                c.setOpacity(0.6);
+                c.end();
+                m_blendedFrame.reinterpretAsFormat(QImage::Format_RGBX8888);
             } else {
+                c.begin(&m_blendedFrame);
                 c.setOpacity(0.6);
+                c.drawImage(QPoint(0, 0), m_renderedFrame);
+                c.end();
             }
-            c.drawImage(QPoint(0, 0), m_renderedFrame);
             m_currFrame = &m_blendedFrame;
         } else {
             m_currFrame = &m_renderedFrame;

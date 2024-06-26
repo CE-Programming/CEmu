@@ -64,7 +64,7 @@ private:
     bool m_transferDrag = false;
     bool m_screenshotDrag = false;
     QRect m_left, m_right;
-    QRegion m_interlaceLeft, m_interlaceRight;
+    QImage m_interlaceAlpha;
     QImage *m_currFrame;
     QImage m_renderedFrame;
     QImage m_blendedFrame;
