@@ -4,7 +4,6 @@
 #include "debug/debug.h"
 #include "schedule.h"
 
-#define PORT_READ_DELAY  2
 #define PORT_WRITE_DELAY 4
 
 /* Global APB state */
@@ -34,10 +33,9 @@ uint8_t port_read_byte(uint16_t address) {
     }
 #endif
 
-    cpu.cycles += PORT_READ_DELAY;
+    cpu.cycles += port_read_cycles[port_loc];
     sched_process_pending_events(); /* make io ports consistent with mid-instruction state */
     value = port_read(address, port_loc, false);
-    cpu.cycles += port_read_cycles[port_loc] - PORT_READ_DELAY;
     return value;
 }
 

@@ -154,6 +154,9 @@ static void gpt_write(uint16_t address, uint8_t value, bool poke) {
 
     if (address >= 0x34 && address < 0x38) {
         ((uint8_t *)&gpt)[address] &= ~value;
+        if (sched_active(SCHED_TIMER_DELAY) && sched_ticks_remaining(SCHED_TIMER_DELAY) == 1) {
+            ((uint8_t *)&gpt.delayStatus)[address - 0x34] &= ~value;
+        }
     } else if (address < 0x3C) {
         counter_delay = address < 0x30 && (address & 0xC) == 0;
         cpu.cycles += counter_delay;
