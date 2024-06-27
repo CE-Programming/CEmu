@@ -402,7 +402,7 @@ static void sched_second(enum sched_item_id id) {
     assert(cpu.cycles >= cpu_clock_rate);
     cpu.seconds++;
     cpu.cycles -= cpu_clock_rate;
-    cpu.eiDelay -= cpu_clock_rate;
+    cpu.eiDelay = cpu.eiDelay < cpu_clock_rate ? 0 : cpu.eiDelay - cpu_clock_rate;
     cpu.baseCycles += cpu_clock_rate;
     sched.dma.last_mem_timestamp = timestamp_diff(sched.dma.last_mem_timestamp, SCHED_BASE_CLOCK_RATE);
     assert(sched.items[SCHED_SECOND].timestamp == SCHED_BASE_CLOCK_RATE);
