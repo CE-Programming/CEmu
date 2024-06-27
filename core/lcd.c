@@ -424,10 +424,6 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
     uint16_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
 
-    if (!peek) {
-        sched_process_pending_dma(0);
-    }
-
     if (index < 0x200) {
         if (index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
         if (index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }
@@ -606,6 +602,10 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
             write8(lcd.lpbase, bit_offset, value);
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {
+            if (!poke) {
+                lcd_write_ctrl_delay();
+                sched_process_pending_dma(0);
+            }
             old = lcd.control;
             write8(lcd.control, bit_offset, value);
             if ((lcd.control ^ old) & 1 << 0) { /* lcdEn changed */
@@ -615,9 +615,6 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
                 } else {
                     sched_clear(SCHED_LCD);
                 }
-            }
-            if (!poke) {
-                lcd_write_ctrl_delay();
             }
         } else if (index == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
@@ -629,10 +626,11 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
         }
         lcd_update();
     } else if (index < 0x400) {
-        write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
         if (!poke) {
             cpu.cycles += (4 - 2);
+            sched_process_pending_dma(0);
         }
+        write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     } else if (index < 0xC00) {
         if (index >= 0x800) {
             write8(lcd.crsrImage[((pio - 0x800) & 0x3FF) >> 2], bit_offset, value);
