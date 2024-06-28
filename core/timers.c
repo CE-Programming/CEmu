@@ -153,9 +153,11 @@ static void gpt_write(uint16_t address, uint8_t value, bool poke) {
     (void)poke;
 
     if (address >= 0x34 && address < 0x38) {
-        ((uint8_t *)&gpt)[address] &= ~value;
+        uint8_t bit_offset = (address & 3) << 3;
+        uint32_t mask = ~((uint32_t)value << bit_offset & 0x1FF);
+        gpt.status &= mask;
         if (sched_active(SCHED_TIMER_DELAY) && sched_ticks_remaining(SCHED_TIMER_DELAY) == 1) {
-            ((uint8_t *)&gpt.delayStatus)[address - 0x34] &= ~value;
+            gpt.delayStatus &= mask;
         }
     } else if (address < 0x3C) {
         counter_delay = address < 0x30 && (address & 0xC) == 0;
