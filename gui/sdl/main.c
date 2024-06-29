@@ -36,7 +36,7 @@ asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, a
     if (python_rev >= 0) {
         *python = python_rev;
     }
-    return asic;
+    return asic_rev;
 }
 
 bool sdl_update_lcd(void *data) {
