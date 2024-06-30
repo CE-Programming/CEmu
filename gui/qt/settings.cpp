@@ -843,6 +843,7 @@ void MainWindow::keymapChanged() {
     } else if (ui->radiojsTIfiedKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_JSTIFIED);
     } else if (ui->radioSmartPadKeys->isChecked()) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Be aware that this may behave unexpectedly due to the combinations of keypresses sent by the calculator, which may trigger some global shortcuts on your system!"));
         setKeymap(SETTING_KEYPAD_SMARTPAD);
     } else if (ui->radioCustomKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_CUSTOM);
