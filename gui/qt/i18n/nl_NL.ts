@@ -1079,52 +1079,52 @@
         <location filename="../mainwindow.ui" line="84"/>
         <location filename="../mainwindow.cpp" line="714"/>
         <source>TI-Basic Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>TI-Basic Debug</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="215"/>
         <source>Show Fetches</source>
-        <translation type="unfinished"></translation>
+        <translation>Fetches weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="255"/>
         <source>Enable TI-Basic Debugging</source>
-        <translation type="unfinished"></translation>
+        <translation>TI-Basig Debug inschakelen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="292"/>
         <source>Show Temp Parser</source>
-        <translation type="unfinished"></translation>
+        <translation>Temp Parser weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="314"/>
         <source>Show Live Execution</source>
-        <translation type="unfinished"></translation>
+        <translation>Live execution weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="321"/>
         <source>Highlight Source</source>
-        <translation type="unfinished"></translation>
+        <translation>Broncode markeren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="340"/>
         <source>Program Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>Program Debug</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="370"/>
         <source>Temporary Parser</source>
-        <translation type="unfinished"></translation>
+        <translation>Temporary Parser</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3086"/>
         <source>Avg. Flash</source>
-        <translation type="unfinished"></translation>
+        <translation>Gem. Flash</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3133"/>
         <source>Flash Cache Misses</source>
-        <translation type="unfinished"></translation>
+        <translation>Flash Cache-missers</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4040"/>
@@ -1188,42 +1188,42 @@
     <message>
         <location filename="../mainwindow.ui" line="7494"/>
         <source>Upscaling:</source>
-        <translation type="unfinished"></translation>
+        <translation>Opschaling</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7502"/>
         <source>Nearest Neighbor</source>
-        <translation type="unfinished"></translation>
+        <translation>Naaste buur</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7507"/>
         <source>Bilinear</source>
-        <translation type="unfinished"></translation>
+        <translation>Bi-lineair</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7512"/>
         <source>Sharp Bilinear</source>
-        <translation type="unfinished"></translation>
+        <translation>Scherp lineair</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7520"/>
         <source>Fullscreen:</source>
-        <translation type="unfinished"></translation>
+        <translation>Volledig scherm:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7528"/>
         <source>Stretch</source>
-        <translation type="unfinished"></translation>
+        <translation>Uitrekken</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7533"/>
         <source>Preserve Aspect</source>
-        <translation type="unfinished"></translation>
+        <translation>Verhoudingen behouden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7538"/>
         <source>Integer Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Schaal in geheel getal</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9005"/>
@@ -1243,7 +1243,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9485"/>
         <source>ASIC revision:</source>
-        <translation type="unfinished"></translation>
+        <translation>ASIC-revisie:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9543"/>
@@ -1268,27 +1268,27 @@
     <message>
         <location filename="../mainwindow.ui" line="9576"/>
         <source>Current:</source>
-        <translation type="unfinished"></translation>
+        <translation>Huidig:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9585"/>
         <source>Emulate Python Edition</source>
-        <translation type="unfinished"></translation>
+        <translation>Python Edition emuleren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9603"/>
         <source>Emulate DMA to LCD memory</source>
-        <translation type="unfinished"></translation>
+        <translation>DMA naar LCD-geheugen emuleren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9610"/>
         <source>Emulate LCD gamma</source>
-        <translation type="unfinished"></translation>
+        <translation>LCD-gamma emuleren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9617"/>
         <source>Emulate LCD response time</source>
-        <translation type="unfinished"></translation>
+        <translation>LCD-reactietijd emuleren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9758"/>
@@ -1303,12 +1303,12 @@
     <message>
         <location filename="../mainwindow.ui" line="9768"/>
         <source>May cause problems if boot code is incompatible. Use only if you know what you&apos;re doing.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan problemen veroorzaken als opstartcode niet compatibel is. Gebruik alleen als je weet wat je doet.</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9771"/>
         <source>Allow any ASIC revision</source>
-        <translation type="unfinished"></translation>
+        <translation>Elke ASIC-revisie toestaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9790"/>
@@ -1659,7 +1659,7 @@
     <message>
         <location filename="../basicdebugger.cpp" line="251"/>
         <source>Executing Program: </source>
-        <translation type="unfinished"></translation>
+        <translation>Programma uitvoeren:</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="1836"/>
@@ -1862,7 +1862,7 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="1557"/>
         <source>Current: %0 (change requires reset)</source>
-        <translation type="unfinished"></translation>
+        <translation>Huidig: %0 (verandering vereist reset)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1583"/>
@@ -2280,7 +2280,7 @@ Plaats hiertoe de bootable image in dezelfde folder als de CEmu executable. Als 
     <message>
         <location filename="../settings.cpp" line="1304"/>
         <source>Natural keymap is not exportable</source>
-        <translation type="unfinished"></translation>
+        <translation>Natuurlijke keymap is niet exporteerbaar</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="1308"/>
@@ -2331,12 +2331,12 @@ Bestand: </translation>
     <message>
         <location filename="../sendinghandler.cpp" line="170"/>
         <source>Transfer issue</source>
-        <translation type="unfinished"></translation>
+        <translation>Overdrachtsprobleem</translation>
     </message>
     <message>
         <location filename="../sendinghandler.cpp" line="170"/>
         <source>Transfer issue, see console for information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Overdrachtsprobleem, zie de console voor meer informatie.</translation>
     </message>
 </context>
 <context>
@@ -2680,12 +2680,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="106"/>
         <source>Saves a screenshot to &lt;File&gt; (only usable as a sent command)</source>
-        <translation type="unfinished"></translation>
+        <translation>Slaat een schermopname op naar &lt;File&gt; (alleen bruikbaar als verzonden commando)</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="107"/>
         <source>screenshot</source>
-        <translation type="unfinished"></translation>
+        <translation>schermopname</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="111"/>
@@ -2730,12 +2730,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="134"/>
         <source>fullscreen</source>
-        <translation>Volledig scherm</translation>
+        <translation>volledig scherm</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="138"/>
         <source>Reset CEmu completely and delete configuration files</source>
-        <translation>Reset CEmu volledig en verwijder configuratiebestanden</translation>
+        <translation>CEmu volledig resetten en configuratiebestanden verwijderen</translation>
     </message>
 </context>
 <context>
