@@ -208,7 +208,7 @@ static void cpu_write_other_index(uint32_t value) {
 }
 
 static uint32_t cpu_index_address(void) {
-    int32_t value = cpu_read_index();
+    uint32_t value = cpu_read_index();
     if (cpu.PREFIX) {
         value += cpu_fetch_offset();
     }
@@ -381,7 +381,7 @@ static void cpu_execute_daa(void) {
 }
 
 static uint32_t cpu_dec_bc_partial_mode() {
-    uint32_t value = cpu_mask_mode((int32_t)cpu.registers.BC - 1, cpu.L);
+    uint32_t value = cpu_mask_mode(cpu.registers.BC - 1, cpu.L);
     if (cpu.L) {
         cpu.registers.BC = value;
     } else {
@@ -665,7 +665,7 @@ static void cpu_execute_bli() {
                 }
                 /* LDI, LDD, LDIR, LDDR */
                 cpu_write_byte(r->DE, cpu_read_byte(r->HL));
-                r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
+                r->DE = cpu_mask_mode(r->DE + delta, cpu.L);
                 r->flags.H = 0;
                 r->flags.PV = cpu_dec_bc_partial_mode() != 0; /* Do not mask BC */
                 r->flags.N = 0;
@@ -766,7 +766,7 @@ static void cpu_execute_bli() {
                         cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                     }
                     /* INI2R, IND2R, OTI2R, OTD2R */
-                    r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
+                    r->DE = cpu_mask_mode(r->DE + delta, cpu.L);
                     r->flags.Z = cpu_dec_bc_partial_mode() == 0; /* Do not mask BC */
                     repeat &= !r->flags.Z;
                 } else {
@@ -786,7 +786,7 @@ static void cpu_execute_bli() {
                 return;
         }
         /* All block instructions */
-        r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
+        r->HL = cpu_mask_mode(r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
         if (repeat) {
             switch (cpu.context.opcode) {
@@ -877,7 +877,6 @@ void cpu_restore_next(void) {
 void cpu_execute(void) {
     /* variable declarations */
     int8_t s;
-    int32_t sw;
     uint32_t w = 0;
 
     uint8_t old = 0;
@@ -959,12 +958,12 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (--r->B) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                                 case 3: /* JR d */
                                     s = cpu_fetch_offset();
-                                    cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
+                                    cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
                                     break;
                                 case 4:
                                 case 5:
@@ -973,7 +972,7 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                             }
@@ -1050,10 +1049,10 @@ void cpu_execute(void) {
                             }
                             switch (context.q) {
                                 case 0: /* INC rp[p] */
-                                    cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) + 1);
+                                    cpu_write_rp(context.p, cpu_read_rp(context.p) + 1);
                                     break;
                                 case 1: /* DEC rp[p] */
-                                    cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) - 1);
+                                    cpu_write_rp(context.p, cpu_read_rp(context.p) - 1);
                                     break;
                             }
                             break;
@@ -1395,16 +1394,18 @@ void cpu_execute(void) {
                                                             old_word = cpu_mask_mode(r->HL, cpu.L);
                                                             op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                                             if (context.q == 0) { /* SBC HL, rp[p] */
-                                                                r->HL = cpu_mask_mode(sw = (int32_t)old_word - (int32_t)op_word - r->flags.C, cpu.L);
+                                                                new_word = old_word - op_word - r->flags.C;
+                                                                r->HL = cpu_mask_mode(new_word, cpu.L);
                                                                 r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
-                                                                    | cpuflag_subtract(1) | cpuflag_carry_w(sw, cpu.L)
+                                                                    | cpuflag_subtract(1) | cpuflag_carry_w(new_word, cpu.L)
                                                                     | cpuflag_halfcarry_w_sub(old_word, op_word, r->flags.C);
                                                             } else { /* ADC HL, rp[p] */
-                                                                r->HL = cpu_mask_mode(sw = (int32_t)old_word + (int32_t)op_word + r->flags.C, cpu.L);
-                                                                r->F = cpuflag_sign_w(sw, cpu.L) | cpuflag_zero(r->HL)
+                                                                new_word = old_word + op_word + r->flags.C;
+                                                                r->HL = cpu_mask_mode(new_word, cpu.L);
+                                                                r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
-                                                                    | cpuflag_subtract(0) | cpuflag_carry_w(sw, cpu.L)
+                                                                    | cpuflag_subtract(0) | cpuflag_carry_w(new_word, cpu.L)
                                                                     | cpuflag_halfcarry_w_add(old_word, op_word, r->flags.C);
                                                             }
                                                             break;
@@ -1469,7 +1470,7 @@ void cpu_execute(void) {
                                                                     cpu_trap();
                                                                     break;
                                                                 case 4: /* PEA IX + d */
-                                                                    cpu_push_word((int32_t)r->IX + cpu_fetch_offset());
+                                                                    cpu_push_word(r->IX + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: /* LD MB, A */
                                                                     if (cpu.ADL) {
@@ -1492,7 +1493,7 @@ void cpu_execute(void) {
                                                                     cpu_trap();
                                                                     break;
                                                                 case 4: /* PEA IY + d */
-                                                                    cpu_push_word((int32_t)r->IY + cpu_fetch_offset());
+                                                                    cpu_push_word(r->IY + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: /* LD A, MB */
                                                                     r->A = r->MBASE;

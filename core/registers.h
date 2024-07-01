@@ -164,9 +164,7 @@ int parity(uint8_t x);
 
 /* S Z 5 H 3 PV N C */
 #define cpuflag_s(a)  ((a) ? FLAG_S  : 0)
-#define cpuflag_5(a)  ((a) ? FLAG_5  : 0)
 #define cpuflag_h(a)  ((a) ? FLAG_H  : 0)
-#define cpuflag_3(a)  ((a) ? FLAG_3  : 0)
 #define cpuflag_pv(a) ((a) ? FLAG_PV : 0)
 #define cpuflag_c(a)  ((a) ? FLAG_C  : 0)
 
@@ -178,17 +176,17 @@ int parity(uint8_t x);
 
 #define cpuflag_parity(a) cpuflag_pv(!parity(a))
 
-#define cpuflag_undef(a) (a & (FLAG_3 | FLAG_5))
+#define cpuflag_undef(a) ((a) & (FLAG_3 | FLAG_5))
 
 #define cpuflag_overflow_b_add(op1, op2, result) cpuflag_pv(((op1) ^ (result)) & ((op2) ^ (result)) & 0x80)
 #define cpuflag_overflow_b_sub(op1, op2, result) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
 #define cpuflag_overflow_w_add(op1, op2, result, mode) cpuflag_pv(((op1) ^ (result)) & ((op2) ^ (result)) & (0x8000 << ((mode) << 3)))
 #define cpuflag_overflow_w_sub(op1, op2, result, mode) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
 
-#define cpuflag_halfcarry_b_add(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0x00f) + (int16_t)((op2) & 0x00f) + (carry)) & 0x0010)
-#define cpuflag_halfcarry_b_sub(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0x00f) - (int16_t)((op2) & 0x00f) - (carry)) & 0x0010)
-#define cpuflag_halfcarry_w_add(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0xfff) + (int16_t)((op2) & 0xfff) + (carry)) & 0x1000)
-#define cpuflag_halfcarry_w_sub(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0xfff) - (int16_t)((op2) & 0xfff) - (carry)) & 0x1000)
+#define cpuflag_halfcarry_b_add(op1, op2, carry) cpuflag_h((((op1) & 0x00f) + ((op2) & 0x00f) + (carry)) & 0x0010)
+#define cpuflag_halfcarry_b_sub(op1, op2, carry) cpuflag_h((((op1) & 0x00f) - ((op2) & 0x00f) - (carry)) & 0x0010)
+#define cpuflag_halfcarry_w_add(op1, op2, carry) cpuflag_h((((op1) & 0xfff) + ((op2) & 0xfff) + (carry)) & 0x1000)
+#define cpuflag_halfcarry_w_sub(op1, op2, carry) cpuflag_h((((op1) & 0xfff) - ((op2) & 0xfff) - (carry)) & 0x1000)
 
 #define cpuflag_subtract(a)   ((a) ? FLAG_N : 0)
 #define cpuflag_zero(a)       ((a) ? 0 : FLAG_Z)
