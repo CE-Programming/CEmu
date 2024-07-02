@@ -137,12 +137,14 @@ static void gpt_some(int which, void update(enum sched_item_id id)) {
 
 static uint8_t gpt_read(uint16_t address, bool peek) {
     uint8_t value = 0;
+    uint8_t index = address >> 2;
+    uint8_t bit_offset = (address & 3) << 3;
     (void)peek;
 
-    if (address < 0x30 && (address & 0xC) == 0) {
-        value = read8(gpt_peek_counter(address >> 4 & 3), (address & 3) << 3);
+    if (index < 0xC && (index & 3) == 0) {
+        value = read8(gpt_peek_counter(index >> 2), bit_offset);
     } else if (address < 0x40) {
-        value = ((uint8_t *)&gpt)[address];
+        value = read8(gpt.regs[index], bit_offset);
     }
     return value;
 }
@@ -150,21 +152,22 @@ static uint8_t gpt_read(uint16_t address, bool peek) {
 static void gpt_write(uint16_t address, uint8_t value, bool poke) {
     int timer;
     bool counter_delay;
+    uint8_t index = address >> 2;
+    uint8_t bit_offset = (address & 3) << 3;
     (void)poke;
 
-    if (address >= 0x34 && address < 0x38) {
-        uint8_t bit_offset = (address & 3) << 3;
+    if (index == 0xD) {
         uint32_t mask = ~((uint32_t)value << bit_offset & 0x1FF);
         gpt.status &= mask;
         if (sched_active(SCHED_TIMER_DELAY) && sched_ticks_remaining(SCHED_TIMER_DELAY) == 1) {
             gpt.delayStatus &= mask;
         }
-    } else if (address < 0x3C) {
-        counter_delay = address < 0x30 && (address & 0xC) == 0;
+    } else if (index < 0xF) {
+        counter_delay = index < 0xC && (index & 3) == 0;
         cpu.cycles += counter_delay;
-        timer = address >> 4 & 3;
+        timer = index >> 2;
         gpt_some(timer, gpt_restore_state);
-        ((uint8_t *)&gpt)[address] = value;
+        write8(gpt.regs[index], bit_offset, value);
         gpt_some(timer, gpt_refresh);
         cpu.cycles -= counter_delay;
     }

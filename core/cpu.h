@@ -43,6 +43,7 @@ typedef enum eZ80abort {
 
 typedef union eZ80context {
     uint8_t opcode;
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
     struct {
         uint8_t z : 3;
         uint8_t y : 3;
@@ -54,7 +55,23 @@ typedef union eZ80context {
         uint8_t   : 1;
         uint8_t q : 1;
         uint8_t p : 2;
+        uint8_t   : 2;
     };
+#else
+    struct {
+        uint8_t x : 2;
+        uint8_t y : 3;
+        uint8_t z : 3;
+    };
+    struct {
+        uint8_t   : 2;
+        uint8_t p : 2;
+        uint8_t q : 1;
+        uint8_t   : 1;
+        uint8_t r : 1;
+        uint8_t s : 1;
+    };
+#endif
 } eZ80context_t;
 
 /* eZ80 CPU State */

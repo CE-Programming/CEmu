@@ -15,8 +15,13 @@ typedef struct timer_state {
 } timer_state_t;
 
 typedef struct general_timers_state {
-    timer_state_t timer[3];
-    uint32_t control, status, mask, revision;
+    union {
+        struct {
+            timer_state_t timer[3];
+            uint32_t control, status, mask, revision;
+        };
+        uint32_t regs[0x10];
+    };
     uint32_t delayStatus, delayIntrpt;
     uint8_t reset;
     bool osTimerState;

@@ -48,52 +48,70 @@ typedef struct panel_mem_ptr {
     uint16_t yAddr;
 } panel_mem_ptr_t;
 
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
+# define PARAM_BYTE_LOW(NAME, WIDTH)    \
+    uint8_t NAME : WIDTH;               \
+    uint8_t : 8 - WIDTH
+#else
+# define PARAM_BYTE_LOW(NAME, WIDTH)    \
+    uint8_t : 8 - WIDTH;                \
+    uint8_t NAME : WIDTH
+#endif
+
 typedef struct panel_gamma {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
     uint8_t V0 : 4;
     uint8_t V63 : 4;
+#else
+    uint8_t V63 : 4;
+    uint8_t V0 : 4;
+#endif
 
-    uint8_t V1 : 6;
-    uint8_t : 2;
+    PARAM_BYTE_LOW(V1, 6);
+    PARAM_BYTE_LOW(V2, 6);
+    PARAM_BYTE_LOW(V4, 5);
+    PARAM_BYTE_LOW(V6, 5);
 
-    uint8_t V2 : 6;
-    uint8_t : 2;
-
-    uint8_t V4 : 5;
-    uint8_t : 3;
-
-    uint8_t V6 : 5;
-    uint8_t : 3;
-
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
     uint8_t V13 : 4;
     uint8_t J0 : 2;
     uint8_t : 2;
+#else
+    uint8_t : 2;
+    uint8_t J0 : 2;
+    uint8_t V13 : 4;
+#endif
 
-    uint8_t V20 : 7;
-    uint8_t : 1;
+    PARAM_BYTE_LOW(V20, 7);
 
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
     uint8_t V27 : 3;
     uint8_t : 1;
     uint8_t V36 : 3;
     uint8_t : 1;
-
-    uint8_t V43 : 7;
+#else
     uint8_t : 1;
+    uint8_t V36 : 3;
+    uint8_t : 1;
+    uint8_t V27 : 3;
+#endif
 
+    PARAM_BYTE_LOW(V43, 7);
+
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
     uint8_t V50 : 4;
     uint8_t J1 : 2;
     uint8_t : 2;
-
-    uint8_t V57 : 5;
-    uint8_t : 3;
-
-    uint8_t V59 : 5;
-    uint8_t : 3;
-
-    uint8_t V61 : 6;
+#else
     uint8_t : 2;
+    uint8_t J1 : 2;
+    uint8_t V50 : 4;
+#endif
 
-    uint8_t V62 : 6;
-    uint8_t : 2;
+    PARAM_BYTE_LOW(V57, 5);
+    PARAM_BYTE_LOW(V59, 5);
+    PARAM_BYTE_LOW(V61, 6);
+    PARAM_BYTE_LOW(V62, 6);
 } panel_gamma_t;
 
 typedef struct panel_params {
@@ -123,6 +141,7 @@ typedef struct panel_params {
     } RASET;
     /* Byte params */
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t : 2;
         uint8_t MH : 1;
         uint8_t RGB : 1;
@@ -130,35 +149,69 @@ typedef struct panel_params {
         uint8_t MV : 1;
         uint8_t MX : 1;
         uint8_t MY : 1;
+#else
+        uint8_t MY : 1;
+        uint8_t MX : 1;
+        uint8_t MV : 1;
+        uint8_t ML : 1;
+        uint8_t RGB : 1;
+        uint8_t MH : 1;
+        uint8_t : 2;
+#endif
     } MADCTL;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t MCU : 3;
         uint8_t : 1;
         uint8_t RGB : 3;
         uint8_t : 1;
+#else
+        uint8_t : 1;
+        uint8_t RGB : 3;
+        uint8_t : 1;
+        uint8_t MCU : 3;
+#endif
     } COLMOD;
     struct {
         uint8_t DBV;
     } DISBV;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t : 2;
         uint8_t BL : 1;
         uint8_t DD : 1;
         uint8_t : 1;
         uint8_t BCTRL : 1;
         uint8_t : 2;
+#else
+        uint8_t : 2;
+        uint8_t BCTRL : 1;
+        uint8_t : 1;
+        uint8_t DD : 1;
+        uint8_t BL : 1;
+        uint8_t : 2;
+#endif
     } CTRLD;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t C : 2;
         uint8_t : 2;
         uint8_t CE : 2;
         uint8_t : 1;
         uint8_t CECTRL : 1;
+#else
+        uint8_t CECTRL : 1;
+        uint8_t : 1;
+        uint8_t CE : 2;
+        uint8_t : 2;
+        uint8_t C : 2;
+#endif
     } CACE;
     struct {
         uint8_t CMB;
     } CABCMB;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t DM : 2;
         uint8_t : 2;
         uint8_t RM : 1;
@@ -170,8 +223,22 @@ typedef struct panel_params {
         uint8_t EPF : 2;
         uint8_t WEMODE0 : 1;
         uint8_t WEMODE1 : 1;
+#else
+        uint8_t : 3;
+        uint8_t RM : 1;
+        uint8_t : 2;
+        uint8_t DM : 2;
+
+        uint8_t WEMODE1 : 1;
+        uint8_t WEMODE0 : 1;
+        uint8_t EPF : 2;
+        uint8_t ENDIAN : 1;
+        uint8_t RIM : 1;
+        uint8_t MDT : 2;
+#endif
     } RAMCTRL;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t EPL : 1;
         uint8_t DPL : 1;
         uint8_t HSPL : 1;
@@ -179,30 +246,40 @@ typedef struct panel_params {
         uint8_t : 1;
         uint8_t RCM : 2;
         uint8_t WO : 1;
-
-        uint8_t VBP : 7;
+#else
+        uint8_t WO : 1;
+        uint8_t RCM : 2;
         uint8_t : 1;
+        uint8_t VSPL : 1;
+        uint8_t HSPL : 1;
+        uint8_t DPL : 1;
+        uint8_t EPL : 1;
+#endif
 
-        uint8_t HBP : 5;
-        uint8_t : 3;
+        PARAM_BYTE_LOW(VBP, 7);
+        PARAM_BYTE_LOW(HBP, 5);
     } RGBCTRL;
     struct {
-        uint8_t BPA : 7;
-        uint8_t : 1;
+        PARAM_BYTE_LOW(BPA, 7);
+        PARAM_BYTE_LOW(FPA, 7);
+        PARAM_BYTE_LOW(PSEN, 1);
 
-        uint8_t FPA : 7;
-        uint8_t : 1;
-
-        uint8_t PSEN : 1;
-        uint8_t : 7;
-
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t FPB : 4;
         uint8_t BPB : 4;
 
         uint8_t FPC : 4;
         uint8_t BPC : 4;
+#else
+        uint8_t BPB : 4;
+        uint8_t FPB : 4;
+
+        uint8_t BPC : 4;
+        uint8_t FPC : 4;
+#endif
     } PORCTRL;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t DIV : 2;
         uint8_t : 2;
         uint8_t FRSEN : 1;
@@ -213,43 +290,77 @@ typedef struct panel_params {
 
         uint8_t RTNC : 5;
         uint8_t NLC : 3;
+#else
+        uint8_t : 3;
+        uint8_t FRSEN : 1;
+        uint8_t : 2;
+        uint8_t DIV : 2;
+
+        uint8_t NLB : 3;
+        uint8_t RTNB : 5;
+
+        uint8_t NLC : 3;
+        uint8_t RTNC : 5;
+#endif
     } FRCTRL1;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t ISC : 4;
         uint8_t PTGISC : 1;
         uint8_t : 2;
         uint8_t NDL : 1;
+#else
+        uint8_t NDL : 1;
+        uint8_t : 2;
+        uint8_t PTGISC : 1;
+        uint8_t ISC : 4;
+#endif
     } PARCTRL;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t VGLS : 3;
         uint8_t : 1;
         uint8_t VGHS : 3;
         uint8_t : 1;
+#else
+        uint8_t : 1;
+        uint8_t VGHS : 3;
+        uint8_t : 1;
+        uint8_t VGLS : 3;
+#endif
     } GCTRL;
     struct {
         uint8_t PAD_2A;
         uint8_t PAD_2B;
+        PARAM_BYTE_LOW(GTA, 6);
 
-        uint8_t GTA : 6;
-        uint8_t : 2;
-
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t GOF : 4;
         uint8_t GOFR : 4;
+#else
+        uint8_t GOFR : 4;
+        uint8_t GOF : 4;
+#endif
     } GTADJ;
     struct {
-        uint8_t VCOMS : 6;
-        uint8_t : 2;
+        PARAM_BYTE_LOW(VCOMS, 6);
     } VCOMS;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t IS : 1;
         uint8_t NS : 1;
         uint8_t : 6;
+#else
+        uint8_t : 6;
+        uint8_t NS : 1;
+        uint8_t IS : 1;
+#endif
     } POWSAVE;
     struct {
-        uint8_t DOFSAVE : 1;
-        uint8_t : 7;
+        PARAM_BYTE_LOW(DOFSAVE, 1);
     } DLPOFFSAVE;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t XGS : 1;
         uint8_t XMV : 1;
         uint8_t XMH : 1;
@@ -258,6 +369,16 @@ typedef struct panel_params {
         uint8_t XBGR : 1;
         uint8_t XMY : 1;
         uint8_t : 1;
+#else
+        uint8_t : 1;
+        uint8_t XMY : 1;
+        uint8_t XBGR : 1;
+        uint8_t XINV : 1;
+        uint8_t XMX : 1;
+        uint8_t XMH : 1;
+        uint8_t XMV : 1;
+        uint8_t XGS : 1;
+#endif
     } LCMCTRL;
     struct {
         uint8_t ID1;
@@ -265,33 +386,41 @@ typedef struct panel_params {
         uint8_t ID3;
     } IDSET;
     struct {
-        uint8_t CMDEN : 1;
-        uint8_t : 7;
-
+        PARAM_BYTE_LOW(CMDEN, 1);
         uint8_t PAD_FF;
     } VDVVRHEN;
     struct {
-        uint8_t VRHS : 6;
-        uint8_t : 2;
+        PARAM_BYTE_LOW(VRHS, 6);
     } VRHSET;
     struct {
-        uint8_t VDVS : 6;
-        uint8_t : 2;
+        PARAM_BYTE_LOW(VDVS, 6);
     } VDVSET;
     struct {
-        uint8_t VCMOFS : 6;
-        uint8_t : 2;
+        PARAM_BYTE_LOW(VCMOFS, 6);
     } VCMOFSET;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t RTNA : 5;
         uint8_t NLA : 3;
+#else
+        uint8_t NLA : 3;
+        uint8_t RTNA : 5;
+#endif
     } FRCTRL2;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t PWMPOL : 1;
         uint8_t PWMFIX : 1;
         uint8_t DPOFPWM : 1;
         uint8_t LEDONREV : 1;
         uint8_t : 4;
+#else
+        uint8_t : 4;
+        uint8_t LEDONREV : 1;
+        uint8_t DPOFPWM : 1;
+        uint8_t PWMFIX : 1;
+        uint8_t PWMPOL : 1;
+#endif
     } CABCCTRL;
     struct {
         uint8_t PAD_08;
@@ -300,17 +429,30 @@ typedef struct panel_params {
         uint8_t PAD_0F;
     } REGSEL2;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t CLK : 3;
         uint8_t CS : 3;
         uint8_t : 2;
+#else
+        uint8_t : 2;
+        uint8_t CS : 3;
+        uint8_t CLK : 3;
+#endif
     } PWMFRSEL;
     struct {
         uint8_t PAD_A4;
 
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t VDS : 2;
         uint8_t : 2;
         uint8_t AVCL : 2;
         uint8_t AVDD : 2;
+#else
+        uint8_t AVDD : 2;
+        uint8_t AVCL : 2;
+        uint8_t : 2;
+        uint8_t VDS : 2;
+#endif
     } PWCTRL1;
     struct {
         uint8_t PAD_4C;
@@ -319,45 +461,58 @@ typedef struct panel_params {
         uint8_t PAD_5A;
         uint8_t PAD_69;
         uint8_t PAD_02;
-
-        uint8_t EN : 1;
-        uint8_t : 7;
+        PARAM_BYTE_LOW(EN, 1);
     } CMD2EN;
     struct {
-        uint8_t NL : 6;
-        uint8_t : 2;
+        PARAM_BYTE_LOW(NL, 6);
+        PARAM_BYTE_LOW(SCN, 6);
 
-        uint8_t SCN : 6;
-        uint8_t : 2;
-
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t GS : 1;
         uint8_t SS : 1;
         uint8_t SM : 1;
         uint8_t : 1;
         uint8_t TMG : 1;
         uint8_t : 3;
+#else
+        uint8_t : 3;
+        uint8_t TMG : 1;
+        uint8_t : 1;
+        uint8_t SM : 1;
+        uint8_t SS : 1;
+        uint8_t GS : 1;
+#endif
     } GATECTRL;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t SPIRD : 1;
         uint8_t : 3;
         uint8_t SPI2EN : 1;
         uint8_t : 3;
+#else
+        uint8_t : 3;
+        uint8_t SPI2EN : 1;
+        uint8_t : 3;
+        uint8_t SPIRD : 1;
+#endif
     } SPI2EN;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t STP14CK : 2;
         uint8_t : 2;
         uint8_t SBCLK : 2;
         uint8_t : 2;
+#else
+        uint8_t : 2;
+        uint8_t SBCLK : 2;
+        uint8_t : 2;
+        uint8_t STP14CK : 2;
+#endif
     } PWCTRL2;
     struct {
-        uint8_t SEQ : 5;
-        uint8_t : 3;
-
-        uint8_t SPRET : 5;
-        uint8_t : 3;
-
-        uint8_t GEQ : 4;
-        uint8_t : 4;
+        PARAM_BYTE_LOW(SEQ, 5);
+        PARAM_BYTE_LOW(SPRET, 5);
+        PARAM_BYTE_LOW(GEQ, 4);
     } EQCTRL;
     struct {
         uint8_t PAD_01;
@@ -367,9 +522,15 @@ typedef struct panel_params {
         uint8_t PAD_69;
         uint8_t PAD_EE;
 
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t : 2;
         uint8_t PROMEN : 1;
         uint8_t : 5;
+#else
+        uint8_t : 5;
+        uint8_t PROMEN : 1;
+        uint8_t : 2;
+#endif
     } PROMEN;
     struct {
         uint8_t ADD;
@@ -381,19 +542,25 @@ typedef struct panel_params {
     } PROMACT;
     /* Gamma-modifying params */
     struct {
-        uint8_t GC : 4;
-        uint8_t : 4;
+        PARAM_BYTE_LOW(GC, 4);
     } GAMSET;
     struct {
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
         uint8_t : 2;
         uint8_t DGMEN : 1;
         uint8_t : 5;
+#else
+        uint8_t : 5;
+        uint8_t DGMEN : 1;
+        uint8_t : 2;
+#endif
     } DGMEN;
     panel_gamma_t PVGAMCTRL;
     panel_gamma_t NVGAMCTRL;
     uint8_t DGMLUTR[64];
     uint8_t DGMLUTB[64];
 } panel_params_t;
+#undef PARAM_BYTE_LOW
 
 typedef struct panel_state {
     uint32_t lineStartTick;

@@ -1185,8 +1185,10 @@ static void panel_write_cmd(uint8_t value) {
 static void panel_write_param(uint8_t value) {
     if (likely(panel.paramIter < panel.paramEnd)) {
         uint8_t index = panel.paramIter++;
+#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
         /* Swap endianness of word parameters */
         index ^= (index < offsetof(panel_params_t, MADCTL));
+#endif
         uint8_t oldValue = ((uint8_t*)&panel.params)[index];
         ((uint8_t*)&panel.params)[index] = value;
         if (index >= offsetof(panel_params_t, CASET) && index < offsetof(panel_params_t, COLMOD)) {

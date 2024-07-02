@@ -15,13 +15,21 @@ extern "C" {
 typedef struct keypad_state {
     union {
         struct {
-            uint16_t mode : 2, rowWait : 14, scanWait;
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
+            uint32_t mode : 2, rowWait : 14, scanWait : 16;
+#else
+            uint32_t scanWait : 16, rowWait : 14, mode : 2;
+#endif
         };
         uint32_t control;
     };
     union {
         struct {
-            uint8_t rows, cols;
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
+            uint32_t rows : 8, cols : 8, : 16;
+#else
+            uint32_t : 16, cols : 8, rows : 8;
+#endif
         };
         uint32_t size;
     };

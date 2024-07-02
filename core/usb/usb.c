@@ -215,8 +215,10 @@ static uint8_t usb_read(uint16_t pio, bool peek) {
     if (pio < sizeof usb.regs) {
         if (unlikely(usb.regs.dma_ctrl >> 31 & usb.regs.phy_tmsr) && pio >= 0x044 && pio < 0x1C8) {
             value = 0;
+        } else if (pio >= 0x1A0 && pio < 0x1AC) {
+            value = usb.regBytes[pio];
         } else {
-            value = ((uint8_t *)&usb.regs)[pio];
+            value = read8(usb.regWords[pio >> 2], (pio & 3) << 3);
         }
     } else if (pio < (peek ? 0x1d8 : 0x1d4)) {
         value = usb.ep0_data[peek ? (usb.ep0_idx & 4) ^ (pio & 7) : (usb_ep0_idx_update() & 4) | (pio & 3)];
@@ -242,7 +244,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             }
             break;
         case 0x014 >> 2: // USBSTS - USB Status Register
-            usb.regs.hcor.usbsts &= ~((uint32_t)value << bit_offset & 0x3F);                      // WC mask (V or RO)
+            usb.regs.hcor.usbsts &= ~((uint32_t)value << bit_offset & 0x3F);                       // WC mask (V or RO)
             break;
         case 0x018 >> 2: // USBINTR - USB Interrupt Enable Register
             write8(usb.regs.hcor.usbintr,          bit_offset, value &        0x3F >> bit_offset); // W mask (V)
@@ -257,7 +259,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.hcor.asynclistaddr,    bit_offset, value &       ~0x1F >> bit_offset); // V mask (W)
             break;
         case 0x030 >> 2: // PORTSC - Port Status and Control Register
-            usb.regs.hcor.portsc[0] &= ~((uint32_t)value << bit_offset & 0x2A);                  // WC mask (V or RO or W)
+            usb.regs.hcor.portsc[0] &= ~((uint32_t)value << bit_offset & 0x2A);                    // WC mask (V or RO or W)
             write8(usb.regs.hcor.portsc[0],        bit_offset, value &    0x1F0000 >> bit_offset); // W mask (RO)
             break;
         case 0x040 >> 2: // Miscellaneous Register
@@ -273,16 +275,16 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.otgcsr,                bit_offset, value &  0x1A00FFF7 >> bit_offset); // W mask (V)
             break;
         case 0x084 >> 2: // OTG Interrupt Status Register
-            usb.regs.otgisr &= ~((uint32_t)value << bit_offset & OTGISR_MASK);                    // WC mask (V)
+            usb.regs.otgisr &= ~((uint32_t)value << bit_offset & OTGISR_MASK);                     // WC mask (V)
             break;
         case 0x088 >> 2: // OTG Interrupt Enable Register
             write8(usb.regs.otgier,                bit_offset, value & OTGISR_MASK >> bit_offset); // W mask (V)
             break;
         case 0x0C0 >> 2: // Global Interrupt Status Register
-            usb.regs.isr &= ~((uint32_t)value << bit_offset & ISR_MASK);                          // WC mask (V)
+            usb.regs.isr &= ~((uint32_t)value << bit_offset & ISR_MASK);                           // WC mask (V)
             break;
         case 0x0C4 >> 2: // Global Interrupt Mask Register
-            write8(usb.regs.imr,                   bit_offset, value &   IMR_MASK >> bit_offset); // W mask (V)
+            write8(usb.regs.imr,                   bit_offset, value &    IMR_MASK >> bit_offset); // W mask (V)
             break;
         case 0x100 >> 2: // Device Control Register
             write8(usb.regs.dev_ctrl,              bit_offset, value &       0x2AF >> bit_offset); // W mask (V or RO)
@@ -318,31 +320,31 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             }
             break;
         case 0x124 >> 2: // IDLE Counter Register
-            write8(usb.regs.idle,                  bit_offset, value &         0x7 >> bit_offset); // W mask (V)
+            write8(usb.regs.idle,                  bit_offset, value &        0x7 >> bit_offset); // W mask (V)
             break;
         case 0x130 >> 2: // Group Interrupt Mask Register
-            write8(usb.regs.gimr,                  bit_offset, value &   GIMR_MASK >> bit_offset); // W mask (V)
+            write8(usb.regs.gimr,                  bit_offset, value &  GIMR_MASK >> bit_offset); // W mask (V)
             break;
         case 0x134 >> 2: // Group Interrupt Mask Register 0
-            write8(usb.regs.gimr0,                 bit_offset, value &  GIMR0_MASK >> bit_offset); // W mask (V)
+            write8(usb.regs.gimr0,                 bit_offset, value & GIMR0_MASK >> bit_offset); // W mask (V)
             break;
         case 0x138 >> 2: // Group Interrupt Mask Register 1
-            write8(usb.regs.gimr1,                 bit_offset, value &  GIMR1_MASK >> bit_offset); // W mask (V)
+            write8(usb.regs.gimr1,                 bit_offset, value & GIMR1_MASK >> bit_offset); // W mask (V)
             break;
         case 0x13C >> 2: // Group Interrupt Mask Register 2
-            write8(usb.regs.gimr2,                 bit_offset, value &  GIMR2_MASK >> bit_offset); // W mask (V)
+            write8(usb.regs.gimr2,                 bit_offset, value & GIMR2_MASK >> bit_offset); // W mask (V)
             break;
         case 0x140 >> 2: // Group Interrupt Status Register
-            usb.regs.gisr &= ~((uint32_t)value << bit_offset & GIMR_MASK);                       // WC mask (V)
+            usb.regs.gisr &= ~((uint32_t)value << bit_offset & GIMR_MASK);                        // WC mask (V)
             break;
         case 0x144 >> 2: // Group Interrupt Status Register 0
-            usb.regs.gisr0 &= ~((uint32_t)value << bit_offset & GIMR0_MASK);                     // WC mask (V)
+            usb.regs.gisr0 &= ~((uint32_t)value << bit_offset & GIMR0_MASK);                      // WC mask (V)
             break;
         case 0x148 >> 2: // Group Interrupt Status Register 1
-            usb.regs.gisr1 &= ~((uint32_t)value << bit_offset & GIMR1_MASK);                     // WC mask (V)
+            usb.regs.gisr1 &= ~((uint32_t)value << bit_offset & GIMR1_MASK);                      // WC mask (V)
             break;
         case 0x14C >> 2: // Group Interrupt Status Register 2
-            usb.regs.gisr2 &= ~((uint32_t)value << bit_offset & GIMR2_MASK);                     // WC mask (V) [const mask]
+            usb.regs.gisr2 &= ~((uint32_t)value << bit_offset & GIMR2_MASK);                      // WC mask (V) [const mask]
             break;
         case 0x150 >> 2: // Receive Zero-Length-Packet Register
             write8(usb.regs.rxzlp,                 bit_offset, value &       0xFF >> bit_offset); // W mask (V)
@@ -362,12 +364,13 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.oep[index & 7],        bit_offset, value &     0x1FFF >> bit_offset); // W mask (V)
             break;
         case 0x1A0 >> 2: case 0x1A4 >> 2: // Endpoint Map Register
-        case 0x1CC >> 2: // DMA Address Register
-            ((uint8_t *)&usb.regs)[pio] = value;                                                  // W
+            usb.regs.epmap[pio & 7] = value;                                                      // W
             break;
         case 0x1A8 >> 2: // FIFO Map Register
+            usb.regs.fifomap[pio & 3] = value & 0x3F;                                             // W mask (V)
+            break;
         case 0x1AC >> 2: // FIFO Configuration Register
-            ((uint8_t *)&usb.regs)[pio] = value & 0x3F;                                           // W mask (V)
+            write8(usb.regs.fifocfg,               bit_offset, value &       0x3F);               // W mask (V)
             break;
         case 0x1C0 >> 2: // DMA Target FIFO Register
             write8(usb.regs.dma_fifo,              bit_offset, value &       0x1F >> bit_offset); // W mask (V)
@@ -419,6 +422,9 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                 //gui_console_printf("\n");
                 usb_grp2_int(GISR2_DMAFIN);
             }
+            break;
+        case 0x1CC >> 2: // DMA Address Register
+            write8(usb.regs.dma_addr,              bit_offset, value);                            // W
             break;
         case 0x1D0 >> 2: // EP0 Data Register
             if (!poke) {
