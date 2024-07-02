@@ -10,7 +10,11 @@
 #include "fotg210.h"
 
 typedef struct usb_state {
-    struct fotg210_regs regs;
+    union {
+        struct fotg210_regs regs;
+        uint32_t            regWords[sizeof(struct fotg210_regs) >> 2];
+        uint8_t             regBytes[sizeof(struct fotg210_regs)];
+    };
     uint8_t ep0_data[8]; /* 0x1d0: EP0 Setup Packet PIO Register */
     uint8_t ep0_idx;
     uint8_t fifo_data[4][1024], cxfifo_data[64];

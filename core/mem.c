@@ -84,12 +84,12 @@ static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t 
         *block_size = SIZE_RAM;
     } else if (*addr < 0xE30800) {
         *addr -= 0xE30200;
-        *block = lcd.palette;
-        *block_size = sizeof lcd.palette;
+        *block = lcd.paletteBytes;
+        *block_size = sizeof lcd.paletteBytes;
     } else {
         *addr -= 0xE30800;
-        *block = lcd.crsrImage;
-        *block_size = sizeof lcd.crsrImage;
+        *block = lcd.crsrImageBytes;
+        *block_size = sizeof lcd.crsrImageBytes;
     }
     return *addr + (unsigned int)size;
 }

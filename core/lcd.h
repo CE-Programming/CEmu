@@ -40,11 +40,17 @@ typedef struct lcd_state {
 
     /* 256x16-bit color palette registers */
     /* 256 palette entries organized as 128 locations of two entries per word */
-    uint16_t palette[0x100];
+    union {
+        uint32_t paletteWords[0x80]; /* For alignment */
+        uint8_t  paletteBytes[0x200];
+    };
 
     /* Cursor image RAM registers */
     /* 256-word wide values defining images overlaid by the hw cursor mechanism */
-    uint32_t crsrImage[0x100];
+    union {
+        uint32_t crsrImageWords[0x100]; /* For alignment */
+        uint8_t  crsrImageBytes[0x400];
+    };
     uint32_t crsrControl;          /* Cursor control register */
     uint32_t crsrConfig;           /* Cursor configuration register */
     uint32_t crsrPalette0;         /* Cursor palette registers */
@@ -62,6 +68,7 @@ typedef struct lcd_state {
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
+    uint16_t palette[0x100];       /* Palette stored as RGB565 in native endianness */
 
     /* Everything above here goes into the state */
     uint32_t *data;                /* Pointer to start of data to start extracting from */

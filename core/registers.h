@@ -32,20 +32,44 @@ extern "C" {
 
 typedef union {
     uint16_t hl, hls;
+#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
     struct {
         uint8_t l;
         uint8_t h;
     };
+#else
+    struct {
+        uint8_t h;
+        uint8_t l;
+    };
+#endif
 } short_reg_t;
 
 typedef union {
     uint32_t hl;
-    uint16_t hls;
+#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
+    struct {
+        uint16_t hls;
+        uint16_t hls_pad;
+    };
     struct {
         uint8_t l;
         uint8_t h;
-        uint8_t u;
+        uint8_t hlu;
+        uint8_t hlu_pad;
     };
+#else
+    struct {
+        uint16_t hls_pad;
+        uint16_t hls;
+    };
+    struct {
+        uint8_t hlu_pad;
+        uint8_t hlu;
+        uint8_t h;
+        uint8_t l;
+    };
+#endif
 } long_reg_t;
 
 typedef struct {
@@ -53,8 +77,12 @@ typedef struct {
         short_reg_t af;
         uint16_t AF;
         struct {
+#if CEMU_BYTE_ORDER == CEMU_BIG_ENDIAN
+            uint8_t A;
+#endif
             union {
                 uint8_t F;
+#if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
                 struct {
                     uint8_t C  : 1;
                     uint8_t N  : 1;
@@ -65,64 +93,66 @@ typedef struct {
                     uint8_t Z  : 1;
                     uint8_t S  : 1;
                 } flags;
+#else
+                struct {
+                    uint8_t S  : 1;
+                    uint8_t Z  : 1;
+                    uint8_t _5 : 1;
+                    uint8_t H  : 1;
+                    uint8_t _3 : 1;
+                    uint8_t PV : 1;
+                    uint8_t N  : 1;
+                    uint8_t C  : 1;
+                } flags;
+#endif
             };
+#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
             uint8_t A;
+#endif
         };
     };
-    union {
-        long_reg_t bc;
-        uint32_t BC;
-        uint16_t BCS;
-        struct {
-            uint8_t C;
-            uint8_t B;
-            uint8_t BCU;
-        };
-    };
-    union {
-        long_reg_t de;
-        uint32_t DE;
-        uint16_t DES;
-        struct {
-            uint8_t E;
-            uint8_t D;
-            uint8_t DEU;
-        };
-    };
+#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
+# define DEF_LONG_REG(name, PAIR, HIGH, LOW)    \
+    union {                                     \
+        long_reg_t name;                        \
+        uint32_t PAIR;                          \
+        struct {                                \
+            uint16_t PAIR##S;                   \
+            uint16_t PAIR##S_pad;               \
+        };                                      \
+        struct {                                \
+            uint8_t LOW;                        \
+            uint8_t HIGH;                       \
+            uint8_t PAIR##U;                    \
+            uint8_t PAIR##U_pad;                \
+        };                                      \
+    }
+#else
+# define DEF_LONG_REG(name, PAIR, HIGH, LOW)    \
+    union {                                     \
+        long_reg_t name;                        \
+        uint32_t PAIR;                          \
+        struct {                                \
+            uint16_t PAIR##S_pad;               \
+            uint16_t PAIR##S;                   \
+        };                                      \
+        struct {                                \
+            uint8_t PAIR##U_pad;                \
+            uint8_t PAIR##U;                    \
+            uint8_t HIGH;                       \
+            uint8_t LOW;                        \
+        };                                      \
+    }
+#endif
+    DEF_LONG_REG(bc, BC, B, C);
+    DEF_LONG_REG(de, DE, D, E);
     union {
         long_reg_t index[4];
         struct {
-            union {
-                long_reg_t hl;
-                uint32_t HL;
-                uint16_t HLS;
-                struct {
-                    uint8_t L;
-                    uint8_t H;
-                    uint8_t HLU;
-                };
-            };
+            DEF_LONG_REG(hl, HL, H, L);
             uint32_t _HL;
-            union {
-                long_reg_t ix;
-                uint32_t IX;
-                uint16_t IXS;
-                struct {
-                    uint8_t IXL;
-                    uint8_t IXH;
-                    uint8_t IXU;
-                };
-            };
-            union {
-                long_reg_t iy;
-                uint32_t IY;
-                uint16_t IYS;
-                struct {
-                    uint8_t IYL;
-                    uint8_t IYH;
-                    uint8_t IYU;
-                };
-            };
+            DEF_LONG_REG(ix, IX, IXH, IXL);
+            DEF_LONG_REG(iy, IY, IYH, IYL);
         };
     };
     uint16_t _AF;
@@ -130,23 +160,21 @@ typedef struct {
     union {
         long_reg_t stack[2];
         struct {
-            uint16_t SPS, SPSU;
+#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
+            uint16_t SPS;
+            uint16_t SPS_pad;
+#else
+            uint16_t SPS_pad;
+            uint16_t SPS;
+#endif
             uint32_t SPL;
         };
     };
-    union {
-        long_reg_t pc;
-        uint32_t PC;
-        uint16_t PCS;
-        struct {
-            uint8_t PCL;
-            uint8_t PCH;
-            uint8_t PCU;
-        };
-    };
+    DEF_LONG_REG(pc, PC, PCH, PCL);
     uint16_t I;
     uint8_t R, MBASE;
 } eZ80registers_t;
+#undef DEF_LONG_REG
 
 typedef enum {
     FLAG_S =  1 << 7,
