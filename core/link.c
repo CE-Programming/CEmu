@@ -64,8 +64,13 @@ alloc_err:
     return err == 0 ? LINK_GOOD : LINK_ERR;
 }
 
-static const char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
+static inline size_t write_le16(uint16_t val, FILE *fd) {
+    uint16_t to_write = to_le16(val);
+    return fwrite(&to_write, sizeof to_write, 1, fd);
+}
+
 int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
+    static const char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
     FILE *fd;
     calc_var_t var;
     uint16_t header_size = 13, size = 0, checksum = 0;
@@ -80,24 +85,24 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
     if (fseek(fd, FILE_DATA_START, SEEK_SET))          goto w_err;
     while (count--) {
         if (!vat_search_find(vars++, &var))            goto w_err;
-        if (fwrite(&header_size,       2, 1, fd) != 1) goto w_err;
-        if (fwrite(&var.size,          2, 1, fd) != 1) goto w_err;
-        if (fwrite(&var.type,          1, 1, fd) != 1) goto w_err;
-        if (fwrite(&var.name,          8, 1, fd) != 1) goto w_err;
-        if (fwrite(&var.version,       1, 1, fd) != 1) goto w_err;
-        if (fputc(var.archived << 7, fd) == EOF)       goto w_err;
-        if (fwrite(&var.size,          2, 1, fd) != 1) goto w_err;
-        if (fwrite(var.data,    var.size, 1, fd) != 1) goto w_err;
+        if (write_le16(header_size,        fd) !=   1) goto w_err;
+        if (write_le16(var.size,           fd) !=   1) goto w_err;
+        if (fputc(var.type,                fd) == EOF) goto w_err;
+        if (fwrite(&var.name,        8, 1, fd) !=   1) goto w_err;
+        if (fputc(var.version,             fd) == EOF) goto w_err;
+        if (fputc(var.archived << 7,       fd) == EOF) goto w_err;
+        if (write_le16(var.size,           fd) !=   1) goto w_err;
+        if (fwrite(var.data,  var.size, 1, fd) !=   1) goto w_err;
         size += 17 + var.size;
     }
     if (fseek(fd, FILE_DATA, SEEK_SET))                goto w_err;
-    if (fwrite(&size,                  2, 1, fd) != 1) goto w_err;
+    if (write_le16(size,                     fd) != 1) goto w_err;
     if (fflush(fd))                                    goto w_err;
     while (size--) {
         if ((byte = fgetc(fd)) == EOF)                 goto w_err;
         checksum += byte;
     }
-    if (fwrite(&checksum,              2, 1, fd) != 1) goto w_err;
+    if (write_le16(checksum,                 fd) != 1) goto w_err;
     (void)fclose(fd);
 
     return LINK_GOOD;

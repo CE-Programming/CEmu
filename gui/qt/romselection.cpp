@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "../../core/os/os.h"
 
+#include <QtCore/QtEndian>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QFileDialog>
@@ -149,6 +150,7 @@ void RomSelection::parseROMSegments() {
             case '1':
                 if (fseek(fd, 0x48, 0)) goto invalid;
                 if (fread(&size, sizeof(size), 1 ,fd) != 1) goto invalid;
+                size = qFromLittleEndian(size);
                 if (size != SEG_SIZE) goto invalid;
 
                 if (fread(&m_array[CERT_LOC], SEG_SIZE, 1, fd) != 1) {
@@ -160,6 +162,7 @@ void RomSelection::parseROMSegments() {
             default:
                 if (fseek(fd, 0x48, 0)) goto invalid;
                 if (fread(&size, sizeof(size), 1 ,fd) != 1) goto invalid;
+                size = qFromLittleEndian(size);
                 if (size != SEG_SIZE) goto invalid;
 
                 seg = buf[7] - 'A';
