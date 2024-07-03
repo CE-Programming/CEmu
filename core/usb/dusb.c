@@ -378,6 +378,22 @@ static bool dusb_verify_checksum(FILE *file) {
     return sum == checksum;
 }
 
+static size_t read_le16(uint16_t *val, FILE *file) {
+    size_t len = fread(val, sizeof *val, 1, file);
+    if (len == 1) {
+        *val = from_le16(*val);
+    }
+    return len;
+}
+
+static size_t read_le32(uint32_t *val, FILE *file) {
+    size_t len = fread(val, sizeof *val, 1, file);
+    if (len == 1) {
+        *val = from_le32(*val);
+    }
+    return len;
+}
+
 static dusb_state_t dusb_detect(dusb_context_t *context) {
     dusb_command_t *command = context->command;
     FILE *file = command->file;
@@ -395,7 +411,7 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
             fread(&command->vartype, sizeof command->vartype, 1, file) != 1 ||
             !dusb_convert_varname_to_utf8(command) ||
             fseek(file, DUSB_FLASH_FILE_LENGTH_OFFSET, SEEK_SET) ||
-            fread(&context->length, sizeof context->length, 1, file) != 1 ||
+            read_le32(&context->length, file) != 1 ||
             fseek(file, 0, SEEK_END) || DUSB_FLASH_FILE_DATA_OFFSET + context->length != ftell(file)) {
             return DUSB_INVALID_STATE;
         }
@@ -415,7 +431,7 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
         if (fread(magic, 3, 1, file) != 1 ||
             magic[0] != 0x1A || magic[1] != 0x0A || magic[2] > 0x13 ||
             fseek(file, DUSB_VAR_FILE_DATA_LENGTH_OFFSET, SEEK_SET) ||
-            fread(&data_length, sizeof data_length, 1, file) != 1 ||
+            read_le16(&data_length, file) != 1 ||
             !dusb_verify_checksum(file) || DUSB_VAR_FILE_DATA_OFFSET +
             data_length + DUSB_VAR_FILE_CHECKSUM_SIZE != ftell(file) ||
             fseek(file, DUSB_VAR_FILE_DATA_OFFSET, SEEK_SET)) {
@@ -430,12 +446,12 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
 static bool dusb_detect_var(dusb_context_t *context) {
     dusb_command_t *command = context->command;
     FILE *file = command->file;
-    uint16_t header_size, data_size;
+    uint16_t header_size, data_size, data_size2;
     context->length = context->version = context->flag = 0;
     return !fseek(file, context->start, SEEK_SET) &&
-        fread(&header_size, sizeof header_size, 1, file) == 1 &&
+        read_le16(&header_size, file) == 1 &&
         header_size >= DUSB_VAR_FILE_VAR_VERSION_OFFSET &&
-        fread(&data_size, sizeof data_size, 1, file) == 1 &&
+        read_le16(&data_size, file) == 1 &&
         fread(&command->vartype, sizeof command->vartype, 1, file) == 1 &&
         fread(&command->varname, sizeof command->varname, 1, file) == 1 &&
         (command->varname_length = strnlen((const char *)command->varname, sizeof command->varname),
@@ -445,9 +461,9 @@ static bool dusb_detect_var(dusb_context_t *context) {
         (header_size <= DUSB_VAR_FILE_VAR_FLAG_OFFSET ||
          fread(&context->flag, sizeof context->flag, 1, file) == 1) &&
         !fseek(file, (context->start += sizeof header_size + header_size +
-                      sizeof data_size) - sizeof data_size, SEEK_SET) &&
-        fread(&context->length, sizeof data_size, 1, file) == 1 &&
-        context->length == data_size;
+                      sizeof data_size) - sizeof data_size2, SEEK_SET) &&
+        read_le16(&data_size2, file) == 1 &&
+        (context->length = data_size2) == data_size;
 }
 
 static uint8_t dusb_transfer_endpoint(dusb_state_t state) {
