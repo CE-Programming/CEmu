@@ -93,7 +93,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not create renderer: %s\n", SDL_GetError());
         return;
     }
-    sdl->texture = SDL_CreateTexture(sdl->renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, LCD_WIDTH, LCD_HEIGHT);
+    sdl->texture = SDL_CreateTexture(sdl->renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, LCD_WIDTH, LCD_HEIGHT);
     if (sdl->texture == NULL) {
         fprintf(stderr, "could not create texture: %s\n", SDL_GetError());
         return;
