@@ -2255,7 +2255,7 @@ Plaats hiertoe de bootable image in dezelfde folder als de CEmu executable. Als 
     <message>
         <location filename="../settings.cpp" line="846"/>
         <source>Be aware that this may behave unexpectedly due to the combinations of keypresses sent by the calculator, which may trigger some global shortcuts on your system!</source>
-        <translation type="unfinished"></translation>
+        <translation>Houd er rekening mee dat dit kan leiden tot onverwacht gedreag t.g.v. toetscombinaties van de rekenmachine die algemene sneltoetsen op je systeem kunnen opwekken!</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="861"/>
