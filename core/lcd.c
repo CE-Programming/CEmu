@@ -42,16 +42,16 @@ static inline uint32_t lcd_bgr888swap(uint32_t bgr888, uint32_t mask) {
     return bgr888 ^ diff ^ (diff << 16);
 }
 
-static inline uint32_t lcd_abgr8888out(uint32_t abgr8888) {
-    return abgr8888 | (abgr8888 >> 5 & 0x040004) | (abgr8888 >> 6 & 0x030303);
+static inline uint32_t lcd_argb8888out(uint32_t argb8888) {
+    return argb8888 | (argb8888 >> 5 & 0x040004) | (argb8888 >> 6 & 0x030303);
 }
 
-static inline uint32_t lcd_bgr565out(uint32_t bgr565) {
-    return lcd_abgr8888out(UINT32_C(0xFF000000) | (bgr565 << 8 & 0xF80000) | (bgr565 << 5 & 0xFC00) | (bgr565 << 3 & 0xF8));
+static inline uint32_t lcd_rgb565out(uint32_t rgb565) {
+    return lcd_argb8888out(UINT32_C(0xFF000000) | (rgb565 << 8 & 0xF80000) | (rgb565 << 5 & 0xFC00) | (rgb565 << 3 & 0xF8));
 }
 
-static inline uint32_t lcd_bgr888out(uint32_t bgr888) {
-    return lcd_abgr8888out(UINT32_C(0xFF000000) | (bgr888 & 0xF8FCF8));
+static inline uint32_t lcd_rgb888out(uint32_t rgb888) {
+    return lcd_argb8888out(UINT32_C(0xFF000000) | (rgb888 & 0xF8FCF8));
 }
 
 void emu_set_lcd_callback(bool (*callback)(void*), void *data) {
@@ -86,7 +86,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
     uint32_t *dat;
     uint32_t *dat_end;
 
-    bgr = lcd_control & (1 << 8) ? 0x001F001F : 0;
+    bgr = lcd_control & (1 << 8) ? 0 : 0x001F001F;
     bebo = lcd_control & (1 << 9);
     mode = lcd_control >> 1 & 7;
     out = output;
@@ -110,9 +110,9 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
                 color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                 color |= (uint32_t)lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask] << 16;
                 color = lcd_bgr565swap(color, bgr);
-                *out++ = lcd_bgr565out(color);
+                *out++ = lcd_rgb565out(color);
                 if (out == out_end) break;
-                *out++ = lcd_bgr565out(color >> 16);
+                *out++ = lcd_rgb565out(color >> 16);
             } while (bitpos && out != out_end);
         } while (dat < dat_end);
 
@@ -121,9 +121,9 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
         do {
             word = rotr32(lcd_next_word(&dat), bi);
             word = lcd_bgr565swap(c1555(word), bgr);
-            *out++ = lcd_bgr565out(word);
+            *out++ = lcd_rgb565out(word);
             if (out == out_end) break;
-            *out++ = lcd_bgr565out(word >> 16);
+            *out++ = lcd_rgb565out(word >> 16);
         } while (dat < dat_end);
 
     } else if (mode == 5) {
@@ -131,7 +131,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
         do {
             word = lcd_next_word(&dat);
             word = lcd_bgr888swap(word, bgr);
-            *out++ = lcd_bgr888out(word);
+            *out++ = lcd_rgb888out(word);
         } while (dat < dat_end);
 
     } else if (mode == 6) {
@@ -139,9 +139,9 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
         do {
             word = rotr32(lcd_next_word(&dat), bi);
             word = lcd_bgr565swap(word, bgr);
-            *out++ = lcd_bgr565out(word);
+            *out++ = lcd_rgb565out(word);
             if (out == out_end) break;
-            *out++ = lcd_bgr565out(word >> 16);
+            *out++ = lcd_rgb565out(word >> 16);
         } while (dat < dat_end);
 
     } else { /* mode == 7 */
@@ -149,9 +149,9 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
         do {
             word = rotr32(lcd_next_word(&dat), bi);
             word = lcd_bgr565swap(c444(word), bgr);
-            *out++ = lcd_bgr565out(word);
+            *out++ = lcd_rgb565out(word);
             if (out == out_end) break;
-            *out++ = lcd_bgr565out(word >> 16);
+            *out++ = lcd_rgb565out(word >> 16);
         } while (dat < dat_end);
     }
 

@@ -16,7 +16,7 @@ VisualizerDisplayWidget::VisualizerDisplayWidget(QWidget *parent) : QWidget{pare
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &VisualizerDisplayWidget::customContextMenuRequested, this, &VisualizerDisplayWidget::contextMenu);
 
-    m_image = new QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    m_image = new QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB32);
 }
 
 VisualizerDisplayWidget::~VisualizerDisplayWidget() {
@@ -111,7 +111,7 @@ void VisualizerDisplayWidget::setConfig(float bppstep, int w, int h, uint32_t u,
     m_size = w * h;
     m_grid = g;
     delete m_image;
-    m_image = new QImage(w, h, QImage::Format_RGBX8888);
+    m_image = new QImage(w, h, QImage::Format_RGB32);
 }
 
 void VisualizerDisplayWidget::contextMenu(const QPoint& posa) {

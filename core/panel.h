@@ -11,10 +11,12 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-#define PANEL_RED 0
-#define PANEL_GREEN 1
-#define PANEL_BLUE 2
-#define PANEL_ALPHA 3
+#define PANEL_RAM_RED 0
+#define PANEL_RAM_GREEN 1
+#define PANEL_RAM_BLUE 2
+#define PANEL_DISP_RED 16
+#define PANEL_DISP_GREEN 8
+#define PANEL_DISP_BLUE 0
 #define PANEL_NUM_ROWS 320
 #define PANEL_LAST_ROW 319
 #define PANEL_NUM_COLS 240
@@ -576,8 +578,8 @@ typedef struct panel_state {
     uint32_t ifPixel;
 
     panel_params_t params;
-    uint8_t lineBuffers[2][240][3];
-    uint8_t frame[320][240][3], display[240][320][4];
+    uint8_t frame[PANEL_NUM_ROWS][PANEL_NUM_COLS][3];
+    uint32_t lineBuffers[2][PANEL_NUM_COLS], display[PANEL_NUM_COLS][PANEL_NUM_ROWS];
 
     /* Below state is not affected by reset */
     uint32_t clockRate;
@@ -588,8 +590,8 @@ typedef struct panel_state {
     void (*write_pixel)(panel_mem_ptr_t *memPtr, uint32_t bgr666);
     panel_mem_ptr_t windowStart, windowEnd;
     uint8_t (*windowBasePtr)[3];
+    uint32_t blankPixel;
     int8_t xDir, yDir;
-    uint8_t blankLevel;
     bool accurateGamma;
     bool gammaDirty;
     bool skipFrame;

@@ -86,8 +86,8 @@ void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path) {
     strcpy(file_buf, path);
 }
 
-uint8_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
-    return &(panel.display[0][0][0]);
+uint32_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
+    return &(panel.display[0][0]);
 }
 
 int EMSCRIPTEN_KEEPALIVE emsc_set_main_loop_timing(int mode, int value) {

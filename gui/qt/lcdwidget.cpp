@@ -25,8 +25,8 @@
 LCDWidget::LCDWidget(QWidget *parent) : QWidget{parent} {
     installEventFilter(keypadBridge);
     m_mutex.lock();
-    m_renderedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
-    m_blendedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    m_renderedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB32);
+    m_blendedFrame = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB32);
     m_currFrame = &m_renderedFrame;
     m_mutex.unlock();
     m_interlaceAlpha = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_Alpha8);
@@ -129,7 +129,7 @@ QImage LCDWidget::getImage() {
         image = m_renderedFrame.copy();
         m_mutex.unlock();
     } else {
-        image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+        image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB32);
         image.fill(Qt::black);
     }
     return image;
@@ -242,7 +242,7 @@ bool LCDWidget::draw() {
             QPainter c;
             if (lcd.useDma && panel.params.GATECTRL.SM) {
                 /* hack to get around format of QImage paint engine being cached forever */
-                QImage blendedFrame(m_blendedFrame.bits(), LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBA8888_Premultiplied);
+                QImage blendedFrame(m_blendedFrame.bits(), LCD_WIDTH, LCD_HEIGHT, QImage::Format_ARGB32_Premultiplied);
                 c.begin(&blendedFrame);
                 c.setCompositionMode(QPainter::CompositionMode_DestinationIn);
                 c.drawImage(QPoint(0, 0), m_interlaceAlpha);
