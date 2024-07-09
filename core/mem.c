@@ -758,7 +758,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
 #ifdef DEBUG_SUPPORT
-                if (debug.commands) {
+                if (debug_get_flags() & DBG_SOFT_COMMANDS) {
                     if (addr >= DBG_PORT_RANGE) {
                         debug_open(addr, value);
                         break;

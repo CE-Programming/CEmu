@@ -20,7 +20,6 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include "atomics.h"
 #include "defines.h"
 
 #ifdef __cplusplus
@@ -83,7 +82,6 @@ typedef struct eZ80cpu {
     uint32_t flashTotalAccesses, flashCacheMisses;
     int64_t flashDelayCycles;
     uint8_t prefetch;
-    _Atomic(uint8_t) abort;
     struct {
         bool    NMI         : 1;  /* Non-Maskable interrupt  */
         bool    IEF1        : 1;  /* Interrupt enable flag 1 */
@@ -115,6 +113,8 @@ void cpu_nmi(void);
 void cpu_execute(void);
 void cpu_restore_next(void);
 void cpu_transition_abort(uint8_t from, uint8_t to);
+uint8_t cpu_check_abort(void);
+void cpu_exit(void);
 void cpu_crash(const char *msg);
 bool cpu_restore(FILE *image);
 bool cpu_save(FILE *image);

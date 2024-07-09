@@ -21,6 +21,7 @@
 #include "emu.h"
 #include "mem.h"
 #include "bus.h"
+#include "atomics.h"
 #include "defines.h"
 #include "control.h"
 #include "registers.h"
@@ -34,6 +35,12 @@
 
 /* Global CPU state */
 eZ80cpu_t cpu;
+
+typedef struct eZ80atomics {
+    _Atomic(uint8_t) abort;
+} eZ80atomics_t;
+
+static eZ80atomics_t atomics;
 
 static void cpu_clear_context(void) {
     cpu.PREFIX = cpu.SUFFIX = 0;
@@ -226,7 +233,7 @@ static uint8_t cpu_read_reg(int i) {
         case 5: value = cpu_read_index_low(); break;
         case 6: value = cpu_read_byte(cpu_index_address()); break;
         case 7: value = cpu.registers.A; break;
-        default: abort();
+        default: unreachable();
     }
     return value;
 }
@@ -240,7 +247,7 @@ static void cpu_write_reg(int i, uint8_t value) {
         case 5: cpu_write_index_low(value); break;
         case 6: cpu_write_byte(cpu_index_address(), value); break;
         case 7: cpu.registers.A = value; break;
-        default: abort();
+        default: unreachable();
     }
 }
 static void cpu_read_write_reg(int read, int write) {
@@ -263,7 +270,7 @@ static uint8_t cpu_read_reg_prefetched(int i, uint32_t address) {
         case 5: value = cpu_read_index_low(); break;
         case 6: value = cpu_read_byte(address); break;
         case 7: value = cpu.registers.A; break;
-        default: abort();
+        default: unreachable();
     }
     return value;
 }
@@ -277,7 +284,7 @@ static void cpu_write_reg_prefetched(int i, uint32_t address, uint8_t value) {
         case 5: cpu_write_index_low(value); break;
         case 6: cpu_write_byte(address, value); break;
         case 7: cpu.registers.A = value; break;
-        default: abort();
+        default: unreachable();
     }
 }
 
@@ -288,7 +295,7 @@ static uint32_t cpu_read_rp(int i) {
         case 1: value = cpu.registers.DE; break;
         case 2: value = cpu_read_index(); break;
         case 3: value = cpu_read_sp(); break;
-        default: abort();
+        default: unreachable();
     }
     return cpu_mask_mode(value, cpu.L);
 }
@@ -299,7 +306,7 @@ static void cpu_write_rp(int i, uint32_t value) {
         case 1: cpu.registers.DE = value; break;
         case 2: cpu_write_index(value); break;
         case 3: cpu_write_sp(value); break;
-        default: abort();
+        default: unreachable();
     }
 }
 
@@ -325,7 +332,7 @@ static uint32_t cpu_read_rp3(int i) {
         case 1: value = cpu.registers.DE; break;
         case 2: value = cpu.registers.HL; break;
         case 3: value = cpu_read_index(); break;
-        default: abort();
+        default: unreachable();
     }
     return cpu_mask_mode(value, cpu.L);
 }
@@ -336,7 +343,7 @@ static void cpu_write_rp3(int i, uint32_t value) {
         case 1: cpu.registers.DE = value; break;
         case 2: cpu.registers.HL = value; break;
         case 3: cpu_write_index(value); break;
-        default: abort();
+        default: unreachable();
     }
 }
 
@@ -350,7 +357,7 @@ static bool cpu_read_cc(const int i) {
         case 5: return  cpu.registers.flags.PV;
         case 6: return !cpu.registers.flags.S;
         case 7: return  cpu.registers.flags.S;
-        default: abort();
+        default: unreachable();
     }
     return true;
 }
@@ -581,7 +588,7 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
             new_c = old_0;
             break;
         default:
-            abort();
+            unreachable();
     }
     cpu_write_reg_prefetched(z, address, value);
     r->F = cpuflag_c(new_c) | cpuflag_sign_b(value) | cpuflag_parity(value)
@@ -807,7 +814,7 @@ static void cpu_execute_bli() {
 
 void cpu_init(void) {
     memset(&cpu, 0, sizeof(eZ80cpu_t));
-    cpu.abort = CPU_ABORT_NONE;
+    atomics.abort = CPU_ABORT_NONE;
     gui_console_printf("[CEmu] Initialized CPU...\n");
 }
 
@@ -828,21 +835,29 @@ void cpu_nmi(void) {
     cpu.NMI = 1;
     cpu_restore_next();
 #ifdef DEBUG_SUPPORT
-    if (debug.openOnReset) {
+    if (debug_get_flags() & DBG_OPEN_ON_RESET) {
         debug_open(DBG_NMI_TRIGGERED, cpu.registers.PC);
     }
 #endif
 }
 
 void cpu_transition_abort(uint8_t from, uint8_t to) {
-    atomic_compare_exchange_strong(&cpu.abort, &from, to);
+    atomic_compare_exchange_strong(&atomics.abort, &from, to);
+}
+
+uint8_t cpu_check_abort(void) {
+    return atomics.abort;
+}
+
+void cpu_exit(void) {
+    atomics.abort = CPU_ABORT_EXIT;
 }
 
 void cpu_crash(const char *msg) {
     cpu_transition_abort(CPU_ABORT_NONE, CPU_ABORT_RESET);
     gui_console_printf("[CEmu] Reset caused by %s.\n", msg);
 #ifdef DEBUG_SUPPORT
-    if (debug.openOnReset) {
+    if (debug_get_flags() & DBG_OPEN_ON_RESET) {
         debug_open(DBG_MISC_RESET, cpu.registers.PC);
     }
 #endif
@@ -865,7 +880,7 @@ static void cpu_halt(void) {
 }
 
 void cpu_restore_next(void) {
-    if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || cpu.abort != CPU_ABORT_NONE) {
+    if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || atomics.abort != CPU_ABORT_NONE) {
         cpu.next = 0; /* always applies, even after cycle rewind during port writes */
     } else if (cpu.IEF_wait) {
         cpu.next = cpu.eiDelay; /* execute one instruction */
@@ -928,7 +943,7 @@ void cpu_execute(void) {
         } else {
             cpu_restore_next();
         }
-        if (cpu.cycles >= cpu.next || cpu.abort != CPU_ABORT_NONE) {
+        if (cpu.cycles >= cpu.next || atomics.abort != CPU_ABORT_NONE) {
             break;
         }
         if (cpu.inBlock) {
@@ -1120,7 +1135,7 @@ void cpu_execute(void) {
                             break;
                         }
                         if (context.z < 4) {
-                            if (cpu.SUFFIX && cpu.abort) { /* suffix can infinite loop */
+                            if (cpu.SUFFIX && atomics.abort != CPU_ABORT_NONE) { /* suffix can infinite loop */
                                 return;
                             }
                             cpu.L = context.s;

@@ -3,7 +3,6 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include "../atomics.h"
 #include "../defines.h"
 
 #ifdef __cplusplus
@@ -76,6 +75,7 @@ void debug_flag(int mask, bool set);                 /* configure setup of debug
 void debug_step(int mode, uint32_t addr);            /* set a step mode, addr points to the instruction after pc */
 void debug_open(int reason, uint32_t data);          /* open the debugger (Should only be called from gui_do_stuff) */
 bool debug_is_open(void);                            /* returns the status of the core debugger */
+int debug_get_flags(void);
 void debug_enable_basic_mode(bool fetches);
 void debug_disable_basic_mode(void);
 bool debug_get_executing_basic_prgm(char *name);
@@ -153,11 +153,6 @@ typedef struct {
 
     uint8_t *addr;
     uint8_t *port;
-    _Atomic(int) flags;
-    _Atomic(bool) open;
-    _Atomic(bool) ignore;
-    _Atomic(bool) commands;
-    _Atomic(bool) openOnReset;
     bool basicMode;
     bool stepBasic;
     bool stepBasicNext;

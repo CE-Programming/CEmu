@@ -1,8 +1,6 @@
 #ifndef EMU_H
 #define EMU_H
 
-#include "atomics.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

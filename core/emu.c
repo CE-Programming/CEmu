@@ -17,10 +17,10 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE0016
+#define IMAGE_VERSION 0xCECE0017
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
-    cpu.abort = CPU_ABORT_EXIT;
+    cpu_exit();
 }
 
 void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
@@ -241,9 +241,9 @@ rerr:
 void emu_run(uint64_t ticks) {
     sched.run_event_triggered = false;
     sched_repeat(SCHED_RUN, ticks);
-    while (cpu.abort != CPU_ABORT_EXIT) {
+    while (cpu_check_abort() != CPU_ABORT_EXIT) {
         sched_process_pending_events();
-        if (cpu.abort == CPU_ABORT_RESET) {
+        if (cpu_check_abort() == CPU_ABORT_RESET) {
             cpu_transition_abort(CPU_ABORT_RESET, CPU_ABORT_NONE);
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();

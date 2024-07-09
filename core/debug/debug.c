@@ -1,6 +1,7 @@
 #ifdef DEBUG_SUPPORT
 
 #include "debug.h"
+#include "../atomics.h"
 #include "../mem.h"
 #include "../emu.h"
 #include "../cpu.h"
@@ -13,6 +14,13 @@
 
 debug_state_t debug;
 
+typedef struct debug_atomics {
+    _Atomic(int) flags;
+    _Atomic(bool) open;
+} debug_atomics_t;
+
+static debug_atomics_t atomics;
+
 void debug_init(void) {
     debug_clear_step();
     debug.stackIndex = debug.stackSize = 0;
@@ -20,7 +28,7 @@ void debug_init(void) {
     debug.addr = (uint8_t*)calloc(DBG_ADDR_SIZE, sizeof(uint8_t));
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
-    debug.open = false;
+    atomics.open = false;
     debug_disable_basic_mode();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
@@ -33,11 +41,15 @@ void debug_free(void) {
 }
 
 bool debug_is_open(void) {
-    return debug.open;
+    return atomics.open;
+}
+
+int debug_get_flags(void) {
+    return atomics.flags;
 }
 
 void debug_open(int reason, uint32_t data) {
-    if (cpu.abort == CPU_ABORT_EXIT || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
+    if (cpu_check_abort() == CPU_ABORT_EXIT || atomics.open || ((atomics.flags & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
 
@@ -85,9 +97,9 @@ void debug_open(int reason, uint32_t data) {
     debug.flashWaitStates = flash.waitStates;
     debug.flashDelayCycles = cpu.flashDelayCycles;
 
-    debug.open = true;
+    atomics.open = true;
     gui_debug_open(reason, data);
-    debug.open = false;
+    atomics.open = false;
 
     cpu.next = debug.cpuNext;
     cpu.cycles = debug.cpuCycles;
@@ -120,13 +132,10 @@ void debug_ports(uint16_t addr, int mask, bool set) {
 
 void debug_flag(int mask, bool set) {
     if (set) {
-        debug.flags |= mask;
+        atomics.flags |= mask;
     } else {
-        debug.flags &= ~mask;
+        atomics.flags &= ~mask;
     }
-    debug.ignore = debug.flags & DBG_IGNORE;
-    debug.commands = debug.flags & DBG_SOFT_COMMANDS;
-    debug.openOnReset = debug.flags & DBG_OPEN_ON_RESET;
 }
 
 void debug_step(int mode, uint32_t addr) {
