@@ -455,7 +455,7 @@ static void cpu_trap(void) {
 static void cpu_jump(uint32_t address, bool mode) {
     cpu_prefetch(address, mode);
 #ifdef DEBUG_SUPPORT
-    debug_record_ret(address, mode);
+    debug_record_ret(cpu.registers.PC, mode);
 #endif
 }
 
