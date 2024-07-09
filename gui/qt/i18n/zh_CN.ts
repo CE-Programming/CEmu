@@ -67,34 +67,34 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../mainwindow.ui" line="10219"/>
-        <location filename="../mainwindow.cpp" line="713"/>
+        <location filename="../mainwindow.ui" line="10229"/>
+        <location filename="../mainwindow.cpp" line="715"/>
         <source>Keypad</source>
         <translatorcomment>&quot;Virtual keypad&quot;</translatorcomment>
         <translation>虚拟键盘</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6777"/>
-        <location filename="../mainwindow.cpp" line="710"/>
+        <location filename="../mainwindow.cpp" line="712"/>
         <source>Variables</source>
         <translation>变量</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4641"/>
-        <location filename="../mainwindow.cpp" line="722"/>
+        <location filename="../mainwindow.cpp" line="724"/>
         <source>Watchpoints</source>
         <translation>观察点</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5067"/>
         <location filename="../mainwindow.ui" line="6978"/>
-        <location filename="../mainwindow.cpp" line="701"/>
+        <location filename="../mainwindow.cpp" line="703"/>
         <source>Size</source>
         <translation>大小</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4957"/>
-        <location filename="../mainwindow.cpp" line="724"/>
+        <location filename="../mainwindow.cpp" line="726"/>
         <source>OS Variables</source>
         <translation>系统变量</translation>
     </message>
@@ -115,8 +115,8 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7172"/>
-        <location filename="../mainwindow.ui" line="10335"/>
-        <location filename="../mainwindow.cpp" line="711"/>
+        <location filename="../mainwindow.ui" line="10345"/>
+        <location filename="../mainwindow.cpp" line="713"/>
         <source>Capture</source>
         <translation>截图</translation>
     </message>
@@ -129,7 +129,7 @@
         <location filename="../mainwindow.ui" line="7444"/>
         <location filename="../mainwindow.ui" line="9208"/>
         <location filename="../mainwindow.ui" line="9659"/>
-        <location filename="../mainwindow.cpp" line="709"/>
+        <location filename="../mainwindow.cpp" line="711"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -149,7 +149,7 @@
         <translation>ROM镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="688"/>
+        <location filename="../mainwindow.cpp" line="690"/>
         <source>Debug</source>
         <translation>调试</translation>
     </message>
@@ -165,7 +165,7 @@
     </message>
     <message>
         <location filename="../debugger.cpp" line="2748"/>
-        <location filename="../mainwindow.cpp" line="706"/>
+        <location filename="../mainwindow.cpp" line="708"/>
         <source>Show ASCII</source>
         <translation>显示 ASCII</translation>
     </message>
@@ -308,29 +308,29 @@
         <translation>转到反汇编视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2471"/>
-        <location filename="../mainwindow.cpp" line="2568"/>
+        <location filename="../mainwindow.cpp" line="2473"/>
+        <location filename="../mainwindow.cpp" line="2570"/>
         <location filename="../memorywidget.cpp" line="262"/>
         <source>Toggle Breakpoint</source>
         <translation>切换断点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2472"/>
-        <location filename="../mainwindow.cpp" line="2569"/>
+        <location filename="../mainwindow.cpp" line="2474"/>
+        <location filename="../mainwindow.cpp" line="2571"/>
         <location filename="../memorywidget.cpp" line="263"/>
         <source>Toggle Write Watchpoint</source>
         <translation>切换写入监视点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2473"/>
-        <location filename="../mainwindow.cpp" line="2570"/>
+        <location filename="../mainwindow.cpp" line="2475"/>
+        <location filename="../mainwindow.cpp" line="2572"/>
         <location filename="../memorywidget.cpp" line="264"/>
         <source>Toggle Read Watchpoint</source>
         <translation>切换读取监视点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2474"/>
-        <location filename="../mainwindow.cpp" line="2571"/>
+        <location filename="../mainwindow.cpp" line="2476"/>
+        <location filename="../mainwindow.cpp" line="2573"/>
         <location filename="../memorywidget.cpp" line="265"/>
         <source>Toggle Read/Write Watchpoint</source>
         <translation>切换读取/写入监视点</translation>
@@ -352,7 +352,7 @@
         <location filename="../mainwindow.ui" line="3882"/>
         <location filename="../mainwindow.ui" line="4005"/>
         <location filename="../debugger.cpp" line="2740"/>
-        <location filename="../mainwindow.cpp" line="703"/>
+        <location filename="../mainwindow.cpp" line="705"/>
         <location filename="../memorywidget.cpp" line="29"/>
         <source>Goto</source>
         <translation>转到</translation>
@@ -360,7 +360,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3678"/>
         <location filename="../mainwindow.ui" line="9791"/>
-        <location filename="../mainwindow.cpp" line="718"/>
+        <location filename="../mainwindow.cpp" line="720"/>
         <source>Disassembly</source>
         <translation>反汇编</translation>
     </message>
@@ -424,7 +424,7 @@
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9989"/>
+        <location filename="../mainwindow.ui" line="9999"/>
         <source>Clear</source>
         <translation>清除</translation>
     </message>
@@ -444,7 +444,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4799"/>
-        <location filename="../mainwindow.cpp" line="723"/>
+        <location filename="../mainwindow.cpp" line="725"/>
         <source>Port Monitor</source>
         <translation>端口监视器</translation>
     </message>
@@ -480,22 +480,22 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3850"/>
-        <location filename="../mainwindow.cpp" line="719"/>
+        <location filename="../mainwindow.cpp" line="721"/>
         <source>Memory</source>
         <translation>内存</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9922"/>
+        <location filename="../mainwindow.ui" line="9932"/>
         <source>dock</source>
         <translation>dock</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9935"/>
+        <location filename="../mainwindow.ui" line="9945"/>
         <source>console</source>
         <translation>控制台</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9958"/>
+        <location filename="../mainwindow.ui" line="9968"/>
         <source>Auto scroll</source>
         <translation>自动滚动</translation>
     </message>
@@ -689,12 +689,22 @@
         <translation>发送文件到计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10791"/>
+        <location filename="../mainwindow.ui" line="9820"/>
+        <source>Tab between opcode / operands</source>
+        <translation>操作码/操作数之间的制表符</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="9830"/>
+        <source>Space between operands</source>
+        <translation>操作数之间的空格</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="10801"/>
         <source>Keypad Mapping</source>
         <translation>键盘映射</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10800"/>
+        <location filename="../mainwindow.ui" line="10810"/>
         <source>Change Instance ID</source>
         <translation>更改实例ID</translation>
     </message>
@@ -714,42 +724,42 @@
         <translation type="vanished">模拟Revision I之前的硬件 (IM 2)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10518"/>
+        <location filename="../mainwindow.ui" line="10528"/>
         <source>Record animated PNG</source>
         <translation>录制PNG动画</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10524"/>
+        <location filename="../mainwindow.ui" line="10534"/>
         <source>Ctrl+Shift+X</source>
         <translation>Ctrl+Shift+X</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10554"/>
+        <location filename="../mainwindow.ui" line="10564"/>
         <source>Reset calculator</source>
         <translation>重置计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10575"/>
+        <location filename="../mainwindow.ui" line="10585"/>
         <source>Save state</source>
         <translation>保存状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10584"/>
+        <location filename="../mainwindow.ui" line="10594"/>
         <source>Restore state</source>
         <translation>恢复状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10593"/>
+        <location filename="../mainwindow.ui" line="10603"/>
         <source>Reload ROM</source>
         <translation>重新装载ROM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10355"/>
+        <location filename="../mainwindow.ui" line="10365"/>
         <source>Screen</source>
         <translation>屏幕</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10180"/>
+        <location filename="../mainwindow.ui" line="10190"/>
         <source>Reload Rom</source>
         <translation>重新装载ROM</translation>
     </message>
@@ -802,7 +812,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4484"/>
-        <location filename="../mainwindow.cpp" line="721"/>
+        <location filename="../mainwindow.cpp" line="723"/>
         <source>Breakpoints</source>
         <translation>断点</translation>
     </message>
@@ -842,7 +852,7 @@
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10145"/>
+        <location filename="../mainwindow.ui" line="10155"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
@@ -912,28 +922,28 @@
         <translation>同步更改</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10473"/>
+        <location filename="../mainwindow.ui" line="10483"/>
         <source>Rom setup wizard...</source>
         <translation>ROM 设置向导…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10500"/>
-        <location filename="../mainwindow.ui" line="10503"/>
+        <location filename="../mainwindow.ui" line="10510"/>
+        <location filename="../mainwindow.ui" line="10513"/>
         <source>Take PNG screenshot</source>
         <translation>以PNG格式截图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10521"/>
+        <location filename="../mainwindow.ui" line="10531"/>
         <source>Record animated GIF</source>
         <translation>录制GIF动画</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10563"/>
+        <location filename="../mainwindow.ui" line="10573"/>
         <source>Check for updates...</source>
         <translation>检查更新…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10542"/>
+        <location filename="../mainwindow.ui" line="10552"/>
         <source>About Qt</source>
         <translation>关于 Qt</translation>
     </message>
@@ -953,8 +963,8 @@
         <translation>亮度</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9886"/>
-        <location filename="../mainwindow.cpp" line="708"/>
+        <location filename="../mainwindow.ui" line="9896"/>
+        <location filename="../mainwindow.cpp" line="710"/>
         <source>Console</source>
         <translation>控制台</translation>
     </message>
@@ -963,7 +973,7 @@
         <location filename="../mainwindow.ui" line="4786"/>
         <location filename="../mainwindow.ui" line="5072"/>
         <location filename="../mainwindow.ui" line="6963"/>
-        <location filename="../mainwindow.ui" line="10123"/>
+        <location filename="../mainwindow.ui" line="10133"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
@@ -977,7 +987,7 @@
         <location filename="../mainwindow.ui" line="4761"/>
         <location filename="../mainwindow.ui" line="4919"/>
         <location filename="../mainwindow.ui" line="7067"/>
-        <location filename="../mainwindow.ui" line="10103"/>
+        <location filename="../mainwindow.ui" line="10113"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
@@ -1005,13 +1015,13 @@
         <location filename="../mainwindow.ui" line="3893"/>
         <location filename="../mainwindow.ui" line="4016"/>
         <location filename="../debugger.cpp" line="2741"/>
-        <location filename="../mainwindow.cpp" line="704"/>
+        <location filename="../mainwindow.cpp" line="706"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2749"/>
-        <location filename="../mainwindow.cpp" line="705"/>
+        <location filename="../mainwindow.cpp" line="707"/>
         <source>Sync Changes</source>
         <translation>同步更改</translation>
     </message>
@@ -1021,22 +1031,22 @@
         <translation>RAM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="696"/>
+        <location filename="../mainwindow.cpp" line="698"/>
         <source>Memory View</source>
         <translation>内存视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10247"/>
+        <location filename="../mainwindow.ui" line="10257"/>
         <source>&amp;File</source>
         <translation>&amp;文件</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10446"/>
+        <location filename="../mainwindow.ui" line="10456"/>
         <source>Open...</source>
         <translation>打开...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10458"/>
+        <location filename="../mainwindow.ui" line="10468"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -1052,13 +1062,13 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="414"/>
-        <location filename="../mainwindow.cpp" line="716"/>
+        <location filename="../mainwindow.cpp" line="718"/>
         <source>Debug Control</source>
         <translation>调试控制</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="618"/>
-        <location filename="../mainwindow.cpp" line="717"/>
+        <location filename="../mainwindow.cpp" line="719"/>
         <source>CPU Status</source>
         <translation>CPU状态</translation>
     </message>
@@ -1097,7 +1107,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4107"/>
-        <location filename="../mainwindow.cpp" line="720"/>
+        <location filename="../mainwindow.cpp" line="722"/>
         <source>Timers</source>
         <translation>定时器</translation>
     </message>
@@ -1186,7 +1196,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5238"/>
-        <location filename="../mainwindow.cpp" line="725"/>
+        <location filename="../mainwindow.cpp" line="727"/>
         <source>OS Stacks</source>
         <translation>系统栈</translation>
     </message>
@@ -1202,7 +1212,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5479"/>
-        <location filename="../mainwindow.cpp" line="726"/>
+        <location filename="../mainwindow.cpp" line="728"/>
         <source>Miscellaneous</source>
         <translation>杂项</translation>
     </message>
@@ -1248,7 +1258,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6338"/>
-        <location filename="../mainwindow.cpp" line="727"/>
+        <location filename="../mainwindow.cpp" line="729"/>
         <source>AutoTester</source>
         <translation>自动测试器</translation>
     </message>
@@ -1269,7 +1279,7 @@
         <translation>从计算器接收</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1948"/>
+        <location filename="../mainwindow.cpp" line="1950"/>
         <source>View Calculator Variables</source>
         <translation>查看计算器变量</translation>
     </message>
@@ -1317,7 +1327,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7383"/>
-        <location filename="../mainwindow.cpp" line="1761"/>
+        <location filename="../mainwindow.cpp" line="1763"/>
         <source>Record</source>
         <translation>录制</translation>
     </message>
@@ -1334,7 +1344,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="84"/>
-        <location filename="../mainwindow.cpp" line="715"/>
+        <location filename="../mainwindow.cpp" line="717"/>
         <source>TI-Basic Debug</source>
         <translation>TI-Basic 调试</translation>
     </message>
@@ -1562,209 +1572,208 @@
         <translation>省略隐含的操作数</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9820"/>
         <source>Opcode / operand space</source>
-        <translation>操作码/操作数空间</translation>
+        <translation type="vanished">操作码/操作数空间</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9827"/>
+        <location filename="../mainwindow.ui" line="9837"/>
         <source>Use uppercase font</source>
         <translation>使用大写字母</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9834"/>
+        <location filename="../mainwindow.ui" line="9844"/>
         <source>Show address column</source>
         <translation>显示地址栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9841"/>
+        <location filename="../mainwindow.ui" line="9851"/>
         <source>Bold disassembly symbols</source>
         <translation>为汇编符号使用粗体</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10003"/>
-        <location filename="../mainwindow.cpp" line="712"/>
+        <location filename="../mainwindow.ui" line="10013"/>
+        <location filename="../mainwindow.cpp" line="714"/>
         <source>State</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10108"/>
+        <location filename="../mainwindow.ui" line="10118"/>
         <source>Load</source>
         <translation>加载</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10113"/>
+        <location filename="../mainwindow.ui" line="10123"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10118"/>
+        <location filename="../mainwindow.ui" line="10128"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10169"/>
-        <location filename="../mainwindow.cpp" line="299"/>
+        <location filename="../mainwindow.ui" line="10179"/>
+        <location filename="../mainwindow.cpp" line="300"/>
         <source>Reset</source>
         <translation>重设</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10251"/>
+        <location filename="../mainwindow.ui" line="10261"/>
         <source>Export</source>
         <translation>导出</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10267"/>
+        <location filename="../mainwindow.ui" line="10277"/>
         <source>Import</source>
         <translation>导入</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10280"/>
+        <location filename="../mainwindow.ui" line="10290"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10305"/>
+        <location filename="../mainwindow.ui" line="10315"/>
         <source>&amp;Calculator</source>
         <translation>&amp;计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10317"/>
+        <location filename="../mainwindow.ui" line="10327"/>
         <source>Extras</source>
         <translation>其他</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10449"/>
+        <location filename="../mainwindow.ui" line="10459"/>
         <source>Ctrl+Shift+O</source>
         <translation>Ctrl+Shift+O</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10461"/>
+        <location filename="../mainwindow.ui" line="10471"/>
         <source>Ctrl+Shift+Q</source>
         <translation>Ctrl+Shift+Q</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10485"/>
-        <location filename="../mainwindow.cpp" line="1776"/>
+        <location filename="../mainwindow.ui" line="10495"/>
+        <location filename="../mainwindow.cpp" line="1778"/>
         <source>About CEmu</source>
         <translation>关于 CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10602"/>
+        <location filename="../mainwindow.ui" line="10612"/>
         <source>ROM image</source>
         <translation>ROM镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10611"/>
-        <location filename="../mainwindow.ui" line="10620"/>
+        <location filename="../mainwindow.ui" line="10621"/>
+        <location filename="../mainwindow.ui" line="10630"/>
         <source>Calculator state</source>
         <translation>计算器状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10629"/>
-        <location filename="../mainwindow.ui" line="10641"/>
+        <location filename="../mainwindow.ui" line="10639"/>
+        <location filename="../mainwindow.ui" line="10651"/>
         <source>Debug state</source>
         <translation>调试状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10650"/>
+        <location filename="../mainwindow.ui" line="10660"/>
         <source>New CEmu instance</source>
         <translation>新建CEmu实例</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10662"/>
+        <location filename="../mainwindow.ui" line="10672"/>
         <source>Show key history</source>
         <translation>显示按键历史记录</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10671"/>
+        <location filename="../mainwindow.ui" line="10681"/>
         <source>Bootable CEmu image</source>
         <translation>可启动的CEmu镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10679"/>
+        <location filename="../mainwindow.ui" line="10689"/>
         <source>Hide menu bar</source>
         <translation>隐藏菜单栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10688"/>
+        <location filename="../mainwindow.ui" line="10698"/>
         <source>Copy screen to clipboard</source>
         <translation>将屏幕图像拷贝到剪贴板</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10691"/>
+        <location filename="../mainwindow.ui" line="10701"/>
         <source>Ctrl+Shift+C</source>
         <translation>Ctrl+Shift+C</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10700"/>
+        <location filename="../mainwindow.ui" line="10710"/>
         <source>Reset GUI docks</source>
         <translation>重置界面项目</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10709"/>
+        <location filename="../mainwindow.ui" line="10719"/>
         <source>Reset CEmu</source>
         <translation>重置CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10714"/>
+        <location filename="../mainwindow.ui" line="10724"/>
         <source>English</source>
         <translation>English</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10719"/>
+        <location filename="../mainwindow.ui" line="10729"/>
         <source>Français</source>
         <translation>Français</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10724"/>
+        <location filename="../mainwindow.ui" line="10734"/>
         <source>Nederlands</source>
         <translation>Nederlands</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10729"/>
+        <location filename="../mainwindow.ui" line="10739"/>
         <source>Español</source>
         <translation>Español</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10738"/>
-        <location filename="../mainwindow.ui" line="10747"/>
+        <location filename="../mainwindow.ui" line="10748"/>
+        <location filename="../mainwindow.ui" line="10757"/>
         <source>Window configuration</source>
         <translation>窗口设置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10756"/>
+        <location filename="../mainwindow.ui" line="10766"/>
         <source>Report a bug / give feedback</source>
         <translation>报告漏洞/反馈意见</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10764"/>
+        <location filename="../mainwindow.ui" line="10774"/>
         <source>Hide status bar</source>
         <translation>隐藏状态栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10773"/>
-        <location filename="../mainwindow.ui" line="10782"/>
+        <location filename="../mainwindow.ui" line="10783"/>
+        <location filename="../mainwindow.ui" line="10792"/>
         <source>RAM image</source>
         <translation>RAM镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10805"/>
+        <location filename="../mainwindow.ui" line="10815"/>
         <source>简体中文</source>
         <translation>简体中文</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10808"/>
+        <location filename="../mainwindow.ui" line="10818"/>
         <source>Simplified Chinese</source>
         <translation>Simplified Chinese</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="687"/>
+        <location filename="../mainwindow.cpp" line="689"/>
         <source>Docks</source>
         <translation>项目</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1038"/>
+        <location filename="../mainwindow.cpp" line="1040"/>
         <source>Welcome!
 
 CEmu uses a customizable dock-style interface. Drag and drop to move tabs and windows around on the screen, and choose which docks are available in the &apos;Docks&apos; menu in the topmost bar. Be sure that &apos;Enable UI edit mode&apos; is selected when laying out your interface. Enjoy!
@@ -1777,157 +1786,157 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
 (注意：取决于您的版本，您可以分别从标题或标签栏中拖动一组或单个标签)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1677"/>
-        <location filename="../mainwindow.cpp" line="1709"/>
+        <location filename="../mainwindow.cpp" line="1679"/>
+        <location filename="../mainwindow.cpp" line="1711"/>
         <source>PNG images (*.png)</source>
         <translation>PNG图像 (*.png)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1265"/>
-        <location filename="../settings.cpp" line="1280"/>
+        <location filename="../mainwindow.cpp" line="1267"/>
+        <location filename="../settings.cpp" line="1290"/>
         <source>Select saved image to restore from</source>
         <translation>选择用于恢复的已保存的镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1267"/>
-        <location filename="../mainwindow.cpp" line="1277"/>
-        <location filename="../settings.cpp" line="505"/>
+        <location filename="../mainwindow.cpp" line="1269"/>
+        <location filename="../mainwindow.cpp" line="1279"/>
+        <location filename="../settings.cpp" line="515"/>
         <source>CEmu images (*.ce);;All files (*.*)</source>
         <translation>CEmu镜像 (*.ce);;所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="689"/>
+        <location filename="../mainwindow.cpp" line="691"/>
         <source>Information</source>
         <translation>信息</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1275"/>
+        <location filename="../mainwindow.cpp" line="1277"/>
         <source>Set image to save to</source>
         <translation>设置镜像保存路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1577"/>
-        <location filename="../mainwindow.cpp" line="1584"/>
+        <location filename="../mainwindow.cpp" line="1579"/>
+        <location filename="../mainwindow.cpp" line="1586"/>
         <source>Emulated Speed: </source>
         <translation>模拟速度: </translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="649"/>
+        <location filename="../settings.cpp" line="659"/>
         <source>Checking updates is disabled for development builds</source>
         <translation>在测试版CEmu中不能检查更新</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="661"/>
+        <location filename="../settings.cpp" line="671"/>
         <source>You already have the latest CEmu version</source>
         <translation>您已经安装了最新的CEmu版本</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="682"/>
+        <location filename="../settings.cpp" line="692"/>
         <source>&lt;b&gt;An error occurred while checking for CEmu updates.&lt;/b&gt;&lt;br/&gt;You can however &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;go here&lt;/a&gt; to check yourself.</source>
         <translation>&lt;b&gt;CEmu在检查更新时出现了错误.&lt;/b&gt;&lt;br/&gt;您可以到&lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;&lt;/a&gt;来自行查看。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1698"/>
+        <location filename="../mainwindow.cpp" line="1700"/>
         <source>Recording...</source>
         <translation>录制中...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1736"/>
+        <location filename="../mainwindow.cpp" line="1738"/>
         <source>Stop Recording</source>
         <translation>停止录制</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1981"/>
+        <location filename="../mainwindow.cpp" line="1983"/>
         <source>Can&apos;t preview this OS variable</source>
         <translation>无法预览该系统变量</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2075"/>
+        <location filename="../mainwindow.cpp" line="2077"/>
         <source>Select at least one file to transfer</source>
         <translation>选择至少一个文件以传输</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1591"/>
+        <location filename="../mainwindow.cpp" line="1593"/>
         <source>Actual FPS: </source>
         <translation>实际帧率: </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="199"/>
+        <location filename="../mainwindow.cpp" line="200"/>
         <source>Run/Stop</source>
         <translation>运行/停止</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="300"/>
+        <location filename="../mainwindow.cpp" line="301"/>
         <source>Reload</source>
         <translation>重新加载</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="698"/>
+        <location filename="../mainwindow.cpp" line="700"/>
         <source>Keypress History</source>
         <translation>键盘历史记录</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="700"/>
+        <location filename="../mainwindow.cpp" line="702"/>
         <source>Clear History</source>
         <translation>清除历史记录</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1652"/>
+        <location filename="../mainwindow.cpp" line="1654"/>
         <source>Save Screen</source>
         <translation>保存屏幕</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1674"/>
+        <location filename="../mainwindow.cpp" line="1676"/>
         <source>Failed to save screenshot.</source>
         <translation>无法保存截屏。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1700"/>
+        <location filename="../mainwindow.cpp" line="1702"/>
         <source>Saving Recording...</source>
         <translation>保存录制文件...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1710"/>
+        <location filename="../mainwindow.cpp" line="1712"/>
         <source>Save Recorded PNG</source>
         <translation>保存录制的PNG</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1726"/>
+        <location filename="../mainwindow.cpp" line="1728"/>
         <source>A failure occured during PNG recording.</source>
         <translation>PNG录制时出现了错误。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1737"/>
+        <location filename="../mainwindow.cpp" line="1739"/>
         <source>Stop Recording...</source>
         <translation>停止录制…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1744"/>
+        <location filename="../mainwindow.cpp" line="1746"/>
         <source>Saving...</source>
         <translation>保存中…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1745"/>
+        <location filename="../mainwindow.cpp" line="1747"/>
         <source>Saving Animated PNG...</source>
         <translation>保存PNG动画...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1762"/>
+        <location filename="../mainwindow.cpp" line="1764"/>
         <source>Record animated PNG...</source>
         <translation>录制PNG动画...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1781"/>
+        <location filename="../mainwindow.cpp" line="1783"/>
         <source>Copy version</source>
         <translation>拷贝版本</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1789"/>
+        <location filename="../mainwindow.cpp" line="1791"/>
         <source>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;%3&lt;br&gt;Other contributors include:&lt;br&gt;%4&lt;br&gt;Translations provided by:&lt;br&gt;%5&lt;br&gt;Many thanks to the following projects: %6&lt;br&gt;In-program icons are courtesy of %7.&lt;br&gt;&lt;br&gt;CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.&lt;br&gt;&lt;br&gt;</source>
         <translation>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;GitHub 主页&lt;/a&gt;&lt;br&gt;&lt;br&gt;开发者:&lt;br&gt;%3&lt;br&gt;其他贡献者:&lt;br&gt;%4&lt;br&gt;翻译:&lt;br&gt;%5&lt;br&gt;感谢以下项目: %6&lt;br&gt;应用内图标由 %7 提供&lt;br&gt;&lt;br&gt;CEmu遵循 %8 协议，且不是一个德州仪器的产品，同时也不隶属于德州仪器&lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1837"/>
+        <location filename="../mainwindow.cpp" line="1839"/>
         <source>[CEmu] Dock output redirected to stdout. Use the radio button to enable dock.</source>
         <translation>[CEmu] 项目输出重定向到标准输出，使用单选按钮启用项目。</translation>
     </message>
@@ -1936,222 +1945,222 @@ CEmu采用可自定义的项目界面，您可以在屏幕上拖拽标签页和�
         <translation type="vanished">TI 文件 (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.b84 *.b83);;Todos Archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1975"/>
+        <location filename="../mainwindow.cpp" line="1977"/>
         <source>Empty</source>
         <translation>空</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1978"/>
-        <location filename="../mainwindow.cpp" line="1991"/>
+        <location filename="../mainwindow.cpp" line="1980"/>
+        <location filename="../mainwindow.cpp" line="1993"/>
         <source>Can&apos;t preview this</source>
         <translation>无法预览</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2003"/>
+        <location filename="../mainwindow.cpp" line="2005"/>
         <source>Archive</source>
         <translation>存档</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2046"/>
+        <location filename="../mainwindow.cpp" line="2048"/>
         <source>Select at least two files to group</source>
         <translation>选择至少两个文件以组合</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2048"/>
+        <location filename="../mainwindow.cpp" line="2050"/>
         <source>TI Group (*.8cg);;All Files (*.*)</source>
         <translation>TI Group (*.8cg);;所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2051"/>
-        <location filename="../mainwindow.cpp" line="2106"/>
+        <location filename="../mainwindow.cpp" line="2053"/>
+        <location filename="../mainwindow.cpp" line="2108"/>
         <source>Transfer error, see console for information:
 File: </source>
         <translation>传输失败，请打开控制台查看更多信息:
 文件: </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2053"/>
-        <location filename="../mainwindow.cpp" line="2104"/>
+        <location filename="../mainwindow.cpp" line="2055"/>
+        <location filename="../mainwindow.cpp" line="2106"/>
         <source>Transfer completed successfully.</source>
         <translation>传输已完成。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2124"/>
+        <location filename="../mainwindow.cpp" line="2126"/>
         <source>Error. No config loaded</source>
         <translation>错误。无加载配置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2127"/>
+        <location filename="../mainwindow.cpp" line="2129"/>
         <source>Error. Couldn&apos;t follow the test sequence defined in the configuration</source>
         <translation>错误。无法跟随在配置中的测试序列</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2130"/>
+        <location filename="../mainwindow.cpp" line="2132"/>
         <source>Error. Unknown one - wat?</source>
         <translation>未知错误—啥？</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2170"/>
+        <location filename="../mainwindow.cpp" line="2172"/>
         <source>See the test config file format and make sure values are correct and referenced files are there.</source>
         <translatorcomment>&quot;Please see the test config file format and check if all values are correct and referenced files exist.&quot;</translatorcomment>
         <translation>请参见测试配置文件的格式并确认数值都是正确的且被引用的文件均存在。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2275"/>
+        <location filename="../mainwindow.cpp" line="2277"/>
         <source>Make sure you have entered a valid start/size pair or preset.</source>
         <translatorcomment>&quot;Make sure the entered `start`/`size` value or preset is valid&quot;</translatorcomment>
         <translation>确保输入的`开始`/`大小`值或预设有效。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2284"/>
+        <location filename="../mainwindow.cpp" line="2286"/>
         <source>Could not convert those values into numbers</source>
         <translation>无法将值转换为数字</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2291"/>
+        <location filename="../mainwindow.cpp" line="2293"/>
         <source>Could not retrieve this memory chunk</source>
         <translation>无法检索该内存块</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2330"/>
+        <location filename="../mainwindow.cpp" line="2332"/>
         <source>Image does not appear to be from a CE. Do you want to attempt to load it anyway? This may cause instability.</source>
         <translation>该图像似乎不是来自一台CE，您确定要加载它吗？这可能导致不稳定。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2470"/>
+        <location filename="../mainwindow.cpp" line="2472"/>
         <source>Set PC</source>
         <translation>设置PC</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2475"/>
+        <location filename="../mainwindow.cpp" line="2477"/>
         <source>Run Until</source>
         <translation>运行直到</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2567"/>
+        <location filename="../mainwindow.cpp" line="2569"/>
         <source>Goto Disassembly View</source>
         <translation>查看反汇编视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2842"/>
+        <location filename="../mainwindow.cpp" line="2844"/>
         <source>Enter image path</source>
         <translation>输入图像路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2139"/>
+        <location filename="../mainwindow.cpp" line="2141"/>
         <source>Please choose a json file or type its path.</source>
         <translation>请选择一个json文件或输入其路径。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="680"/>
+        <location filename="../mainwindow.cpp" line="682"/>
         <source>No translation available for this language :(</source>
         <translation>该语言目前没有翻译:(</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="692"/>
+        <location filename="../mainwindow.cpp" line="694"/>
         <source>Add memory view</source>
         <translation>添加内存视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="693"/>
+        <location filename="../mainwindow.cpp" line="695"/>
         <source>Add memory visualizer</source>
         <translation>添加内存可视化器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="697"/>
+        <location filename="../mainwindow.cpp" line="699"/>
         <source>Memory Visualizer</source>
         <translation>内存可视化器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1066"/>
+        <location filename="../mainwindow.cpp" line="1068"/>
         <source>CEmu was not able to write to the standard settings location.
 Portable mode has been activated.</source>
         <translation>CEmu无法写入到标准设置位置
 便携式模式已启用。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1285"/>
+        <location filename="../mainwindow.cpp" line="1287"/>
         <source>ROM images (*.rom)</source>
         <translation>ROM镜像 (*.rom)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1286"/>
+        <location filename="../mainwindow.cpp" line="1288"/>
         <source>Set ROM image to save to</source>
         <translation>设置ROM镜像保存路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1296"/>
+        <location filename="../mainwindow.cpp" line="1298"/>
         <source>RAM images (*.ram)</source>
         <translation>RAM镜像 (*.ram)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1297"/>
+        <location filename="../mainwindow.cpp" line="1299"/>
         <source>Set RAM image to save to</source>
         <translation>设置内存(RAM)镜像保存路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1307"/>
+        <location filename="../mainwindow.cpp" line="1309"/>
         <source>Select RAM image to load</source>
         <translation>选择加载的内存(RAM)镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1309"/>
+        <location filename="../mainwindow.cpp" line="1311"/>
         <source>RAM images (*.ram);;All files (*.*)</source>
         <translation>RAM镜像 (*.ram);;所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1338"/>
+        <location filename="../mainwindow.cpp" line="1340"/>
         <source>Saving failed. Please check write permissions in settings directory.</source>
         <translation>保存失败，请检查写入权限设置.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1552"/>
+        <location filename="../mainwindow.cpp" line="1554"/>
         <source>Auto (%0)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1558"/>
+        <location filename="../mainwindow.cpp" line="1560"/>
         <source>Current: %0 (change requires reset)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1584"/>
-        <location filename="../mainwindow.cpp" line="1595"/>
+        <location filename="../mainwindow.cpp" line="1586"/>
+        <location filename="../mainwindow.cpp" line="1597"/>
         <source>N/A</source>
         <translation>不适用</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1784"/>
+        <location filename="../mainwindow.cpp" line="1786"/>
         <source>Version copied!</source>
         <translation>已拷贝版本信息!</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1876"/>
+        <location filename="../mainwindow.cpp" line="1878"/>
         <source>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8eu *.8pu *.b84 *.b83);;All Files (*.*)</source>
         <translation>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8eu *.8pu *.b84 *.b83);;All Files (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2149"/>
+        <location filename="../mainwindow.cpp" line="2151"/>
         <source>Couldn&apos;t go to where the JSON file is.</source>
         <translation>无法进入JSON文件位置。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2154"/>
+        <location filename="../mainwindow.cpp" line="2156"/>
         <source>Couldn&apos;t read JSON file.</source>
         <translation>无法读取JSON文件。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2158"/>
+        <location filename="../mainwindow.cpp" line="2160"/>
         <source>Unable to open the file.</source>
         <translation>无法打开文件。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2235"/>
+        <location filename="../mainwindow.cpp" line="2237"/>
         <source>Test results</source>
         <translation>测试结果</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2235"/>
+        <location filename="../mainwindow.cpp" line="2237"/>
         <source>Out of %2 tests attempted:
 %4 passed
 %6 failed</source>
@@ -2160,55 +2169,55 @@ Portable mode has been activated.</source>
 %6 失败</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2547"/>
+        <location filename="../mainwindow.cpp" line="2549"/>
         <source>Launch program</source>
         <translation>启动程序</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2530"/>
         <location filename="../debugger.cpp" line="2564"/>
-        <location filename="../mainwindow.cpp" line="2476"/>
-        <location filename="../mainwindow.cpp" line="2566"/>
+        <location filename="../mainwindow.cpp" line="2478"/>
+        <location filename="../mainwindow.cpp" line="2568"/>
         <source>Goto Memory View</source>
         <translation>显示内存视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2751"/>
+        <location filename="../mainwindow.cpp" line="2753"/>
         <source>CEmu Change ID</source>
         <translation>更改CEmu ID</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2751"/>
+        <location filename="../mainwindow.cpp" line="2753"/>
         <source>New ID:</source>
         <translation>新ID:</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="503"/>
+        <location filename="../settings.cpp" line="513"/>
         <source>Set saved image to restore from</source>
         <translation>让保存的镜像恢复的位置</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="514"/>
+        <location filename="../settings.cpp" line="524"/>
         <source>Set debugging information path</source>
         <translation>设置调试信息路径</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="516"/>
+        <location filename="../settings.cpp" line="526"/>
         <source>Debugging information (*.ini);;All files (*.*)</source>
         <translation>调试信息 (* .ini);;所有文件 (*. *)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="694"/>
+        <location filename="../mainwindow.cpp" line="696"/>
         <source>Enable UI edit mode</source>
         <translation>启用UI编辑模式</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="690"/>
+        <location filename="../mainwindow.cpp" line="692"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="255"/>
+        <location filename="../settings.cpp" line="256"/>
         <source>A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup.
 
 The bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, the boot image will be loaded automatically and then removed for convience.</source>
@@ -2217,98 +2226,98 @@ The bootable image should be placed in the same directory as the CEmu executable
 可启动镜像应放置在与 CEmu 可执行文件相同的目录中。当 CEmu 启动时将自动加载并移除启动镜像以方便使用。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="259"/>
+        <location filename="../settings.cpp" line="260"/>
         <source>Save bootable CEmu image</source>
         <translation>保存可启动的CEmu镜像</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="261"/>
+        <location filename="../settings.cpp" line="262"/>
         <source>Bootable CEmu images (*.cemu);</source>
         <translation>可启动的CEmu镜像 (* .cemu);</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="661"/>
+        <location filename="../settings.cpp" line="671"/>
         <source>No update available</source>
         <translation>无可用更新</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="667"/>
+        <location filename="../settings.cpp" line="677"/>
         <source>CEmu update</source>
         <translation>CEmu更新</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="668"/>
+        <location filename="../settings.cpp" line="678"/>
         <source>&lt;b&gt;A new version of CEmu is available!&lt;/b&gt;&lt;br/&gt;You can &lt;a href=&apos;%1&apos;&gt;download it here&lt;/a&gt;.</source>
         <translation>&lt;b&gt;Cemu有新版本可用!&lt;/b&gt;&lt;br/&gt;您可以在 &lt;a href=&apos;%1&apos;&gt;下载&lt;/a&gt;.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="681"/>
+        <location filename="../settings.cpp" line="691"/>
         <source>Update check failed</source>
         <translation>检查更新失败</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="816"/>
+        <location filename="../settings.cpp" line="826"/>
         <source>Keymap Config (*.ini);;All files (*.*)</source>
         <translation>键盘映射配置 (*.ini);;所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="846"/>
+        <location filename="../settings.cpp" line="856"/>
         <source>Be aware that this may behave unexpectedly due to the combinations of keypresses sent by the calculator, which may trigger some global shortcuts on your system!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="861"/>
+        <location filename="../settings.cpp" line="871"/>
         <source>Unable to set custom keymap.</source>
         <translation>无法自定义键盘映射。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1195"/>
+        <location filename="../settings.cpp" line="1205"/>
         <source>Keep migratable settings</source>
         <translation>保留可迁移设置</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1198"/>
+        <location filename="../settings.cpp" line="1208"/>
         <source>This version of CEmu is not compatible with your settings, probably made by an older version. Would you like to erase them to prevent any unexpected behavior?</source>
         <translatorcomment>&quot;This version of CEmu does not match with your settings, it&apos;s probably from an older version. Would you like to delete them to prevent unexpected things to happen?&quot;</translatorcomment>
         <translation>该CEmu版本和您的设置不匹配，其可能来源于一个历史版本。您愿意删除它们以防止意外情况发生吗？</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1251"/>
+        <location filename="../settings.cpp" line="1261"/>
         <source>Window Config (*.ini)</source>
         <translation>窗口设置 (*.ini)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1252"/>
+        <location filename="../settings.cpp" line="1262"/>
         <source>Save window configuration</source>
         <translation>保存窗口设置</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1282"/>
+        <location filename="../settings.cpp" line="1292"/>
         <source>Window Config (*.ini);;All files (*.*)</source>
         <translation>窗口设置 (*.ini);;所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1312"/>
+        <location filename="../settings.cpp" line="1322"/>
         <source>Natural keymap is not exportable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1316"/>
+        <location filename="../settings.cpp" line="1326"/>
         <source>Keymap Config (*.ini)</source>
         <translation>键盘映射配置 (*.ini)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="1317"/>
+        <location filename="../settings.cpp" line="1327"/>
         <source>Save keymap configuration</source>
         <translation>保存键盘映射</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1778"/>
+        <location filename="../mainwindow.cpp" line="1780"/>
         <source>Check for updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1956"/>
+        <location filename="../mainwindow.cpp" line="1958"/>
         <source>Resume emulation</source>
         <translation>恢复模拟</translation>
     </message>
@@ -2329,12 +2338,12 @@ The bootable image should be placed in the same directory as the CEmu executable
         <translation>没有找到字符串。</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="691"/>
+        <location filename="../mainwindow.cpp" line="693"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="842"/>
+        <location filename="../mainwindow.cpp" line="844"/>
         <source>Toggle Windows Console</source>
         <translation>切换窗口控制台</translation>
     </message>
@@ -2475,44 +2484,44 @@ File: </source>
         <translation>在我的电脑上查找ROM镜像</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="79"/>
+        <location filename="../romselection.cpp" line="80"/>
         <source>Select ROM file</source>
         <translation>选择一个ROM镜像</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="80"/>
+        <location filename="../romselection.cpp" line="81"/>
         <source>ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)</source>
         <translation>ROM镜像 (* .rom * .Rom * .ROM);;所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="185"/>
+        <location filename="../romselection.cpp" line="188"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="185"/>
+        <location filename="../romselection.cpp" line="188"/>
         <source>Invalid ROM segment
 </source>
         <translation>无效的ROM镜像片段
 </translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="195"/>
+        <location filename="../romselection.cpp" line="198"/>
         <source>Save ROM Dumper Program</source>
         <translation>保存ROM转存程序</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="195"/>
+        <location filename="../romselection.cpp" line="198"/>
         <source>ROM Dumper (*.8xp)</source>
         <translation>ROM转存程序 (*.8xp)</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="221"/>
+        <location filename="../romselection.cpp" line="224"/>
         <source>Save ROM</source>
         <translation>保存ROM镜像</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="221"/>
+        <location filename="../romselection.cpp" line="224"/>
         <source>ROM Image (*.rom)</source>
         <translation>ROM镜像 (*.rom)</translation>
     </message>
