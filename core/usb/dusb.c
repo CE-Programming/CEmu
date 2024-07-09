@@ -82,7 +82,7 @@
 #define DUSB_OUT_DIRECTION                  0x00
 
 
-#define DUSB_FILE_MAGIC_SIZE                8
+#define DUSB_FILE_MAGIC_SIZE                10
 
 #define DUSB_FLASH_FILE_NAME_OFFSET         16
 #define DUSB_FLASH_FILE_DEVICE_TYPE_OFFSET  48
@@ -400,11 +400,12 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
     char magic[DUSB_FILE_MAGIC_SIZE];
     if (fseek(file, 0, SEEK_SET) ||
         fread(magic, sizeof magic, 1, file) != 1) {
-        return DUSB_INVALID_STATE;
+        goto invalid;
     }
-    if (!memcmp("**TIFL**", magic, sizeof magic)) {
+    if (!memcmp("**TIFL**", magic, 8)) {
         if (fseek(file, DUSB_FLASH_FILE_NAME_OFFSET, SEEK_SET) ||
             fread(&command->varname_length, sizeof command->varname_length, 1, file) != 1 ||
+            command->varname_length > sizeof command->varname ||
             fread(command->varname, command->varname_length, 1, file) != 1 ||
             fseek(file, DUSB_FLASH_FILE_DEVICE_TYPE_OFFSET, SEEK_SET) ||
             fread(&context->version, sizeof context->version, 1, file) != 1 || context->version != 0x73 ||
@@ -413,34 +414,38 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
             fseek(file, DUSB_FLASH_FILE_LENGTH_OFFSET, SEEK_SET) ||
             read_le32(&context->length, file) != 1 ||
             fseek(file, 0, SEEK_END) || DUSB_FLASH_FILE_DATA_OFFSET + context->length != ftell(file)) {
-            return DUSB_INVALID_STATE;
+            goto invalid;
         }
         context->start = DUSB_FLASH_FILE_DATA_OFFSET;
         switch (command->vartype) {
             case CALC_VAR_TYPE_OPERATING_SYSTEM:
+                gui_console_printf("[CEmu] Transferring OS: %.*s %d.%d\n",
+                    context->command->varname_utf8_length, context->command->varname_utf8, magic[8], magic[9]);
                 return DUSB_SOS_PING_STATE;
             case CALC_VAR_TYPE_FLASH_APP:
+                gui_console_printf("[CEmu] Transferring application: %.*s %d.%d\n",
+                    context->command->varname_utf8_length, context->command->varname_utf8, magic[8], magic[9]);
                 context->flag = DUSB_VAR_FILE_VAR_FLAG_ARCHIVED;
                 return DUSB_SEND_PING_STATE;
             default:
-                return DUSB_INVALID_STATE;
+                goto invalid;
         }
     }
-    if (!memcmp("**TI83F*", magic, sizeof magic)) {
+    if (!memcmp("**TI83F*\x1A\x0A", magic, sizeof magic)) {
         uint16_t data_length;
-        if (fread(magic, 3, 1, file) != 1 ||
-            magic[0] != 0x1A || magic[1] != 0x0A || magic[2] > 0x13 ||
-            fseek(file, DUSB_VAR_FILE_DATA_LENGTH_OFFSET, SEEK_SET) ||
+        if (fseek(file, DUSB_VAR_FILE_DATA_LENGTH_OFFSET, SEEK_SET) ||
             read_le16(&data_length, file) != 1 ||
             !dusb_verify_checksum(file) || DUSB_VAR_FILE_DATA_OFFSET +
             data_length + DUSB_VAR_FILE_CHECKSUM_SIZE != ftell(file) ||
             fseek(file, DUSB_VAR_FILE_DATA_OFFSET, SEEK_SET)) {
-            return DUSB_INVALID_STATE;
+            goto invalid;
         }
         context->start = DUSB_VAR_FILE_DATA_OFFSET;
         return DUSB_SEND_NEXT_STATE;
     }
-    return DUSB_INVALID_STATE;
+invalid:
+    gui_console_printf("[CEmu] Transfer warning: file parsing failed\n");
+    return DUSB_NEXT_COMMAND_STATE;
 }
 
 static bool dusb_detect_var(dusb_context_t *context) {
@@ -690,6 +695,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
             case DUSB_COMMAND_STATE:
                 switch (context->command->type) {
                     case DUSB_DONE_COMMAND:
+                        gui_console_printf("[CEmu] USB transfer(s) finished.\n");
                         event->type = USB_DESTROY_EVENT;
                         break;
                     case DUSB_SCREENSHOT_COMMAND:
@@ -753,9 +759,18 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 timer->useconds = 2000000;
                 break;
             case DUSB_SEND_NEXT_STATE:
-                state = dusb_detect_var(context) ? DUSB_SEND_PING_STATE : DUSB_NEXT_COMMAND_STATE;
+                if (context->command->vartype == CALC_VAR_TYPE_FLASH_APP || context->start == context->command->file_length - 2) {
+                    state = DUSB_NEXT_COMMAND_STATE;
+                } else if (!dusb_detect_var(context)) {
+                    gui_console_printf("[CEmu] Transfer warning: variable parsing failed\n");
+                    state = DUSB_NEXT_COMMAND_STATE;
+                } else {
+                    gui_console_printf("[CEmu] Transferring variable: %.*s\n", context->command->varname_utf8_length, context->command->varname_utf8);
+                    state = DUSB_SEND_PING_STATE;
+                }
                 continue;
             case DUSB_INVALID_STATE:
+                gui_console_printf("[CEmu] USB transfer failed, stopping activity\n");
                 event->type = USB_DESTROY_EVENT;
                 break;
         }

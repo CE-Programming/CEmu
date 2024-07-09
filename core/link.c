@@ -53,7 +53,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
         gui_console_printf("[CEmu] USB transfer error code %d.\n", err);
     }
     else {
-        gui_console_printf("[CEmu] USB transfer(s) completed successfully.\n");
+        gui_console_printf("[CEmu] USB transfer(s) starting...\n");
     }
 
 alloc_err:
