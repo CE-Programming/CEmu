@@ -1918,26 +1918,36 @@ void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
     if (address < 0x80) {
         return;
     }
-    map_value_t::const_iterator item = disasm.reverse.find(name.toUpper().toStdString());
-    if (item != disasm.reverse.end()) {
-        if (address == item->second) {
-            return;
-        } else {
-            disasm.reverse.erase(item);
-        }
+    if (!equatesAddEquateInternal(name, address)) {
+        return;
     }
-    uint32_t &itemReverse = disasm.reverse[name.toUpper().toStdString()];
-    itemReverse = address;
-    disasm.map.emplace(address, name.toStdString());
     uint8_t *ptr = static_cast<uint8_t *>(phys_mem_ptr(address - 4, 9));
     if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
         uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
         if (phys_mem_ptr(address2, 1)) {
-            disasm.map.emplace(address2, "_" + name.toStdString());
-            uint32_t &itemReverse2 = disasm.reverse["_" + name.toUpper().toStdString()];
-            itemReverse2 = address2;
+            equatesAddEquateInternal(QStringLiteral("_") + name, address2);
         }
     }
+}
+
+bool MainWindow::equatesAddEquateInternal(const QString &name, uint32_t address) {
+    std::pair<map_value_t::iterator, bool> inserted = disasm.reverse.emplace(name.toUpper().toStdString(), address);
+    if (!inserted.second) {
+        uint32_t oldAddress = std::exchange(inserted.first->second, address);
+        if (oldAddress == address) {
+            return false;
+        }
+        std::pair<map_t::iterator, map_t::iterator> range = disasm.map.equal_range(oldAddress);
+        for (map_t::iterator it = range.first; it != range.second; ) {
+            if (name.compare(QString::fromStdString(it->second), Qt::CaseInsensitive) == 0) {
+                it = disasm.map.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+    disasm.map.emplace(address, name.toStdString());
+    return true;
 }
 
 void MainWindow::disasmUpdate() {

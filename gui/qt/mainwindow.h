@@ -391,6 +391,7 @@ private:
     void equatesAddDialog();
     void equatesAddFile(const QString &file);
     void equatesAddEquate(const QString &name, uint32_t addr);
+    bool equatesAddEquateInternal(const QString &name, uint32_t addr);
     void equatesClear();
     void equatesRefresh();
     QString getAddressString(const QString &string, bool *ok);
