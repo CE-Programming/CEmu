@@ -188,6 +188,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batterySetCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batterySet);
     connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmSpace);
+    connect(ui->checkOperandTab, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmTab);
     connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debugZeroCycles);
     connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::setCalcId);
@@ -585,6 +586,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     ui->checkSaveRestore->setChecked(m_config->value(SETTING_SAVE_ON_CLOSE, true).toBool());
     setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
     setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_DISASM_SPACE, false).toBool());
+    setDebugDisasmTab(m_config->value(SETTING_DEBUGGER_DISASM_TAB, false).toBool());
     setDebugDisasmAddrCol(m_config->value(SETTING_DEBUGGER_ADDR_COL, true).toBool());
     setDebugDisasmDataCol(m_config->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
     setDebugDisasmBoldSymbols(m_config->value(SETTING_DEBUGGER_BOLD_SYMBOLS, false).toBool());
@@ -2442,7 +2444,7 @@ void MainWindow::disasmLine() {
             }
             sit++;
         } else {
-            line = QString(QStringLiteral("%1 %2%3%4 %5  %6 %7"))
+            line = QString(QStringLiteral("%1 %2%3%4 %5  %6%7"))
                            .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
                                 disasm.highlight.watchR ? QStringLiteral("R") : QStringLiteral(" "),
                                 disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" "),

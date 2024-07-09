@@ -459,6 +459,7 @@ private:
     void setDebugDisasmDataCol(bool state);
     void setDebugDisasmAddrCol(bool state);
     void setDebugDisasmSpace(bool state);
+    void setDebugDisasmTab(bool state);
     void setDebugDisasmImplict(bool state);
     void setDebugDisasmUppercase(bool state);
     void setDebugDisasmBoldSymbols(bool state);
@@ -718,6 +719,7 @@ private:
     // Settings definitions
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
     static const QString SETTING_DEBUGGER_DISASM_SPACE;
+    static const QString SETTING_DEBUGGER_DISASM_TAB;
     static const QString SETTING_DEBUGGER_RESTORE_ON_OPEN;
     static const QString SETTING_DEBUGGER_SAVE_ON_CLOSE;
     static const QString SETTING_DEBUGGER_RESET_OPENS;

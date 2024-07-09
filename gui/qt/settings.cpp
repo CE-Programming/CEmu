@@ -37,6 +37,7 @@ const QString MainWindow::SETTING_DEBUGGER_RESET_OPENS      = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_ENABLE_SOFT      = QStringLiteral("Debugger/enable_soft_commands");
 const QString MainWindow::SETTING_DEBUGGER_BOLD_SYMBOLS     = QStringLiteral("Debugger/disasm_bold_symbols");
 const QString MainWindow::SETTING_DEBUGGER_DISASM_SPACE     = QStringLiteral("Debugger/disasm_add_space");
+const QString MainWindow::SETTING_DEBUGGER_DISASM_TAB       = QStringLiteral("Debugger/disasm_use_tab");
 const QString MainWindow::SETTING_DEBUGGER_ADDR_COL         = QStringLiteral("Debugger/disasm_addr_column");
 const QString MainWindow::SETTING_DEBUGGER_DATA_COL         = QStringLiteral("Debugger/disasm_data_column");
 const QString MainWindow::SETTING_DEBUGGER_IMPLICT          = QStringLiteral("Debugger/disasm_implict");
@@ -351,6 +352,15 @@ void MainWindow::setDebugDisasmSpace(bool state) {
     ui->checkAddSpace->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_DISASM_SPACE, state);
     disasm.comma = state ? ", " : ",";
+    if (guiDebug) {
+        disasmUpdate();
+    }
+}
+
+void MainWindow::setDebugDisasmTab(bool state) {
+    ui->checkOperandTab->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_DISASM_TAB, state);
+    disasm.tab = state;
     if (guiDebug) {
         disasmUpdate();
     }

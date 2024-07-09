@@ -148,6 +148,7 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
             *disasm.cur += static_cast<char>(val);
             break;
         case ZDIS_PUT_MNE_SEP:
+            disasm.instr.operands = disasm.tab ? '\t' : ' ';
             disasm.cur = &disasm.instr.operands;
             break;
         case ZDIS_PUT_ARG_SEP:
@@ -188,7 +189,7 @@ void disasmGet(bool useCpuMode) {
         static char tmpbuf[20];
         size_t size = cpu.registers.PC - static_cast<uint32_t>(disasm.base);
         disasm.instr.data = disasm.instr.data.substr(0, size * 2);
-        disasm.instr.operands.clear();
+        disasm.instr.operands = disasm.tab ? '\t' : ' ';
         int precision;
         if (size % 3 == 0) {
             size /= 3;

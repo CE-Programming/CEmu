@@ -9791,7 +9791,7 @@ QPushButton:pressed {
                <string>Disassembly</string>
               </property>
               <layout class="QGridLayout" name="gridLayout_23">
-               <item row="1" column="0">
+               <item row="2" column="0">
                 <widget class="QCheckBox" name="checkDisasmDataCol">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
@@ -9812,12 +9812,22 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item row="0" column="0">
+                <widget class="QCheckBox" name="checkOperandTab">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>Tab between opcode / operands</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
                 <widget class="QCheckBox" name="checkAddSpace">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
-                  <string>Opcode / operand space</string>
+                  <string>Space between operands</string>
                  </property>
                 </widget>
                </item>
@@ -9828,7 +9838,7 @@ QPushButton:pressed {
                  </property>
                 </widget>
                </item>
-               <item row="2" column="0">
+               <item row="3" column="0">
                 <widget class="QCheckBox" name="checkDisasmAddr">
                  <property name="text">
                   <string>Show address column</string>
