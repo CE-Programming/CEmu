@@ -234,7 +234,9 @@ static bool dusb_convert_varname_to_utf8(dusb_command_t *command) {
                 return false;
             }
             fallthrough;
-        default:
+        case CALC_VAR_TYPE_PROG:
+        case CALC_VAR_TYPE_PROT_PROG:
+        case CALC_VAR_TYPE_TEMP_PROG:
             if (command->varname[0] < 'A' || command->varname[0] > 'Z' + 1) {
                 return false;
             }
@@ -340,6 +342,13 @@ static bool dusb_convert_varname_to_utf8(dusb_command_t *command) {
             if (command->varname[1] != 9) {
                 tiascii[5] += 1 + command->varname[1];
             }
+            break;
+        default:
+            if (command->varname[0] < 'A' || (command->varname[0] > 'Z' + 1 && command->varname[0] < 'a') || command->varname[0] > 'z') {
+                return false;
+            }
+            memcpy(tiascii, command->varname, command->varname_length);
+            tiascii[command->varname_length] = '\0';
             break;
     }
 
