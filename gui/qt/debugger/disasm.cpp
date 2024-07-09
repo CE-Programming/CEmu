@@ -107,7 +107,11 @@ static int disasmFetch(struct zdis_ctx *ctx, uint32_t addr) {
 
     if (disasm.bytes) {
         snprintf(tmp, 3, "%02X", value);
-        disasm.instr.data += tmp;
+        uint8_t offset = (addr - disasm.ctx.zdis_start_addr) * 2;
+        if (offset + 2 > disasm.instr.data.size()) {
+            disasm.instr.data.resize(offset + 2, '0');
+        }
+        memcpy(&disasm.instr.data[offset], tmp, 2);
     }
 
     return value;
