@@ -19,6 +19,7 @@ void MainWindow::toggleConsole() {
                 QMessageBox::critical(this, "Error", "Unable to open console.");
             }
         }
+        SetConsoleOutputCP(CP_UTF8);
     } else {
         if (!FreeConsole()) {
             QMessageBox::critical(this, "Error", "Unable to close console. If you are running directly from a console, you may not be able to close it.");
