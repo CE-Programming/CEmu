@@ -211,6 +211,54 @@ const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
     return buffer;
 }
 
+static uint8_t calc_tokenized_var_version(const calc_var_t *var) {
+    static const uint8_t twoByteTokens[] = {0x5C, 0x5D, 0x5E, 0x60, 0x61, 0x62, 0x63, 0x7E, 0xBB, 0xAA, 0xEF};
+    bool usesRTC = false;
+    int maxBB = -1;
+    int maxEF = -1;
+    uint16_t offset = 2;
+    while (offset < var->size) {
+        uint8_t firstByte = var->data[offset++];
+        if (memchr(twoByteTokens, firstByte, sizeof(twoByteTokens)) != NULL) {
+            if (offset >= var->size) {
+                break;
+            }
+            uint8_t secondByte = var->data[offset++];
+            if (firstByte == 0xBB) {
+                if (secondByte > maxBB) maxBB = secondByte;
+            } else if (firstByte == 0xEF) {
+                if (secondByte <= 0x10) usesRTC = true;
+                if (secondByte > maxEF) maxEF = secondByte;
+            }
+        }
+    }
+    uint8_t version = usesRTC ? 0x20 : 0x00;
+    if (maxBB > 0xF5 || maxEF > 0xA6) {
+        version = 0xFF;
+    } else if (maxEF > 0x98) {
+        version |= 0x0C;
+    } else if (maxEF > 0x75) {
+        version |= 0x0B;
+    } else if (maxEF > 0x40) {
+        version |= 0x0A;
+    } else if (maxEF > 0x3E) {
+        version |= 0x07;
+    } else if (maxEF > 0x16) {
+        version |= 0x06;
+    } else if (maxEF > 0x12) {
+        version |= 0x05;
+    } else if (maxEF > -1) {
+        version |= 0x04;
+    } else if (maxBB > 0xDA) {
+        version |= 0x03;
+    } else if (maxBB > 0xCE) {
+        version |= 0x02;
+    } else if (maxBB > 0x67) {
+        version |= 0x01;
+    }
+    return version;
+}
+
 void vat_search_init(calc_var_t *var) {
     memset(var, 0, sizeof *var);
     var->vat = 0xD3FFFF;
@@ -250,6 +298,7 @@ bool vat_search_next(calc_var_t *var) {
     switch (var->type) {
         case CALC_VAR_TYPE_REAL:
         case CALC_VAR_TYPE_REAL_FRAC:
+        case CALC_VAR_TYPE_MIXED_FRAC:
         case CALC_VAR_TYPE_REAL_RADICAL:
         case CALC_VAR_TYPE_REAL_PI:
         case CALC_VAR_TYPE_REAL_PI_FRAC:
@@ -277,10 +326,73 @@ bool vat_search_next(calc_var_t *var) {
             break;
     }
     var->data = phys_mem_ptr(var->address, var->size);
+    if (var->data == NULL) {
+        return false;
+    }
     for (i = 0; i != var->namelen; i++) {
         var->name[i] = mem_peek_byte(var->vat--);
     }
     memset(&var->name[i], 0, sizeof var->name - i);
+
+    if (!var->archived) {
+        switch (var->type) {
+        case CALC_VAR_TYPE_REAL:
+        case CALC_VAR_TYPE_REAL_FRAC:
+        case CALC_VAR_TYPE_MIXED_FRAC:
+            var->type = CALC_VAR_TYPE_REAL;
+            i = var->data[0] & 0x3F;
+            if (i == CALC_VAR_TYPE_REAL) {
+                var->version = 0x00;
+            } else {
+                var->version = 0x06;
+            }
+            break;
+
+        case CALC_VAR_TYPE_CPLX:
+        case CALC_VAR_TYPE_CPLX_FRAC:
+        case CALC_VAR_TYPE_CPLX_RADICAL:
+        case CALC_VAR_TYPE_CPLX_PI:
+        case CALC_VAR_TYPE_CPLX_PI_FRAC:
+            i = var->data[0] & 0x3F;
+            if (i == CALC_VAR_TYPE_CPLX) {
+                var->version = 0x00;
+            } else if (i == CALC_VAR_TYPE_CPLX_FRAC) {
+                var->version = 0x0B;
+            } else {
+                var->version = 0x10;
+            }
+            break;
+
+        case CALC_VAR_TYPE_REAL_LIST:
+        case CALC_VAR_TYPE_MATRIX:
+        case CALC_VAR_TYPE_CPLX_LIST:
+            var->version = 0x00;
+            for (uint16_t offset = 2; offset < var->size; offset += 9) {
+                i = var->data[offset] & 0x3F;
+                if (i > CALC_VAR_TYPE_CPLX_FRAC) {
+                    var->version = 0x10;
+                    break;
+                } else if (i == CALC_VAR_TYPE_CPLX_FRAC) {
+                    if (var->version < 0x0B) var->version = 0x0B;
+                } else if (i == CALC_VAR_TYPE_REAL_FRAC || i == CALC_VAR_TYPE_MIXED_FRAC) {
+                    if (var->version < 0x06) var->version = 0x06;
+                }
+            }
+            break;
+
+        case CALC_VAR_TYPE_EQU:
+        case CALC_VAR_TYPE_STRING:
+        case CALC_VAR_TYPE_NEW_EQU:
+            var->version = calc_tokenized_var_version(var);
+            break;
+
+        default:
+            if (var->type > CALC_VAR_TYPE_CPLX_FRAC) {
+                var->version = 0x10;
+            }
+            break;
+        }
+    }
 
     return true;
 }

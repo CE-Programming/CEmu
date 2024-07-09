@@ -15,6 +15,7 @@
 #define ADDR_ERRNO      0xD008DF
 #define ADDR_PRGM_SIZE  0xD0118C
 
+#define FILE_PRODUCT_ID 0x0A
 #define FILE_DATA 0x35
 #define FILE_DATA_START 0x37
 
@@ -74,6 +75,7 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
     FILE *fd;
     calc_var_t var;
     uint16_t header_size = 13, size = 0, checksum = 0;
+    uint8_t max_version = 0, product_id;
     int byte;
 
     fd = fopen_utf8(file, "w+b");
@@ -94,15 +96,27 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
         if (write_le16(var.size,           fd) !=   1) goto w_err;
         if (fwrite(var.data,  var.size, 1, fd) !=   1) goto w_err;
         size += 17 + var.size;
+        if ((var.version & ~0x20) > max_version) {
+            max_version = var.version & ~0x20;
+        }
     }
+    if (max_version > 0x0A) {
+        product_id = 0x13;
+    } else if (max_version == 0x0A) {
+        product_id = 0x0F;
+    } else {
+        product_id = 0x0A;
+    }
+    if (fseek(fd, FILE_PRODUCT_ID, SEEK_SET))          goto w_err;
+    if (fputc(product_id,                  fd) == EOF) goto w_err;
     if (fseek(fd, FILE_DATA, SEEK_SET))                goto w_err;
-    if (write_le16(size,                     fd) != 1) goto w_err;
+    if (write_le16(size,                   fd) !=   1) goto w_err;
     if (fflush(fd))                                    goto w_err;
     while (size--) {
         if ((byte = fgetc(fd)) == EOF)                 goto w_err;
         checksum += byte;
     }
-    if (write_le16(checksum,                 fd) != 1) goto w_err;
+    if (write_le16(checksum,               fd) !=   1) goto w_err;
     (void)fclose(fd);
 
     return LINK_GOOD;
