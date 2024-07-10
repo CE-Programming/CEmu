@@ -34,11 +34,13 @@ extern "C" {
 
 #define cpu_mask_mode(address, mode) ((uint32_t)((address) & ((mode) ? 0xFFFFFF : 0xFFFF)))
 
-typedef enum eZ80abort {
-    CPU_ABORT_NONE,
-    CPU_ABORT_RESET,
-    CPU_ABORT_EXIT,
-} eZ80abort_t;
+typedef enum eZ80signal {
+    CPU_SIGNAL_NONE = 0,
+    CPU_SIGNAL_EXIT = 1 << 0,
+    CPU_SIGNAL_RESET = 1 << 1,
+    CPU_SIGNAL_ON_KEY = 1 << 2,
+    CPU_SIGNAL_ANY_KEY = 1 << 3
+} eZ80signal_t;
 
 typedef union eZ80context {
     uint8_t opcode;
@@ -112,9 +114,9 @@ void cpu_flush(uint32_t, bool);
 void cpu_nmi(void);
 void cpu_execute(void);
 void cpu_restore_next(void);
-void cpu_transition_abort(uint8_t from, uint8_t to);
-uint8_t cpu_check_abort(void);
-void cpu_exit(void);
+void cpu_set_signal(uint8_t signal);
+uint8_t cpu_check_signals(void);
+uint8_t cpu_clear_signals(void);
 void cpu_crash(const char *msg);
 bool cpu_restore(FILE *image);
 bool cpu_save(FILE *image);

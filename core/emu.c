@@ -3,6 +3,7 @@
 #include "asic.h"
 #include "cpu.h"
 #include "cert.h"
+#include "keypad.h"
 #include "os/os.h"
 #include "defines.h"
 #include "schedule.h"
@@ -20,7 +21,7 @@
 #define IMAGE_VERSION 0xCECE0017
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
-    cpu_exit();
+    cpu_set_signal(CPU_SIGNAL_EXIT);
 }
 
 void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
@@ -239,12 +240,18 @@ rerr:
 }
 
 void emu_run(uint64_t ticks) {
+    uint8_t signals;
     sched.run_event_triggered = false;
     sched_repeat(SCHED_RUN, ticks);
-    while (cpu_check_abort() != CPU_ABORT_EXIT) {
+    while (!((signals = cpu_clear_signals()) & CPU_SIGNAL_EXIT)) {
+        if (signals & CPU_SIGNAL_ON_KEY) {
+            keypad_on_check();
+        }
+        if (signals & CPU_SIGNAL_ANY_KEY) {
+            keypad_any_check();
+        }
         sched_process_pending_events();
-        if (cpu_check_abort() == CPU_ABORT_RESET) {
-            cpu_transition_abort(CPU_ABORT_RESET, CPU_ABORT_NONE);
+        if (signals & CPU_SIGNAL_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
 #ifdef DEBUG_SUPPORT

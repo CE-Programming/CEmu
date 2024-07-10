@@ -60,7 +60,7 @@ EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SI
 }
 
 void EmuThread::run() {
-    while (cpu_check_abort() != CPU_ABORT_EXIT) {
+    while (!(cpu_check_signals() & CPU_SIGNAL_EXIT)) {
         emu_run(1u);
         doStuff();
         throttleWait();
