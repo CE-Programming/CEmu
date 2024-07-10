@@ -1,4 +1,5 @@
 #include "keypad.h"
+#include "atomics.h"
 #include "defines.h"
 #include "emu.h"
 #include "schedule.h"
@@ -10,25 +11,49 @@
 #include <string.h>
 #include <stdio.h>
 
+#define ON_KEY_PRESSED 1
+#define ON_KEY_EDGE 2
+
 /* Global KEYPAD state */
 keypad_state_t keypad;
 
-void keypad_intrpt_check() {
-    intrpt_set(INT_KEYPAD, (keypad.status & keypad.enable) | (keypad.gpioStatus & keypad.gpioEnable));
+typedef struct keypad_atomics {
+    _Atomic(uint32_t) keyMap[KEYPAD_MAX_ROWS];
+    _Atomic(uint8_t) onKey;
+} keypad_atomics_t;
+
+static keypad_atomics_t keypad_atomics;
+
+static inline void keypad_intrpt_check() {
+    intrpt_set(INT_KEYPAD, keypad.status & keypad.enable);
 }
 
-static void keypad_any_check(void) {
-    uint8_t any = 0;
-    unsigned int row;
+static inline uint8_t keypad_row_limit() {
+    return keypad.rows >= KEYPAD_MAX_ROWS ? KEYPAD_MAX_ROWS : keypad.rows;
+}
+
+static inline uint16_t keypad_data_mask() {
+    uint8_t colLimit = keypad.cols >= KEYPAD_MAX_COLS ? KEYPAD_MAX_COLS : keypad.cols;
+    return (1 << colLimit) - 1;
+}
+
+static inline uint16_t keypad_query_keymap(uint8_t row) {
+    uint32_t data = atomic32_fetch_and_explicit(&keypad_atomics.keyMap[row], (1 << KEYPAD_MAX_COLS) - 1, memory_order_relaxed);
+    return (data | data >> KEYPAD_MAX_COLS) & ((1 << KEYPAD_MAX_COLS) - 1);
+}
+
+void keypad_any_check(void) {
+    uint8_t row;
     if (keypad.mode != 1) {
         return;
     }
-    for (row = 0; row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0]); row++) {
-        any |= keypad.keyMap[row] | keypad.delay[row];
-        keypad.delay[row] = 0;
+    uint16_t any = 0;
+    uint8_t rowLimit = keypad_row_limit();
+    for (row = 0; row < rowLimit; row++) {
+        any |= keypad_query_keymap(row);
     }
-    any &= (1 << keypad.cols) - 1;
-    for (row = 0; row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0]); row++) {
+    any &= keypad_data_mask();
+    for (row = 0; row < rowLimit; row++) {
         keypad.data[row] = any;
     }
     if (any) {
@@ -37,23 +62,34 @@ static void keypad_any_check(void) {
     }
 }
 
+void keypad_on_check(void) {
+    uint8_t onState = atomic8_fetch_and_explicit(&keypad_atomics.onKey, ON_KEY_PRESSED, memory_order_relaxed);
+    intrpt_set(INT_ON, onState);
+    if (onState == ON_KEY_EDGE) {
+        intrpt_set(INT_ON, false);
+    }
+    if ((onState & ON_KEY_EDGE) && control.off) {
+        control.readBatteryStatus = ~1;
+        control.off = false;
+        intrpt_pulse(INT_WAKE);
+    }
+}
+
 void EMSCRIPTEN_KEEPALIVE emu_keypad_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
-        intrpt_set(INT_ON, press);
-        if (press && control.off) {
-            control.readBatteryStatus = ~1;
-            control.off = false;
-            intrpt_pulse(INT_WAKE);
-        }
-    } else {
         if (press) {
-            keypad.keyMap[row] |= 1 << col;
-            keypad.delay[row] |= 1 << col;
+            atomic8_fetch_or_explicit(&keypad_atomics.onKey, ON_KEY_EDGE | ON_KEY_PRESSED, memory_order_relaxed);
         } else {
-            keypad.keyMap[row] &= ~(1 << col);
-            keypad_intrpt_check();
+            atomic8_fetch_and_explicit(&keypad_atomics.onKey, ~ON_KEY_PRESSED, memory_order_relaxed);
         }
-        keypad_any_check();
+        cpu_set_signal(CPU_SIGNAL_ON_KEY);
+    } else if (row < KEYPAD_MAX_ROWS && col < KEYPAD_MAX_COLS) {
+        if (press) {
+            atomic32_fetch_or_explicit(&keypad_atomics.keyMap[row], (1 | 1 << KEYPAD_MAX_COLS) << col, memory_order_relaxed);
+            cpu_set_signal(CPU_SIGNAL_ANY_KEY);
+        } else {
+            atomic32_fetch_and_explicit(&keypad_atomics.keyMap[row], ~(1 << col), memory_order_relaxed);
+        }
     }
 }
 
@@ -83,9 +119,7 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
         case 0x10:
             value = read8(keypad.gpioEnable, bit_offset);
             break;
-        case 0x11:
-            value = read8(keypad.gpioStatus, bit_offset);
-            break;
+        case 0x11: /* GPIO status is always 0 */
         default:
             break;
     }
@@ -97,10 +131,9 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
 /* Scan next row of keypad, if scanning is enabled */
 static void keypad_scan_event(enum sched_item_id id) {
     uint8_t row = keypad.row++;
-    if (row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0])) {
+    if (row < keypad_row_limit()) {
         /* scan each data row */
-        uint16_t data = (keypad.keyMap[row] | keypad.delay[row]) & ((1 << keypad.cols) - 1);
-        keypad.delay[row] = 0;
+        uint16_t data = keypad_query_keymap(row) & keypad_data_mask();
 
         /* if mode 3 or 2, generate data change interrupt */
         if (keypad.data[row] != data) {
@@ -154,17 +187,13 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x08: case 0x09: case 0x0A: case 0x0B:
             if (poke) {
                 write8(keypad.data[(pio - 0x10) >> 1 & 15], pio << 3 & 8, byte);
-                write8(keypad.keyMap[pio >> 1 & 15], pio << 3 & 8, byte);
+                write8(keypad_atomics.keyMap[pio >> 1 & 15], pio << 3 & 8, byte);
             }
             break;
         case 0x10:
             write8(keypad.gpioEnable, bit_offset, byte);
-            keypad_intrpt_check();
             break;
-        case 0x11:
-            write8(keypad.gpioStatus, bit_offset, keypad.gpioStatus >> bit_offset & ~byte);
-            keypad_intrpt_check();
-            break;
+        case 0x11:  /* GPIO status is always 0, no 1 bits to reset */
         default:
             break;  /* Escape write sequence if unimplemented */
     }
@@ -187,8 +216,6 @@ eZ80portrange_t init_keypad(void) {
     keypad.row = 0;
 
     memset(keypad.data, 0, sizeof(keypad.data));
-    memset(keypad.keyMap, 0, sizeof(keypad.keyMap));
-    memset(keypad.delay, 0, sizeof(keypad.delay));
 
     gui_console_printf("[CEmu] Initialized Keypad...\n");
     return device;

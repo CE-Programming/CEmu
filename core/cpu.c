@@ -37,10 +37,10 @@
 eZ80cpu_t cpu;
 
 typedef struct eZ80atomics {
-    _Atomic(uint8_t) abort;
+    _Atomic(uint8_t) signals;
 } eZ80atomics_t;
 
-static eZ80atomics_t atomics;
+static eZ80atomics_t cpu_atomics;
 
 static void cpu_clear_context(void) {
     cpu.PREFIX = cpu.SUFFIX = 0;
@@ -814,7 +814,7 @@ static void cpu_execute_bli() {
 
 void cpu_init(void) {
     memset(&cpu, 0, sizeof(eZ80cpu_t));
-    atomics.abort = CPU_ABORT_NONE;
+    cpu_atomics.signals = CPU_SIGNAL_ON_KEY | CPU_SIGNAL_ANY_KEY;
     gui_console_printf("[CEmu] Initialized CPU...\n");
 }
 
@@ -841,20 +841,20 @@ void cpu_nmi(void) {
 #endif
 }
 
-void cpu_transition_abort(uint8_t from, uint8_t to) {
-    atomic_compare_exchange_strong(&atomics.abort, &from, to);
+void cpu_set_signal(uint8_t signal) {
+    atomic8_fetch_or_explicit(&cpu_atomics.signals, signal, memory_order_release);
 }
 
-uint8_t cpu_check_abort(void) {
-    return atomics.abort;
+uint8_t cpu_check_signals(void) {
+    return atomic_load_explicit(&cpu_atomics.signals, memory_order_relaxed);
 }
 
-void cpu_exit(void) {
-    atomics.abort = CPU_ABORT_EXIT;
+uint8_t cpu_clear_signals(void) {
+    return atomic8_fetch_and_explicit(&cpu_atomics.signals, CPU_SIGNAL_EXIT, memory_order_acquire);
 }
 
 void cpu_crash(const char *msg) {
-    cpu_transition_abort(CPU_ABORT_NONE, CPU_ABORT_RESET);
+    cpu_set_signal(CPU_SIGNAL_RESET);
     gui_console_printf("[CEmu] Reset caused by %s.\n", msg);
 #ifdef DEBUG_SUPPORT
     if (debug_get_flags() & DBG_OPEN_ON_RESET) {
@@ -880,7 +880,7 @@ static void cpu_halt(void) {
 }
 
 void cpu_restore_next(void) {
-    if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || atomics.abort != CPU_ABORT_NONE) {
+    if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || cpu_check_signals() != CPU_SIGNAL_NONE) {
         cpu.next = 0; /* always applies, even after cycle rewind during port writes */
     } else if (cpu.IEF_wait) {
         cpu.next = cpu.eiDelay; /* execute one instruction */
@@ -943,7 +943,7 @@ void cpu_execute(void) {
         } else {
             cpu_restore_next();
         }
-        if (cpu.cycles >= cpu.next || atomics.abort != CPU_ABORT_NONE) {
+        if (cpu.cycles >= cpu.next) {
             break;
         }
         if (cpu.inBlock) {
@@ -1135,7 +1135,7 @@ void cpu_execute(void) {
                             break;
                         }
                         if (context.z < 4) {
-                            if (cpu.SUFFIX && atomics.abort != CPU_ABORT_NONE) { /* suffix can infinite loop */
+                            if (cpu.SUFFIX && (cpu_check_signals() & (CPU_SIGNAL_RESET | CPU_SIGNAL_EXIT))) { /* suffix can infinite loop */
                                 return;
                             }
                             cpu.L = context.s;

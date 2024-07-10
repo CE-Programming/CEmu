@@ -19,7 +19,7 @@ typedef struct debug_atomics {
     _Atomic(bool) open;
 } debug_atomics_t;
 
-static debug_atomics_t atomics;
+static debug_atomics_t debug_atomics;
 
 void debug_init(void) {
     debug_clear_step();
@@ -28,7 +28,7 @@ void debug_init(void) {
     debug.addr = (uint8_t*)calloc(DBG_ADDR_SIZE, sizeof(uint8_t));
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
-    atomics.open = false;
+    debug_atomics.open = false;
     debug_disable_basic_mode();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
@@ -41,15 +41,15 @@ void debug_free(void) {
 }
 
 bool debug_is_open(void) {
-    return atomics.open;
+    return atomic_load_explicit(&debug_atomics.open, memory_order_relaxed);
 }
 
 int debug_get_flags(void) {
-    return atomics.flags;
+    return atomic_load_explicit(&debug_atomics.flags, memory_order_relaxed);
 }
 
 void debug_open(int reason, uint32_t data) {
-    if (cpu_check_abort() == CPU_ABORT_EXIT || atomics.open || ((atomics.flags & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
+    if ((cpu_check_signals() & CPU_SIGNAL_EXIT) || debug_is_open() || ((debug_get_flags() & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
 
@@ -97,9 +97,9 @@ void debug_open(int reason, uint32_t data) {
     debug.flashWaitStates = flash.waitStates;
     debug.flashDelayCycles = cpu.flashDelayCycles;
 
-    atomics.open = true;
+    debug_atomics.open = true;
     gui_debug_open(reason, data);
-    atomics.open = false;
+    debug_atomics.open = false;
 
     cpu.next = debug.cpuNext;
     cpu.cycles = debug.cpuCycles;
@@ -132,9 +132,9 @@ void debug_ports(uint16_t addr, int mask, bool set) {
 
 void debug_flag(int mask, bool set) {
     if (set) {
-        atomics.flags |= mask;
+        debug_atomics.flags |= mask;
     } else {
-        atomics.flags &= ~mask;
+        debug_atomics.flags &= ~mask;
     }
 }
 

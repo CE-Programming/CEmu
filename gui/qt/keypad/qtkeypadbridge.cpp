@@ -83,9 +83,6 @@ void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
             }
         }
     }
-
-    keypad.gpioEnable |= 0x800;
-    keypad_intrpt_check();
 }
 
 void QtKeypadBridge::kEvent(QString text, int key, bool repeat) {

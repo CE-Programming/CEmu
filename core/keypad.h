@@ -12,6 +12,9 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
+#define KEYPAD_MAX_COLS 16
+#define KEYPAD_MAX_ROWS 16
+
 typedef struct keypad_state {
     union {
         struct {
@@ -36,17 +39,15 @@ typedef struct keypad_state {
     uint8_t  row;
     uint8_t  status;
     uint8_t  enable;
-    uint16_t data[16];
-    uint16_t keyMap[16];
-    uint16_t delay[16];
-    uint32_t gpioStatus;
+    uint16_t data[KEYPAD_MAX_ROWS];
     uint32_t gpioEnable;
 } keypad_state_t;
 
 extern keypad_state_t keypad;
 
 eZ80portrange_t init_keypad(void);
-void keypad_intrpt_check(void);
+void keypad_any_check(void);
+void keypad_on_check(void);
 void keypad_reset(void);
 bool keypad_restore(FILE *image);
 bool keypad_save(FILE *image);
