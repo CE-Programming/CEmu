@@ -7,6 +7,7 @@
 #include "interrupt.h"
 #include "debug/debug.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -16,18 +17,17 @@ cxxx_state_t cxxx; /* Global CXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
 static void watchdog_event(enum sched_item_id id) {
+    assert(watchdog.control & 1);
 
-    if (watchdog.control & 1) {
-        watchdog.status = 1;
-        if (watchdog.control & 2) {
-            cpu_crash("[CEmu] Reset triggered by watchdog timer.\n");
-        }
-        if (watchdog.control & 4) {
-            gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
-            cpu_nmi();
-        }
-        sched_repeat(id, watchdog.load);
+    watchdog.status = 1;
+    if (watchdog.control & 2) {
+        cpu_crash("[CEmu] Reset triggered by watchdog timer.\n");
     }
+    if (watchdog.control & 4) {
+        gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
+        cpu_nmi();
+    }
+    sched_repeat(id, watchdog.load);
 }
 
 /* Watchdog read routine */
@@ -83,8 +83,11 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x008: case 0x009:
             write8(watchdog.restart, bit_offset, byte);
             if (watchdog.restart == 0x5AB9) {
-                sched_set(SCHED_WATCHDOG, watchdog.load);
-                watchdog.count = watchdog.load;
+                if (watchdog.control & 1) {
+                    sched_set(SCHED_WATCHDOG, watchdog.load);
+                } else {
+                    watchdog.count = watchdog.load;
+                }
                 watchdog.restart = 0;
             }
             break;
@@ -98,7 +101,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             if ((watchdog.control ^ old) & 1) {
                 if (watchdog.control & 1) {
-                    sched_set(SCHED_WATCHDOG, watchdog.load);
+                    sched_set(SCHED_WATCHDOG, watchdog.count);
                 } else {
                     watchdog.count = sched_ticks_remaining(SCHED_WATCHDOG);
                     sched_clear(SCHED_WATCHDOG);
