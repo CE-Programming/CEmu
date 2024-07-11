@@ -16,6 +16,10 @@ protected_state_t protect;
 cxxx_state_t cxxx; /* Global CXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
+static inline uint32_t watchdog_counter(void) {
+    return sched_ticks_remaining(SCHED_WATCHDOG) - 1;
+}
+
 static void watchdog_event(enum sched_item_id id) {
     assert(watchdog.control & 1);
 
@@ -27,7 +31,7 @@ static void watchdog_event(enum sched_item_id id) {
         gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
         cpu_nmi();
     }
-    sched_repeat(id, watchdog.load);
+    sched_repeat(id, (uint64_t)watchdog.load + 1);
 }
 
 /* Watchdog read routine */
@@ -40,9 +44,9 @@ static uint8_t watchdog_read(const uint16_t pio, bool peek) {
     switch (index) {
         case 0x000: case 0x001: case 0x002: case 0x003:
             if (watchdog.control & 1) {
-                value = read8(sched_ticks_remaining(SCHED_WATCHDOG), bit_offset);
+                value = read8(watchdog_counter(), bit_offset);
             } else {
-                value = watchdog.count;
+                value = read8(watchdog.count, bit_offset);
             }
             break;
         case 0x004: case 0x005: case 0x006: case 0x007:
@@ -84,7 +88,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             write8(watchdog.restart, bit_offset, byte);
             if (watchdog.restart == 0x5AB9) {
                 if (watchdog.control & 1) {
-                    sched_set(SCHED_WATCHDOG, watchdog.load);
+                    sched_set(SCHED_WATCHDOG, (uint64_t)watchdog.load + 1);
                 } else {
                     watchdog.count = watchdog.load;
                 }
@@ -101,9 +105,9 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             if ((watchdog.control ^ old) & 1) {
                 if (watchdog.control & 1) {
-                    sched_set(SCHED_WATCHDOG, watchdog.count);
+                    sched_set(SCHED_WATCHDOG, (uint64_t)watchdog.count + 1);
                 } else {
-                    watchdog.count = sched_ticks_remaining(SCHED_WATCHDOG);
+                    watchdog.count = watchdog_counter();
                     sched_clear(SCHED_WATCHDOG);
                 }
             }
