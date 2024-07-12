@@ -11,14 +11,25 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+typedef enum watchdog_mode {
+    WATCHDOG_COUNTER,
+    WATCHDOG_PULSE,
+    WATCHDOG_EXPIRED,
+    WATCHDOG_RELOAD
+} watchdog_mode_t;
+
 typedef struct watchdog_state {
     uint32_t count;
     uint32_t load;
-    uint16_t restart;
-    uint32_t control;
-    uint32_t status;
-    uint32_t length;
     uint32_t revision;
+    uint8_t control;
+    uint8_t status;
+    uint8_t pulseCount;
+    uint8_t pulseLoad;
+    uint8_t mode;
+    bool blockStatus;
+    bool blockPulseReload;
+    bool pendingReload;
 } watchdog_state_t;
 
 typedef struct protected_state {
