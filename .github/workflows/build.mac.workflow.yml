@@ -21,10 +21,10 @@ jobs:
             qtver: "5.15.2"
             qtvershort: "5_intel"
           - os: macos-13
-            qtver: "6.7.1"
+            qtver: "6.7.2"
             qtvershort: "6_intel"
           - os: macos-14
-            qtver: "6.7.1"
+            qtver: "6.7.2"
             qtvershort: "6_arm"
 
     steps:
