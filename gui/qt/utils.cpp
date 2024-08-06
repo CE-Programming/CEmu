@@ -7,6 +7,7 @@
 #include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
 
 #include <array>
+#include <tuple>
 
 #include <QtCore/QDir>
 #include <QtCore/QString>
@@ -59,12 +60,12 @@ QString int2hex(uint32_t a, uint8_t l) {
 }
 
 std::string calc_var_content_string(const calc_var_t &var) {
-    tivars::stringFromData_handler_t func;
+    decltype(&tivars::TypeHandlers::TH_TempEqu::makeStringFromData) func;
     // We need to special case some specific temp-equ variables...
     if (var.type == CALC_VAR_TYPE_EQU && var.name[0] == '$') {
-        func = &tivars::TH_TempEqu::makeStringFromData;
+        func = &tivars::TypeHandlers::TH_TempEqu::makeStringFromData;
     } else {
-        func = tivars::TIVarType::createFromID(static_cast<uint>(var.type)).getHandlers().second;
+        func = std::get<1>(tivars::TIVarType::createFromID(static_cast<uint>(var.type)).getHandlers());
     }
     const options_t opts = (calc_var_is_prog(&var) || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();
