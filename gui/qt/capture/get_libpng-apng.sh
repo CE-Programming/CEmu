@@ -30,7 +30,7 @@ cerr() { becho "An error occurred. Please see output above for details." && exit
 
 dlLibPNG() { curl -s -L -O "https://downloads.sourceforge.net/sourceforge/libpng/libpng-$1.tar.xz"; }
 
-LIBPNG_VERSION_CONSTANT="1.6.35"
+LIBPNG_VERSION_CONSTANT="1.6.43"
 
 becho " ** Detecting latest version of libpng..."
 
@@ -90,6 +90,7 @@ rm -f ../libpng-${LIBPNG_VERSION}-apng.patch || cerr
 
 # Build libpng-apng
 becho " ** Configuring libpng-apng..."
+export MACOSX_DEPLOYMENT_TARGET=10.15
 autoreconf -vif && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" || cerr
 
 becho " ** Building libpng-apng..."
