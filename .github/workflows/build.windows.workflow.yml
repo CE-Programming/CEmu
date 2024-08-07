@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: "Build target: ${{ matrix.arch }}-${{ matrix.config }}"
+    name: "Build: Windows ${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}"
     runs-on: windows-latest
 
     strategy:
@@ -54,7 +54,7 @@ jobs:
     - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} EXE
       uses: actions/upload-artifact@v3
       with:
-        name: CEmu_win${{ matrix.arch_suffix }}_master
+        name: CEmu_win${{ matrix.arch_suffix }}_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe
 
     - name: Prepare binary for release upload
@@ -70,4 +70,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe
+          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe

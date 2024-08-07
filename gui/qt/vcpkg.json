@@ -13,17 +13,29 @@
     {
       "name": "libpng",
       "features": [ "apng" ]
-    },
-    {
-      "name": "qtbase",
-      "default-features": false,
-      "features": [ "dbus", "gui", "network", "widgets", "png" ]
-    },
-    {
-      "name": "qt5-base",
-      "default-features": false
     }
   ],
+  "features": {
+    "qt5": {
+      "description": "Build with Qt5",
+      "dependencies": [
+        {
+          "name": "qt5-base",
+          "default-features": false
+        }
+      ]
+    },
+    "qt6": {
+      "description": "Build with Qt6",
+      "dependencies": [
+        {
+          "name": "qtbase",
+          "default-features": false,
+          "features": [ "dbus", "gui", "network", "widgets", "png" ]
+        }
+      ]
+    }
+  },
   "builtin-baseline": "ad25766aefb5313b6bc4e2a4b78a2946f84fbf66",
   "overrides": [
     {

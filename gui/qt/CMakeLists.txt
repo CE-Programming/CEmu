@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.21.1)
 
+option(USE_QT5 "Build with Qt5 instead of Qt6" OFF)
+
+if(USE_QT5)
+    list(APPEND VCPKG_MANIFEST_FEATURES "qt5")
+else()
+    list(APPEND VCPKG_MANIFEST_FEATURES "qt6")
+endif()
+
 project(CEmu
         VERSION 2.0
         LANGUAGES C CXX)
@@ -8,8 +16,6 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
    NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tivars_lib_cpp/src/TIVarFile.cpp")
     message(FATAL_ERROR "Some files seem to be missing - you have to run 'git submodule init' and 'git submodule update' first.")
 endif()
-
-option(USE_QT5 "Build with Qt5 instead of Qt6" OFF)
 
 option(TRY_STATIC_LIBS "Build using as many static libs as possible" OFF)
 if (VCPKG_TARGET_TRIPLET MATCHES "-static(-md|-release)?$")
@@ -65,6 +71,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
     if(MSVC_VERSION GREATER_EQUAL 1935)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /experimental:c11atomics")
     endif()
