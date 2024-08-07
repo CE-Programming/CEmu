@@ -9,6 +9,8 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
     message(FATAL_ERROR "Some files seem to be missing - you have to run 'git submodule init' and 'git submodule update' first.")
 endif()
 
+option(USE_QT5 "Build with Qt5 instead of Qt6" OFF)
+
 option(TRY_STATIC_LIBS "Build using as many static libs as possible" OFF)
 if (VCPKG_TARGET_TRIPLET MATCHES "-static(-md|-release)?$")
     if(NOT TRY_STATIC_LIBS)
@@ -70,21 +72,27 @@ endif()
 
 include(GNUInstallDirs)
 
+if(USE_QT5)
+    find_package(Qt5 REQUIRED COMPONENTS Core DBus Gui Network Widgets)
+else()
+    find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
+    find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
+endif()
+
 set(CMAKE_AUTORCC ON)
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 if(COMMAND qt_standard_project_setup)
     qt_standard_project_setup()
-else()
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTOUIC ON)
 endif()
 
 if(APPLE)
     set(MAYBE_MACOSX_BUNDLE MACOSX_BUNDLE)
 endif()
 
-qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
+qt_add_resources(CEmu_Resources resources.qrc)
+
+set(CEmu_Sources
     ../../core/asic.c ../../core/asic.h
     ../../core/atomics.h
     ../../core/backlight.c ../../core/backlight.h
@@ -186,7 +194,14 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     tivars_lib_cpp/src/tivarslib_utils.cpp tivars_lib_cpp/src/tivarslib_utils.h
     utils.cpp utils.h
     visualizerwidget.cpp visualizerwidget.h
+    ${CEmu_Resources}
 )
+
+if(USE_QT5)
+    add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
+else()
+    qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
+endif()
 
 # TODO better, see https://stackoverflow.com/a/21028226/378298
 execute_process(
@@ -347,109 +362,6 @@ target_link_libraries(CEmu PRIVATE
     Qt::DBus # needed at runtime by QtGui for some reason...?
     Qt::Network
     Qt::Widgets
-)
-
-qt_add_resources(CEmu "skins"
-    PREFIX "/skin"
-    FILES
-        "resources/skin/ti83pce.png"
-        "resources/skin/ti84pce.png"
-        "resources/skin/ti83pce_ep.png"
-        "resources/skin/ti84pce_py.png"
-)
-qt_add_resources(CEmu "setup"
-    PREFIX "/setup"
-    FILES
-        "resources/setup/home.png"
-)
-qt_add_resources(CEmu "icons"
-    PREFIX "/icons"
-    FILES
-        "resources/icons/add_mem.png"
-        "resources/icons/autotester.png"
-        "resources/icons/break_watch_port.png"
-        "resources/icons/breakpoints.png"
-        "resources/icons/bug.png"
-        "resources/icons/capture.png"
-        "resources/icons/change_cert.png"
-        "resources/icons/change_language.png"
-        "resources/icons/characters.png"
-        "resources/icons/check.png"
-        "resources/icons/check_update.png"
-        "resources/icons/checkgray.png"
-        "resources/icons/clock.png"
-        "resources/icons/console.png"
-        "resources/icons/cpu_status.png"
-        "resources/icons/debug_control.png"
-        "resources/icons/debugger.png"
-        "resources/icons/disasm.png"
-        "resources/icons/exit.png"
-        "resources/icons/export.png"
-        "resources/icons/generic_export.png"
-        "resources/icons/generic_import.png"
-        "resources/icons/goto.png"
-        "resources/icons/icon.ico"
-        "resources/icons/icon.png"
-        "resources/icons/import.png"
-        "resources/icons/info.png"
-        "resources/icons/key_history.png"
-        "resources/icons/keypad.png"
-        "resources/icons/lcd.png"
-        "resources/icons/memory.png"
-        "resources/icons/minus.png"
-        "resources/icons/misc.png"
-        "resources/icons/open.png"
-        "resources/icons/os_view.png"
-        "resources/icons/plus.png"
-        "resources/icons/port.png"
-        "resources/icons/profiler.png"
-        "resources/icons/ram_chip.png"
-        "resources/icons/record.png"
-        "resources/icons/refresh.png"
-        "resources/icons/reload_rom.png"
-        "resources/icons/reset.png"
-        "resources/icons/reset_cemu.png"
-        "resources/icons/reset_gui.png"
-        "resources/icons/rom_chip.png"
-        "resources/icons/run.png"
-        "resources/icons/save.png"
-        "resources/icons/screenshot.png"
-        "resources/icons/script.png"
-        "resources/icons/search.png"
-        "resources/icons/settings.png"
-        "resources/icons/source_code.png"
-        "resources/icons/stack.png"
-        "resources/icons/states.png"
-        "resources/icons/stepin.png"
-        "resources/icons/stepnext.png"
-        "resources/icons/stepout.png"
-        "resources/icons/stepover.png"
-        "resources/icons/stop.png"
-        "resources/icons/timers.png"
-        "resources/icons/toggle_console.png"
-        "resources/icons/ui_edit.png"
-        "resources/icons/variables.png"
-        "resources/icons/watchpoints.png"
-        "resources/icons/wizard.png"
-)
-qt_add_resources(CEmu "custom_fonts"
-    PREFIX "/fonts"
-    FILES
-        "resources/custom_fonts/LiberationSansNarrow-Bold.ttf"
-        "resources/custom_fonts/TICELarge.ttf"
-)
-qt_add_resources(CEmu "other"
-    PREFIX "/other"
-    FILES
-        "tivars_lib_cpp/programs_tokens.csv"
-)
-qt_add_resources(CEmu "i18n"
-    PREFIX "/i18n"
-    FILES
-        "i18n/es_ES.qm"
-        "i18n/fr_FR.qm"
-        "i18n/nl_NL.qm"
-        "i18n/zh_CN.qm"
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL Release OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)

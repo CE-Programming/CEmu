@@ -63,7 +63,7 @@
       }
     },
     {
-      "name": "x64-Debug",
+      "name": "x64-Debug-Qt6",
       "inherits": "ninja-vcpkg-x64",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
@@ -73,7 +73,17 @@
       }
     },
     {
-      "name": "x64-RelWithDebInfo",
+      "name": "x64-Debug-Qt5",
+      "inherits": "x64-Debug-Qt6",
+      "cacheVariables": {
+        "USE_QT5": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "x64-RelWithDebInfo-Qt6",
       "inherits": "ninja-vcpkg-x64",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
@@ -83,7 +93,17 @@
       }
     },
     {
-      "name": "x64-Release",
+      "name": "x64-RelWithDebInfo-Qt5",
+      "inherits": "x64-RelWithDebInfo-Qt6",
+      "cacheVariables": {
+        "USE_QT5": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "x64-Release-Qt6",
       "inherits": "ninja-vcpkg-x64",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
@@ -101,7 +121,17 @@
       }
     },
     {
-      "name": "x86-Debug",
+      "name": "x64-Release-Qt5",
+      "inherits": "x64-Release-Qt6",
+      "cacheVariables": {
+        "USE_QT5": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "x86-Debug-Qt6",
       "inherits": "ninja-vcpkg-x86",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
@@ -111,7 +141,17 @@
       }
     },
     {
-      "name": "x86-RelWithDebInfo",
+      "name": "x86-Debug-Qt5",
+      "inherits": "x86-Debug-Qt6",
+      "cacheVariables": {
+        "USE_QT5": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "x86-RelWithDebInfo-Qt6",
       "inherits": "ninja-vcpkg-x86",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
@@ -121,7 +161,17 @@
       }
     },
     {
-      "name": "x86-Release",
+      "name": "x86-RelWithDebInfo-Qt5",
+      "inherits": "x86-RelWithDebInfo-Qt6",
+      "cacheVariables": {
+        "USE_QT5": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "x86-Release-Qt6",
       "inherits": "ninja-vcpkg-x86",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
@@ -129,32 +179,66 @@
           "value": "Release"
         }
       }
+    },
+    {
+      "name": "x86-Release-Qt5",
+      "inherits": "x86-Release-Qt6",
+      "cacheVariables": {
+        "USE_QT5": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
     }
   ],
   "buildPresets": [
     {
-      "name": "x64-Debug",
-      "configurePreset": "x64-Debug"
+      "name": "x64-Debug-Qt6",
+      "configurePreset": "x64-Debug-Qt6"
     },
     {
-      "name": "x64-RelWithDebInfo",
-      "configurePreset": "x64-RelWithDebInfo"
+      "name": "x64-Debug-Qt5",
+      "configurePreset": "x64-Debug-Qt5"
     },
     {
-      "name": "x64-Release",
-      "configurePreset": "x64-Release"
+      "name": "x64-RelWithDebInfo-Qt6",
+      "configurePreset": "x64-RelWithDebInfo-Qt6"
     },
     {
-      "name": "x86-Debug",
-      "configurePreset": "x86-Debug"
+      "name": "x64-RelWithDebInfo-Qt5",
+      "configurePreset": "x64-RelWithDebInfo-Qt5"
     },
     {
-      "name": "x86-RelWithDebInfo",
-      "configurePreset": "x86-RelWithDebInfo"
+      "name": "x64-Release-Qt6",
+      "configurePreset": "x64-Release-Qt6"
     },
     {
-      "name": "x86-Release",
-      "configurePreset": "x86-Release"
+      "name": "x64-Release-Qt5",
+      "configurePreset": "x64-Release-Qt5"
+    },
+    {
+      "name": "x86-Debug-Qt6",
+      "configurePreset": "x86-Debug-Qt6"
+    },
+    {
+      "name": "x86-Debug-Qt5",
+      "configurePreset": "x86-Debug-Qt5"
+    },
+    {
+      "name": "x86-RelWithDebInfo-Qt6",
+      "configurePreset": "x86-RelWithDebInfo-Qt6"
+    },
+    {
+      "name": "x86-RelWithDebInfo-Qt5",
+      "configurePreset": "x86-RelWithDebInfo-Qt5"
+    },
+    {
+      "name": "x86-Release-Qt6",
+      "configurePreset": "x86-Release-Qt6"
+    },
+    {
+      "name": "x86-Release-Qt5",
+      "configurePreset": "x86-Release-Qt5"
     }
   ]
 }

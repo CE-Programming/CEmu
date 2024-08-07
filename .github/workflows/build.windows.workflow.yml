@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x64]
+        qtver: [Qt5, Qt6]
         config: [Release]
         include:
           - arch: x64
@@ -45,8 +46,8 @@ jobs:
       uses: lukka/run-cmake@fbcfe006bc5450def7a319af91733647d985d157 # latest as of 2023-08-30
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}'
-        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}'
+        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
+        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
       env:
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
@@ -54,12 +55,12 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_master
-        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe
 
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |
-        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu.exe" -NewName "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe"
+        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe" -NewName "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe"
 
     - name: Update nightly release
       if: ${{ matrix.config == 'Release' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
@@ -69,4 +70,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_qt6.exe
+          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe

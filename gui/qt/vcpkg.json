@@ -5,6 +5,7 @@
   "description": "Developer-oriented emulator of the eZ80-based TI-84 Plus CE / TI-83 Premium CE calculators.",
   "dependencies": [
     "pkgconf",
+    "libiconv",
     {
       "name": "libarchive",
       "default-features": false
@@ -17,6 +18,10 @@
       "name": "qtbase",
       "default-features": false,
       "features": [ "dbus", "gui", "network", "widgets", "png" ]
+    },
+    {
+      "name": "qt5-base",
+      "default-features": false
     }
   ],
   "builtin-baseline": "ad25766aefb5313b6bc4e2a4b78a2946f84fbf66",
