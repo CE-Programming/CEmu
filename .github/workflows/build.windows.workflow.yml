@@ -60,7 +60,9 @@ jobs:
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |
-        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe" -NewName "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe"
+        $ReleaseName = "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe".Replace("Qt", "qt")
+        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe" -NewName $ReleaseName
+        echo "RELEASE_NAME=$ReleaseName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Update nightly release
       if: ${{ matrix.config == 'Release' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
@@ -70,4 +72,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe
+          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/${{ env.RELEASE_NAME }}
