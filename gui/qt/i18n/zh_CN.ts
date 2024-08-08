@@ -67,84 +67,84 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../mainwindow.ui" line="10229"/>
+        <location filename="../mainwindow.ui" line="10233"/>
         <location filename="../mainwindow.cpp" line="715"/>
         <source>Keypad</source>
         <translatorcomment>&quot;Virtual keypad&quot;</translatorcomment>
         <translation>虚拟键盘</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6777"/>
+        <location filename="../mainwindow.ui" line="6781"/>
         <location filename="../mainwindow.cpp" line="712"/>
         <source>Variables</source>
         <translation>变量</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4641"/>
+        <location filename="../mainwindow.ui" line="4645"/>
         <location filename="../mainwindow.cpp" line="724"/>
         <source>Watchpoints</source>
         <translation>观察点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5067"/>
-        <location filename="../mainwindow.ui" line="6978"/>
+        <location filename="../mainwindow.ui" line="5071"/>
+        <location filename="../mainwindow.ui" line="6982"/>
         <location filename="../mainwindow.cpp" line="703"/>
         <source>Size</source>
         <translation>大小</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4957"/>
+        <location filename="../mainwindow.ui" line="4961"/>
         <location filename="../mainwindow.cpp" line="726"/>
         <source>OS Variables</source>
         <translation>系统变量</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5222"/>
+        <location filename="../mainwindow.ui" line="5226"/>
         <source> Change Calculator Certificate ID</source>
         <translation> 更改计算器许可ID</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7121"/>
+        <location filename="../mainwindow.ui" line="7125"/>
         <source>Resend selected</source>
         <translation>重新发送选中的内容</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7157"/>
+        <location filename="../mainwindow.ui" line="7161"/>
         <source>Save transferred file paths on exit</source>
         <translation>在退出时保存传输文件路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7172"/>
-        <location filename="../mainwindow.ui" line="10345"/>
+        <location filename="../mainwindow.ui" line="7176"/>
+        <location filename="../mainwindow.ui" line="10349"/>
         <location filename="../mainwindow.cpp" line="713"/>
         <source>Capture</source>
         <translation>截图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7186"/>
+        <location filename="../mainwindow.ui" line="7190"/>
         <source>Screenshot</source>
         <translation>截图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7444"/>
-        <location filename="../mainwindow.ui" line="9208"/>
-        <location filename="../mainwindow.ui" line="9659"/>
+        <location filename="../mainwindow.ui" line="7448"/>
+        <location filename="../mainwindow.ui" line="9212"/>
+        <location filename="../mainwindow.ui" line="9663"/>
         <location filename="../mainwindow.cpp" line="711"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7460"/>
+        <location filename="../mainwindow.ui" line="7464"/>
         <source>General</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8972"/>
+        <location filename="../mainwindow.ui" line="8976"/>
         <source>Automatically save and restore state</source>
         <translation>自动保存和恢复状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9346"/>
+        <location filename="../mainwindow.ui" line="9350"/>
         <source>ROM Image</source>
         <translation>ROM镜像</translation>
     </message>
@@ -164,24 +164,24 @@
         <translation>重置杂项</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2748"/>
+        <location filename="../debugger.cpp" line="2758"/>
         <location filename="../mainwindow.cpp" line="708"/>
         <source>Show ASCII</source>
         <translation>显示 ASCII</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2836"/>
+        <location filename="../debugger.cpp" line="2846"/>
         <source>Cannot locate calculator ID in the certificate. This is usually due to an improper ROM dump. Please try another ROM dump using a physical calculator.</source>
         <translatorcomment>&quot;Can&apos;t find calculator ID in certificate, this is usually caused by an incorrect ROM dump, please try to get another ROM image from physical calculator.&quot;</translatorcomment>
         <translation>在许可证书中找不到计算器ID，这通常是由于ROM镜像不正确。请尝试从实体计算器中重新获取ROM镜像。</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2843"/>
+        <location filename="../debugger.cpp" line="2853"/>
         <source>CEmu Change Certificate ID</source>
         <translation>CEmu更改许可ID</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2843"/>
+        <location filename="../debugger.cpp" line="2853"/>
         <source>Old ID: </source>
         <translation>旧ID: </translation>
     </message>
@@ -238,8 +238,8 @@
         <translation> 监视点 </translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4766"/>
-        <location filename="../mainwindow.ui" line="4924"/>
+        <location filename="../mainwindow.ui" line="4770"/>
+        <location filename="../mainwindow.ui" line="4928"/>
         <location filename="../debugger.cpp" line="486"/>
         <source>Read</source>
         <translation>读取</translation>
@@ -287,23 +287,23 @@
         <translation>所有文件 (*.*)</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2531"/>
+        <location filename="../debugger.cpp" line="2541"/>
         <location filename="../memorywidget.cpp" line="261"/>
         <source>Copy Address</source>
         <translation>拷贝地址</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2532"/>
+        <location filename="../debugger.cpp" line="2542"/>
         <source>Copy Data</source>
         <translation>拷贝数据</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2565"/>
+        <location filename="../debugger.cpp" line="2575"/>
         <source>Goto VAT Memory View</source>
         <translation>转到VAT内存视图</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2566"/>
+        <location filename="../debugger.cpp" line="2576"/>
         <source>Goto Disasm View</source>
         <translation>转到反汇编视图</translation>
     </message>
@@ -336,375 +336,375 @@
         <translation>切换读取/写入监视点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="146"/>
-        <location filename="../mainwindow.ui" line="473"/>
+        <location filename="../mainwindow.ui" line="150"/>
+        <location filename="../mainwindow.ui" line="477"/>
         <source>Step</source>
         <translation>单步运行</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="496"/>
+        <location filename="../mainwindow.ui" line="500"/>
         <source>Step Over</source>
         <translatorcomment>&quot;run until next instruction&quot;</translatorcomment>
         <translation>运行到下一条指令</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3701"/>
-        <location filename="../mainwindow.ui" line="3882"/>
-        <location filename="../mainwindow.ui" line="4005"/>
-        <location filename="../debugger.cpp" line="2740"/>
+        <location filename="../mainwindow.ui" line="3705"/>
+        <location filename="../mainwindow.ui" line="3886"/>
+        <location filename="../mainwindow.ui" line="4009"/>
+        <location filename="../debugger.cpp" line="2750"/>
         <location filename="../mainwindow.cpp" line="705"/>
         <location filename="../memorywidget.cpp" line="29"/>
         <source>Goto</source>
         <translation>转到</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3678"/>
-        <location filename="../mainwindow.ui" line="9791"/>
+        <location filename="../mainwindow.ui" line="3682"/>
+        <location filename="../mainwindow.ui" line="9795"/>
         <location filename="../mainwindow.cpp" line="720"/>
         <source>Disassembly</source>
         <translation>反汇编</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6983"/>
+        <location filename="../mainwindow.ui" line="6987"/>
         <source>Preview</source>
         <translation>预览</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8998"/>
+        <location filename="../mainwindow.ui" line="9002"/>
         <source>Always show on top of other windows</source>
         <translatorcomment>&quot;Always show on top of other windows&quot;</translatorcomment>
         <translation>始终在其他窗口之上显示</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9174"/>
+        <location filename="../mainwindow.ui" line="9178"/>
         <source>File Locations</source>
         <translation>文件路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9240"/>
+        <location filename="../mainwindow.ui" line="9244"/>
         <source>Saved Image</source>
         <translation>保存的镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7581"/>
+        <location filename="../mainwindow.ui" line="7585"/>
         <source>Skin</source>
         <translation>外观</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7565"/>
+        <location filename="../mainwindow.ui" line="7569"/>
         <source>Scale:</source>
         <translation>比例:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7638"/>
+        <location filename="../mainwindow.ui" line="7642"/>
         <source>Keypad Skin Color</source>
         <translation>键盘外观颜色</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="166"/>
-        <location filename="../mainwindow.ui" line="519"/>
+        <location filename="../mainwindow.ui" line="170"/>
+        <location filename="../mainwindow.ui" line="523"/>
         <source>Step Next</source>
         <translatorcomment>&quot;run until next line of disassembly&quot;</translatorcomment>
         <translation>运行到下一行反汇编</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3741"/>
+        <location filename="../mainwindow.ui" line="3745"/>
         <source>Equates:</source>
         <translation>汇编定义:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3748"/>
+        <location filename="../mainwindow.ui" line="3752"/>
         <source>Load...</source>
         <translation>加载...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3762"/>
-        <location filename="../mainwindow.ui" line="6689"/>
+        <location filename="../mainwindow.ui" line="3766"/>
+        <location filename="../mainwindow.ui" line="6693"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9999"/>
+        <location filename="../mainwindow.ui" line="10003"/>
         <source>Clear</source>
         <translation>清除</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3838"/>
+        <location filename="../mainwindow.ui" line="3842"/>
         <source>Open debugger to view disassembly...</source>
         <translatorcomment>&quot;Open debugger and view disassembly&quot;</translatorcomment>
         <translation>打开调试器并查看反汇编…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4245"/>
-        <location filename="../mainwindow.ui" line="4944"/>
-        <location filename="../mainwindow.ui" line="5202"/>
-        <location filename="../mainwindow.ui" line="5463"/>
+        <location filename="../mainwindow.ui" line="4249"/>
+        <location filename="../mainwindow.ui" line="4948"/>
+        <location filename="../mainwindow.ui" line="5206"/>
+        <location filename="../mainwindow.ui" line="5467"/>
         <source>Value</source>
         <translation>值</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4799"/>
+        <location filename="../mainwindow.ui" line="4803"/>
         <location filename="../mainwindow.cpp" line="725"/>
         <source>Port Monitor</source>
         <translation>端口监视器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6211"/>
+        <location filename="../mainwindow.ui" line="6215"/>
         <source>Battery</source>
         <translation>电池</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6280"/>
+        <location filename="../mainwindow.ui" line="6284"/>
         <source>Charging</source>
         <translation>充电</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5893"/>
+        <location filename="../mainwindow.ui" line="5897"/>
         <source>PWR</source>
         <translation>PWR</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5787"/>
+        <location filename="../mainwindow.ui" line="5791"/>
         <source>BEPO</source>
         <translation>BEPO</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5840"/>
+        <location filename="../mainwindow.ui" line="5844"/>
         <source>BGR</source>
         <translation>BGR</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5734"/>
+        <location filename="../mainwindow.ui" line="5738"/>
         <source>BEBO</source>
         <translation>BEBO</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3850"/>
+        <location filename="../mainwindow.ui" line="3854"/>
         <location filename="../mainwindow.cpp" line="721"/>
         <source>Memory</source>
         <translation>内存</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9932"/>
+        <location filename="../mainwindow.ui" line="9936"/>
         <source>dock</source>
         <translation>dock</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9945"/>
+        <location filename="../mainwindow.ui" line="9949"/>
         <source>console</source>
         <translation>控制台</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9968"/>
+        <location filename="../mainwindow.ui" line="9972"/>
         <source>Auto scroll</source>
         <translation>自动滚动</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2983"/>
+        <location filename="../mainwindow.ui" line="2987"/>
         <source>Zero</source>
         <translation>清零</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4499"/>
+        <location filename="../mainwindow.ui" line="4503"/>
         <source>Add Breakpoint</source>
         <translation>添加断点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4656"/>
+        <location filename="../mainwindow.ui" line="4660"/>
         <source>Add Watchpoint</source>
         <translation>添加监视点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4771"/>
-        <location filename="../mainwindow.ui" line="4929"/>
+        <location filename="../mainwindow.ui" line="4775"/>
+        <location filename="../mainwindow.ui" line="4933"/>
         <source>Write</source>
         <translation>写入</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4776"/>
+        <location filename="../mainwindow.ui" line="4780"/>
         <source>Low</source>
         <translatorcomment>&quot;lower bound&quot; (of watchpoint range)</translatorcomment>
         <translation>下限</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4781"/>
+        <location filename="../mainwindow.ui" line="4785"/>
         <source>High</source>
         <translatorcomment>&quot;upper bound&quot; (of watchpoint range)</translatorcomment>
         <translation>上限</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4814"/>
+        <location filename="../mainwindow.ui" line="4818"/>
         <source>Add Port Monitor</source>
         <translation>添加端口监视器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5491"/>
+        <location filename="../mainwindow.ui" line="5495"/>
         <source>LCD</source>
         <translation>LCD</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5531"/>
+        <location filename="../mainwindow.ui" line="5535"/>
         <source>Control</source>
         <translation>控制</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6035"/>
+        <location filename="../mainwindow.ui" line="6039"/>
         <source>Base</source>
         <translation>基</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6079"/>
+        <location filename="../mainwindow.ui" line="6083"/>
         <source>Current</source>
         <translation>当前</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6372"/>
+        <location filename="../mainwindow.ui" line="6376"/>
         <source>.json file:</source>
         <translation>.json文件:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6437"/>
+        <location filename="../mainwindow.ui" line="6441"/>
         <source>Launch test</source>
         <translation>启动测试</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6456"/>
+        <location filename="../mainwindow.ui" line="6460"/>
         <source>Reset before test</source>
         <translation>在测试前重置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6466"/>
+        <location filename="../mainwindow.ui" line="6470"/>
         <source>[Clear] before test</source>
         <translatorcomment>&quot;automatically press [clear] before test&quot;</translatorcomment>
         <translation>在测试之前自动按[clear]</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6505"/>
+        <location filename="../mainwindow.ui" line="6509"/>
         <source>Get CRC</source>
         <translation>获取 CRC</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6527"/>
+        <location filename="../mainwindow.ui" line="6531"/>
         <source>Start (address):</source>
         <translation>起始地址：</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6544"/>
+        <location filename="../mainwindow.ui" line="6548"/>
         <source>Size:</source>
         <translation>大小:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6568"/>
+        <location filename="../mainwindow.ui" line="6572"/>
         <source>... or choose a preset:</source>
         <translation>…或者选择一个预设:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6576"/>
+        <location filename="../mainwindow.ui" line="6580"/>
         <source>(no preset)</source>
         <translation>(无预设)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6581"/>
+        <location filename="../mainwindow.ui" line="6585"/>
         <source>All VRAM (LCD set in 16bpp)</source>
         <translation>所有VRAM(LCD 16bpp)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6586"/>
+        <location filename="../mainwindow.ui" line="6590"/>
         <source>1st half of the VRAM (8bpp)</source>
         <translation>前半部分VRAM (8bpp)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6591"/>
+        <location filename="../mainwindow.ui" line="6595"/>
         <source>2nd half of the VRAM (8bpp)</source>
         <translation>后半部分VRAM (8bpp)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6596"/>
+        <location filename="../mainwindow.ui" line="6600"/>
         <source>textShadow</source>
         <translation>textShadow</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6601"/>
+        <location filename="../mainwindow.ui" line="6605"/>
         <source>cmdShadow</source>
         <translation>cmdShadow</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6606"/>
+        <location filename="../mainwindow.ui" line="6610"/>
         <source>pixelShadow</source>
         <translation>pixelShadow</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6611"/>
+        <location filename="../mainwindow.ui" line="6615"/>
         <source>pixelShadow2</source>
         <translation>pixelShadow2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6616"/>
+        <location filename="../mainwindow.ui" line="6620"/>
         <source>cmdPixelShadow2</source>
         <translation>cmdPixelShadow2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6621"/>
+        <location filename="../mainwindow.ui" line="6625"/>
         <source>plotSScreen</source>
         <translation>plotSScreen</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6626"/>
+        <location filename="../mainwindow.ui" line="6630"/>
         <source>saveSScreen</source>
         <translation>saveSScreen</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6631"/>
+        <location filename="../mainwindow.ui" line="6635"/>
         <source>lcdPalette</source>
         <translation>lcdPalette</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6636"/>
+        <location filename="../mainwindow.ui" line="6640"/>
         <source>cursorImage</source>
         <translation>cursorImage</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6641"/>
+        <location filename="../mainwindow.ui" line="6645"/>
         <source>All the RAM</source>
         <translation>全部RAM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6663"/>
+        <location filename="../mainwindow.ui" line="6667"/>
         <source>Hash (CRC):</source>
         <translation>哈希值(CRC):</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6821"/>
+        <location filename="../mainwindow.ui" line="6825"/>
         <source>View calc variables</source>
         <translation>查看计算器变量</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7077"/>
+        <location filename="../mainwindow.ui" line="7081"/>
         <source>Selected</source>
         <translation>选中的</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7104"/>
+        <location filename="../mainwindow.ui" line="7108"/>
         <source>Send files to calc</source>
         <translation>发送文件到计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9820"/>
+        <location filename="../mainwindow.ui" line="9824"/>
         <source>Tab between opcode / operands</source>
         <translation>操作码/操作数之间的制表符</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9830"/>
+        <location filename="../mainwindow.ui" line="9834"/>
         <source>Space between operands</source>
         <translation>操作数之间的空格</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10801"/>
+        <location filename="../mainwindow.ui" line="10805"/>
         <source>Keypad Mapping</source>
         <translation>键盘映射</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10810"/>
+        <location filename="../mainwindow.ui" line="10814"/>
         <source>Change Instance ID</source>
         <translation>更改实例ID</translation>
     </message>
@@ -714,7 +714,7 @@
         <translation type="vanished">模拟实体计算器LCD SPI绘制过程</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9761"/>
+        <location filename="../mainwindow.ui" line="9765"/>
         <source>Auto. save and restore debug state</source>
         <translation>自动保存并恢复调试状态</translation>
     </message>
@@ -724,309 +724,309 @@
         <translation type="vanished">模拟Revision I之前的硬件 (IM 2)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10528"/>
+        <location filename="../mainwindow.ui" line="10532"/>
         <source>Record animated PNG</source>
         <translation>录制PNG动画</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10534"/>
+        <location filename="../mainwindow.ui" line="10538"/>
         <source>Ctrl+Shift+X</source>
         <translation>Ctrl+Shift+X</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10564"/>
+        <location filename="../mainwindow.ui" line="10568"/>
         <source>Reset calculator</source>
         <translation>重置计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10585"/>
+        <location filename="../mainwindow.ui" line="10589"/>
         <source>Save state</source>
         <translation>保存状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10594"/>
+        <location filename="../mainwindow.ui" line="10598"/>
         <source>Restore state</source>
         <translation>恢复状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10603"/>
+        <location filename="../mainwindow.ui" line="10607"/>
         <source>Reload ROM</source>
         <translation>重新装载ROM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10365"/>
+        <location filename="../mainwindow.ui" line="10369"/>
         <source>Screen</source>
         <translation>屏幕</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10190"/>
+        <location filename="../mainwindow.ui" line="10194"/>
         <source>Reload Rom</source>
         <translation>重新装载ROM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4623"/>
-        <location filename="../mainwindow.ui" line="5057"/>
-        <location filename="../mainwindow.ui" line="5182"/>
-        <location filename="../mainwindow.ui" line="5338"/>
-        <location filename="../mainwindow.ui" line="5448"/>
+        <location filename="../mainwindow.ui" line="4627"/>
+        <location filename="../mainwindow.ui" line="5061"/>
+        <location filename="../mainwindow.ui" line="5186"/>
+        <location filename="../mainwindow.ui" line="5342"/>
+        <location filename="../mainwindow.ui" line="5452"/>
         <source>Address</source>
         <translation>地址</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8985"/>
+        <location filename="../mainwindow.ui" line="8989"/>
         <source>Automatically check for updates</source>
         <translation>自动检查更新</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8952"/>
+        <location filename="../mainwindow.ui" line="8956"/>
         <source>Use portable configuration</source>
         <translation>使用便携式设置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9751"/>
+        <location filename="../mainwindow.ui" line="9755"/>
         <source>Open debugger on reset or nmi</source>
         <translation>在重置或NMI时打开调试器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9741"/>
+        <location filename="../mainwindow.ui" line="9745"/>
         <source>Enable software commands</source>
         <translation>启用软件命令</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7600"/>
-        <location filename="../mainwindow.ui" line="9479"/>
+        <location filename="../mainwindow.ui" line="7604"/>
+        <location filename="../mainwindow.ui" line="9483"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9282"/>
-        <location filename="../mainwindow.ui" line="9307"/>
+        <location filename="../mainwindow.ui" line="9286"/>
+        <location filename="../mainwindow.ui" line="9311"/>
         <source>Change path</source>
         <translation>更改路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9260"/>
+        <location filename="../mainwindow.ui" line="9264"/>
         <source>Saved Debug</source>
         <translatorcomment>&quot;saved debug sessions&quot;</translatorcomment>
         <translation>保存的调试会话</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4484"/>
+        <location filename="../mainwindow.ui" line="4488"/>
         <location filename="../mainwindow.cpp" line="723"/>
         <source>Breakpoints</source>
         <translation>断点</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4618"/>
+        <location filename="../mainwindow.ui" line="4622"/>
         <source>Enabled</source>
         <translation>已启用</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1154"/>
-        <location filename="../mainwindow.ui" line="5918"/>
+        <location filename="../mainwindow.ui" line="1158"/>
+        <location filename="../mainwindow.ui" line="5922"/>
         <source>Registers</source>
         <translation>寄存器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="736"/>
+        <location filename="../mainwindow.ui" line="740"/>
         <source>Flags</source>
         <translation>标志位</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7289"/>
-        <location filename="../mainwindow.ui" line="9417"/>
+        <location filename="../mainwindow.ui" line="7293"/>
+        <location filename="../mainwindow.ui" line="9421"/>
         <source>Frame skip:</source>
         <translation>跳帧：</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6140"/>
+        <location filename="../mainwindow.ui" line="6144"/>
         <source>1</source>
         <translation>1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="123"/>
-        <location filename="../mainwindow.ui" line="450"/>
+        <location filename="../mainwindow.ui" line="127"/>
+        <location filename="../mainwindow.ui" line="454"/>
         <location filename="../basicdebugger.cpp" line="146"/>
         <location filename="../debugger.cpp" line="605"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10155"/>
+        <location filename="../mainwindow.ui" line="10159"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4939"/>
+        <location filename="../mainwindow.ui" line="4943"/>
         <source>Port</source>
         <translation>端口</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5192"/>
-        <location filename="../mainwindow.ui" line="5343"/>
-        <location filename="../mainwindow.ui" line="5453"/>
+        <location filename="../mainwindow.ui" line="5196"/>
+        <location filename="../mainwindow.ui" line="5347"/>
+        <location filename="../mainwindow.ui" line="5457"/>
         <source>Data</source>
         <translation>数据</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4934"/>
+        <location filename="../mainwindow.ui" line="4938"/>
         <source>Freeze</source>
         <translation>冻结</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6860"/>
+        <location filename="../mainwindow.ui" line="6864"/>
         <source>Save selected</source>
         <translation>保存所选内容</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9391"/>
+        <location filename="../mainwindow.ui" line="9395"/>
         <source>Throttle:</source>
         <translatorcomment>&quot;(emulation) speed limit&quot;</translatorcomment>
         <translation>限速:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9713"/>
+        <location filename="../mainwindow.ui" line="9717"/>
         <source>Text size:</source>
         <translation>文字大小:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9015"/>
+        <location filename="../mainwindow.ui" line="9019"/>
         <source>Key bindings</source>
         <translation>键盘绑定</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="542"/>
+        <location filename="../mainwindow.ui" line="546"/>
         <source>Step Out</source>
         <translatorcomment>&quot;run until function returns&quot;</translatorcomment>
         <translation>运行到函数返回</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2706"/>
+        <location filename="../mainwindow.ui" line="2710"/>
         <source>CPU State</source>
         <translation>CPU状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2970"/>
+        <location filename="../mainwindow.ui" line="2974"/>
         <source>Cycles</source>
         <translation>周期</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4969"/>
+        <location filename="../mainwindow.ui" line="4973"/>
         <source>VAT View</source>
         <translation>VAT视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3931"/>
-        <location filename="../mainwindow.ui" line="4054"/>
+        <location filename="../mainwindow.ui" line="3935"/>
+        <location filename="../mainwindow.ui" line="4058"/>
         <source>Sync changes</source>
         <translation>同步更改</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10483"/>
+        <location filename="../mainwindow.ui" line="10487"/>
         <source>Rom setup wizard...</source>
         <translation>ROM 设置向导…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10510"/>
-        <location filename="../mainwindow.ui" line="10513"/>
+        <location filename="../mainwindow.ui" line="10514"/>
+        <location filename="../mainwindow.ui" line="10517"/>
         <source>Take PNG screenshot</source>
         <translation>以PNG格式截图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10531"/>
+        <location filename="../mainwindow.ui" line="10535"/>
         <source>Record animated GIF</source>
         <translation>录制GIF动画</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10573"/>
+        <location filename="../mainwindow.ui" line="10577"/>
         <source>Check for updates...</source>
         <translation>检查更新…</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10552"/>
+        <location filename="../mainwindow.ui" line="10556"/>
         <source>About Qt</source>
         <translation>关于 Qt</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3260"/>
+        <location filename="../mainwindow.ui" line="3264"/>
         <source>Interrupts</source>
         <translation>中断</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7479"/>
+        <location filename="../mainwindow.ui" line="7483"/>
         <source>Display</source>
         <translation>显示</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5654"/>
+        <location filename="../mainwindow.ui" line="5658"/>
         <source>Brightness</source>
         <translation>亮度</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9896"/>
+        <location filename="../mainwindow.ui" line="9900"/>
         <location filename="../mainwindow.cpp" line="710"/>
         <source>Console</source>
         <translation>控制台</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4628"/>
-        <location filename="../mainwindow.ui" line="4786"/>
-        <location filename="../mainwindow.ui" line="5072"/>
-        <location filename="../mainwindow.ui" line="6963"/>
-        <location filename="../mainwindow.ui" line="10133"/>
+        <location filename="../mainwindow.ui" line="4632"/>
+        <location filename="../mainwindow.ui" line="4790"/>
+        <location filename="../mainwindow.ui" line="5076"/>
+        <location filename="../mainwindow.ui" line="6967"/>
+        <location filename="../mainwindow.ui" line="10137"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6973"/>
+        <location filename="../mainwindow.ui" line="6977"/>
         <source>Type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4613"/>
-        <location filename="../mainwindow.ui" line="4761"/>
-        <location filename="../mainwindow.ui" line="4919"/>
-        <location filename="../mainwindow.ui" line="7067"/>
-        <location filename="../mainwindow.ui" line="10113"/>
+        <location filename="../mainwindow.ui" line="4617"/>
+        <location filename="../mainwindow.ui" line="4765"/>
+        <location filename="../mainwindow.ui" line="4923"/>
+        <location filename="../mainwindow.ui" line="7071"/>
+        <location filename="../mainwindow.ui" line="10117"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1073"/>
+        <location filename="../mainwindow.ui" line="1077"/>
         <source>h</source>
         <translation>h</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1184"/>
+        <location filename="../mainwindow.ui" line="1188"/>
         <source>PC/SP</source>
         <translation>PC/SP</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3162"/>
+        <location filename="../mainwindow.ui" line="3166"/>
         <source>Stack</source>
         <translation>栈</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3859"/>
+        <location filename="../mainwindow.ui" line="3863"/>
         <source>Flash</source>
         <translation>闪存</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3893"/>
-        <location filename="../mainwindow.ui" line="4016"/>
-        <location filename="../debugger.cpp" line="2741"/>
+        <location filename="../mainwindow.ui" line="3897"/>
+        <location filename="../mainwindow.ui" line="4020"/>
+        <location filename="../debugger.cpp" line="2751"/>
         <location filename="../mainwindow.cpp" line="706"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2749"/>
+        <location filename="../debugger.cpp" line="2759"/>
         <location filename="../mainwindow.cpp" line="707"/>
         <source>Sync Changes</source>
         <translation>同步更改</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3982"/>
+        <location filename="../mainwindow.ui" line="3986"/>
         <source>RAM</source>
         <translation>RAM</translation>
     </message>
@@ -1036,244 +1036,244 @@
         <translation>内存视图</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10257"/>
+        <location filename="../mainwindow.ui" line="10261"/>
         <source>&amp;File</source>
         <translation>&amp;文件</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10456"/>
+        <location filename="../mainwindow.ui" line="10460"/>
         <source>Open...</source>
         <translation>打开...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10468"/>
+        <location filename="../mainwindow.ui" line="10472"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9230"/>
+        <location filename="../mainwindow.ui" line="9234"/>
         <source>Setup wizard</source>
         <translation>设置向导</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6388"/>
+        <location filename="../mainwindow.ui" line="6392"/>
         <source>Browse...</source>
         <translation>浏览...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="414"/>
+        <location filename="../mainwindow.ui" line="418"/>
         <location filename="../mainwindow.cpp" line="718"/>
         <source>Debug Control</source>
         <translation>调试控制</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="618"/>
+        <location filename="../mainwindow.ui" line="622"/>
         <location filename="../mainwindow.cpp" line="719"/>
         <source>CPU Status</source>
         <translation>CPU状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="659"/>
+        <location filename="../mainwindow.ui" line="663"/>
         <source>Debug Trigger</source>
         <translatorcomment>&quot;Debug event trigger&quot;</translatorcomment>
         <translation>调试事件触发器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3189"/>
-        <location filename="../mainwindow.ui" line="3712"/>
+        <location filename="../mainwindow.ui" line="3193"/>
+        <location filename="../mainwindow.ui" line="3716"/>
         <source>ADL</source>
         <translation>ADL</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3776"/>
+        <location filename="../mainwindow.ui" line="3780"/>
         <source>Clear Equates</source>
         <translatorcomment>&quot;Clear symbol definitions&quot;</translatorcomment>
         <translation>清除符号定义</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3790"/>
+        <location filename="../mainwindow.ui" line="3794"/>
         <source>Autoloads any .inc, .map, or .lab found when transferring files </source>
         <translation>传输文件时自动加载任何找到的.inc, .map或者.lab文件 </translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3793"/>
+        <location filename="../mainwindow.ui" line="3797"/>
         <source>Autoload</source>
         <translation>自动加载</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4040"/>
+        <location filename="../mainwindow.ui" line="4044"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4107"/>
+        <location filename="../mainwindow.ui" line="4111"/>
         <location filename="../mainwindow.cpp" line="722"/>
         <source>Timers</source>
         <translation>定时器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4122"/>
+        <location filename="../mainwindow.ui" line="4126"/>
         <source>General Purpose Timers</source>
         <translation>通用计时器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4153"/>
+        <location filename="../mainwindow.ui" line="4157"/>
         <source>Timer 3</source>
         <translation>计时器 3</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4205"/>
+        <location filename="../mainwindow.ui" line="4209"/>
         <source>Reload Value</source>
         <translatorcomment>&quot;reset value&quot;</translatorcomment>
         <translation>重置值</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4212"/>
+        <location filename="../mainwindow.ui" line="4216"/>
         <source>Timer 2</source>
         <translation>计时器 2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4232"/>
+        <location filename="../mainwindow.ui" line="4236"/>
         <source>Timer 1</source>
         <translation>计时器 1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4303"/>
+        <location filename="../mainwindow.ui" line="4307"/>
         <source>Real Time Clock</source>
         <translation>实时时钟(RTC)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4434"/>
+        <location filename="../mainwindow.ui" line="4438"/>
         <source>Minutes</source>
         <translation>分钟</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4321"/>
+        <location filename="../mainwindow.ui" line="4325"/>
         <source>Days</source>
         <translation>日</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4405"/>
+        <location filename="../mainwindow.ui" line="4409"/>
         <source>Hours</source>
         <translation>小时</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="4395"/>
+        <location filename="../mainwindow.ui" line="4399"/>
         <source>Seconds</source>
         <translation>秒</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5187"/>
+        <location filename="../mainwindow.ui" line="5191"/>
         <source>OP Number</source>
         <translation>OP编号</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5062"/>
+        <location filename="../mainwindow.ui" line="5066"/>
         <source>VAT Address</source>
         <translation>VAT地址</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2763"/>
-        <location filename="../mainwindow.ui" line="5571"/>
+        <location filename="../mainwindow.ui" line="2767"/>
+        <location filename="../mainwindow.ui" line="5575"/>
         <source>MHz</source>
         <translation>MHz</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5077"/>
+        <location filename="../mainwindow.ui" line="5081"/>
         <source>Data Type</source>
         <translation>数据类型</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5094"/>
+        <location filename="../mainwindow.ui" line="5098"/>
         <source>OP Variables</source>
         <translation>OP变量</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5197"/>
-        <location filename="../mainwindow.ui" line="5458"/>
+        <location filename="../mainwindow.ui" line="5201"/>
+        <location filename="../mainwindow.ui" line="5462"/>
         <source>String</source>
         <translation>字符</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5238"/>
+        <location filename="../mainwindow.ui" line="5242"/>
         <location filename="../mainwindow.cpp" line="727"/>
         <source>OS Stacks</source>
         <translation>系统栈</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5250"/>
+        <location filename="../mainwindow.ui" line="5254"/>
         <source>OP Stack</source>
         <translation>OP栈</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5360"/>
+        <location filename="../mainwindow.ui" line="5364"/>
         <source>FP Stack</source>
         <translation>浮点栈</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5479"/>
+        <location filename="../mainwindow.ui" line="5483"/>
         <location filename="../mainwindow.cpp" line="728"/>
         <source>Miscellaneous</source>
         <translation>杂项</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6123"/>
+        <location filename="../mainwindow.ui" line="6127"/>
         <source>BPP</source>
         <translation>BPP</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6145"/>
+        <location filename="../mainwindow.ui" line="6149"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6150"/>
+        <location filename="../mainwindow.ui" line="6154"/>
         <source>4</source>
         <translation>4</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6155"/>
+        <location filename="../mainwindow.ui" line="6159"/>
         <source>8</source>
         <translation>8</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6160"/>
+        <location filename="../mainwindow.ui" line="6164"/>
         <source>16</source>
         <translation>16</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6165"/>
+        <location filename="../mainwindow.ui" line="6169"/>
         <source>24</source>
         <translation>24</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6170"/>
+        <location filename="../mainwindow.ui" line="6174"/>
         <source>16 (5:6:5)</source>
         <translation>16 (5:6:5)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6175"/>
+        <location filename="../mainwindow.ui" line="6179"/>
         <source>12 (4:4:4)</source>
         <translation>12 (4:4:4)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6338"/>
+        <location filename="../mainwindow.ui" line="6342"/>
         <location filename="../mainwindow.cpp" line="729"/>
         <source>AutoTester</source>
         <translation>自动测试器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6350"/>
+        <location filename="../mainwindow.ui" line="6354"/>
         <source>Launch Test Configuration</source>
         <translation>运行测试配置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6401"/>
+        <location filename="../mainwindow.ui" line="6405"/>
         <source>(Re)Load</source>
         <translation>(重新)加载</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6795"/>
+        <location filename="../mainwindow.ui" line="6799"/>
         <source>Calculator Receive</source>
         <translatorcomment>&quot;Receive from calculator&quot;</translatorcomment>
         <translation>从计算器接收</translation>
@@ -1284,61 +1284,61 @@
         <translation>查看计算器变量</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6883"/>
+        <location filename="../mainwindow.ui" line="6887"/>
         <source>Save group</source>
         <translatorcomment>&quot;save as group&quot;</translatorcomment>
         <translation>保存为组</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6968"/>
+        <location filename="../mainwindow.ui" line="6972"/>
         <source>Location</source>
         <translation>位置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6994"/>
+        <location filename="../mainwindow.ui" line="6998"/>
         <source>Calculator Send</source>
         <translatorcomment>&quot;Send to calculator&quot;</translatorcomment>
         <translation>发送至计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7072"/>
+        <location filename="../mainwindow.ui" line="7076"/>
         <source>Resend</source>
         <translation>重新发送</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7082"/>
+        <location filename="../mainwindow.ui" line="7086"/>
         <source>Path</source>
         <translation>路径</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7219"/>
+        <location filename="../mainwindow.ui" line="7223"/>
         <source>Save PNG</source>
         <translation>保存PNG</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7241"/>
+        <location filename="../mainwindow.ui" line="7245"/>
         <source>Copy PNG</source>
         <translation>拷贝PNG</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7257"/>
+        <location filename="../mainwindow.ui" line="7261"/>
         <source>Screen Recording</source>
         <translation>屏幕录制</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7383"/>
+        <location filename="../mainwindow.ui" line="7387"/>
         <location filename="../mainwindow.cpp" line="1763"/>
         <source>Record</source>
         <translation>录制</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7409"/>
+        <location filename="../mainwindow.ui" line="7413"/>
         <source>Optimize</source>
         <translation>优化</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="200"/>
-        <location filename="../mainwindow.ui" line="8931"/>
+        <location filename="../mainwindow.ui" line="204"/>
+        <location filename="../mainwindow.ui" line="8935"/>
         <source>Configuration</source>
         <translation>配置</translation>
     </message>
@@ -1349,224 +1349,224 @@
         <translation>TI-Basic 调试</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="215"/>
+        <location filename="../mainwindow.ui" line="219"/>
         <source>Show Fetches</source>
         <translation>显示 Fetches</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="255"/>
+        <location filename="../mainwindow.ui" line="259"/>
         <source>Enable TI-Basic Debugging</source>
         <translation>启用 TI-Basic 调试</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="292"/>
+        <location filename="../mainwindow.ui" line="296"/>
         <source>Show Temp Parser</source>
         <translation>显示临时解析器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="314"/>
+        <location filename="../mainwindow.ui" line="318"/>
         <source>Show Live Execution</source>
         <translation>显示实时执行</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="321"/>
+        <location filename="../mainwindow.ui" line="325"/>
         <source>Highlight Source</source>
         <translation>高亮源码</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="340"/>
+        <location filename="../mainwindow.ui" line="344"/>
         <source>Program Debug</source>
         <translation>Program 调试</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="370"/>
+        <location filename="../mainwindow.ui" line="374"/>
         <source>Temporary Parser</source>
         <translation>临时解析器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8959"/>
+        <location filename="../mainwindow.ui" line="8963"/>
         <source>Pause emulation on focus change</source>
         <translation>在CEmu不在最上方时暂停模拟</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9005"/>
+        <location filename="../mainwindow.ui" line="9009"/>
         <source>Allow dock grouped dragging</source>
         <translation>允许项目组拖移</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9030"/>
+        <location filename="../mainwindow.ui" line="9034"/>
         <source>Natural</source>
         <translation>自然的</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9141"/>
+        <location filename="../mainwindow.ui" line="9145"/>
         <source>Custom</source>
         <translation>自定义</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9155"/>
+        <location filename="../mainwindow.ui" line="9159"/>
         <source>Emulation</source>
         <translation>模拟</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9356"/>
+        <location filename="../mainwindow.ui" line="9360"/>
         <source>Display / Emulation Speed</source>
         <translation>显示/模拟速度</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9576"/>
+        <location filename="../mainwindow.ui" line="9580"/>
         <source>Actual FPS:</source>
         <translation>实际帧率:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9404"/>
+        <location filename="../mainwindow.ui" line="9408"/>
         <source>Update status:</source>
         <translation>更新状态：</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3086"/>
+        <location filename="../mainwindow.ui" line="3090"/>
         <source>Avg. Flash</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3133"/>
+        <location filename="../mainwindow.ui" line="3137"/>
         <source>Flash Cache Misses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7494"/>
+        <location filename="../mainwindow.ui" line="7498"/>
         <source>Upscaling:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7502"/>
+        <location filename="../mainwindow.ui" line="7506"/>
         <source>Nearest Neighbor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7507"/>
+        <location filename="../mainwindow.ui" line="7511"/>
         <source>Bilinear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7512"/>
+        <location filename="../mainwindow.ui" line="7516"/>
         <source>Sharp Bilinear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7520"/>
+        <location filename="../mainwindow.ui" line="7524"/>
         <source>Fullscreen:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7528"/>
+        <location filename="../mainwindow.ui" line="7532"/>
         <source>Stretch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7533"/>
+        <location filename="../mainwindow.ui" line="7537"/>
         <source>Preserve Aspect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7538"/>
+        <location filename="../mainwindow.ui" line="7542"/>
         <source>Integer Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9125"/>
+        <location filename="../mainwindow.ui" line="9129"/>
         <source>SmartPad</source>
         <translation>SmartPad</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9495"/>
+        <location filename="../mainwindow.ui" line="9499"/>
         <source>ASIC revision:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9508"/>
+        <location filename="../mainwindow.ui" line="9512"/>
         <source> sec</source>
         <translation> 秒</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9553"/>
+        <location filename="../mainwindow.ui" line="9557"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9558"/>
+        <location filename="../mainwindow.ui" line="9562"/>
         <source>Rev A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9563"/>
+        <location filename="../mainwindow.ui" line="9567"/>
         <source>Rev I</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9568"/>
+        <location filename="../mainwindow.ui" line="9572"/>
         <source>Rev M</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9586"/>
+        <location filename="../mainwindow.ui" line="9590"/>
         <source>Current:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9595"/>
+        <location filename="../mainwindow.ui" line="9599"/>
         <source>Emulate Python Edition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9613"/>
+        <location filename="../mainwindow.ui" line="9617"/>
         <source>Emulate DMA to LCD memory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9620"/>
+        <location filename="../mainwindow.ui" line="9624"/>
         <source>Emulate LCD gamma</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9627"/>
+        <location filename="../mainwindow.ui" line="9631"/>
         <source>Emulate LCD response time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9653"/>
+        <location filename="../mainwindow.ui" line="9657"/>
         <source>Debugging</source>
         <translation>调试</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9768"/>
+        <location filename="../mainwindow.ui" line="9772"/>
         <source>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</source>
         <translatorcomment>&quot;Some of the debugging views only make sense when TIOS is running normally (when some assembly programs are running, it may not make sense, for instance)&quot;</translatorcomment>
         <translation>一些调试器视图仅在TIOS正常运行的情况下才有意义（例如在一些汇编语言程序运行时就可能没有意义)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9771"/>
+        <location filename="../mainwindow.ui" line="9775"/>
         <source>Assume normal OS operation</source>
         <translatorcomment>Asumir el funcionamiento normal del OS</translatorcomment>
         <translation>假设操作系统工作正常</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9778"/>
+        <location filename="../mainwindow.ui" line="9782"/>
         <source>May cause problems if boot code is incompatible. Use only if you know what you&apos;re doing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9781"/>
+        <location filename="../mainwindow.ui" line="9785"/>
         <source>Allow any ASIC revision</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9800"/>
+        <location filename="../mainwindow.ui" line="9804"/>
         <source>Show data column</source>
         <translation>显示数据栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9810"/>
+        <location filename="../mainwindow.ui" line="9814"/>
         <source>Use implicit mode</source>
         <translatorcomment>&quot;omit implicit operands&quot;</translatorcomment>
         <translation>省略隐含的操作数</translation>
@@ -1576,194 +1576,194 @@
         <translation type="vanished">操作码/操作数空间</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9837"/>
+        <location filename="../mainwindow.ui" line="9841"/>
         <source>Use uppercase font</source>
         <translation>使用大写字母</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9844"/>
+        <location filename="../mainwindow.ui" line="9848"/>
         <source>Show address column</source>
         <translation>显示地址栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="9851"/>
+        <location filename="../mainwindow.ui" line="9855"/>
         <source>Bold disassembly symbols</source>
         <translation>为汇编符号使用粗体</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10013"/>
+        <location filename="../mainwindow.ui" line="10017"/>
         <location filename="../mainwindow.cpp" line="714"/>
         <source>State</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10118"/>
+        <location filename="../mainwindow.ui" line="10122"/>
         <source>Load</source>
         <translation>加载</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10123"/>
+        <location filename="../mainwindow.ui" line="10127"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10128"/>
+        <location filename="../mainwindow.ui" line="10132"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10179"/>
+        <location filename="../mainwindow.ui" line="10183"/>
         <location filename="../mainwindow.cpp" line="300"/>
         <source>Reset</source>
         <translation>重设</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10261"/>
+        <location filename="../mainwindow.ui" line="10265"/>
         <source>Export</source>
         <translation>导出</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10277"/>
+        <location filename="../mainwindow.ui" line="10281"/>
         <source>Import</source>
         <translation>导入</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10290"/>
+        <location filename="../mainwindow.ui" line="10294"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10315"/>
+        <location filename="../mainwindow.ui" line="10319"/>
         <source>&amp;Calculator</source>
         <translation>&amp;计算器</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10327"/>
+        <location filename="../mainwindow.ui" line="10331"/>
         <source>Extras</source>
         <translation>其他</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10459"/>
+        <location filename="../mainwindow.ui" line="10463"/>
         <source>Ctrl+Shift+O</source>
         <translation>Ctrl+Shift+O</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10471"/>
+        <location filename="../mainwindow.ui" line="10475"/>
         <source>Ctrl+Shift+Q</source>
         <translation>Ctrl+Shift+Q</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10495"/>
+        <location filename="../mainwindow.ui" line="10499"/>
         <location filename="../mainwindow.cpp" line="1778"/>
         <source>About CEmu</source>
         <translation>关于 CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10612"/>
+        <location filename="../mainwindow.ui" line="10616"/>
         <source>ROM image</source>
         <translation>ROM镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10621"/>
-        <location filename="../mainwindow.ui" line="10630"/>
+        <location filename="../mainwindow.ui" line="10625"/>
+        <location filename="../mainwindow.ui" line="10634"/>
         <source>Calculator state</source>
         <translation>计算器状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10639"/>
-        <location filename="../mainwindow.ui" line="10651"/>
+        <location filename="../mainwindow.ui" line="10643"/>
+        <location filename="../mainwindow.ui" line="10655"/>
         <source>Debug state</source>
         <translation>调试状态</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10660"/>
+        <location filename="../mainwindow.ui" line="10664"/>
         <source>New CEmu instance</source>
         <translation>新建CEmu实例</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10672"/>
+        <location filename="../mainwindow.ui" line="10676"/>
         <source>Show key history</source>
         <translation>显示按键历史记录</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10681"/>
+        <location filename="../mainwindow.ui" line="10685"/>
         <source>Bootable CEmu image</source>
         <translation>可启动的CEmu镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10689"/>
+        <location filename="../mainwindow.ui" line="10693"/>
         <source>Hide menu bar</source>
         <translation>隐藏菜单栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10698"/>
+        <location filename="../mainwindow.ui" line="10702"/>
         <source>Copy screen to clipboard</source>
         <translation>将屏幕图像拷贝到剪贴板</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10701"/>
+        <location filename="../mainwindow.ui" line="10705"/>
         <source>Ctrl+Shift+C</source>
         <translation>Ctrl+Shift+C</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10710"/>
+        <location filename="../mainwindow.ui" line="10714"/>
         <source>Reset GUI docks</source>
         <translation>重置界面项目</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10719"/>
+        <location filename="../mainwindow.ui" line="10723"/>
         <source>Reset CEmu</source>
         <translation>重置CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10724"/>
+        <location filename="../mainwindow.ui" line="10728"/>
         <source>English</source>
         <translation>English</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10729"/>
+        <location filename="../mainwindow.ui" line="10733"/>
         <source>Français</source>
         <translation>Français</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10734"/>
+        <location filename="../mainwindow.ui" line="10738"/>
         <source>Nederlands</source>
         <translation>Nederlands</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10739"/>
+        <location filename="../mainwindow.ui" line="10743"/>
         <source>Español</source>
         <translation>Español</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10748"/>
-        <location filename="../mainwindow.ui" line="10757"/>
+        <location filename="../mainwindow.ui" line="10752"/>
+        <location filename="../mainwindow.ui" line="10761"/>
         <source>Window configuration</source>
         <translation>窗口设置</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10766"/>
+        <location filename="../mainwindow.ui" line="10770"/>
         <source>Report a bug / give feedback</source>
         <translation>报告漏洞/反馈意见</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10774"/>
+        <location filename="../mainwindow.ui" line="10778"/>
         <source>Hide status bar</source>
         <translation>隐藏状态栏</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10783"/>
-        <location filename="../mainwindow.ui" line="10792"/>
+        <location filename="../mainwindow.ui" line="10787"/>
+        <location filename="../mainwindow.ui" line="10796"/>
         <source>RAM image</source>
         <translation>RAM镜像</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10815"/>
+        <location filename="../mainwindow.ui" line="10819"/>
         <source>简体中文</source>
         <translation>简体中文</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="10818"/>
+        <location filename="../mainwindow.ui" line="10822"/>
         <source>Simplified Chinese</source>
         <translation>Simplified Chinese</translation>
     </message>
@@ -2174,8 +2174,8 @@ Portable mode has been activated.</source>
         <translation>启动程序</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="2530"/>
-        <location filename="../debugger.cpp" line="2564"/>
+        <location filename="../debugger.cpp" line="2540"/>
+        <location filename="../debugger.cpp" line="2574"/>
         <location filename="../mainwindow.cpp" line="2478"/>
         <location filename="../mainwindow.cpp" line="2568"/>
         <source>Goto Memory View</source>
@@ -2401,17 +2401,24 @@ File: </source>
         <translation>欢迎使用CEmu! 您需要提供一个ROM镜像来开始使用，您可以在此处创建一个，也可以从计算机中选择一个。</translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="386"/>
+        <location filename="../romselection.ui" line="284"/>
+        <source>To run the program, select Asm( from the catalog by pressing [2nd] then [0], and then pressing enter at the following prompt. You do not need the Asm( part if you&apos;re on OS 5.3 or later.
+Note that if you&apos;re on OS 5.5 or later, you will need to use an assembly program launcher instead (like a shell, or AsmHook, both of which can be installed through arTIfiCE first).</source>
+        <translation type="unfinished">要运行该程序，请从目录中选择 Asm(，按 [2]，然后按 [0]，并在下面的提示符下按回车键。如果操作系统是 5.3 或更高版本，则不需要 Asm( 部分。
+请注意，如果您的操作系统是 5.5 或更高版本，则需要使用汇编程序启动器（如 shell 或 AsmHook，这两种程序都可以先通过 arTIfiCE 安装）。</translation>
+    </message>
+    <message>
+        <location filename="../romselection.ui" line="387"/>
         <source>Using your computer&apos;s calculator connectivity software, copy all the variables prefixed with &quot;ROMData&quot; to your computer. Drag and drop all of them into the box below.</source>
         <translation>使用您电脑上的计算器连接软件, 将所有前缀为 &quot;ROMData&quot; 的复制到您的电脑上 并把它们拖到下方的框中。</translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="411"/>
+        <location filename="../romselection.ui" line="412"/>
         <source>Drop ROM segments here</source>
         <translation>将ROM文件拖到这里</translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="485"/>
+        <location filename="../romselection.ui" line="486"/>
         <source>Browse...</source>
         <translation>选取文件…</translation>
     </message>
@@ -2448,18 +2455,17 @@ File: </source>
         <translation>保存程序...</translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="284"/>
         <source>To run the program, select Asm( from the catalog by pressing [2nd][0], and then pressing enter at the following prompt.</source>
-        <translation>要运行该程序，请用 [2nd][0] 打开目录并选择 Asm(，然后在屏幕上显示如下内容时按下 Enter 键。</translation>
+        <translation type="vanished">要运行该程序，请用 [2nd][0] 打开目录并选择 Asm(，然后在屏幕上显示如下内容时按下 Enter 键。</translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="335"/>
-        <location filename="../romselection.ui" line="511"/>
+        <location filename="../romselection.ui" line="336"/>
+        <location filename="../romselection.ui" line="512"/>
         <source>Back</source>
         <translation>返回</translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="466"/>
+        <location filename="../romselection.ui" line="467"/>
         <source>Choose a place to save your ROM image. Once complete, CEmu will load automatically.</source>
         <translation>选择一个保存您ROM镜像的位置，CEmu在下次启动时将会自动加载该镜像。</translation>
     </message>
@@ -2474,7 +2480,7 @@ File: </source>
         <translation>CEmu 版本: </translation>
     </message>
     <message>
-        <location filename="../romselection.ui" line="361"/>
+        <location filename="../romselection.ui" line="362"/>
         <source>Next</source>
         <translation>下一个</translation>
     </message>
