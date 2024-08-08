@@ -79,9 +79,13 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tab_5">
+      <widget class="QWidget" name="tab_tibasic_debugger">
        <attribute name="title">
         <string>TI-Basic Debug</string>
+       </attribute>
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_17">
         <item>
