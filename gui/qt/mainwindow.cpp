@@ -668,8 +668,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         ui->buttonChangeSavedImagePath->setEnabled(false);
         ui->checkPortable->blockSignals(false);
     }
-
-    m_consoleFormat = ui->console->currentCharFormat();
 }
 
 void MainWindow::translateSwitch(const QString& lang) {
@@ -1384,20 +1382,19 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::console(const QString &str, const QColor &colorFg, const QColor &colorBg, int type) {
+void MainWindow::console(const QString &str, int type) {
     if (m_nativeConsole) {
         fputs(str.toStdString().c_str(), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
+        QTextCharFormat format = ui->console->currentCharFormat();
         if (type == EmuThread::ConsoleNorm) {
-            m_consoleFormat.setFontWeight(QFont::Normal);
+            format.setFontWeight(QFont::Normal);
         } else {
-            m_consoleFormat.setFontWeight(QFont::Black);
+            format.setFontWeight(QFont::Black);
         }
-        m_consoleFormat.setBackground(colorBg);
-        m_consoleFormat.setForeground(colorFg);
         QTextCursor cur(ui->console->document());
         cur.movePosition(QTextCursor::End);
-        cur.insertText(str, m_consoleFormat);
+        cur.insertText(str, format);
         if (ui->checkAutoScroll->isChecked()) {
             ui->console->setTextCursor(cur);
         }
@@ -1412,16 +1409,13 @@ void MainWindow::console(int type, const char *str, int size) {
         fwrite(str, sizeof(char), static_cast<size_t>(size), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
         static int state = CONSOLE_ESC;
-        static QColor sColorFg = ui->console->palette().color(QPalette::Text);
-        static QColor sColorBg = ui->console->palette().color(QPalette::Base);
         const char *tok;
         const QColor lookup[8] = { Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white };
 
-        QColor colorFg = sColorFg;
-        QColor colorBg = sColorBg;
         if ((tok = static_cast<const char*>(memchr(str, '\x1B', static_cast<size_t>(size))))) {
+            QTextCharFormat format = ui->console->currentCharFormat();
             if (tok != str) {
-                console(QString::fromUtf8(str, static_cast<int>(tok - str)), sColorFg, sColorBg, type);
+                console(QString::fromUtf8(str, static_cast<int>(tok - str)), type);
                 size -= tok - str;
             }
             do {
@@ -1444,8 +1438,8 @@ void MainWindow::console(int type, const char *str, int size) {
                             switch (x) {
                                 case '0':
                                     state = CONSOLE_ENDVAL;
-                                    colorBg = ui->console->palette().color(QPalette::Base);
-                                    colorFg = ui->console->palette().color(QPalette::Text);
+                                    format.clearBackground();
+                                    format.clearForeground();
                                     break;
                                 case '3':
                                     state = CONSOLE_FGCOLOR;
@@ -1455,15 +1449,16 @@ void MainWindow::console(int type, const char *str, int size) {
                                     break;
                                 default:
                                     state = CONSOLE_ESC;
-                                    sColorBg = ui->console->palette().color(QPalette::Base);
-                                    sColorFg = ui->console->palette().color(QPalette::Text);
+                                    format.clearBackground();
+                                    format.clearForeground();
+                                    ui->console->setCurrentCharFormat(format);
                                     break;
                             }
                             break;
                         case CONSOLE_FGCOLOR:
                             if (x >= '0' && x <= '7') {
                                 state = CONSOLE_ENDVAL;
-                                colorFg = lookup[x - '0'];
+                                format.setForeground(lookup[x - '0']);
                             } else {
                                 state = CONSOLE_ESC;
                             }
@@ -1471,7 +1466,7 @@ void MainWindow::console(int type, const char *str, int size) {
                         case CONSOLE_BGCOLOR:
                             if (x >= '0' && x <= '7') {
                                 state = CONSOLE_ENDVAL;
-                                colorBg = lookup[x - '0'];
+                                format.setBackground(lookup[x - '0']);
                             } else {
                                 state = CONSOLE_ESC;
                             }
@@ -1480,8 +1475,7 @@ void MainWindow::console(int type, const char *str, int size) {
                             if (x == ';') {
                                 state = CONSOLE_PARSE;
                             } else if (x == 'm') {
-                                sColorBg = colorBg;
-                                sColorFg = colorFg;
+                                ui->console->setCurrentCharFormat(format);
                                 state = CONSOLE_ESC;
                             } else {
                                 state = CONSOLE_ESC;
@@ -1498,10 +1492,10 @@ void MainWindow::console(int type, const char *str, int size) {
                 if (size > 0) {
                     const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', static_cast<size_t>(size)));
                     if (tokn) {
-                        console(QString::fromUtf8(tok, static_cast<int>(tokn - tok)), sColorFg, sColorBg, type);
+                        console(QString::fromUtf8(tok, static_cast<int>(tokn - tok)), type);
                         size -= tokn - tok;
                     } else {
-                        console(QString::fromUtf8(tok, static_cast<int>(size)), sColorFg, sColorBg, type);
+                        console(QString::fromUtf8(tok, static_cast<int>(size)), type);
                     }
                     tok = tokn;
                 } else {
@@ -1509,7 +1503,7 @@ void MainWindow::console(int type, const char *str, int size) {
                 }
             } while (tok);
         } else {
-            console(QString::fromUtf8(str, size), sColorFg, sColorBg, type);
+            console(QString::fromUtf8(str, size), type);
         }
     }
 }
@@ -1523,7 +1517,7 @@ void MainWindow::consoleClear() {
         ret = system("clear");
 #endif
         if (ret == -1) {
-            console(QStringLiteral("[CEmu] Error clearing console\n"));
+            console(QStringLiteral("[CEmu] Error clearing console\n"), EmuThread::ConsoleErr);
         }
     } else {
         ui->console->clear();
@@ -1836,9 +1830,7 @@ void MainWindow::consoleModified() {
     ui->console->clear();
     if (ui->radioConsole->isChecked()) {
         ui->console->setEnabled(false);
-        console(tr("[CEmu] Dock output redirected to stdout. Use the radio button to enable dock."),
-                ui->console->palette().color(QPalette::Text),
-                ui->console->palette().color(QPalette::Base));
+        console(tr("[CEmu] Dock output redirected to stdout. Use the radio button to enable dock."));
     } else {
         ui->console->setEnabled(true);
     }
@@ -2336,7 +2328,7 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
             break;
         case EMU_STATE_INVALID:
             if (type == EMU_DATA_IMAGE) {
-                console(QStringLiteral("[CEmu] Failed loading image, falling back to ROM.\n"));
+                console(QStringLiteral("[CEmu] Failed loading image, falling back to ROM.\n"), EmuThread::ConsoleErr);
                 emu.load(EMU_DATA_ROM, m_pathRom);
             }
             break;
@@ -2743,7 +2735,7 @@ void MainWindow::ipcReceived() {
             close();
             break;
         default:
-           console(QStringLiteral("[CEmu] IPC Unknown\n"));
+           console(QStringLiteral("[CEmu] IPC Unknown\n"), EmuThread::ConsoleErr);
            break;
     }
 }

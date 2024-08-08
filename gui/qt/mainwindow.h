@@ -189,7 +189,7 @@ private:
     void sendEmuLetterKey(char letter);
 
     // console
-    void console(const QString &str, const QColor &colorFg = Qt::black, const QColor &colorBg = Qt::white, int type = EmuThread::ConsoleNorm);
+    void console(const QString &str, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);
     void consoleStr();
     void consoleClear();
@@ -655,7 +655,6 @@ private:
     QIcon m_iconSync, m_iconAddMem, m_iconLcd;
     QIcon m_iconAscii, m_iconUiEdit;
     QIcon m_iconCheck, m_iconCheckGray;
-    QTextCharFormat m_consoleFormat;
 
     QString m_gotoAddr;
     QString m_flashGotoAddr;

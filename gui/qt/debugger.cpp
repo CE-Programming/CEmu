@@ -349,7 +349,7 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
                         QString::number(cmd, 16).rightJustified(2, '0') +
                         QStringLiteral(",0x") +
                         QString::number(offset + 0xFFFF00, 16) +
-                        QStringLiteral("\n"), Qt::darkRed);
+                        QStringLiteral("\n"), EmuThread::ConsoleErr);
                 break;
         }
     }
@@ -1848,7 +1848,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         m_equateFiles.removeAll(fileName);
-        console(QStringLiteral("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
+        console(QStringLiteral("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n", EmuThread::ConsoleErr);
         return;
     }
 
