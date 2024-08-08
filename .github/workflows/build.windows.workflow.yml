@@ -55,6 +55,7 @@ jobs:
         configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
         buildPreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
       env:
+        VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows
         VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-release
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
