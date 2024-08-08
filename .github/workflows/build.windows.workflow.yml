@@ -41,15 +41,15 @@ jobs:
         submodules: 'recursive'
 
     - name: Install latest CMake
-      uses: lukka/get-cmake@4dcd3eb73017c61159eb130746fbca35d78a3d5f # latest as of 2023-08-30
+      uses: lukka/get-cmake@a70f1cfa1857a3eecfe0d34962269e1b1e8be56c # latest as of 2024-08-08
 
     - name: Restore artifacts, or setup vcpkg (do not install any package)
-      uses: lukka/run-vcpkg@3a22746930754ced94ac552915aa816265ef90c1 # latest as of 2023-08-30
+      uses: lukka/run-vcpkg@d87e7fac99f22776a4973d7e413921ea254c1fc9 # latest as of 2024-08-08
       with:
-        vcpkgGitCommitId: 'ad25766aefb5313b6bc4e2a4b78a2946f84fbf66' # latest as of 2024-06-08
+        vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
-    - name: Build CEmu Qt ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
-      uses: lukka/run-cmake@fbcfe006bc5450def7a319af91733647d985d157 # latest as of 2023-08-30
+    - name: Build CEmu ${{ matrix.qtver }} ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
+      uses: lukka/run-cmake@4b1adc1944be8367be9f4e08303ce49918db8e3c # latest as of 2024-08-08
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
@@ -58,7 +58,7 @@ jobs:
         VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-release
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
-    - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} EXE
+    - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} ${{ matrix.qtver }} EXE
       uses: actions/upload-artifact@v3
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_${{ matrix.qtver }}_master
