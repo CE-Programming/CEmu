@@ -295,10 +295,7 @@ else()
     message(STATUS "IPO/LTO not supported: <${error}>")
 endif()
 
-target_compile_definitions(CEmu PRIVATE $<$<CONFIG:Release>:QT_NO_DEBUG_OUTPUT>)
-if(CMAKE_BUILD_TYPE STREQUAL Release OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-    target_compile_definitions(CEmu PRIVATE QT_NO_DEBUG_OUTPUT)
-endif()
+target_compile_definitions(CEmu PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:QT_NO_DEBUG_OUTPUT>)
 
 if(UNIX OR APPLE)
     target_sources(CEmu PUBLIC ../../core/os/os-linux.c)

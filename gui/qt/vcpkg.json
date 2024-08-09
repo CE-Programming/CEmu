@@ -32,6 +32,12 @@
           "name": "qtbase",
           "default-features": false,
           "features": [ "dbus", "gui", "network", "widgets", "png" ]
+        },
+        {
+          "name": "qtbase",
+          "default-features": false,
+          "features": [ "xcb" ],
+          "platform": "linux"
         }
       ]
     }
