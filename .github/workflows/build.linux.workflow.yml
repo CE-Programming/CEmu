@@ -31,6 +31,15 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: workaround for default apt mirror connectivity issues
+      run: |
+        sudo sed -i 's/azure\.//' /etc/apt/sources.list
+
+    - name: Install dependencies
+      run: |
+        set -e
+        sudo apt install -y autoconf automake autoconf-archive '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev
+
     - name: Install latest CMake
       uses: lukka/get-cmake@a70f1cfa1857a3eecfe0d34962269e1b1e8be56c # latest as of 2024-08-08
 
@@ -59,7 +68,7 @@ jobs:
     - name: Prepare binary for release upload
       if: ${{ matrix.statictype == 'ON' }}
       run: |
-        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/build/CEmu-nightly_linux64_qt6
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_qt6
 
     - name: Update nightly release
       if: ${{ matrix.statictype == 'ON' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
@@ -69,4 +78,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ${{ github.workspace }}/build/CEmu-nightly_linux64_qt6
+          ${{ github.workspace }}/CEmu-nightly_linux64_qt6
