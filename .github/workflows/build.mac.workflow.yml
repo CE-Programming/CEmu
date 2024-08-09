@@ -16,15 +16,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-12, macos-13, macos-14]
+        config: [Release]
         include:
           - os: macos-12
-            qtver: "5.15.2"
+            arch: x64
+            qtver: Qt5
             qtvershort: "5_intel"
           - os: macos-13
-            qtver: "6.7.2"
+            arch: x64
+            qtver: Qt6
             qtvershort: "6_intel"
           - os: macos-14
-            qtver: "6.7.2"
+            arch: arm64
+            qtver: Qt6
             qtvershort: "6_arm"
 
     steps:
@@ -36,47 +40,31 @@ jobs:
     - name: Install dependencies
       run: |
         set -e
-        brew install libarchive libpng zlib automake autoconf libtool
+        brew install automake autoconf libtool
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@f03f05556819ceb3781ee2f455ec44c339d683c0 # v4
-      env:
-          PIP_BREAK_SYSTEM_PACKAGES: 1
+    - name: Install latest CMake
+      uses: lukka/get-cmake@a70f1cfa1857a3eecfe0d34962269e1b1e8be56c # latest as of 2024-08-08
+
+    - name: Restore artifacts, or setup vcpkg (do not install any package)
+      uses: lukka/run-vcpkg@d87e7fac99f22776a4973d7e413921ea254c1fc9 # latest as of 2024-08-08
       with:
-          target: desktop
-          version: "${{ matrix.qtver }}"
-          setup-python: false
-          cache: true
+        vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
-    # Workaround!
-    # libarchive.pc now has (lib)iconv in Requires.private, which doesn't work here
-    # See https://github.com/libarchive/libarchive/pull/1813 and other issues
-    - name: Fix libarchive pkg-config file
-      run: |
-        sudo sed -i '' -E '/^Requires.private: (lib)?iconv/d' $(brew --prefix libarchive)/lib/pkgconfig/libarchive.pc
+    - name: Build CEmu ${{ matrix.qtver }} ${{ matrix.config }} on MacOS ${{ matrix.arch }}
+      uses: lukka/run-cmake@4b1adc1944be8367be9f4e08303ce49918db8e3c # latest as of 2024-08-08
+      with:
+        cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
+        configurePreset: 'Mac-${{ matrix.arch }}-${{ matrix.qtver }}'
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON']"
+        buildPreset: 'Mac-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
+      env:
+        VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-osx-release
+        VCPKG_FORCE_SYSTEM_BINARIES: 1
 
-    - name: Build CEmu Qt on macOS
+    - name: Move to temp folder
       run: |
-        set -e
-        export PKG_CONFIG_PATH="$(brew --prefix libarchive)/lib/pkgconfig:$PKG_CONFIG_PATH"
-        cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
-        mkdir build
-        cd build
-        qmake ../gui/qt && make -j4
-        macdeployqt CEmu.app
         mkdir -p /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
-        mv CEmu.app /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
-
-    - name: Fixup libarchive deps for some reason
-      run: |
-        libDir=/tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/CEmu.app/Contents/Frameworks/
-        libAPath=${libDir}/libarchive.13.dylib
-        ls -al "$libAPath" || exit 1
-        for lib in xz zstd lz4 libb2; do cp -a $(brew --prefix ${lib})/lib/lib*.dylib "$libDir"; done
-        install_name_tool -change "@loader_path/../../../../opt/xz/lib/liblzma.5.dylib"   "@executable_path/../Frameworks/liblzma.5.dylib" \
-                          -change "@loader_path/../../../../opt/zstd/lib/libzstd.1.dylib" "@executable_path/../Frameworks/libzstd.1.dylib" \
-                          -change "@loader_path/../../../../opt/lz4/lib/liblz4.1.dylib"   "@executable_path/../Frameworks/liblz4.1.dylib"  \
-                          -change "@loader_path/../../../../opt/libb2/lib/libb2.1.dylib"  "@executable_path/../Frameworks/libb2.1.dylib"  "$libAPath" || echo lib path replacement fail
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Mac-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.app /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
 
     - name: "Codesign CEmu.app"
       env:
