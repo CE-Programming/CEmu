@@ -26,7 +26,7 @@ jobs:
             release_suffix: static
           - statictype: OFF
             qtver: Qt6-Dynamic
-            host_triplet: dynamic
+            host_triplet: dynamic-apng
             release_suffix: shared
 
     steps:
