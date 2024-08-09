@@ -334,4 +334,8 @@ err:
     return true;
 }
 
+#else
+
+#warning "LibPNG APNG functions not available - Animated PNG capture will not be available"
+
 #endif
