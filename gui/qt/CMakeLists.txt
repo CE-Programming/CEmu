@@ -8,6 +8,18 @@ else()
     list(APPEND VCPKG_MANIFEST_FEATURES "qt6")
 endif()
 
+option(DEPS_RELEASE_ONLY "Build only release versions of vcpkg dependencies" OFF)
+
+if(DEPS_RELEASE_ONLY)
+    if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+        message(FATAL_ERROR "Must provide a VCPKG_TARGET_TRIPLET to set as release only")
+    endif()
+    if(NOT VCPKG_TARGET_TRIPLET MATCHES "-release$")
+        set(VCPKG_TARGET_TRIPLET "${VCPKG_TARGET_TRIPLET}-release")
+        message("Updated VCPKG_TARGET_TRIPLET to ${VCPKG_TARGET_TRIPLET}")
+    endif()
+endif()
+
 project(CEmu
         VERSION 2.0
         LANGUAGES C CXX)

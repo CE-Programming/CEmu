@@ -26,9 +26,11 @@ jobs:
           - arch: x64
             arch_name: 64-bit
             arch_suffix: "64"
+            deps_release_only: "ON"
           - arch: x86
             arch_name: 32-bit
             arch_suffix: "32"
+            deps_release_only: "OFF"
     steps:
     - name: Remove Perl Strawberry installation
       # Removes conflicting headers from include paths
@@ -52,8 +54,9 @@ jobs:
       uses: lukka/run-cmake@4b1adc1944be8367be9f4e08303ce49918db8e3c # latest as of 2024-08-08
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
-        buildPreset: '${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}'
+        configurePreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}'
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=${{ matrix.deps_release_only }}']"
+        buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows
         VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-release
@@ -63,13 +66,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_${{ matrix.qtver }}_master
-        path: ${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe
 
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |
         $ReleaseName = "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe".Replace("Qt", "qt")
-        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/CEmu.exe" -NewName $ReleaseName
+        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe" -NewName $ReleaseName
         echo "RELEASE_NAME=$ReleaseName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Update nightly release
@@ -80,4 +83,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ./gui/qt/CEmu.build/${{ matrix.arch }}-${{ matrix.config }}-${{ matrix.qtver }}/${{ env.RELEASE_NAME }}
+          ./gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/${{ env.RELEASE_NAME }}
