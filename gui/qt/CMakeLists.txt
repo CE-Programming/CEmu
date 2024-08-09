@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.21.1)
 
+set(X_VCPKG_FORCE_VCPKG_X_LIBRARIES ON)
+
 option(USE_QT5 "Build with Qt5 instead of Qt6" OFF)
 
 if(USE_QT5)
@@ -275,6 +277,12 @@ else()
     message(WARNING "No LibPNG found! APNG capture will not be available")
 endif()
 
+#if(LINUX AND TRY_STATIC_LIBS)
+#    target_link_libraries(CEmu PRIVATE
+#        -lxcb -lxcb-image
+#    )
+#endif()
+
 target_link_libraries(CEmu PRIVATE
     Qt::Core
     Qt::Gui
@@ -282,6 +290,14 @@ target_link_libraries(CEmu PRIVATE
     Qt::Network
     Qt::Widgets
 )
+
+if(LINUX AND TRY_STATIC_LIBS)
+    target_link_libraries(CEmu PRIVATE
+        /usr/lib/x86_64-linux-gnu/libXau.a
+        /usr/lib/x86_64-linux-gnu/libXdmcp.a
+        /usr/lib/x86_64-linux-gnu/libbsd.a
+    )
+endif()
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT lto_supported OUTPUT error)

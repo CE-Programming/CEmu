@@ -38,6 +38,10 @@
           "default-features": false,
           "features": [ "xcb" ],
           "platform": "linux"
+        },
+        {
+          "name": "xcb-image",
+          "platform": "linux"
         }
       ]
     }
