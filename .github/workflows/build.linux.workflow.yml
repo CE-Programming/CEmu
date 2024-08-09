@@ -10,13 +10,20 @@ on:
 
 jobs:
   build:
-    name: "Build: ${{ matrix.os }} - static ${{ matrix.statictype }}"
+    name: "Build: ${{ matrix.os }} - ${{ matrix.qtver }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04]
+        arch: [x64]
+        config: [Release]
         statictype: [ON, OFF]
+        include:
+          - statictype: ON
+            qtver: Qt6
+          - statictype: OFF
+            qtver: Qt6-Dynamic
 
     steps:
     - name: Checkout Git Repo
@@ -24,47 +31,35 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: workaround for default apt mirror connectivity issues
-      run: |
-        sudo sed -i 's/azure\.//' /etc/apt/sources.list
+    - name: Install latest CMake
+      uses: lukka/get-cmake@a70f1cfa1857a3eecfe0d34962269e1b1e8be56c # latest as of 2024-08-08
 
-    - name: Install dependencies
-      run: |
-        set -e
-        sudo add-apt-repository universe
-        sudo apt update
-        sudo apt install -y cmake ninja-build libarchive-dev libzstd-dev zlib1g-dev libgl1-mesa-dev nettle-dev libacl1-dev liblz4-dev libc6-dev
-
-    - name: Install Qt
-      uses: jurplel/install-qt-action@f03f05556819ceb3781ee2f455ec44c339d683c0 # v4
+    - name: Restore artifacts, or setup vcpkg (do not install any package)
+      uses: lukka/run-vcpkg@d87e7fac99f22776a4973d7e413921ea254c1fc9 # latest as of 2024-08-08
       with:
-        version: 6.7.2
-        target: desktop
-        setup-python: false
-        cache: true
+        vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
-    - name: Build static libpng-apng dependency
-      run: |
-        set -e
-        cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
-
-    - name: Build CEmu Qt in Release
-      run: |
-        set -e
-        mkdir build && cd build
-        cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DTRY_STATIC_LIBS=${{ matrix.statictype }} ../gui/qt
-        cmake --build . --target all
+    - name: Build CEmu ${{ matrix.qtver }} ${{ matrix.config }} on Linux ${{ matrix.arch }}
+      uses: lukka/run-cmake@4b1adc1944be8367be9f4e08303ce49918db8e3c # latest as of 2024-08-08
+      with:
+        cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
+        configurePreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}'
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=${{ matrix.statictype }}']"
+        buildPreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
+      env:
+        VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-linux-release
+        VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload binary as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: CEmu_linux_static${{ matrix.statictype }}_master
-        path: ${{ github.workspace }}/build/CEmu
+        name: CEmu_linux_${{ matrix.qtver }}_master
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
 
     - name: Prepare binary for release upload
       if: ${{ matrix.statictype == 'ON' }}
       run: |
-        mv ${{ github.workspace }}/build/CEmu ${{ github.workspace }}/build/CEmu-nightly_linux64_qt6
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/build/CEmu-nightly_linux64_qt6
 
     - name: Update nightly release
       if: ${{ matrix.statictype == 'ON' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}

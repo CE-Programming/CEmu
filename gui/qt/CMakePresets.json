@@ -84,6 +84,15 @@
       }
     },
     {
+      "name": "linux-only",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
       "name": "Win-x64-Qt6",
       "inherits": [ "ninja-vcpkg-x64", "win-only" ],
       "cacheVariables": {
@@ -120,6 +129,30 @@
         "VCPKG_TARGET_TRIPLET": {
           "type": "STRING",
           "value": "arm64-osx"
+        }
+      }
+    },
+    {
+      "name": "Linux-x64-Qt6",
+      "inherits": [ "ninja-vcpkg-x64", "linux-only" ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux"
+        }
+      }
+    },
+    {
+      "name": "Linux-x64-Qt6-Dynamic",
+      "inherits": [ "ninja-vcpkg-x64", "linux-only" ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "TRY_STATIC_LIBS": {
+          "type": "BOOL",
+          "value": "OFF"
         }
       }
     },
@@ -259,6 +292,36 @@
     {
       "name": "Mac-arm64-Qt5-Release",
       "configurePreset": "Mac-arm64-Qt5",
+      "configuration": "Release"
+    },
+    {
+      "name": "Linux-x64-Qt6-Debug",
+      "configurePreset": "Linux-x64-Qt6",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Linux-x64-Qt6-RelWithDebInfo",
+      "configurePreset": "Linux-x64-Qt6",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Linux-x64-Qt6-Release",
+      "configurePreset": "Linux-x64-Qt6",
+      "configuration": "Release"
+    },
+    {
+      "name": "Linux-x64-Qt6-Dynamic-Debug",
+      "configurePreset": "Linux-x64-Qt6-Dynamic",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Linux-x64-Qt6-Dynamic-RelWithDebInfo",
+      "configurePreset": "Linux-x64-Qt6-Dynamic",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Linux-x64-Qt6-Dynamic-Release",
+      "configurePreset": "Linux-x64-Qt6-Dynamic",
       "configuration": "Release"
     }
   ]
