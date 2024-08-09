@@ -23,9 +23,11 @@ jobs:
           - statictype: ON
             qtver: Qt6
             host_triplet: release
+            release_suffix: static
           - statictype: OFF
             qtver: Qt6-Dynamic
             host_triplet: dynamic
+            release_suffix: shared
 
     steps:
     - name: Checkout Git Repo
@@ -68,16 +70,15 @@ jobs:
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
 
     - name: Prepare binary for release upload
-      if: ${{ matrix.statictype == 'ON' }}
       run: |
-        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_qt6
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}
 
     - name: Update nightly release
-      if: ${{ matrix.statictype == 'ON' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+      if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
       uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
       with:
         tag_name: nightly
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ${{ github.workspace }}/CEmu-nightly_linux64_qt6
+          ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}
