@@ -25,10 +25,6 @@
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "STRING",
           "value": "${sourceDir}/triplets"
-        },
-        "TRY_STATIC_LIBS": {
-          "type": "BOOL",
-          "value": "ON"
         }
       }
     },
@@ -153,10 +149,6 @@
         "VCPKG_TARGET_TRIPLET": {
           "type": "STRING",
           "value": "x64-linux-dynamic-apng"
-        },
-        "TRY_STATIC_LIBS": {
-          "type": "BOOL",
-          "value": "OFF"
         }
       }
     },

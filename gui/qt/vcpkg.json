@@ -36,7 +36,7 @@
         {
           "name": "qtbase",
           "default-features": false,
-          "features": [ "xcb" ],
+          "features": [ "fontconfig", "xcb" ],
           "platform": "linux"
         }
       ]
