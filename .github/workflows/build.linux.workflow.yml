@@ -26,7 +26,7 @@ jobs:
             release_suffix: static
           - statictype: OFF
             qtver: Qt6-Dynamic
-            host_triplet: dynamic-apng
+            host_triplet: dynamic-apng-release
             release_suffix: shared
 
     steps:
@@ -57,7 +57,7 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=${{ matrix.statictype }}']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON']"
         buildPreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-linux-${{ matrix.host_triplet }}

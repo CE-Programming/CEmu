@@ -26,11 +26,9 @@ jobs:
           - arch: x64
             arch_name: 64-bit
             arch_suffix: "64"
-            deps_release_only: "ON"
           - arch: x86
             arch_name: 32-bit
             arch_suffix: "32"
-            deps_release_only: "OFF"
     steps:
     - name: Remove Perl Strawberry installation
       # Removes conflicting headers from include paths
@@ -55,7 +53,7 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=${{ matrix.deps_release_only }}']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON']"
         buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows
