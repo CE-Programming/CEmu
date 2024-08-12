@@ -81,18 +81,19 @@ static void hex_byte(char **dest, uint8_t byte) {
     *(*dest)++ = hex_char(byte >> 0);
 }
 
-const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
-    static char buffer[20];
+const char *calc_var_name_to_utf8(uint8_t name[8], uint8_t namelen, bool named) {
+    static char buffer[26];
     char *dest = buffer;
     uint8_t i = 0;
     if (name[0] == 0x5D) {
         *dest++ = '\xCA';
         *dest++ = '\x9F';
         i++;
+        namelen--; /* Ignore formula byte when parsing name */
     }
-    for (; i < 8 && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
-                     (i && name[i] >= 'a' && name[i] <= 'z') ||
-                     (i && name[i] >= '0' && name[i] <= '9')); i++) {
+    for (; i < namelen && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
+                      (i && name[i] >= 'a' && name[i] <= 'z') ||
+                      (i && name[i] >= '0' && name[i] <= '9')); i++) {
         if (name[i] == 'Z' + 1) {
             *dest++ = '\xCE';
             *dest++ = '\xB8';
@@ -121,6 +122,18 @@ const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
                 *dest++ = 'g';
                 *dest++ = 'e';
                 *dest++ = '0' + (name[1] + 1) % 10;
+                break;
+            case 0x3F:
+                *dest++ = 'F';
+                *dest++ = 'o';
+                *dest++ = 'r';
+                *dest++ = 'm';
+                *dest++ = 'u';
+                *dest++ = 'l';
+                *dest++ = 'a';
+                *dest++ = '0' + name[1] / 100;
+                *dest++ = '0' + (name[1] / 10) % 10;
+                *dest++ = '0' + name[1] % 10;
                 break;
             case 0x5C:
                 *dest++ = '[';
@@ -189,9 +202,9 @@ const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
                 }
                 fallthrough;
             default:
-                for (i = 0; i < 8 && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
-                                      (name[i] >= 'a' && name[i] <= 'z') ||
-                                      (name[i] >= '0' && name[i] <= '9')); i++) {
+                for (i = 0; i < namelen && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
+                                            (name[i] >= 'a' && name[i] <= 'z') ||
+                                            (name[i] >= '0' && name[i] <= '9')); i++) {
                     if (name[i] == 'Z' + 1) {
                         *dest++ = '\xCE';
                         *dest++ = '\xB8';
@@ -200,12 +213,27 @@ const char *calc_var_name_to_utf8(uint8_t name[8], bool named) {
                     }
                 }
                 if (!i) {
-                    for (; i < 8 && name[i]; i++) {
+                    for (; i < namelen; i++) {
                         hex_byte(&dest, name[i]);
                     }
                 }
                 break;
         }
+    }
+    if (name[0] == 0x5D && name[namelen] != 0) {
+        *dest++ = ' ';
+        *dest++ = '(';
+        *dest++ = 'F';
+        *dest++ = 'o';
+        *dest++ = 'r';
+        *dest++ = 'm';
+        *dest++ = 'u';
+        *dest++ = 'l';
+        *dest++ = 'a';
+        *dest++ = '0' + name[namelen] / 100;
+        *dest++ = '0' + (name[namelen] / 10) % 10;
+        *dest++ = '0' + name[namelen] % 10;
+        *dest++ = ')';
     }
     *dest = '\0';
     return buffer;
@@ -275,6 +303,7 @@ bool vat_search_next(calc_var_t *var) {
         return false; /* some sanity check failed */
     }
     var->type1    = mem_peek_byte(var->vat--);
+    var->type     = (calc_var_type_t)(var->type1 & 0x3F);
     var->type2    = mem_peek_byte(var->vat--);
     var->version  = mem_peek_byte(var->vat--);
     var->address  = mem_peek_byte(var->vat--);
@@ -282,7 +311,7 @@ bool vat_search_next(calc_var_t *var) {
     var->address |= mem_peek_byte(var->vat--) << 16;
     if ((var->named = var->vat > pTemp && var->vat <= progPtr)) {
         var->namelen = mem_peek_byte(var->vat--);
-        if (!var->namelen || var->namelen > 8) {
+        if (!var->namelen || var->namelen > 8 - calc_var_is_list(var)) {
             return false; /* invalid name length */
         }
     } else {
@@ -294,7 +323,6 @@ bool vat_search_next(calc_var_t *var) {
     } else if (var->address < 0xD1A881 || var->address >= 0xD40000) {
         return false;
     }
-    var->type = (calc_var_type_t)(var->type1 & 0x3F);
     switch (var->type) {
         case CALC_VAR_TYPE_REAL:
         case CALC_VAR_TYPE_REAL_FRAC:
@@ -398,15 +426,21 @@ bool vat_search_next(calc_var_t *var) {
 }
 
 bool vat_search_find(const calc_var_t *target, calc_var_t *result) {
+    /* Ignore linked formula when comparing list names */
+    bool isList = calc_var_is_list(target);
     vat_search_init(result);
     while (vat_search_next(result)) {
         if (result->type == target->type &&
             result->namelen == target->namelen &&
-            !memcmp(result->name, target->name, target->namelen)) {
+            !memcmp(result->name, target->name, target->namelen - isList)) {
             return true;
         }
     }
     return false;
+}
+
+bool calc_var_is_list(const calc_var_t *var) {
+    return var && (var->type == CALC_VAR_TYPE_REAL_LIST || var->type == CALC_VAR_TYPE_CPLX_LIST);
 }
 
 bool calc_var_is_prog(const calc_var_t *var) {

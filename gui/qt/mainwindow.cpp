@@ -1993,7 +1993,7 @@ void MainWindow::varShow() {
                     var_type_str += QStringLiteral(" (ASM)");
                 }
 
-                QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name, var.named));
+                QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name, var.namelen, var.named));
                 QTableWidgetItem *var_location = new QTableWidgetItem(var.archived ? tr("Archive") : QStringLiteral("RAM"));
                 QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
@@ -2039,7 +2039,7 @@ void MainWindow::varSaveSelected() {
     if (selectedVars.size() < 2) {
         QMessageBox::warning(this, MSG_WARNING, tr("Select at least two files to group"));
     } else {
-         fileNames = varDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
+        fileNames = varDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         if (fileNames.size() == 1) {
             if (emu_receive_variable(fileNames.first().toUtf8(), selectedVars.constData(), selectedVars.size()) != LINK_GOOD) {
                 QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + fileNames.first());
@@ -2083,8 +2083,12 @@ void MainWindow::varSaveSelectedFiles() {
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
         if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
             calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
+            if (calc_var_is_list(&var)) {
+                // Remove any linked formula before generating filename
+                var.name[var.namelen - 1] = 0;
+            }
 
-            name = QString(calc_var_name_to_utf8(var.name, var.named));
+            name = QString(calc_var_name_to_utf8(var.name, var.namelen, var.named));
             filename = dialog.directory().absolutePath() + "/" + name + "." + m_varExtensions[var.type1];
 
             if (emu_receive_variable(filename.toStdString().c_str(), &var, 1) != LINK_GOOD) {

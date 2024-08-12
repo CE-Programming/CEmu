@@ -87,6 +87,10 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
     if (fseek(fd, FILE_DATA_START, SEEK_SET))          goto w_err;
     while (count--) {
         if (!vat_search_find(vars++, &var))            goto w_err;
+        if (calc_var_is_list(&var)) {
+            /* Remove any linked formula from var name */
+            var.name[var.namelen - 1] = 0;
+        }
         if (write_le16(header_size,        fd) !=   1) goto w_err;
         if (write_le16(var.size,           fd) !=   1) goto w_err;
         if (fputc(var.type,                fd) == EOF) goto w_err;

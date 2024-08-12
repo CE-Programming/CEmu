@@ -54,8 +54,7 @@ typedef enum calc_var_type {
 } calc_var_type_t;
 
 extern const char *calc_var_type_names[0x40];
-const char *calc_var_name_to_utf8(uint8_t name[8], bool named);
-const char *calc_var_name_to_ascii(uint8_t name[8]);
+const char *calc_var_name_to_utf8(uint8_t name[8], uint8_t namelen, bool named);
 
 typedef struct calc_var {
     uint32_t vat, address;
@@ -69,6 +68,7 @@ void vat_search_init(calc_var_t *);
 bool vat_search_next(calc_var_t *);
 bool vat_search_find(const calc_var_t *, calc_var_t *);
 
+bool calc_var_is_list(const calc_var_t *);
 bool calc_var_is_prog(const calc_var_t *);
 bool calc_var_is_asmprog(const calc_var_t *);
 bool calc_var_is_internal(const calc_var_t *);
