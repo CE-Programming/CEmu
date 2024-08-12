@@ -26,6 +26,7 @@
 #include <QShortcut> /* Different module in Qt5 vs Qt6 */
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
+#include <QtCore/QPointer>
 #include <QtGui/QTextCursor>
 #include <QtGui/QFont>
 #include <QtWidgets/QMessageBox>
@@ -699,7 +700,7 @@ private:
     QStringList m_docksVisualizerConfig;
     QList<DockWidget*> m_dockPtrs;
     QSettings *m_config = Q_NULLPTR;
-    HexWidget *m_memWidget = Q_NULLPTR;
+    QPointer<HexWidget> m_memWidget = Q_NULLPTR;
 
     QString m_pathRom;
     QString m_pathRam;

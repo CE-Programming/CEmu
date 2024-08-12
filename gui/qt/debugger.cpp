@@ -2009,6 +2009,15 @@ void MainWindow::gotoDisasmAddr(uint32_t address) {
 void MainWindow::gotoMemAddr(uint32_t address) {
     if (m_memWidget != Q_NULLPTR) {
         memGoto(m_memWidget, address);
+    } else {
+        for (HexWidget *edit : { ui->flashEdit, ui->ramEdit }) {
+            uint32_t offset = address - edit->getBase();
+            if (offset < edit->getSize()) {
+                edit->setFocus();
+                edit->setOffset(offset);
+                break;
+            }
+        }
     }
 }
 
@@ -2710,6 +2719,7 @@ void MainWindow::addVisualizerDock(const QString &magic, const QString &config) 
     });
 
     dw->setState(m_uiEditMode);
+    dw->setAttribute(Qt::WA_DeleteOnClose);
     addDockWidget(Qt::RightDockWidgetArea, dw);
     dw->setObjectName(magic);
     dw->setWidget(widget);
@@ -2730,6 +2740,7 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     dw = new DockWidget(TXT_MEM_DOCK, this);
     dw->setObjectName(magic);
     dw->setState(m_uiEditMode);
+    dw->setAttribute(Qt::WA_DeleteOnClose);
 
     if (m_setup) {
         dw->setFloating(true);

@@ -425,6 +425,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRamSync, &QToolButton::clicked, this, &MainWindow::ramSyncPressed);
     connect(ui->flashEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
     connect(ui->ramEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
+    connect(ui->flashEdit, &HexWidget::focused, [this] { m_memWidget = Q_NULLPTR; });
+    connect(ui->ramEdit, &HexWidget::focused, [this] { m_memWidget = Q_NULLPTR; });
 
     // keymap
     connect(ui->radioNaturalKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
