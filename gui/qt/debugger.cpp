@@ -2546,31 +2546,24 @@ void MainWindow::contextOp(const QPoint &posa) {
         return;
     }
 
-    QString gotoMem = tr("Goto Memory View");
-    QString copyAddr = tr("Copy Address");
-    QString copyData = tr("Copy Data");
     QPoint globalPos = obj->mapToGlobal(posa);
 
     QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), OP_ADDR_COL)->text();
     QString data = obj->item(obj->selectionModel()->selectedRows().first().row(), obj->objectName() == QStringLiteral("opView") ? 2 : 1)->text();
 
     QMenu menu;
-    menu.addAction(gotoMem);
+    QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
+    QAction *copyAddr = menu.addAction(ACTION_COPY_ADDR);
     menu.addSeparator();
-    menu.addAction(copyAddr);
-    menu.addAction(copyData);
+    QAction *copyData = menu.addAction(ACTION_COPY_DATA);
 
     QAction *item = menu.exec(globalPos);
-    if (item != Q_NULLPTR) {
-        if (item->text() == gotoMem) {
-            gotoMemAddr(static_cast<uint32_t>(hex2int(addr)));
-        }
-        if (item->text() == copyAddr) {
-            qApp->clipboard()->setText(addr);
-        }
-        if (item->text() == copyData) {
-            qApp->clipboard()->setText(data);
-        }
+    if (item == gotoMem) {
+        gotoMemAddr(static_cast<uint32_t>(hex2int(addr)));
+    } else if (item == copyAddr) {
+        qApp->clipboard()->setText(addr);
+    } else if (item == copyData) {
+        qApp->clipboard()->setText(data);
     }
 }
 
@@ -2580,30 +2573,23 @@ void MainWindow::contextVat(const QPoint &posa) {
         return;
     }
 
-    QString gotoMem = tr("Goto Memory View");
-    QString gotoVat = tr("Goto VAT Memory View");
-    QString gotoDisasm = tr("Goto Disasm View");
     QPoint globalPos = obj->mapToGlobal(posa);
 
     QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_ADDR_COL)->text();
     QString vatAddr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_VAT_ADDR_COL)->text();
 
     QMenu menu;
-    menu.addAction(gotoMem);
-    menu.addAction(gotoVat);
-    menu.addAction(gotoDisasm);
+    QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
+    QAction *gotoVat = menu.addAction(ACTION_GOTO_VAT_MEMORY_VIEW);
+    QAction *gotoDisasm = menu.addAction(ACTION_GOTO_DISASM_VIEW);
 
-    QAction* item = menu.exec(globalPos);
-    if (item) {
-        if (item->text() == gotoMem) {
-            gotoMemAddr(hex2int(addr));
-        }
-        if (item->text() == gotoVat) {
-            gotoMemAddr(hex2int(vatAddr));
-        }
-        if (item->text() == gotoDisasm) {
-            disasmUpdateAddr(hex2int(addr) + 4, false);
-        }
+    QAction *item = menu.exec(globalPos);
+    if (item == gotoMem) {
+        gotoMemAddr(hex2int(addr));
+    } else if (item == gotoVat) {
+        gotoMemAddr(hex2int(vatAddr));
+    } else if (item == gotoDisasm) {
+        disasmUpdateAddr(hex2int(addr) + 4, false);
     }
 }
 

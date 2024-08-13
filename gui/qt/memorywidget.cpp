@@ -258,39 +258,30 @@ void MainWindow::contextMem(const QPoint &posa) {
 }
 
 void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
-    QString copyAddr = tr("Copy Address");
-    QString toggleBreak = tr("Toggle Breakpoint");
-    QString toggleWrite = tr("Toggle Write Watchpoint");
-    QString toggleRead = tr("Toggle Read Watchpoint");
-    QString toggleReadWrite = tr("Toggle Read/Write Watchpoint");
     QString addr = int2hex(address, 6);
 
-    copyAddr += QStringLiteral(" '") + addr + QStringLiteral("'");
-
     QMenu menu;
-    menu.addAction(copyAddr);
+    QAction *copyAddr = menu.addAction(ACTION_COPY_ADDR + QStringLiteral(" '") + addr + QStringLiteral("'"));
     menu.addSeparator();
-    menu.addAction(toggleBreak);
-    menu.addAction(toggleRead);
-    menu.addAction(toggleWrite);
-    menu.addAction(toggleReadWrite);
+    QAction *toggleBreak = menu.addAction(ACTION_TOGGLE_BREAK);
+    QAction *toggleRead = menu.addAction(ACTION_TOGGLE_READ);
+    QAction *toggleWrite = menu.addAction(ACTION_TOGGLE_WRITE);
+    QAction *toggleReadWrite = menu.addAction(ACTION_TOGGLE_RW);
 
     QAction* item = menu.exec(pos);
-    if (item) {
-        if (item->text() == copyAddr) {
-            qApp->clipboard()->setText(addr.toLatin1());
-        } else if (item->text() == toggleBreak) {
-            breakAdd(breakNextLabel(), address, true, true, false);
-            memDocksUpdate();
-        } else if (item->text() == toggleRead) {
-            watchAdd(watchNextLabel(), address, address, DBG_MASK_READ, true, false);
-            memDocksUpdate();
-        } else if (item->text() == toggleWrite) {
-            watchAdd(watchNextLabel(), address, address, DBG_MASK_WRITE, true, false);
-            memDocksUpdate();
-        } else if (item->text() == toggleReadWrite) {
-            watchAdd(watchNextLabel(), address, address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
-            memDocksUpdate();
-        }
+    if (item == copyAddr) {
+        qApp->clipboard()->setText(addr.toLatin1());
+    } else if (item == toggleBreak) {
+        breakAdd(breakNextLabel(), address, true, true, false);
+        memDocksUpdate();
+    } else if (item == toggleRead) {
+        watchAdd(watchNextLabel(), address, address, DBG_MASK_READ, true, false);
+        memDocksUpdate();
+    } else if (item == toggleWrite) {
+        watchAdd(watchNextLabel(), address, address, DBG_MASK_WRITE, true, false);
+        memDocksUpdate();
+    } else if (item == toggleReadWrite) {
+        watchAdd(watchNextLabel(), address, address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
+        memDocksUpdate();
     }
 }

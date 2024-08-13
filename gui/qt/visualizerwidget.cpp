@@ -71,34 +71,24 @@ void VisualizerWidget::translate() {
 }
 
 void VisualizerWidget::showPresets() {
-    const QString preset_1 = tr("Current LCD State");
-    const QString preset_2 = tr("8bpp Buffer 1");
-    const QString preset_3 = tr("8bpp Buffer 2");
-    const QString preset_4 = tr("Palette View");
-
     QMenu menu;
-    menu.addAction(preset_1);
-    menu.addAction(preset_2);
-    menu.addAction(preset_3);
-    menu.addAction(preset_4);
+    QAction *preset_1 = menu.addAction(tr("Current LCD State"));
+    QAction *preset_2 = menu.addAction(tr("8bpp Buffer 1"));
+    QAction *preset_3 = menu.addAction(tr("8bpp Buffer 2"));
+    QAction *preset_4 = menu.addAction(tr("Palette View"));
 
     QAction *item = menu.exec(mapToGlobal(m_btnLcd->pos()));
-    if (item != Q_NULLPTR) {
-        if (item->text() == preset_1) {
-            resetView();
-        } else
-        if (item->text() == preset_2) {
-            m_config->setText("d40000,320x240,8bpp,bgr");
-            stringToView();
-        } else
-        if (item->text() == preset_3) {
-            m_config->setText("d52c00,320x240,8bpp,bgr");
-            stringToView();
-        } else
-        if (item->text() == preset_4) {
-            m_config->setText("e30200,32x8,1555bpp,bgr,1000%");
-            stringToView();
-        }
+    if (item == preset_1) {
+        resetView();
+    } else if (item == preset_2) {
+        m_config->setText("d40000,320x240,8bpp,bgr");
+        stringToView();
+    } else if (item == preset_3) {
+        m_config->setText("d52c00,320x240,8bpp,bgr");
+        stringToView();
+    } else if (item == preset_4) {
+        m_config->setText("e30200,32x8,1555bpp,bgr,1000%");
+        stringToView();
     }
 }
 

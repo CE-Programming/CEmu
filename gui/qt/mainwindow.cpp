@@ -694,6 +694,15 @@ void MainWindow::translateExtras(int init) {
     MSG_ADD_MEMORY = tr("Add memory view");
     MSG_ADD_VISUALIZER = tr("Add memory visualizer");
     MSG_EDIT_UI = tr("Enable UI edit mode");
+    ACTION_TOGGLE_BREAK = tr("Toggle Breakpoint");
+    ACTION_TOGGLE_READ = tr("Toggle Read Watchpoint");
+    ACTION_TOGGLE_WRITE = tr("Toggle Write Watchpoint");
+    ACTION_TOGGLE_RW = tr("Toggle Read/Write Watchpoint");
+    ACTION_GOTO_MEMORY_VIEW = tr("Goto Memory View");
+    ACTION_GOTO_VAT_MEMORY_VIEW = tr("Goto VAT Memory View");
+    ACTION_GOTO_DISASM_VIEW = tr("Goto Disasm View");
+    ACTION_COPY_ADDR = tr("Copy Address");
+    ACTION_COPY_DATA = tr("Copy Data");
 
     QString __TXT_MEM_DOCK = tr("Memory View");
     QString __TXT_VISUALIZER_DOCK = tr("Memory Visualizer");
@@ -2467,55 +2476,45 @@ void MainWindow::disasmLine() {
 }
 
 void MainWindow::contextDisasm(const QPoint &posa) {
-    QString setPc = tr("Set PC");
-    QString toggleBreak = tr("Toggle Breakpoint");
-    QString toggleWrite = tr("Toggle Write Watchpoint");
-    QString toggleRead = tr("Toggle Read Watchpoint");
-    QString toggleRw = tr("Toggle Read/Write Watchpoint");
-    QString runUntil = tr("Run Until");
-    QString gotoMem = tr("Goto Memory View");
-
     m_disasm->setTextCursor(m_disasm->cursorForPosition(posa));
     QPoint globalPos = m_disasm->mapToGlobal(posa);
     QString addrStr = m_disasm->getSelectedAddr();
     uint32_t addr = static_cast<uint32_t>(hex2int(addrStr));
 
     QMenu menu;
-    menu.addAction(runUntil);
+    QAction *runUntil = menu.addAction(tr("Run Until"));
     menu.addSeparator();
-    menu.addAction(toggleBreak);
-    menu.addAction(toggleRead);
-    menu.addAction(toggleWrite);
-    menu.addAction(toggleRw);
+    QAction *toggleBreak = menu.addAction(ACTION_TOGGLE_BREAK);
+    QAction *toggleRead = menu.addAction(ACTION_TOGGLE_READ);
+    QAction *toggleWrite = menu.addAction(ACTION_TOGGLE_WRITE);
+    QAction *toggleRw = menu.addAction(ACTION_TOGGLE_RW);
     menu.addSeparator();
-    menu.addAction(gotoMem);
-    menu.addAction(setPc);
+    QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
+    QAction *setPc = menu.addAction(tr("Set PC"));
 
     QAction *item = menu.exec(globalPos);
-    if (item) {
-        if (item->text() == setPc) {
-            ui->pcregView->setText(addrStr);
-            debug_set_pc(addr);
-            disasmUpdateAddr(static_cast<int>(cpu.registers.PC), true);
-        } else if (item->text() == toggleBreak) {
-            breakAddGui();
-            memUpdate();
-        } else if (item->text() == toggleRead) {
-            watchAddGuiR();
-            memUpdate();
-        } else if (item->text() == toggleWrite) {
-            watchAddGuiW();
-            memUpdate();
-        } else if (item->text() == toggleRw) {
-            watchAddGuiRW();
-            memUpdate();
-        } else if (item->text() == runUntil) {
-            m_runUntilAddr = addr;
-            debugToggle();
-            debugStep(DBG_RUN_UNTIL);
-        } else if (item->text() == gotoMem) {
-            gotoMemAddr(addr);
-        }
+    if (item == setPc) {
+        ui->pcregView->setText(addrStr);
+        debug_set_pc(addr);
+        disasmUpdateAddr(static_cast<int>(cpu.registers.PC), true);
+    } else if (item == toggleBreak) {
+        breakAddGui();
+        memUpdate();
+    } else if (item == toggleRead) {
+        watchAddGuiR();
+        memUpdate();
+    } else if (item == toggleWrite) {
+        watchAddGuiW();
+        memUpdate();
+    } else if (item == toggleRw) {
+        watchAddGuiRW();
+        memUpdate();
+    } else if (item == runUntil) {
+        m_runUntilAddr = addr;
+        debugToggle();
+        debugStep(DBG_RUN_UNTIL);
+    } else if (item == gotoMem) {
+        gotoMemAddr(addr);
     }
 }
 
@@ -2544,31 +2543,20 @@ void MainWindow::contextVars(const QPoint& posa) {
 
     const calc_var_t var = ui->emuVarView->item(row, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
 
-    QString launch = tr("Launch program");
-
     QMenu contextMenu;
-    if (calc_var_is_prog(&var) && !calc_var_is_internal(&var)) {
-        contextMenu.addAction(launch);
-    }
+    QAction *launch = contextMenu.addAction(tr("Launch program"));
+    launch->setVisible(calc_var_is_prog(&var) && !calc_var_is_internal(&var));
 
     QAction *selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
-    if (selectedItem) {
-        if (selectedItem->text() == launch) {
-            varToggle();
-            varLaunch(&var);
-        }
+    if (selectedItem == launch) {
+        varToggle();
+        varLaunch(&var);
     }
 }
 
 void MainWindow::contextConsole(const QPoint &posa) {
     bool ok = true;
 
-    QString gotoMem = tr("Goto Memory View");
-    QString gotoDisasm = tr("Goto Disassembly View");
-    QString toggleBreak = tr("Toggle Breakpoint");
-    QString toggleWrite = tr("Toggle Write Watchpoint");
-    QString toggleRead = tr("Toggle Read Watchpoint");
-    QString toggleRw = tr("Toggle Read/Write Watchpoint");
     QPoint globalp = ui->console->mapToGlobal(posa);
     QTextCursor cursor = ui->console->cursorForPosition(posa);
     ui->console->setTextCursor(cursor);
@@ -2587,29 +2575,29 @@ void MainWindow::contextConsole(const QPoint &posa) {
         ui->console->setTextCursor(cursor);
 
         QMenu menu;
-        menu.addAction(gotoMem);
-        menu.addAction(gotoDisasm);
+        QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
+        QAction *gotoDisasm = menu.addAction(ACTION_GOTO_DISASM_VIEW);
         menu.addSeparator();
-        menu.addAction(toggleBreak);
-        menu.addAction(toggleRead);
-        menu.addAction(toggleWrite);
-        menu.addAction(toggleRw);
+        QAction *toggleBreak = menu.addAction(ACTION_TOGGLE_BREAK);
+        QAction *toggleRead = menu.addAction(ACTION_TOGGLE_READ);
+        QAction *toggleWrite = menu.addAction(ACTION_TOGGLE_WRITE);
+        QAction *toggleRw = menu.addAction(ACTION_TOGGLE_RW);
 
         QAction *item = menu.exec(globalp);
         if (item) {
-            if (item->text() == gotoMem) {
+            if (item == gotoMem) {
                 debugForce();
                 gotoMemAddr(address);
-            } else if (item->text() == gotoDisasm) {
+            } else if (item == gotoDisasm) {
                 debugForce();
                 gotoDisasmAddr(address);
-            } else if (item->text() == toggleBreak) {
+            } else if (item == toggleBreak) {
                 breakAdd(breakNextLabel(), address, true, true, false);
-            } else if (item->text() == toggleRead) {
+            } else if (item == toggleRead) {
                 watchAdd(watchNextLabel(), address, address, DBG_MASK_READ, true, false);
-            } else if (item->text() == toggleWrite) {
+            } else if (item == toggleWrite) {
                 watchAdd(watchNextLabel(), address, address, DBG_MASK_WRITE, true, false);
-            } else if (item->text() == toggleRw) {
+            } else if (item == toggleRw) {
                 watchAdd(watchNextLabel(), address, address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
             }
             memDocksUpdate();

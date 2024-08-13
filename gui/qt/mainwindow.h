@@ -850,6 +850,16 @@ private:
     QString MSG_ADD_VISUALIZER;
     QString MSG_EDIT_UI;
 
+    QString ACTION_TOGGLE_BREAK;
+    QString ACTION_TOGGLE_READ;
+    QString ACTION_TOGGLE_WRITE;
+    QString ACTION_TOGGLE_RW;
+    QString ACTION_GOTO_MEMORY_VIEW;
+    QString ACTION_GOTO_VAT_MEMORY_VIEW;
+    QString ACTION_GOTO_DISASM_VIEW;
+    QString ACTION_COPY_ADDR;
+    QString ACTION_COPY_DATA;
+
     QTableWidget *m_breakpoints = Q_NULLPTR;
     QTableWidget *m_watchpoints = Q_NULLPTR;
     QTableWidget *m_ports = Q_NULLPTR;

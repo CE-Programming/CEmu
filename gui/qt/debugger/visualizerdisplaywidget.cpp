@@ -131,15 +131,14 @@ void VisualizerDisplayWidget::contextMenu(const QPoint& posa) {
     copyStr += QStringLiteral(" '") + addr + QStringLiteral("'");
 
     QMenu menu;
-    menu.addAction(copyStr);
+    QAction *copy = menu.addAction(copyStr);
     menu.addSeparator();
-    menu.addAction(coordStr);
+    QAction *coord = menu.addAction(coordStr);
+    coord->setEnabled(false);
 
     QAction *item = menu.exec(mapToGlobal(posa));
-    if (item) {
-        if (item->text() == copyStr) {
-            QClipboard *clipboard = QApplication::clipboard();
-            clipboard->setText(addr.toLatin1());
-        }
+    if (item == copy) {
+        QClipboard *clipboard = QApplication::clipboard();
+        clipboard->setText(addr.toLatin1());
     }
 }
