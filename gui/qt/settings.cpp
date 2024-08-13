@@ -1165,6 +1165,7 @@ void MainWindow::addKeyHistoryDock(const QString &magic, int size) {
     });
 
     dw->setState(m_uiEditMode);
+    dw->setAttribute(Qt::WA_DeleteOnClose);
     addDockWidget(Qt::RightDockWidgetArea, dw);
     dw->setObjectName(magic);
     dw->setWidget(widget);

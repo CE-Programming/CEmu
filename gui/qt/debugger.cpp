@@ -2004,21 +2004,52 @@ void MainWindow::gotoPressed() {
 
 void MainWindow::gotoDisasmAddr(uint32_t address) {
     disasmUpdateAddr(address, false);
+    raiseContainingDock(ui->disasm);
+    ui->disasm->setFocus();
+}
+
+QAction *MainWindow::gotoDisasmAction(QMenu *menu) {
+    QAction *gotoDisasm = menu->addAction(ACTION_GOTO_DISASM_VIEW);
+    gotoDisasm->setEnabled(m_uiEditMode || ui->debugDisassemblyWidget->isVisible());
+    return gotoDisasm;
 }
 
 void MainWindow::gotoMemAddr(uint32_t address) {
-    if (m_memWidget != Q_NULLPTR) {
-        memGoto(m_memWidget, address);
-    } else {
-        for (HexWidget *edit : { ui->flashEdit, ui->ramEdit }) {
+    HexWidget *memWidget = m_memWidget;
+    bool didGoto = false;
+    if (memWidget == Q_NULLPTR && !ui->debugMemoryWidget->isVisible()) {
+        memWidget = firstMemWidget();
+    }
+    if (memWidget == Q_NULLPTR) {
+        for (HexWidget *edit : ui->debugMemoryWidget->findChildren<HexWidget*>()) {
             uint32_t offset = address - edit->getBase();
             if (offset < edit->getSize()) {
-                edit->setFocus();
                 edit->setOffset(offset);
+                memWidget = edit;
+                didGoto = true;
                 break;
             }
         }
+        if (!didGoto) {
+            if (m_docksMemory.isEmpty() && m_uiEditMode) {
+                addMemDock(randomString(20), 8, true);
+            }
+            memWidget = firstMemWidget();
+        }
     }
+    if (memWidget != Q_NULLPTR) {
+        if (!didGoto) {
+            memGoto(memWidget, address);
+        }
+        raiseContainingDock(memWidget);
+        memWidget->setFocus();
+    }
+}
+
+QAction *MainWindow::gotoMemAction(QMenu *menu, bool vat) {
+    QAction *gotoMem = menu->addAction(vat ? ACTION_GOTO_VAT_MEMORY_VIEW : ACTION_GOTO_MEMORY_VIEW);
+    gotoMem->setEnabled(m_uiEditMode || ui->debugMemoryWidget->isVisible() || !m_docksMemory.isEmpty());
+    return gotoMem;
 }
 
 void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
@@ -2552,7 +2583,7 @@ void MainWindow::contextOp(const QPoint &posa) {
     QString data = obj->item(obj->selectionModel()->selectedRows().first().row(), obj->objectName() == QStringLiteral("opView") ? 2 : 1)->text();
 
     QMenu menu;
-    QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
+    QAction *gotoMem = gotoMemAction(&menu);
     QAction *copyAddr = menu.addAction(ACTION_COPY_ADDR);
     menu.addSeparator();
     QAction *copyData = menu.addAction(ACTION_COPY_DATA);
@@ -2579,9 +2610,9 @@ void MainWindow::contextVat(const QPoint &posa) {
     QString vatAddr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_VAT_ADDR_COL)->text();
 
     QMenu menu;
-    QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
-    QAction *gotoVat = menu.addAction(ACTION_GOTO_VAT_MEMORY_VIEW);
-    QAction *gotoDisasm = menu.addAction(ACTION_GOTO_DISASM_VIEW);
+    QAction *gotoMem = gotoMemAction(&menu);
+    QAction *gotoVat = gotoMemAction(&menu, true);
+    QAction *gotoDisasm = gotoDisasmAction(&menu);
 
     QAction *item = menu.exec(globalPos);
     if (item == gotoMem) {
@@ -2589,7 +2620,7 @@ void MainWindow::contextVat(const QPoint &posa) {
     } else if (item == gotoVat) {
         gotoMemAddr(hex2int(vatAddr));
     } else if (item == gotoDisasm) {
-        disasmUpdateAddr(hex2int(addr) + 4, false);
+        gotoDisasmAddr(hex2int(addr) + 4);
     }
 }
 
@@ -2602,6 +2633,16 @@ void MainWindow::memDocksUpdate() {
             memUpdateEdit(edit);
         }
     }
+}
+
+HexWidget *MainWindow::firstMemWidget() {
+    if (!m_docksMemory.isEmpty()) {
+        QWidget *dock = findChild<QDockWidget*>(m_docksMemory.first());
+        if (dock != Q_NULLPTR) {
+            return dock->findChild<HexWidget*>();
+        }
+    }
+    return Q_NULLPTR;
 }
 
 //------------------------------------------------

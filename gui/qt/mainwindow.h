@@ -318,7 +318,9 @@ private:
     // goto
     void gotoPressed();
     void gotoDisasmAddr(uint32_t addr);
+    QAction *gotoDisasmAction(QMenu *menu);
     void gotoMemAddr(uint32_t addr);
+    QAction *gotoMemAction(QMenu *menu, bool vat = false);
 
     void handleCtrlClickText(QPlainTextEdit *edit);
     void handleCtrlClickLine(QLineEdit *edit);
@@ -517,6 +519,7 @@ private:
     void memSyncEdit(HexWidget *edit);
     void memAsciiToggle(HexWidget *edit);
     void memDocksUpdate();
+    HexWidget *firstMemWidget();
     void addMemDock(const QString &magic, int bytes, bool ascii);
     void addVisualizerDock(const QString &magic, const QString &config);
     void addKeyHistoryDock(const QString &magic, int size);
@@ -574,6 +577,7 @@ private:
                            Qt::CursorShape cursorShape,
                            int (QSize::*dimension)() const,
                            Qt::Orientation orientation);
+    void raiseContainingDock(QWidget *widget);
 
     // Members
     Ui::MainWindow *ui = Q_NULLPTR;

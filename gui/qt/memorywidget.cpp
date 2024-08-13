@@ -267,10 +267,14 @@ void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
     QAction *toggleRead = menu.addAction(ACTION_TOGGLE_READ);
     QAction *toggleWrite = menu.addAction(ACTION_TOGGLE_WRITE);
     QAction *toggleReadWrite = menu.addAction(ACTION_TOGGLE_RW);
+    menu.addSeparator();
+    QAction *gotoDisasm = gotoDisasmAction(&menu);
 
     QAction* item = menu.exec(pos);
     if (item == copyAddr) {
         qApp->clipboard()->setText(addr.toLatin1());
+    } else if (item == gotoDisasm) {
+        gotoDisasmAddr(address);
     } else if (item == toggleBreak) {
         breakAdd(breakNextLabel(), address, true, true, false);
         memDocksUpdate();

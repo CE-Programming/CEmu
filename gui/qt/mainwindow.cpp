@@ -985,6 +985,17 @@ bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
     return false;
 }
 
+void MainWindow::raiseContainingDock(QWidget *widget) {
+    QWidget *dock = findSelfOrParent<QDockWidget*>(widget);
+    if (dock != Q_NULLPTR) {
+        if (m_uiEditMode) {
+            dock->show();
+        }
+        dock->activateWindow();
+        dock->raise();
+    }
+}
+
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
     if (!childAt(event->pos())) {
         int sep = style()->pixelMetric(QStyle::PM_DockWidgetSeparatorExtent, Q_NULLPTR, this);
@@ -2489,7 +2500,7 @@ void MainWindow::contextDisasm(const QPoint &posa) {
     QAction *toggleWrite = menu.addAction(ACTION_TOGGLE_WRITE);
     QAction *toggleRw = menu.addAction(ACTION_TOGGLE_RW);
     menu.addSeparator();
-    QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
+    QAction *gotoMem = gotoMemAction(&menu);
     QAction *setPc = menu.addAction(tr("Set PC"));
 
     QAction *item = menu.exec(globalPos);
@@ -2575,8 +2586,8 @@ void MainWindow::contextConsole(const QPoint &posa) {
         ui->console->setTextCursor(cursor);
 
         QMenu menu;
-        QAction *gotoMem = menu.addAction(ACTION_GOTO_MEMORY_VIEW);
-        QAction *gotoDisasm = menu.addAction(ACTION_GOTO_DISASM_VIEW);
+        QAction *gotoMem = gotoMemAction(&menu);
+        QAction *gotoDisasm = gotoDisasmAction(&menu);
         menu.addSeparator();
         QAction *toggleBreak = menu.addAction(ACTION_TOGGLE_BREAK);
         QAction *toggleRead = menu.addAction(ACTION_TOGGLE_READ);
