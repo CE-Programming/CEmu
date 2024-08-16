@@ -31,7 +31,7 @@
 #define _SAMD21_SBMATRIX_INSTANCE_
 
 /* ========== Register definition for SBMATRIX peripheral ========== */
-#if (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
+#if (defined(NO_VOLATILE_CONST_IO) || defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
 #define REG_SBMATRIX_PRAS0         (0x41007080) /**< \brief (SBMATRIX) Priority A for Slave 0 */
 #define REG_SBMATRIX_PRBS0         (0x41007084) /**< \brief (SBMATRIX) Priority B for Slave 0 */
 #define REG_SBMATRIX_PRAS1         (0x41007088) /**< \brief (SBMATRIX) Priority A for Slave 1 */
