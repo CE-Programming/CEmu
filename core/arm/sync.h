@@ -3,7 +3,7 @@
 
 #include <stdatomic.h>
 #include <stdbool.h>
-#include <threads.h>
+#include "threading.h"
 
 #ifdef __cplusplus
 extern "C" {
