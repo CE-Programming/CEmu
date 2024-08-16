@@ -2,9 +2,9 @@ name: Build Linux
 
 on:
   push:
-    branches: [ master, feature/github-actions ]
+    branches: [ master, feature/github-actions, feature/python ]
   pull_request:
-    branches: [ master, feature/github-actions ]
+    branches: [ master, feature/github-actions, feature/python ]
 
 jobs:
   build:
