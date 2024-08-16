@@ -8,7 +8,7 @@
 #include "sync.h"
 
 #include <stdbool.h>
-#include <threads.h>
+#include "threading.h"
 
 struct arm {
     sync_t sync;
