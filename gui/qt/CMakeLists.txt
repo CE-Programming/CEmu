@@ -219,6 +219,19 @@ set(CEmu_Sources
     ${CEmu_Resources}
 )
 
+include(CheckCSourceCompiles)
+check_c_source_compiles("
+	#include <threads.h>
+	#include <stdatomic.h>
+	int main(void) { thrd_t thread; mtx_t mutex; tss_t tss; return 0; }
+	" HAVE_C11_THREADS)
+if (HAVE_C11_THREADS)
+    add_definitions(-DHAVE_C11_THREADS)
+else()
+    message(WARNING "C11 <threads.h> not supported, using tinycthread library as fallback")
+    set(CEmu_Sources ${CEmu_Sources} ../../core/arm/tinycthread.c ../../core/arm/tinycthread.h)
+endif()
+
 if(USE_QT5)
     add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
 else()
