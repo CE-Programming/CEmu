@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <threads.h>
+#include "threading.h"
 
 typedef struct {
     __IO PM_CTRL_Type               CTRL;        /**< \brief Offset: 0x00 (R/W  8) Control */
