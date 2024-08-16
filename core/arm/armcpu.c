@@ -12,7 +12,9 @@
 # define __has_builtin(builtin) 0
 #endif
 
-#ifdef _MSC_VER
+#if defined(__aarch64__) && defined(__APPLE__)
+# define DEBUG_BREAK __builtin_trap()
+#elif defined(_MSC_VER)
 # define DEBUG_BREAK __debugbreak()
 #else
 # define DEBUG_BREAK asm("int3")
