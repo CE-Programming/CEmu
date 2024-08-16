@@ -84,5 +84,5 @@ We also welcome more translations. Qt Linguist is a great tool for that (here's 
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), [KDMacTouchBar](https://github.com/KDAB/KDMacTouchBar), and FatCow's ["Farm-Fresh Web Icons"](http://www.fatcow.com/free-icons).  
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), [KDMacTouchBar](https://github.com/KDAB/KDMacTouchBar), [TinyCThread](https://github.com/gyrovorbis/tinycthread) (_gyrovorbis_'s fork), and FatCow's ["Farm-Fresh Web Icons"](http://www.fatcow.com/free-icons).  
 The complete licensing information is available in the [LICENSE](LICENSE) file.
