@@ -369,7 +369,7 @@ void I2S_Handler                 ( void );
 /** \defgroup SAMD21E18A_base Peripheral Base Address Definitions */
 /*@{*/
 
-#if defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)
+#if defined(NO_VOLATILE_CONST_IO) || defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)
 #define AC                            (0x42004400) /**< \brief (AC) APB Base Address */
 #define ADC                           (0x42004000) /**< \brief (ADC) APB Base Address */
 #define DAC                           (0x42004800) /**< \brief (DAC) APB Base Address */
@@ -410,6 +410,30 @@ void I2S_Handler                 ( void );
 #define TCC2                          (0x42002800) /**< \brief (TCC2) APB Base Address */
 #define USB                           (0x41005000) /**< \brief (USB) APB Base Address */
 #define WDT                           (0x40001000) /**< \brief (WDT) APB Base Address */
+
+#define AC_INST_NUM       1                          /**< \brief (AC) Number of instances */
+#define ADC_INST_NUM      1                          /**< \brief (ADC) Number of instances */
+#define DAC_INST_NUM      1                          /**< \brief (DAC) Number of instances */
+#define DMAC_INST_NUM     1                          /**< \brief (DMAC) Number of instances */
+#define DSU_INST_NUM      1                          /**< \brief (DSU) Number of instances */
+#define EIC_INST_NUM      1                          /**< \brief (EIC) Number of instances */
+#define EVSYS_INST_NUM    1                          /**< \brief (EVSYS) Number of instances */
+#define GCLK_INST_NUM     1                          /**< \brief (GCLK) Number of instances */
+#define HMATRIXB_INST_NUM 1                          /**< \brief (HMATRIXB) Number of instances */
+#define I2S_INST_NUM      1                          /**< \brief (I2S) Number of instances */
+#define MTB_INST_NUM      1                          /**< \brief (MTB) Number of instances */
+#define NVMCTRL_INST_NUM  1                          /**< \brief (NVMCTRL) Number of instances */
+#define PAC_INST_NUM      3                          /**< \brief (PAC) Number of instances */
+#define PM_INST_NUM       1                          /**< \brief (PM) Number of instances */
+#define PORT_INST_NUM     1                          /**< \brief (PORT) Number of instances */
+#define PORT_IOBUS_INST_NUM 1                          /**< \brief (PORT) Number of instances */
+#define PTC_INST_NUM      1                          /**< \brief (PTC) Number of instances */
+#define RTC_INST_NUM      1                          /**< \brief (RTC) Number of instances */
+#define SERCOM_INST_NUM   4                          /**< \brief (SERCOM) Number of instances */
+#define SYSCTRL_INST_NUM  1                          /**< \brief (SYSCTRL) Number of instances */
+#define TC_INST_NUM       3                          /**< \brief (TC) Number of instances */
+#define TCC_INST_NUM      3                          /**< \brief (TCC) Number of instances */
+#define WDT_INST_NUM      1                          /**< \brief (WDT) Number of instances */
 #else
 #define AC                ((Ac       *)0x42004400UL) /**< \brief (AC) APB Base Address */
 #define AC_INST_NUM       1                          /**< \brief (AC) Number of instances */

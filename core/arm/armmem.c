@@ -10,6 +10,9 @@
 #define FLASH_REGION_SIZE      (FLASH_SIZE      >> 4)
 #define FLASH_ROW_SIZE         (FLASH_PAGE_SIZE << 2)
 
+#define PORT_PMUX_COUNT 16
+#define PORT_PINCFG_COUNT 32
+
 #define ARM_SERCOM_SLEEP       4
 
 static uint32_t bitreverse(uint32_t x, uint8_t bits) {
@@ -495,9 +498,9 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
                 case PORT_WRCONFIG_OFFSET >> 2:
                     return PORT_WRCONFIG_RESETVALUE;
                 default:
-                    if (addr - (uint32_t)&PORT->Group->PMUX < sizeof(PORT->Group->PMUX)) {
+                    if (addr - (uint32_t)(PORT + PORT_PMUX_OFFSET) < (PORT_PMUX_COUNT << 2)) {
                         return PORT_PMUX_RESETVALUE;
-                    } else if (addr - (uint32_t)&PORT->Group->PINCFG < sizeof(PORT->Group->PINCFG)) {
+                    } else if (addr - (uint32_t)(PORT + PORT_PINCFG_OFFSET) < (PORT_PINCFG_COUNT << 2)) {
                         return PORT_PINCFG_RESETVALUE;
                     }
                     break;
@@ -689,9 +692,9 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
             case PORT_WRCONFIG_OFFSET >> 2:
                 return PORT_WRCONFIG_RESETVALUE;
             default:
-                if (addr - (uint32_t)&PORT->Group->PMUX < sizeof(PORT->Group->PMUX)) {
+                if (addr - (uint32_t)(PORT_IOBUS + PORT_PMUX_OFFSET) < (PORT_PMUX_COUNT << 2)) {
                     return PORT_PMUX_RESETVALUE;
-                } else if (addr - (uint32_t)&PORT->Group->PINCFG < sizeof(PORT->Group->PINCFG)) {
+                } else if (addr - (uint32_t)(PORT_IOBUS + PORT_PINCFG_OFFSET) < (PORT_PINCFG_COUNT << 2)) {
                     return PORT_PINCFG_RESETVALUE;
                 }
                 break;
@@ -730,52 +733,57 @@ uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
     } else if (unlikely(addr < SysTick_BASE)) {
     } else if (unlikely(addr < NVIC_BASE)) {
         arm_systick_t *systick = &arm->cpu.systick;
-        if (addr == (uint32_t)&SysTick->CTRL) {
-            val = systick->ctrl;
-            systick->ctrl &= ~SysTick_CTRL_COUNTFLAG_Msk;
-            return val;
-        } else if (addr == (uint32_t)&SysTick->LOAD) {
-            return systick->load;
-        } else if (addr == (uint32_t)&SysTick->VAL) {
-            return systick->val;
-        } else if (addr == (uint32_t)&SysTick->CALIB) {
+        switch (addr - SysTick_BASE) {
+            case 0x000: // CTRL
+                val = systick->ctrl;
+                systick->ctrl &= ~SysTick_CTRL_COUNTFLAG_Msk;
+                return val;
+            case 0x004: // LOAD
+                return systick->load;
+            case 0x008: // VAL
+                return systick->val;
+            case 0x00C: // CALIB
+                break;
+            default:
+                break;
         }
     } else if (unlikely(addr < SCB_BASE)) {
         arm_nvic_t *nvic = &arm->cpu.nvic;
-        if (addr == (uint32_t)&NVIC->ISER[0] ||
-            addr == (uint32_t)&NVIC->ICER[0]) {
+        if (addr == NVIC_BASE + 0x000 || // ISER[0]
+            addr == NVIC_BASE + 0x080) { // ICER[0]
             return nvic->ier;
-        } else if (addr == (uint32_t)&NVIC->ISPR[0] ||
-                   addr == (uint32_t)&NVIC->ICPR[0]) {
+        } else if (addr == NVIC_BASE + 0x100 || // ISPR[0]
+                   addr == NVIC_BASE + 0x180) { // ICPR[0]
             return nvic->ipr;
-        } else if (addr >= (uint32_t)&NVIC->IP[0] &&
-                   addr <= (uint32_t)&NVIC->IP[7]) {
+        } else if (addr >= NVIC_BASE + 0x300 &&
+                   addr <  NVIC_BASE + 0x320) { // IP[0] - IP[7]
             return nvic->ip[addr >> 2 & 7];
         }
     } else {
         arm_scb_t *scb = &arm->cpu.scb;
-        if (addr == (uint32_t)&SCB->CPUID) {
-            return 'A' << SCB_CPUID_IMPLEMENTER_Pos |
-                0 << SCB_CPUID_VARIANT_Pos |
-                12 << SCB_CPUID_ARCHITECTURE_Pos |
-                28 << SCB_CPUID_PARTNO_Pos |
-                6 << SCB_CPUID_REVISION_Pos;
-        } else if (addr == (uint32_t)&SCB->ICSR) {
-            return scb->icsr;
-        } else if (addr == (uint32_t)&SCB->VTOR) {
-            return scb->vtor;
-        } else if (addr == (uint32_t)&SCB->AIRCR) {
-            return 0;
-        } else if (addr == (uint32_t)&SCB->CCR) {
-            return SCB_CCR_STKALIGN_Msk |
-                SCB_CCR_UNALIGN_TRP_Msk;
-        } else if (addr == (uint32_t)&SCB->SHP[0]) {
-            return scb->shp[0];
-        } else if (addr == (uint32_t)&SCB->SHP[1]) {
-            return scb->shp[1];
-        } else if (addr == (uint32_t)&SCB->SHCSR) {
-            return (scb->icsr & SCB_ICSR_PENDSVSET_Msk) >>
-                SCB_ICSR_PENDSVSET_Pos << SCB_SHCSR_SVCALLPENDED_Pos;
+        switch (addr - SCB_BASE) {
+            case 0x000: // CPUID
+                return 'A' << SCB_CPUID_IMPLEMENTER_Pos |
+                    0 << SCB_CPUID_VARIANT_Pos |
+                    12 << SCB_CPUID_ARCHITECTURE_Pos |
+                    28 << SCB_CPUID_PARTNO_Pos |
+                    6 << SCB_CPUID_REVISION_Pos;
+            case 0x004: // ICSR
+                return scb->icsr;
+            case 0x008: // VTOR
+                return scb->vtor;
+            case 0x00C: // AIRCR
+                return 0;
+            case 0x014: // CCR
+                return SCB_CCR_STKALIGN_Msk |
+                    SCB_CCR_UNALIGN_TRP_Msk;
+            case 0x01C: // SHP[0]
+                return scb->shp[0];
+            case 0x020: // SHP[1]
+                return scb->shp[1];
+            case 0x024: // SHCSR
+                return (scb->icsr & SCB_ICSR_PENDSVSET_Msk) >>
+                    SCB_ICSR_PENDSVSET_Pos << SCB_SHCSR_SVCALLPENDED_Pos;
         }
     }
     if (arm->debug) {
@@ -1053,9 +1061,9 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
                 case PORT_WRCONFIG_OFFSET >> 2:
                     return;
                 default:
-                    if (addr - (uint32_t)&PORT->Group->PMUX < sizeof(PORT->Group->PMUX)) {
+                    if (addr - (uint32_t)(PORT + PORT_PMUX_OFFSET) < (PORT_PMUX_COUNT << 2)) {
                         return;
-                    } else if (addr - (uint32_t)&PORT->Group->PINCFG < sizeof(PORT->Group->PINCFG)) {
+                    } else if (addr - (uint32_t)(PORT + PORT_PINCFG_OFFSET) < (PORT_PINCFG_COUNT << 2)) {
                         return;
                     }
                     break;
@@ -1091,7 +1099,7 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
             }
         } else { // SBMATRIX
             switch (addr) {
-                case (uint32_t)&REG_SBMATRIX_SFR4:
+                case (uint32_t)REG_SBMATRIX_SFR4:
                     return;
             }
         }
@@ -1332,9 +1340,9 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
             case PORT_WRCONFIG_OFFSET >> 2:
                 return;
             default:
-                if (addr - (uint32_t)&PORT->Group->PMUX < sizeof(PORT->Group->PMUX)) {
+                if (addr - (uint32_t)(PORT_IOBUS + PORT_PMUX_OFFSET) < (PORT_PMUX_COUNT << 2)) {
                     return;
-                } else if (addr - (uint32_t)&PORT->Group->PINCFG < sizeof(PORT->Group->PINCFG)) {
+                } else if (addr - (uint32_t)(PORT_IOBUS + PORT_PINCFG_OFFSET) < (PORT_PINCFG_COUNT << 2)) {
                     return;
                 }
                 break;
@@ -1372,71 +1380,80 @@ void arm_mem_store_word(arm_t *arm, uint32_t val, uint32_t addr) {
     } else if (unlikely(addr < SysTick_BASE)) {
     } else if (unlikely(addr < NVIC_BASE)) {
         arm_systick_t *systick = &arm->cpu.systick;
-        if (addr == (uint32_t)&SysTick->CTRL) {
-            systick->ctrl = (systick->ctrl & SysTick_CTRL_COUNTFLAG_Msk) |
-                (val & (SysTick_CTRL_CLKSOURCE_Msk |
-                        SysTick_CTRL_TICKINT_Msk |
-                        SysTick_CTRL_ENABLE_Msk));
-            return;
-        } else if (addr == (uint32_t)&SysTick->LOAD) {
-            systick->load = val & SysTick_LOAD_RELOAD_Msk;
-            return;
-        } else if (addr == (uint32_t)&SysTick->VAL) {
-            systick->ctrl &= ~SysTick_CTRL_COUNTFLAG_Msk;
-            systick->val = 0;
-            return;
-        } else if (addr == (uint32_t)&SysTick->CALIB) {
+        switch (addr - SysTick_BASE) {
+            case 0x000: // CTRL
+                systick->ctrl = (systick->ctrl & SysTick_CTRL_COUNTFLAG_Msk) |
+                    (val & (SysTick_CTRL_CLKSOURCE_Msk |
+                            SysTick_CTRL_TICKINT_Msk |
+                            SysTick_CTRL_ENABLE_Msk));
+                return;
+            case 0x004: // LOAD
+                systick->load = val & SysTick_LOAD_RELOAD_Msk;
+                return;
+            case 0x008: // VAL
+                systick->ctrl &= ~SysTick_CTRL_COUNTFLAG_Msk;
+                systick->val = 0;
+                return;
+            case 0x00C: // CALIB
+                break;
+            default:
+                break;
         }
     } else if (unlikely(addr < SCB_BASE)) {
         arm_nvic_t *nvic = &arm->cpu.nvic;
-        if (addr == (uint32_t)&NVIC->ISER[0]) {
+        if (addr == NVIC_BASE + 0x000) { // ISER[0]
             nvic->ier |= val;
             return;
-        } else if (addr == (uint32_t)&NVIC->ICER[0]) {
+        } else if (addr == NVIC_BASE + 0x080) { // ICER[0]
             nvic->ier &= ~val;
             return;
-        } else if (addr == (uint32_t)&NVIC->ISPR[0]) {
+        } else if (addr == NVIC_BASE + 0x100) { // ISPR[0]
             nvic->ipr |= val;
             return;
-        } else if (addr == (uint32_t)&NVIC->ICPR[0]) {
+        } else if (addr == NVIC_BASE + 0x180) { // ICPR[0]
             nvic->ipr &= ~val;
             return;
-        } else if (addr >= (uint32_t)&NVIC->IP[0] && addr <= (uint32_t)&NVIC->IP[7]) {
+        } else if (addr >= NVIC_BASE + 0x300 &&
+                   addr <  NVIC_BASE + 0x320) { // IP[0] - IP[7]
             nvic->ip[addr >> 2 & 7] = val & UINT32_C(0xC0C0C0C0);
             return;
         }
     } else {
         arm_scb_t *scb = &arm->cpu.scb;
-        if (addr == (uint32_t)&SCB->ICSR) {
-            if (val & SCB_ICSR_NMIPENDSET_Msk) {
-                scb->icsr |= SCB_ICSR_NMIPENDSET_Msk;
-            }
-            if (val & SCB_ICSR_PENDSVSET_Msk) {
-                scb->icsr |= SCB_ICSR_PENDSVSET_Msk;
-            } else if (val & SCB_ICSR_PENDSVCLR_Msk) {
-                scb->icsr &= ~SCB_ICSR_PENDSVSET_Msk;
-            }
-            if (val & SCB_ICSR_PENDSTSET_Msk) {
-                scb->icsr |= SCB_ICSR_PENDSTSET_Msk;
-            } else if (val & SCB_ICSR_PENDSTCLR_Msk) {
-                scb->icsr &= ~SCB_ICSR_PENDSTSET_Msk;
-            }
-            return;
-        } else if (addr == (uint32_t)&SCB->VTOR) {
-            scb->vtor = val & SCB_VTOR_TBLOFF_Msk;
-            return;
-        } else if (addr == (uint32_t)&SCB->SHP[0]) {
-            scb->shp[0] = val & UINT32_C(0xC0000000);
-            return;
-        } else if (addr == (uint32_t)&SCB->SHP[1]) {
-            scb->shp[1] = val & UINT32_C(0xC0C00000);
-            return;
-        } else if (addr == (uint32_t)&SCB->SHCSR) {
-            if (val & SCB_SHCSR_SVCALLPENDED_Msk) {
-                scb->icsr |= SCB_ICSR_PENDSVSET_Msk;
-            } else {
-                scb->icsr &= ~SCB_ICSR_PENDSVSET_Msk;
-            }
+        switch (addr - SCB_BASE) {
+            case 0x004: // ICSR
+                if (val & SCB_ICSR_NMIPENDSET_Msk) {
+                    scb->icsr |= SCB_ICSR_NMIPENDSET_Msk;
+                }
+                if (val & SCB_ICSR_PENDSVSET_Msk) {
+                    scb->icsr |= SCB_ICSR_PENDSVSET_Msk;
+                } else if (val & SCB_ICSR_PENDSVCLR_Msk) {
+                    scb->icsr &= ~SCB_ICSR_PENDSVSET_Msk;
+                }
+                if (val & SCB_ICSR_PENDSTSET_Msk) {
+                    scb->icsr |= SCB_ICSR_PENDSTSET_Msk;
+                } else if (val & SCB_ICSR_PENDSTCLR_Msk) {
+                    scb->icsr &= ~SCB_ICSR_PENDSTSET_Msk;
+                }
+                return;
+            case 0x008: // VTOR
+                scb->vtor = val & SCB_VTOR_TBLOFF_Msk;
+                return;
+            case 0x01C: // SHP[0]
+                scb->shp[0] = val & UINT32_C(0xC0000000);
+                return;
+            case 0x020: // SHP[1]
+                scb->shp[1] = val & UINT32_C(0xC0C00000);
+                return;
+            case 0x024: // SHCSR
+                if (val & SCB_SHCSR_SVCALLPENDED_Msk) {
+                    scb->icsr |= SCB_ICSR_PENDSVSET_Msk;
+                } else {
+                    scb->icsr &= ~SCB_ICSR_PENDSVSET_Msk;
+                }
+                return;
+            default:
+                break;
         }
     }
     if (arm->debug) {
