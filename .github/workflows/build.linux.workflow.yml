@@ -7,9 +7,9 @@ permissions:
 
 on:
   push:
-    branches: [ master, test-ci ]
+    branches: [ master, test-ci, feature/python ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, feature/python ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
