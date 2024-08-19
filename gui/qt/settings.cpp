@@ -663,7 +663,7 @@ void MainWindow::checkUpdate(bool forceInfoBox) {
 
     static const QString currentVersionReleaseURL = QStringLiteral("https://github.com/CE-Programming/CEmu/releases/tag/" CEMU_VERSION);
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply) {
+    connect(manager, &QNetworkAccessManager::finished, this, [this, forceInfoBox](QNetworkReply* reply) {
         QString newVersionURL = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
         if (!newVersionURL.isEmpty()) {
             if (newVersionURL.compare(currentVersionReleaseURL) == 0) {

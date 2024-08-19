@@ -177,11 +177,11 @@ static bool checkProc(DWORD processID) {
     if (hProcess) {
         HMODULE hMod;
         DWORD cbNeeded;
-        wchar_t szProcessName[MAX_PATH];
+        WCHAR szProcessName[MAX_PATH];
 
         if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
-            if(GetModuleBaseNameW(hProcess, hMod, szProcessName, sizeof(szProcessName)/sizeof(TCHAR)) > 0) {
-                processName = QString::fromUtf16((unsigned short*)szProcessName);
+            if(GetModuleBaseNameW(hProcess, hMod, szProcessName, sizeof(szProcessName)/sizeof(WCHAR)) > 0) {
+                processName = QString::fromUtf16((char16_t*)szProcessName);
             }
         }
         CloseHandle(hProcess);

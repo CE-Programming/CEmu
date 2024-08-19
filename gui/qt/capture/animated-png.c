@@ -9,13 +9,13 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #endif
 
 #include "../../core/schedule.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 static inline int clzll(unsigned long long input_num) {
     unsigned long index;
 #ifdef _WIN64

@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 # include <intrin.h>
 # if defined(_M_X64) || defined(_M_ARM64)
 #  define HAS_MULH
@@ -42,7 +42,7 @@
 sched_state_t sched;
 
 static inline bool timestamp_before(uint64_t a, uint64_t b) {
-#if defined(_MSC_VER) && defined(_M_IX86)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
     /* Avoid branchy codegen on 32-bit MSVC */
     uint32_t temp;
     bool borrow = _subborrow_u32(0, (uint32_t)a, (uint32_t)b, &temp);
@@ -53,7 +53,7 @@ static inline bool timestamp_before(uint64_t a, uint64_t b) {
 }
 
 static inline uint64_t timestamp_diff(uint64_t a, uint64_t b) {
-#if defined(_MSC_VER) && defined(_M_IX86)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
     /* Avoid branchy codegen on 32-bit MSVC */
     union {
         struct {
@@ -412,7 +412,7 @@ static void sched_second(enum sched_item_id id) {
 void sched_rewind_cpu(uint8_t duration) {
 #if __has_builtin(__builtin_sub_overflow) || (__GNUC__ >= 5)
     if (likely(!__builtin_sub_overflow(cpu.cycles, duration, &cpu.cycles))) {
-#elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#elif defined(_MSC_VER) && !defined(__clang__) && (defined(_M_IX86) || defined(_M_X64))
     if (likely(!_subborrow_u32(0, cpu.cycles, duration, &cpu.cycles))) {
 #else
     bool underflow = cpu.cycles < duration;
