@@ -317,7 +317,7 @@ static uint32_t arm_adcs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     bool carry = cpu->c;
     int32_t res;
     cpu->v = __builtin_add_overflow(x, y, &res);
-    cpu->v |= __builtin_add_overflow(res, carry, &res);
+    cpu->v ^= __builtin_add_overflow(res, carry, &res);
     cpu->c = __builtin_add_overflow(x, y, &x);
     cpu->c |= __builtin_add_overflow(x, carry, &x);
     return arm_movs(cpu, x);
@@ -347,7 +347,7 @@ static uint32_t arm_sbcs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     bool borrow = !cpu->c;
     int32_t res;
     cpu->v = __builtin_sub_overflow(x, y, &res);
-    cpu->v |= __builtin_sub_overflow(res, borrow, &res);
+    cpu->v ^= __builtin_sub_overflow(res, borrow, &res);
     cpu->c = !__builtin_sub_overflow(x, y, &x);
     cpu->c &= !__builtin_sub_overflow(x, borrow, &x);
     return arm_movs(cpu, x);
