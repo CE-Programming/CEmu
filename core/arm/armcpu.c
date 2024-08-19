@@ -7,6 +7,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#endif
 
 #ifndef __has_builtin
 # define __has_builtin(builtin) 0
@@ -20,9 +23,15 @@
 # define DEBUG_BREAK asm("int3")
 #endif
 
+#if (defined(__GNUC__) || defined(__clang__))
+# define EXTENDED_ASM 1
+#else
+# define EXTENDED_ASM 0
+#endif
+
 #if defined(__GCC_ASM_FLAG_OUTPUTS__) &&       \
     (defined(__i386) || defined(__x86_64__) || \
-     defined(_M_IX86) || defined(_M_IX64))
+     defined(_M_IX86) || defined(_M_X64))
 # define FLAGS_FROM_EXTENDED_X86_ASM 1
 #else
 # define FLAGS_FROM_EXTENDED_X86_ASM 0
@@ -34,6 +43,12 @@
 # define FLAGS_FROM_OVERFLOW_BUILTINS 0
 #endif
 
+#if _MSC_VER >= 1937 && !defined(__clang__) && (defined(_M_IX86) || defined(_M_X64))
+# define FLAGS_FROM_MSVC_INTRINSICS 1
+#else
+# define FLAGS_FROM_MSVC_INTRINSICS 0
+#endif
+
 #if __has_builtin(__builtin_constant_p) || __GNUC__ >= 3 // Not sure, so conservative
 # define HAVE_BUILTIN_CONSTANT_P 1
 #else
@@ -43,10 +58,21 @@
 static uint8_t bitcount9(uint32_t x) {
 #if __has_builtin(__builtin_popcount) || __GNUC__ >= 4
     return __builtin_popcount(x & 0777);
+#elif UINT32_MAX >= UINTPTR_MAX
+    uint32_t res = (x &= 0777), mask = UINT32_C(0x11111111);
+    res *= UINT32_C(0001001001001);
+    res >>= 3;
+# if EXTENDED_ASM && (defined(__i386__) || defined(_M_IX86))
+    __asm__("andl\t%1, %0\nimull\t%1, %0" : "+r"(res) : "r"(mask) : "cc");
+# else
+    res &= mask;
+    res *= mask;
+#endif
+    return (res >> 28) + (x >> 8);
 #else
     uint64_t res = x & 0777, mask = UINT64_C(0x1111111111111111);
     res *= UINT64_C(0001001001001);
-# if defined(__x86_64__) || defined(_M_IX64)
+# if EXTENDED_ASM && (defined(__x86_64__) || defined(_M_X64))
     __asm__("andq\t%1, %0\nimulq\t%1, %0" : "+r"(res) : "r"(mask) : "cc");
 # else
     res &= mask;
@@ -60,17 +86,24 @@ static uint8_t lowestsetbit32(uint32_t x) {
     assert(x && "invalid argument");
 #if __has_builtin(__builtin_ctz) || __GNUC__ >= 4
     return __builtin_ctz(x);
+#elif defined(_MSC_VER) && !defined(__clang__)
+    unsigned long index;
+    _BitScanForward(&index, x);
+    return index;
 #else
+# if EXTENDED_ASM && \
+    (defined(__i386) || defined(__x86_64__) || \
+     defined(_M_IX86) || defined(_M_X64))
     uint32_t res;
-# if defined(__i386) || defined(__x86_64__) || \
-     defined(_M_IX86) || defined(_M_IX64)
     __asm__("bsfl\t%1, %0" : "+r"(res) : "r"(x) : "cc");
 # else
-    res = 0;
-    while (!(x & 1)) {
-        x >>= 1;
-        ++res;
-    }
+    uint8_t res = 0;
+    x &= -x;
+    if (x & UINT32_C(0xAAAAAAAA)) res += 1;
+    if (x & UINT32_C(0xCCCCCCCC)) res += 2;
+    if (x & UINT32_C(0xF0F0F0F0)) res += 4;
+    if (x & UINT32_C(0xFF00FF00)) res += 8;
+    if (x & UINT32_C(0xFFFF0000)) res += 16;
 # endif
     return res;
 #endif
@@ -209,13 +242,17 @@ static uint32_t arm_negs(arm_cpu_t *cpu, uint32_t x) {
 #elif FLAGS_FROM_OVERFLOW_BUILTINS
     int32_t res;
     cpu->v = __builtin_sub_overflow(0, (int32_t)x, &res);
-    cpu->c = x;
-    return arm_movs(cpu, -x);
+    cpu->c = !res;
+    return arm_movs(cpu, res);
+#elif FLAGS_FROM_MSVC_INTRINSICS
+    int32_t res;
+    cpu->v = _sub_overflow_i32(0, 0, x, &res);
+    cpu->c = !res;
+    return arm_movs(cpu, res);
 #else
-    int64_t res = UINT64_C(0) - (int32_t)x;
-    cpu->v = res != (int32_t)res;
-    cpu->c = (uint32_t)res <= 0;
-    //cpu->c = 0 >= x;
+    uint32_t res = -x;
+    cpu->v = (x & res) >> 31;
+    cpu->c = !res;
     return arm_movs(cpu, res);
 #endif
 }
@@ -229,10 +266,18 @@ static uint32_t arm_adds(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     cpu->v = __builtin_add_overflow((int32_t)x, (int32_t)y, &res);
     cpu->c = __builtin_add_overflow(x, y, &x);
     return arm_movs(cpu, x);
+#elif FLAGS_FROM_MSVC_INTRINSICS
+    int32_t res;
+    cpu->v = _add_overflow_i32(0, x, y, &res);
+    cpu->c = _addcarry_u32(0, x, y, &x);
+    return arm_movs(cpu, x);
 #else
-    int64_t res = (int64_t)(int32_t)x + (int32_t)y;
-    cpu->v = res != (int32_t)res;
-    cpu->c = (uint32_t)res < x;
+    uint32_t res = x + y;
+    flags->v = ((res ^ x) & (res ^ y)) >> 31;
+    flags->c = res < x;
+    //int64_t res = (int64_t)(int32_t)x + (int32_t)y;
+    //cpu->v = res != (int32_t)res;
+    //cpu->c = (uint32_t)res < x;
     //cpu->c = x > ~y;
     return arm_movs(cpu, res);
 #endif
@@ -247,10 +292,18 @@ static uint32_t arm_subs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     cpu->v = __builtin_sub_overflow((int32_t)x, (int32_t)y, &res);
     cpu->c = !__builtin_sub_overflow(x, y, &x);
     return arm_movs(cpu, x);
+#elif FLAGS_FROM_MSVC_INTRINSICS
+    int32_t res;
+    cpu->v = _sub_overflow_i32(0, x, y, &res);
+    cpu->c = !_subborrow_u32(0, x, y, &x);
+    return arm_movs(cpu, x);
 #else
-    int64_t res = (int64_t)(int32_t)x - (int32_t)y;
-    cpu->v = res != (int32_t)res;
-    cpu->c = (uint32_t)res <= x;
+    uint32_t res = x - y;
+    cpu->v = ((x ^ y) & (res ^ x)) >> 31;
+    cpu->c = res <= x;
+    //int64_t res = (int64_t)(int32_t)x - (int32_t)y;
+    //cpu->v = res != (int32_t)res;
+    //cpu->c = (uint32_t)res <= x;
     //cpu->c = x >= y;
     return arm_movs(cpu, res);
 #endif
@@ -268,10 +321,20 @@ static uint32_t arm_adcs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     cpu->c = __builtin_add_overflow(x, y, &x);
     cpu->c |= __builtin_add_overflow(x, carry, &x);
     return arm_movs(cpu, x);
+#elif FLAGS_FROM_MSVC_INTRINSICS
+    bool carry = cpu->c;
+    int32_t res;
+    cpu->v = _add_overflow_i32(carry, x, y, &res);
+    cpu->c = _addcarry_u32(carry, x, y, &x);
+    return arm_movs(cpu, x);
 #else
-    int64_t res = (uint64_t)(int32_t)x + (int32_t)y + cpu->c;
-    cpu->v = res != (int32_t)res;
-    cpu->c = ((uint64_t)x + y + cpu->c) >> 32;
+    uint32_t res = x + y + cpu->c;
+    uint32_t carries = (x | y) ^ ((x ^ y) & res);
+    cpu->c = carries >> 31;
+    cpu->v = cpu->c ^ (carries >> 30 & 1);
+    //int64_t res = (uint64_t)(int32_t)x + (int32_t)y + cpu->c;
+    //cpu->v = res != (int32_t)res;
+    //cpu->c = ((uint64_t)x + y + cpu->c) >> 32;
     return arm_movs(cpu, res);
 #endif
 }
@@ -285,14 +348,21 @@ static uint32_t arm_sbcs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     int32_t res;
     cpu->v = __builtin_sub_overflow(x, y, &res);
     cpu->v |= __builtin_sub_overflow(res, borrow, &res);
-    cpu->c = __builtin_sub_overflow(x, y, &x);
-    cpu->c |= __builtin_sub_overflow(x, borrow, &x);
+    cpu->c = !__builtin_sub_overflow(x, y, &x);
+    cpu->c &= !__builtin_sub_overflow(x, borrow, &x);
+    return arm_movs(cpu, x);
+#elif FLAGS_FROM_MSVC_INTRINSICS
+    bool borrow = !cpu->c;
+    int32_t res;
+    cpu->v = _sub_overflow_i32(borrow, x, y, &res);
+    cpu->c = !_subborrow_u32(borrow, x, y, &x);
     return arm_movs(cpu, x);
 #else
-    int64_t res = (uint64_t)(int32_t)x - (int32_t)y - !cpu->c;
-    cpu->v = res != (int32_t)res;
-    cpu->c = ((uint64_t)x - y - !cpu->c) >> 32;
-    return arm_movs(cpu, res);
+    return arm_adcs(cpu, x, ~y);
+    //int64_t res = (uint64_t)(int32_t)x - (int32_t)y - !cpu->c;
+    //cpu->v = res != (int32_t)res;
+    //cpu->c = !(((uint64_t)x - y - !cpu->c) >> 32);
+    //return arm_movs(cpu, res);
 #endif
 }
 
