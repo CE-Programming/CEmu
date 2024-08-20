@@ -116,6 +116,13 @@ jobs:
           name: CEmu-nightly_mac_qt${{matrix.qtvershort}}
           path: CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg
 
+    - name: Launch CEmu
+      run: |
+        otool -L /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/CEmu.app/Contents/MacOS/CEmu
+        /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/CEmu.app/Contents/MacOS/CEmu --version
+      env:
+        ACTIONS_STEP_DEBUG: true
+
     - name: Update nightly release
       if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
       uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13

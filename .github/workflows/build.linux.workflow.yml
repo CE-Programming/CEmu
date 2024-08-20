@@ -69,6 +69,13 @@ jobs:
         name: CEmu_linux_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
 
+    - name: Launch CEmu
+      run: |
+        ldd ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
+        ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu --version
+      env:
+        ACTIONS_STEP_DEBUG: true
+
     - name: Prepare binary for release upload
       run: |
         mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}

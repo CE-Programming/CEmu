@@ -66,6 +66,13 @@ jobs:
         name: CEmu_win${{ matrix.arch_suffix }}_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe
 
+    - name: Launch CEmu
+      run: |
+        dumpbin /DEPENDENTS ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe
+        ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe --version
+      env:
+        ACTIONS_STEP_DEBUG: true
+
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |

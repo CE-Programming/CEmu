@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(CEMU_VERSION " (git: " CEMU_GIT_SHA ")"));
 
     execPath = QCoreApplication::applicationFilePath();
 
