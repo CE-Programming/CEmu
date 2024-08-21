@@ -56,8 +56,6 @@ void MainWindow::debugBasic(bool enable) {
 
     // disable other debugger / var list
     ui->buttonSend->setEnabled(!enable);
-    ui->buttonReceiveFiles->setEnabled(!enable);
-    ui->buttonReceiveFile->setEnabled(!enable);
     ui->buttonResendFiles->setEnabled(!enable);
     ui->buttonRun->setEnabled(!enable);
 }
@@ -79,7 +77,7 @@ void MainWindow::debugBasicDisable() {
 void MainWindow::debugBasicToggle() {
     bool state = guiDebugBasic;
 
-    if (guiDebug || guiReceive || guiSend) {
+    if (guiDebug || guiSend) {
         return;
     }
 
@@ -386,6 +384,10 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
 
     if (!force && !m_basicShowLiveExecution) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
+    }
+
+    if (guiReceive) {
+        varShow();
     }
 
     const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));

@@ -6811,7 +6811,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="buttonRefreshList">
+              <widget class="QPushButton" name="buttonEnableVarList">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                  <horstretch>0</horstretch>
@@ -6827,6 +6827,20 @@
                <property name="icon">
                 <iconset resource="resources.qrc">
                  <normaloff>:/icons/resources/icons/states.png</normaloff>:/icons/resources/icons/states.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="buttonRefreshVarList">
+               <property name="toolTip">
+                <string>Refresh</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/refresh.png</normaloff>:/icons/resources/icons/refresh.png</iconset>
                </property>
               </widget>
              </item>

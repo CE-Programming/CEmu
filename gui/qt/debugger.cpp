@@ -638,11 +638,7 @@ void MainWindow::debugGuiState(bool state) {
     ui->fpStack->setEnabled(state && m_normalOs);
 
     ui->buttonSend->setEnabled(!state);
-    ui->buttonRefreshList->setEnabled(!state);
-    ui->emuVarView->setEnabled(!state);
     ui->buttonResendFiles->setEnabled(!state);
-    ui->buttonReceiveFiles->setEnabled(!state && guiReceive);
-    ui->buttonReceiveFile->setEnabled(!state && guiReceive);
 
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
@@ -674,10 +670,6 @@ void MainWindow::debugToggle() {
 
     if (m_pathRom.isEmpty()) {
         return;
-    }
-
-    if (guiReceive) {
-        varToggle();
     }
 
     if (state) {
@@ -870,6 +862,10 @@ void MainWindow::debugPopulate() {
     disasmUpdateAddr(m_prevDisasmAddr = cpu.registers.PC, true);
 
     memUpdate();
+
+    if (guiReceive) {
+        varShow();
+    }
 }
 
 // ------------------------------------------------
