@@ -40,6 +40,7 @@ signals:
     void send(const QStringList &names, int location);
     void loadEquateFile(const QString &path);
     void cancelTransfer();
+    void sendFinished();
 
 private:
     void checkDirForEquateFiles(QString &dirPath);

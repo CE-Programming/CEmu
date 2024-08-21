@@ -83,7 +83,7 @@ SendingHandler::SendingHandler(QObject *parent, QPushButton *cancelBtn, QProgres
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, int location) {
-    if (guiSend || guiReceive || guiDebug || guiDebugBasic) {
+    if (guiSend || guiDebug || guiDebugBasic) {
         e->ignore();
         return;
     }
@@ -137,7 +137,7 @@ void SendingHandler::removeRow() {
 }
 
 bool SendingHandler::dragOccured(QDragEnterEvent *e) {
-    if (guiSend || guiReceive || guiDebug || guiDebugBasic) {
+    if (guiSend || guiDebug || guiDebugBasic) {
         e->ignore();
         return false;
     }
@@ -178,6 +178,7 @@ void SendingHandler::linkProgress(int value, int total) {
         m_progressBar->setValue(0);
     }
     guiSend = false;
+    emit sendFinished();
 }
 
 void SendingHandler::addFile(const QString &file, bool select) {
@@ -230,7 +231,7 @@ void SendingHandler::addFile(const QString &file, bool select) {
 void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
     QStringList list = fileNames;
 
-    if (guiSend || guiReceive || guiDebug || guiDebugBasic || !list.size()) {
+    if (guiSend || guiDebug || guiDebugBasic || !list.size()) {
         return;
     }
 

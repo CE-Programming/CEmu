@@ -473,6 +473,7 @@ private:
 
     // linking
     QStringList varDialog(QFileDialog::AcceptMode mode, const QString &filter, const QString &suffix);
+    void varReceive(std::function<void(bool)> recvAction);
     void varShow();
     void varPressed(QTableWidgetItem *item);
     void varLaunch(const calc_var_t *prgm);
@@ -606,6 +607,7 @@ private:
 
     QDir m_dir;
     QStringList m_equateFiles;
+    std::function<void(bool)> m_recvAction;
 
     bool m_uiEditMode = false;
     bool m_portable = false;

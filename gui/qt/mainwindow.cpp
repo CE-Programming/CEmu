@@ -259,7 +259,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::varSelect);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::varSelect);
-    connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::varToggle);
+    connect(ui->buttonEnableVarList, &QPushButton::clicked, this, &MainWindow::varToggle);
+    connect(ui->buttonRefreshVarList, &QPushButton::clicked, this, &MainWindow::varShow);
     connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::varSaveSelected);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::varSaveSelectedFiles);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::varResend);
@@ -415,6 +416,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(sendingHandler, &SendingHandler::cancelTransfer, &emu, &EmuThread::cancelTransfer, Qt::QueuedConnection);
     connect(&emu, &EmuThread::linkProgress, sendingHandler, &SendingHandler::linkProgress, Qt::QueuedConnection);
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
+    connect(sendingHandler, &SendingHandler::sendFinished, this, [this] { if (guiReceive) { varShow(); } });
 
     // memory editors
     connect(ui->buttonFlashSearch, &QPushButton::clicked, [this]{ memSearchEdit(ui->flashEdit); });
@@ -904,6 +906,8 @@ void MainWindow::translateExtras(int init) {
         actionToggleConsole->setText(TXT_TOGGLE_CONSOLE);
 #endif
     }
+
+    varShow();
 }
 
 void MainWindow::darkModeSwitch(bool darkMode) {
@@ -1703,7 +1707,7 @@ void MainWindow::lcdCopy() {
 void MainWindow::recordAnimated() {
     static QString path;
 
-    if (guiDebug || guiReceive || guiSend) {
+    if (guiDebug || guiDebugBasic || guiSend) {
         return;
     }
 
@@ -1875,13 +1879,18 @@ void MainWindow::pauseEmu(Qt::ApplicationState state) {
 //  Linking things
 // ------------------------------------------------
 
-void MainWindow::varToggle() {
-    if (guiReceive) {
-        varShow();
-        emu.unblock();
+void MainWindow::varReceive(std::function<void(bool)> recvAction) {
+    if (guiDebug || guiDebugBasic) {
+        recvAction(false);
     } else {
+        m_recvAction = std::move(recvAction);
         emu.receive();
     }
+}
+
+void MainWindow::varToggle() {
+    guiReceive = !guiReceive;
+    varShow();
 }
 
 void MainWindow::varSelect() {
@@ -1943,111 +1952,118 @@ void MainWindow::emuBlocked(int req) {
         case EmuThread::RequestPause:
             break;
         case EmuThread::RequestReceive:
-            varShow();
+            if (m_recvAction) {
+                m_recvAction(true);
+                m_recvAction = nullptr;
+            } else {
+                emu.unblock();
+            }
             break;
     }
 }
 
 void MainWindow::varShow() {
-    calc_var_t var;
-
-    if (guiSend || guiDebug || guiDebugBasic) {
-        return;
-    }
-
-    guiReceive = !guiReceive;
-
-    ui->emuVarView->setRowCount(0);
-    ui->emuVarView->setSortingEnabled(false);
-
     if (!guiReceive) {
-        ui->buttonRefreshList->setText(tr("View Calculator Variables"));
+        m_recvAction = nullptr;
+        ui->emuVarView->setRowCount(0);
+        ui->emuVarView->setSortingEnabled(false);
+        ui->buttonEnableVarList->setText(tr("View Calculator Variables"));
+        ui->buttonRefreshVarList->setEnabled(false);
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonReceiveFile->setEnabled(false);
-        ui->buttonRun->setEnabled(true);
-        ui->buttonSend->setEnabled(true);
         ui->emuVarView->setEnabled(false);
-        ui->buttonResendFiles->setEnabled(true);
     } else {
-        ui->buttonRefreshList->setText(tr("Resume emulation"));
-        ui->buttonSend->setEnabled(false);
-        ui->buttonReceiveFiles->setEnabled(true);
-        ui->buttonReceiveFile->setEnabled(true);
-        ui->buttonResendFiles->setEnabled(false);
-        ui->buttonRun->setEnabled(false);
-        ui->emuVarView->setEnabled(true);
+        if (m_recvAction) {
+            return;
+        }
 
-        vat_search_init(&var);
-        while (vat_search_next(&var)) {
-            if (var.named || var.size > 2) {
-                int row;
+        varReceive([this](bool isBlocked) {
+            calc_var_t var;
 
-                row = ui->emuVarView->rowCount();
-                ui->emuVarView->setRowCount(row + 1);
+            ui->emuVarView->setRowCount(0);
+            ui->emuVarView->setSortingEnabled(false);
+            ui->buttonEnableVarList->setText(tr("Hide Calculator Variables"));
+            ui->buttonRefreshVarList->setEnabled(true);
+            ui->buttonReceiveFiles->setEnabled(true);
+            ui->buttonReceiveFile->setEnabled(true);
+            ui->emuVarView->setEnabled(true);
 
-                bool var_preview_needs_gray = false;
-                QString var_value;
-                if (var.size <= 2) {
-                    var_value = tr("Empty");
-                    var_preview_needs_gray = true;
-                } else if (calc_var_is_asmprog(&var)) {
-                    var_value = tr("Can't preview this");
-                    var_preview_needs_gray = true;
-                } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
-                    var_value = tr("Can't preview this OS variable");
-                    var_preview_needs_gray = true;
-                } else {
-                    try {
-                        var_value = QString::fromStdString(calc_var_content_string(var)).trimmed().replace("\n", " \\ ");
-                        if (var_value.size() > 50) {
-                            var_value.truncate(50);
-                            var_value += QStringLiteral(" [...]");
-                        }
-                    } catch(...) {
+            vat_search_init(&var);
+            while (vat_search_next(&var)) {
+                if (var.named || var.size > 2) {
+                    int row;
+
+                    row = ui->emuVarView->rowCount();
+                    ui->emuVarView->setRowCount(row + 1);
+
+                    bool var_preview_needs_gray = false;
+                    QString var_value;
+                    if (var.size <= 2) {
+                        var_value = tr("Empty");
+                        var_preview_needs_gray = true;
+                    } else if (calc_var_is_asmprog(&var)) {
                         var_value = tr("Can't preview this");
                         var_preview_needs_gray = true;
+                    } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
+                        var_value = tr("Can't preview this OS variable");
+                        var_preview_needs_gray = true;
+                    } else {
+                        try {
+                            var_value = QString::fromStdString(calc_var_content_string(var)).trimmed().replace("\n", " \\ ");
+                            if (var_value.size() > 50) {
+                                var_value.truncate(50);
+                                var_value += QStringLiteral(" [...]");
+                            }
+                        } catch (...) {
+                            var_value = tr("Can't preview this");
+                            var_preview_needs_gray = true;
+                        }
                     }
+
+                    // Do not translate - things rely on those names.
+                    QString var_type_str = calc_var_type_names[var.type];
+                    if (calc_var_is_asmprog(&var)) {
+                        var_type_str += QStringLiteral(" (ASM)");
+                    }
+
+                    QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name, var.namelen, var.named));
+                    QTableWidgetItem *var_location = new QTableWidgetItem(var.archived ? tr("Archive") : QStringLiteral("RAM"));
+                    QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
+                    QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
+                    QTableWidgetItem *var_size = new QTableWidgetItem();
+
+                    // Attach var index (hidden) to the name. Needed elsewhere
+                    var_name->setData(Qt::UserRole, QVariant::fromValue(var));
+                    var_size->setData(Qt::DisplayRole, var.size);
+
+                    var_name->setCheckState(Qt::Unchecked);
+
+                    if (var_preview_needs_gray) {
+                        var_preview->setFont(varPreviewItalicFont);
+                        var_preview->setForeground(Qt::gray);
+                    } else {
+                        var_preview->setFont(varPreviewCEFont);
+                    }
+
+                    ui->emuVarView->setItem(row, VAR_NAME_COL, var_name);
+                    ui->emuVarView->setItem(row, VAR_LOCATION_COL, var_location);
+                    ui->emuVarView->setItem(row, VAR_TYPE_COL, var_type);
+                    ui->emuVarView->setItem(row, VAR_SIZE_COL, var_size);
+                    ui->emuVarView->setItem(row, VAR_PREVIEW_COL, var_preview);
                 }
-
-                // Do not translate - things rely on those names.
-                QString var_type_str = calc_var_type_names[var.type];
-                if (calc_var_is_asmprog(&var)) {
-                    var_type_str += QStringLiteral(" (ASM)");
-                }
-
-                QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name, var.namelen, var.named));
-                QTableWidgetItem *var_location = new QTableWidgetItem(var.archived ? tr("Archive") : QStringLiteral("RAM"));
-                QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
-                QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
-                QTableWidgetItem *var_size = new QTableWidgetItem();
-
-                // Attach var index (hidden) to the name. Needed elsewhere
-                var_name->setData(Qt::UserRole, QVariant::fromValue(var));
-                var_size->setData(Qt::DisplayRole, var.size);
-
-                var_name->setCheckState(Qt::Unchecked);
-
-                if (var_preview_needs_gray) {
-                    var_preview->setFont(varPreviewItalicFont);
-                    var_preview->setForeground(Qt::gray);
-                } else {
-                    var_preview->setFont(varPreviewCEFont);
-                }
-
-                ui->emuVarView->setItem(row, VAR_NAME_COL, var_name);
-                ui->emuVarView->setItem(row, VAR_LOCATION_COL, var_location);
-                ui->emuVarView->setItem(row, VAR_TYPE_COL, var_type);
-                ui->emuVarView->setItem(row, VAR_SIZE_COL, var_size);
-                ui->emuVarView->setItem(row, VAR_PREVIEW_COL, var_preview);
             }
-        }
-        ui->emuVarView->resizeColumnToContents(VAR_NAME_COL);
-        ui->emuVarView->resizeColumnToContents(VAR_LOCATION_COL);
-        ui->emuVarView->resizeColumnToContents(VAR_TYPE_COL);
-        ui->emuVarView->resizeColumnToContents(VAR_SIZE_COL);
-    }
+            if (isBlocked) {
+                emu.unblock();
+            }
 
-    ui->emuVarView->setSortingEnabled(true);
+            ui->emuVarView->resizeColumnToContents(VAR_NAME_COL);
+            ui->emuVarView->resizeColumnToContents(VAR_LOCATION_COL);
+            ui->emuVarView->resizeColumnToContents(VAR_TYPE_COL);
+            ui->emuVarView->resizeColumnToContents(VAR_SIZE_COL);
+
+            ui->emuVarView->setSortingEnabled(true);
+        });
+    }
 }
 
 void MainWindow::varSaveSelected() {
@@ -2063,11 +2079,17 @@ void MainWindow::varSaveSelected() {
     } else {
         fileNames = varDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         if (fileNames.size() == 1) {
-            if (emu_receive_variable(fileNames.first().toUtf8(), selectedVars.constData(), selectedVars.size()) != LINK_GOOD) {
-                QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + fileNames.first());
-            } else {
-                QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
-            }
+            varReceive([this, fileName = std::move(fileNames.first()), selectedVars = std::move(selectedVars)](bool isBlocked) {
+                int status = emu_receive_variable(fileName.toUtf8(), selectedVars.constData(), selectedVars.size());
+                if (isBlocked) {
+                    emu.unblock();
+                }
+                if (status != LINK_GOOD) {
+                    QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + fileName);
+                } else {
+                    QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
+                }
+            });
         }
     }
 }
@@ -2099,32 +2121,38 @@ void MainWindow::varSaveSelectedFiles() {
         return;
     }
 
-    QString name;
-    QString filename;
+    varReceive([this, dir = dialog.directory().absolutePath()](bool isBlocked) {
+        QString name;
+        QString filename;
+        bool good = true;
 
-    for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
-            calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
-            if (calc_var_is_list(&var)) {
-                // Remove any linked formula before generating filename
-                var.name[var.namelen - 1] = 0;
-            }
+        for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
+            if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
+                calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
+                if (calc_var_is_list(&var)) {
+                    // Remove any linked formula before generating filename
+                    var.name[var.namelen - 1] = 0;
+                }
 
-            name = QString(calc_var_name_to_utf8(var.name, var.namelen, var.named));
-            filename = dialog.directory().absolutePath() + "/" + name + "." + m_varExtensions[var.type1];
+                name = QString(calc_var_name_to_utf8(var.name, var.namelen, var.named));
+                filename = dir + "/" + name + "." + m_varExtensions[var.type1];
 
-            if (emu_receive_variable(filename.toStdString().c_str(), &var, 1) != LINK_GOOD) {
-                good = 0;
-                break;
+                if (emu_receive_variable(filename.toStdString().c_str(), &var, 1) != LINK_GOOD) {
+                    good = false;
+                    break;
+                }
             }
         }
-    }
+        if (isBlocked) {
+            emu.unblock();
+        }
 
-    if (good) {
-        QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
-    } else {
-        QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + filename);
-    }
+        if (good) {
+            QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
+        } else {
+            QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + filename);
+        }
+    });
 }
 
 void MainWindow::varResend() {
@@ -2560,7 +2588,6 @@ void MainWindow::contextVars(const QPoint& posa) {
 
     QAction *selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem == launch) {
-        varToggle();
         varLaunch(&var);
     }
 }
