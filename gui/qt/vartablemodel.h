@@ -5,6 +5,7 @@
 
 #include <QtCore/QAbstractTableModel>
 #include <QtGui/QFont>
+#include <vector>
 
 class VarTableModel : public QAbstractTableModel {
     Q_OBJECT
@@ -33,18 +34,28 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
 private:
+    enum class PreviewState : uint8_t {
+        Outdated,
+        Invalid,
+        Valid
+    };
+
     struct VarData {
-        explicit VarData(const calc_var_t &var);
+        VarData(const calc_var_t &var);
+        ~VarData();
+        VarData(VarData &&other) noexcept;
+        VarData &operator=(VarData &&other) noexcept;
+
+        uint8_t updateInfo(const calc_var_t &var);
         void updatePreview();
 
         calc_var_t info;
-        QByteArray data;
         QString preview;
-        bool previewValid;
-        Qt::CheckState checked;
+        PreviewState previewState;
+        bool checked;
     };
 
-    QVector<VarData> vars;
+    mutable std::vector<VarData> vars;
     QFont varPreviewItalicFont;
     QFont varPreviewCEFont;
 };

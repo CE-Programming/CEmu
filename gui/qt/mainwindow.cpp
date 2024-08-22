@@ -141,6 +141,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_varTableModel = new VarTableModel(ui->emuVarView);
     QSortFilterProxyModel *varTableSortModel = new QSortFilterProxyModel(m_varTableModel);
     varTableSortModel->setSourceModel(m_varTableModel);
+    varTableSortModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+    varTableSortModel->setSortLocaleAware(true);
     ui->emuVarView->setModel(varTableSortModel);
     ui->emuVarView->sortByColumn(VarTableModel::VAR_NAME_COL, Qt::AscendingOrder);
 
@@ -2063,22 +2065,32 @@ void MainWindow::varSaveSelectedFiles() {
     varReceive([this, dir = dialog.directory().absolutePath()](bool isBlocked) {
         QString name;
         QString filename;
-        bool good = true;
+        QString errMsg;
 
         for (int currRow = 0; currRow < ui->emuVarView->model()->rowCount(); currRow++) {
             QModelIndex nameIndex = ui->emuVarView->model()->index(currRow, VarTableModel::VAR_NAME_COL);
             if (nameIndex.data(Qt::CheckStateRole) == Qt::Checked) {
-                calc_var_t var = nameIndex.data(Qt::UserRole).value<calc_var_t>();
+                calc_var_t var, varName = nameIndex.data(Qt::UserRole).value<calc_var_t>();
+                // Find the variable first to ensure the current type is used for the file extension
+                if (!vat_search_find(&varName, &var)) {
+                    if (calc_var_is_list(&varName)) {
+                        // Remove any linked formula before generating filename
+                        varName.name[varName.namelen - 1] = 0;
+                    }
+                    name = QString(calc_var_name_to_utf8(varName.name, varName.namelen, varName.named));
+                    errMsg = tr("Transfer error, variable no longer exists: ") + name;
+                    break;
+                }
                 if (calc_var_is_list(&var)) {
                     // Remove any linked formula before generating filename
                     var.name[var.namelen - 1] = 0;
                 }
 
                 name = QString(calc_var_name_to_utf8(var.name, var.namelen, var.named));
-                filename = dir + "/" + name + "." + m_varExtensions[var.type1];
+                filename = dir + "/" + name + "." + m_varExtensions[var.type];
 
                 if (emu_receive_variable(filename.toStdString().c_str(), &var, 1) != LINK_GOOD) {
-                    good = false;
+                    errMsg = tr("Transfer error, see console for information:\nFile: ") + filename;
                     break;
                 }
             }
@@ -2087,10 +2099,10 @@ void MainWindow::varSaveSelectedFiles() {
             emu.unblock();
         }
 
-        if (good) {
+        if (errMsg.isEmpty()) {
             QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
         } else {
-            QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + filename);
+            QMessageBox::critical(this, MSG_ERROR, errMsg);
         }
     });
 }

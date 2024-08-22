@@ -4,25 +4,75 @@
 #include "utils.h"
 
 #include <QtGui/QBrush>
+#include <algorithm>
+#include <cassert>
 
 Q_DECLARE_METATYPE(calc_var_t)
 
-VarTableModel::VarData::VarData(const calc_var_t &var) : info(var), data(reinterpret_cast<char*>(var.data), var.size), checked(Qt::Unchecked) {
-    info.data = reinterpret_cast<uint8_t*>(data.data());
-    updatePreview();
+VarTableModel::VarData::VarData(const calc_var_t &var) : info(var), previewState(PreviewState::Outdated), checked(false) {
+    info.data = new uint8_t[var.size];
+    memcpy(info.data, var.data, var.size);
+}
+
+VarTableModel::VarData::~VarData() {
+    delete[] info.data;
+}
+
+VarTableModel::VarData::VarData(VarData &&other) noexcept {
+    info.data = nullptr;
+    *this = std::move(other);
+}
+
+VarTableModel::VarData &VarTableModel::VarData::operator=(VarData &&other) noexcept {
+    uint8_t *data = info.data;
+    info = other.info;
+    other.info.data = data;
+    preview = std::move(other.preview);
+    previewState = other.previewState;
+    checked = other.checked;
+    return *this;
+}
+
+uint8_t VarTableModel::VarData::updateInfo(const calc_var_t &var) {
+    uint8_t changed = 0;
+    if (var.namelen != info.namelen ||
+        0 != memcmp(var.name, info.name, var.namelen)) {
+        changed |= (1 << VAR_NAME_COL);
+    }
+    if (var.archived != info.archived) {
+        changed |= (1 << VAR_LOCATION_COL);
+    }
+    if (var.type != info.type) {
+        changed |= (1 << VAR_TYPE_COL);
+    }
+    uint8_t *data = info.data;
+    if (var.size != info.size) {
+        changed |= (1 << VAR_SIZE_COL) | (1 << VAR_PREVIEW_COL);
+        data = new uint8_t[var.size];
+        delete[] info.data;
+    } else if (0 != memcmp(var.data, data, var.size)) {
+        changed |= (1 << VAR_PREVIEW_COL);
+    }
+    info = var;
+    info.data = data;
+    if (changed & (1 << VAR_PREVIEW_COL)) {
+        memcpy(info.data, var.data, var.size);
+        previewState = PreviewState::Outdated;
+    }
+    return changed;
 }
 
 void VarTableModel::VarData::updatePreview() {
-    previewValid = true;
+    previewState = PreviewState::Valid;
     if (info.size <= 2) {
         preview = tr("Empty");
-        previewValid = false;
+        previewState = PreviewState::Invalid;
     } else if (calc_var_is_asmprog(&info)) {
         preview = tr("Can't preview this");
-        previewValid = false;
+        previewState = PreviewState::Invalid;
     } else if (calc_var_is_internal(&info) && info.name[0] != '#') { // # is previewable
         preview = tr("Can't preview this OS variable");
-        previewValid = false;
+        previewState = PreviewState::Invalid;
     } else {
         try {
             preview = QString::fromStdString(calc_var_content_string(info)).trimmed().replace("\n", " \\ ");
@@ -32,7 +82,7 @@ void VarTableModel::VarData::updatePreview() {
             }
         } catch (...) {
             preview = tr("Can't preview this");
-            previewValid = false;
+            previewState = PreviewState::Invalid;
         }
     }
 }
@@ -48,37 +98,91 @@ void VarTableModel::clear() {
     endResetModel();
 }
 
+static bool varLess(const calc_var_t &var, const calc_var_t &other) {
+    return calc_var_compare_names(&var, &other) < 0;
+}
+
 void VarTableModel::refresh() {
     calc_var_t var;
 
-    clear();
+    std::vector<calc_var_t> newVars;
 
     vat_search_init(&var);
     while (vat_search_next(&var)) {
         if (var.named || var.size > 2) {
-            int row = vars.size();
-            beginInsertRows(QModelIndex(), row, row);
-            vars.push_back(VarData(var));
-            endInsertRows();
+            newVars.push_back(var);
         }
+    }
+
+    std::sort(newVars.begin(), newVars.end(), varLess);
+
+    auto oldIter = vars.begin();
+    auto newIter = newVars.begin();
+    while (newIter != newVars.end()) {
+        size_t row = oldIter - vars.begin();
+        // Remove old vars smaller than the next new var
+        auto oldRemoveEnd = std::find_if_not(oldIter, vars.end(), [=](const VarData &var) { return varLess(var.info, *newIter); });
+        if (oldIter != oldRemoveEnd) {
+            beginRemoveRows(QModelIndex(), row, row + (oldRemoveEnd - oldIter - 1));
+            oldIter = vars.erase(oldIter, oldRemoveEnd);
+            endRemoveRows();
+        }
+        // Insert new vars smaller than the next old var, or insert all if no more old vars
+        auto newInsertEnd = newVars.end(); 
+        if (oldIter != vars.end()) {
+            newInsertEnd = std::find_if_not(newIter, newVars.end(), [=](const calc_var_t &var) { return varLess(var, oldIter->info); });
+        }
+        if (newIter != newInsertEnd) {
+            beginInsertRows(QModelIndex(), row, row + (newInsertEnd - newIter - 1));
+            oldIter = vars.insert(oldIter, newIter, newInsertEnd);
+            endInsertRows();
+            oldIter += (newInsertEnd - newIter);
+            newIter = newInsertEnd;
+        } else {
+            // No new vars were smaller, and the old var cannot be smaller because those were already removed, so they're equal
+            assert(oldIter != vars.end());
+            // Update the old variable with the new variable data
+            uint8_t changed = oldIter->updateInfo(*newIter);
+            // Inform the view of changed columns
+            for (uint8_t col = 0; col < VAR_NUM_COLS; col++) {
+                if (changed & (1 << col)) {
+                    QModelIndex cell = index(row, col);
+                    emit dataChanged(cell, cell);
+                }
+            }
+            oldIter++;
+            newIter++;
+        }
+    }
+    // Remove any remaining old vars
+    if (oldIter != vars.end()) {
+        beginRemoveRows(QModelIndex(), oldIter - vars.begin(), vars.size() - 1);
+        vars.erase(oldIter, vars.end());
+        endRemoveRows();
     }
 }
 
 void VarTableModel::retranslate() {
     if (!vars.empty()) {
         for (VarData &var : vars) {
-            var.updatePreview();
+            // Only invalid previews are translated
+            if (var.previewState == PreviewState::Invalid) {
+                var.previewState = PreviewState::Outdated;
+            }
         }
-        emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+        emit dataChanged(index(0, VAR_LOCATION_COL), index(vars.size() - 1, VAR_NUM_COLS - 1));
     }
-    emit headerDataChanged(Qt::Horizontal, 0, columnCount() - 1);
+    emit headerDataChanged(Qt::Horizontal, 0, VAR_NUM_COLS - 1);
 }
 
 QVariant VarTableModel::data(const QModelIndex &index, int role) const {
     if (!index.isValid()) {
         return QVariant();
     }
-    const VarData &var = vars[index.row()];
+    VarData &var = vars[index.row()];
+    if (index.column() == VAR_PREVIEW_COL && var.previewState == PreviewState::Outdated) {
+        var.updatePreview();
+    }
     switch (role) {
         case Qt::DisplayRole:
             switch (index.column()) {
@@ -104,17 +208,17 @@ QVariant VarTableModel::data(const QModelIndex &index, int role) const {
             };
         case Qt::FontRole:
             if (index.column() == VAR_PREVIEW_COL) {
-                return var.previewValid ? varPreviewCEFont : varPreviewItalicFont;
+                return var.previewState == PreviewState::Invalid ? varPreviewItalicFont : varPreviewCEFont;
             }
             return QVariant();
         case Qt::ForegroundRole:
-            if (index.column() == VAR_PREVIEW_COL && !var.previewValid) {
+            if (index.column() == VAR_PREVIEW_COL && var.previewState == PreviewState::Invalid) {
                 return QBrush(Qt::gray);
             }
             return QVariant();
         case Qt::CheckStateRole:
             if (index.column() == VAR_NAME_COL) {
-                return var.checked;
+                return var.checked ? Qt::Checked : Qt::Unchecked;
             }
             return QVariant();
         case Qt::UserRole:
@@ -126,7 +230,7 @@ QVariant VarTableModel::data(const QModelIndex &index, int role) const {
 
 bool VarTableModel::setData(const QModelIndex &index, const QVariant &value, int role) {
     if (index.isValid() && index.column() == VAR_NAME_COL && role == Qt::CheckStateRole) {
-        vars[index.row()].checked = qvariant_cast<Qt::CheckState>(value);
+        vars[index.row()].checked = qvariant_cast<Qt::CheckState>(value) == Qt::Checked;
         emit dataChanged(index, index, { Qt::CheckStateRole });
         return true;
     }

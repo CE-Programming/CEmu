@@ -68,6 +68,8 @@ void vat_search_init(calc_var_t *);
 bool vat_search_next(calc_var_t *);
 bool vat_search_find(const calc_var_t *, calc_var_t *);
 
+int calc_var_compare_names(const calc_var_t *, const calc_var_t *);
+calc_var_type_t calc_var_normalized_type(calc_var_type_t);
 bool calc_var_is_list(const calc_var_t *);
 bool calc_var_is_prog(const calc_var_t *);
 bool calc_var_is_asmprog(const calc_var_t *);
