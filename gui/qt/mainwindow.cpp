@@ -35,6 +35,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QBuffer>
 #include <QtCore/QProcess>
+#include <QtCore/QSortFilterProxyModel>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
@@ -120,9 +121,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->console->setMaximumBlockCount(1000);
 
-    varPreviewCEFont = QFont(QStringLiteral("TICELarge"), 11);
-    varPreviewItalicFont.setItalic(true);
-
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
@@ -139,6 +137,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     ui->statusBar->addWidget(m_progressBar);
     ui->statusBar->addWidget(m_btnCancelTranser);
     sendingHandler = new SendingHandler(this, m_btnCancelTranser, m_progressBar, ui->varLoadedView);
+
+    m_varTableModel = new VarTableModel(ui->emuVarView);
+    QSortFilterProxyModel *varTableSortModel = new QSortFilterProxyModel(m_varTableModel);
+    varTableSortModel->setSourceModel(m_varTableModel);
+    ui->emuVarView->setModel(varTableSortModel);
+    ui->emuVarView->sortByColumn(VarTableModel::VAR_NAME_COL, Qt::AscendingOrder);
 
     // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
@@ -396,8 +400,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramAscii, &QToolButton::toggled, [this](bool set){ ui->ramEdit->setAsciiArea(set); });
     connect(ui->flashAscii, &QToolButton::toggled, [this](bool set){ ui->flashEdit->setAsciiArea(set); });
-    connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::varPressed);
-    connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::contextVars);
+    connect(ui->emuVarView, &QTableView::doubleClicked, this, &MainWindow::varPressed);
+    connect(ui->emuVarView, &QTableView::customContextMenuRequested, this, &MainWindow::contextVars);
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::stateAddNew);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::bootImageExport);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
@@ -821,7 +825,10 @@ void MainWindow::translateExtras(int init) {
                 dock->setWindowTitle(__TXT_AUTOTESTER);
             }
         }
+
+        m_varTableModel->retranslate();
     }
+    varUpdate();
 
     TXT_MEM_DOCK = __TXT_MEM_DOCK;
     TXT_VISUALIZER_DOCK = __TXT_VISUALIZER_DOCK;
@@ -906,8 +913,6 @@ void MainWindow::translateExtras(int init) {
         actionToggleConsole->setText(TXT_TOGGLE_CONSOLE);
 #endif
     }
-
-    varShow();
 }
 
 void MainWindow::darkModeSwitch(bool darkMode) {
@@ -1890,6 +1895,7 @@ void MainWindow::varReceive(std::function<void(bool)> recvAction) {
 
 void MainWindow::varToggle() {
     guiReceive = !guiReceive;
+    varUpdate();
     varShow();
 }
 
@@ -1924,8 +1930,12 @@ QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &n
     return QStringList();
 }
 
-void MainWindow::varPressed(QTableWidgetItem *item) {
-    calc_var_t var = ui->emuVarView->item(item->row(), VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
+void MainWindow::varPressed(const QModelIndex &index) {
+    QModelIndex nameIndex = index.siblingAtColumn(VarTableModel::VAR_NAME_COL);
+    if (!nameIndex.isValid()) {
+        return;
+    }
+    calc_var_t var = nameIndex.data(Qt::UserRole).value<calc_var_t>();
     if (var.size <= 2 || calc_var_is_asmprog(&var)) {
         return;
     } else if (!calc_var_is_internal(&var) || var.name[0] == '#') {
@@ -1937,7 +1947,7 @@ void MainWindow::varPressed(QTableWidgetItem *item) {
         }
         bool isHexAppVar = var.type == CALC_VAR_TYPE_APP_VAR && !calc_var_is_python_appvar(&var);
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this, !isHexAppVar);
-        codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME_COL)->text());
+        codePopup->setVariableName(nameIndex.data().toString());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
         codePopup->setOriginalCode(QString::fromStdString(str), calc_var_is_tokenized(&var));
@@ -1962,106 +1972,34 @@ void MainWindow::emuBlocked(int req) {
     }
 }
 
+void MainWindow::varUpdate() {
+    ui->buttonEnableVarList->setText(guiReceive ? tr("Hide Calculator Variables") : tr("View Calculator Variables"));
+    ui->buttonRefreshVarList->setEnabled(guiReceive);
+    ui->buttonReceiveFiles->setEnabled(guiReceive);
+    ui->buttonReceiveFile->setEnabled(guiReceive);
+    ui->emuVarView->setEnabled(guiReceive);
+}
+
 void MainWindow::varShow() {
     if (!guiReceive) {
         m_recvAction = nullptr;
-        ui->emuVarView->setRowCount(0);
-        ui->emuVarView->setSortingEnabled(false);
-        ui->buttonEnableVarList->setText(tr("View Calculator Variables"));
-        ui->buttonRefreshVarList->setEnabled(false);
-        ui->buttonReceiveFiles->setEnabled(false);
-        ui->buttonReceiveFile->setEnabled(false);
-        ui->emuVarView->setEnabled(false);
+
+        m_varTableModel->clear();
     } else {
         if (m_recvAction) {
             return;
         }
 
         varReceive([this](bool isBlocked) {
-            calc_var_t var;
-
-            ui->emuVarView->setRowCount(0);
-            ui->emuVarView->setSortingEnabled(false);
-            ui->buttonEnableVarList->setText(tr("Hide Calculator Variables"));
-            ui->buttonRefreshVarList->setEnabled(true);
-            ui->buttonReceiveFiles->setEnabled(true);
-            ui->buttonReceiveFile->setEnabled(true);
-            ui->emuVarView->setEnabled(true);
-
-            vat_search_init(&var);
-            while (vat_search_next(&var)) {
-                if (var.named || var.size > 2) {
-                    int row;
-
-                    row = ui->emuVarView->rowCount();
-                    ui->emuVarView->setRowCount(row + 1);
-
-                    bool var_preview_needs_gray = false;
-                    QString var_value;
-                    if (var.size <= 2) {
-                        var_value = tr("Empty");
-                        var_preview_needs_gray = true;
-                    } else if (calc_var_is_asmprog(&var)) {
-                        var_value = tr("Can't preview this");
-                        var_preview_needs_gray = true;
-                    } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
-                        var_value = tr("Can't preview this OS variable");
-                        var_preview_needs_gray = true;
-                    } else {
-                        try {
-                            var_value = QString::fromStdString(calc_var_content_string(var)).trimmed().replace("\n", " \\ ");
-                            if (var_value.size() > 50) {
-                                var_value.truncate(50);
-                                var_value += QStringLiteral(" [...]");
-                            }
-                        } catch (...) {
-                            var_value = tr("Can't preview this");
-                            var_preview_needs_gray = true;
-                        }
-                    }
-
-                    // Do not translate - things rely on those names.
-                    QString var_type_str = calc_var_type_names[var.type];
-                    if (calc_var_is_asmprog(&var)) {
-                        var_type_str += QStringLiteral(" (ASM)");
-                    }
-
-                    QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name, var.namelen, var.named));
-                    QTableWidgetItem *var_location = new QTableWidgetItem(var.archived ? tr("Archive") : QStringLiteral("RAM"));
-                    QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
-                    QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
-                    QTableWidgetItem *var_size = new QTableWidgetItem();
-
-                    // Attach var index (hidden) to the name. Needed elsewhere
-                    var_name->setData(Qt::UserRole, QVariant::fromValue(var));
-                    var_size->setData(Qt::DisplayRole, var.size);
-
-                    var_name->setCheckState(Qt::Unchecked);
-
-                    if (var_preview_needs_gray) {
-                        var_preview->setFont(varPreviewItalicFont);
-                        var_preview->setForeground(Qt::gray);
-                    } else {
-                        var_preview->setFont(varPreviewCEFont);
-                    }
-
-                    ui->emuVarView->setItem(row, VAR_NAME_COL, var_name);
-                    ui->emuVarView->setItem(row, VAR_LOCATION_COL, var_location);
-                    ui->emuVarView->setItem(row, VAR_TYPE_COL, var_type);
-                    ui->emuVarView->setItem(row, VAR_SIZE_COL, var_size);
-                    ui->emuVarView->setItem(row, VAR_PREVIEW_COL, var_preview);
-                }
-            }
+            m_varTableModel->refresh();
             if (isBlocked) {
                 emu.unblock();
             }
 
-            ui->emuVarView->resizeColumnToContents(VAR_NAME_COL);
-            ui->emuVarView->resizeColumnToContents(VAR_LOCATION_COL);
-            ui->emuVarView->resizeColumnToContents(VAR_TYPE_COL);
-            ui->emuVarView->resizeColumnToContents(VAR_SIZE_COL);
-
-            ui->emuVarView->setSortingEnabled(true);
+            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_NAME_COL);
+            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_LOCATION_COL);
+            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_TYPE_COL);
+            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_SIZE_COL);
         });
     }
 }
@@ -2069,9 +2007,10 @@ void MainWindow::varShow() {
 void MainWindow::varSaveSelected() {
     QVector<calc_var_t> selectedVars;
     QStringList fileNames;
-    for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
-            selectedVars.append(ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>());
+    for (int currRow = 0; currRow < ui->emuVarView->model()->rowCount(); currRow++) {
+        QModelIndex nameIndex = ui->emuVarView->model()->index(currRow, VarTableModel::VAR_NAME_COL);
+        if (nameIndex.data(Qt::CheckStateRole) == Qt::Checked) {
+            selectedVars.append(nameIndex.data(Qt::UserRole).value<calc_var_t>());
         }
     }
     if (selectedVars.size() < 2) {
@@ -2102,8 +2041,8 @@ void MainWindow::varSaveSelectedFiles() {
     dialog.setDirectory(m_dir);
     int good = 0;
 
-    for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
+    for (int currRow = 0; currRow < ui->emuVarView->model()->rowCount(); currRow++) {
+        if (ui->emuVarView->model()->index(currRow, VarTableModel::VAR_NAME_COL).data(Qt::CheckStateRole) == Qt::Checked) {
             good = 1;
             break;
         }
@@ -2126,9 +2065,10 @@ void MainWindow::varSaveSelectedFiles() {
         QString filename;
         bool good = true;
 
-        for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-            if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
-                calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
+        for (int currRow = 0; currRow < ui->emuVarView->model()->rowCount(); currRow++) {
+            QModelIndex nameIndex = ui->emuVarView->model()->index(currRow, VarTableModel::VAR_NAME_COL);
+            if (nameIndex.data(Qt::CheckStateRole) == Qt::Checked) {
+                calc_var_t var = nameIndex.data(Qt::UserRole).value<calc_var_t>();
                 if (calc_var_is_list(&var)) {
                     // Remove any linked formula before generating filename
                     var.name[var.namelen - 1] = 0;
@@ -2575,12 +2515,12 @@ void MainWindow::varLaunch(const calc_var_t *prgm) {
 }
 
 void MainWindow::contextVars(const QPoint& posa) {
-    int row = ui->emuVarView->rowAt(posa.y());
-    if (row < 0) {
+    QModelIndex nameIndex = ui->emuVarView->indexAt(posa).siblingAtColumn(VarTableModel::VAR_NAME_COL);
+    if (!nameIndex.isValid()) {
         return;
     }
 
-    const calc_var_t var = ui->emuVarView->item(row, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
+    const calc_var_t var = nameIndex.data(Qt::UserRole).value<calc_var_t>();
 
     QMenu contextMenu;
     QAction *launch = contextMenu.addAction(tr("Launch program"));

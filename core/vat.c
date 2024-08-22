@@ -81,7 +81,7 @@ static void hex_byte(char **dest, uint8_t byte) {
     *(*dest)++ = hex_char(byte >> 0);
 }
 
-const char *calc_var_name_to_utf8(uint8_t name[8], uint8_t namelen, bool named) {
+const char *calc_var_name_to_utf8(const uint8_t name[8], uint8_t namelen, bool named) {
     static char buffer[26];
     char *dest = buffer;
     uint8_t i = 0;

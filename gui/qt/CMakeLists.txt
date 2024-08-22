@@ -197,6 +197,7 @@ set(CEmu_Sources
     tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h
     tivars_lib_cpp/src/tivarslib_utils.cpp tivars_lib_cpp/src/tivarslib_utils.h
     utils.cpp utils.h
+    vartablemodel.cpp vartablemodel.h
     visualizerwidget.cpp visualizerwidget.h
     ${CEmu_Resources}
 )
