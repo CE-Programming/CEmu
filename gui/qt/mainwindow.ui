@@ -6822,7 +6822,7 @@
                 <enum>Qt::TabFocus</enum>
                </property>
                <property name="text">
-                <string>View calc variables</string>
+                <string/>
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
@@ -6909,7 +6909,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QTableWidget" name="emuVarView">
+            <widget class="QTableView" name="emuVarView">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -6976,31 +6976,6 @@
              <attribute name="verticalHeaderShowSortIndicator" stdset="0">
               <bool>false</bool>
              </attribute>
-             <column>
-              <property name="text">
-               <string>Name</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Location</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Type</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Size</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Preview</string>
-              </property>
-             </column>
             </widget>
            </item>
           </layout>

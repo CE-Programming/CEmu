@@ -10,6 +10,7 @@
 #include "keyhistorywidget.h"
 #include "dockwidget.h"
 #include "datawidget.h"
+#include "vartablemodel.h"
 #include "keypad/qtkeypadbridge.h"
 #include "debugger/hexwidget.h"
 #include "debugger/disasm.h"
@@ -148,14 +149,6 @@ private:
         VAT_SIZE_COL,
         VAT_NAME_COL,
         VAT_TYPE_COL
-    };
-
-    enum {
-        VAR_NAME_COL,
-        VAR_LOCATION_COL,
-        VAR_TYPE_COL,
-        VAR_SIZE_COL,
-        VAR_PREVIEW_COL
     };
 
     enum {
@@ -474,8 +467,9 @@ private:
     // linking
     QStringList varDialog(QFileDialog::AcceptMode mode, const QString &filter, const QString &suffix);
     void varReceive(std::function<void(bool)> recvAction);
+    void varUpdate();
     void varShow();
-    void varPressed(QTableWidgetItem *item);
+    void varPressed(const QModelIndex &index);
     void varLaunch(const calc_var_t *prgm);
     void varSelect();
     void varSaveSelected();
@@ -607,6 +601,7 @@ private:
 
     QDir m_dir;
     QStringList m_equateFiles;
+    VarTableModel *m_varTableModel;
     std::function<void(bool)> m_recvAction;
 
     bool m_uiEditMode = false;
@@ -717,9 +712,6 @@ private:
     bool m_timerFpsTriggered = false;
 
     QString m_styleForMode[2];
-
-    QFont varPreviewCEFont;
-    QFont varPreviewItalicFont;
 
     static const char *m_varExtensions[];
 

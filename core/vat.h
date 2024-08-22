@@ -54,7 +54,7 @@ typedef enum calc_var_type {
 } calc_var_type_t;
 
 extern const char *calc_var_type_names[0x40];
-const char *calc_var_name_to_utf8(uint8_t name[8], uint8_t namelen, bool named);
+const char *calc_var_name_to_utf8(const uint8_t name[8], uint8_t namelen, bool named);
 
 typedef struct calc_var {
     uint32_t vat, address;

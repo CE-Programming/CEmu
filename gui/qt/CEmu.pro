@@ -269,6 +269,7 @@ SOURCES += \
     tivars_lib_cpp/src/TypeHandlers/STH_ExactRadical.cpp \
     tivars_lib_cpp/src/TypeHandlers/STH_ExactPi.cpp \
     tivars_lib_cpp/src/TypeHandlers/STH_FP.cpp \
+    vartablemodel.cpp \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
@@ -368,6 +369,7 @@ HEADERS  += \
     tivars_lib_cpp/src/TIVarType.h \
     tivars_lib_cpp/src/TIVarTypes.h \
     tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h \
+    vartablemodel.h \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
     archive/extractor.h \
