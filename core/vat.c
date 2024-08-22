@@ -426,17 +426,61 @@ bool vat_search_next(calc_var_t *var) {
 }
 
 bool vat_search_find(const calc_var_t *target, calc_var_t *result) {
-    /* Ignore linked formula when comparing list names */
-    bool isList = calc_var_is_list(target);
     vat_search_init(result);
     while (vat_search_next(result)) {
-        if (result->type == target->type &&
-            result->namelen == target->namelen &&
-            !memcmp(result->name, target->name, target->namelen - isList)) {
+        if (0 == calc_var_compare_names(target, result)) {
             return true;
         }
     }
     return false;
+}
+
+int calc_var_compare_names(const calc_var_t *left, const calc_var_t *right) {
+    bool leftIsAns = !left->named & (left->name[0] == 0x72);
+    bool rightIsAns = !right->named & (right->name[0] == 0x72);
+    if (leftIsAns || rightIsAns) {
+        return leftIsAns - rightIsAns;
+    }
+    /* Ignore linked formula when comparing list names */
+    uint8_t leftNameLen = left->namelen - calc_var_is_list(left);
+    uint8_t rightNameLen = right->namelen - calc_var_is_list(right);
+    int cmp = memcmp(left->name, right->name, leftNameLen < rightNameLen ? leftNameLen : rightNameLen);
+    if (cmp != 0) {
+        return cmp;
+    }
+    cmp = leftNameLen - rightNameLen;
+    if (cmp != 0) {
+        return cmp;
+    }
+    if (likely(left->type == right->type)) {
+        return 0;
+    }
+    return calc_var_normalized_type(left->type) - calc_var_normalized_type(right->type);
+}
+
+calc_var_type_t calc_var_normalized_type(calc_var_type_t type) {
+    switch (type) {
+        case CALC_VAR_TYPE_REAL:
+        case CALC_VAR_TYPE_REAL_FRAC:
+        case CALC_VAR_TYPE_MIXED_FRAC:
+        case CALC_VAR_TYPE_REAL_RADICAL:
+        case CALC_VAR_TYPE_REAL_PI:
+        case CALC_VAR_TYPE_REAL_PI_FRAC:
+        case CALC_VAR_TYPE_CPLX:
+        case CALC_VAR_TYPE_CPLX_FRAC:
+        case CALC_VAR_TYPE_CPLX_RADICAL:
+        case CALC_VAR_TYPE_CPLX_PI:
+        case CALC_VAR_TYPE_CPLX_PI_FRAC:
+            return CALC_VAR_TYPE_REAL;
+        case CALC_VAR_TYPE_REAL_LIST:
+        case CALC_VAR_TYPE_CPLX_LIST:
+            return CALC_VAR_TYPE_REAL_LIST;
+        case CALC_VAR_TYPE_PROG:
+        case CALC_VAR_TYPE_PROT_PROG:
+            return CALC_VAR_TYPE_PROG;
+        default:
+            return type;
+    }
 }
 
 bool calc_var_is_list(const calc_var_t *var) {
