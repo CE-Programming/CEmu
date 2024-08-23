@@ -76,7 +76,9 @@ void debug_open(int reason, uint32_t data) {
                     (mem_peek_byte(DBG_BASIC_CMDFLAGS) & DBG_BASIC_CMDEXEC_BIT)) {
 
                     // check current pc for instruction "bit 1,(iy+$36)"
-                    if(*(uint32_t*)phys_mem_ptr(cpu.registers.PC - 4, 4) == 0x4E36CBFD) {
+                    static const uint8_t instr[] = { 0xFD, 0xCB, 0x36, 0x4E };
+                    const void *ptr = phys_mem_ptr(cpu.registers.PC - sizeof(instr), sizeof(instr));
+                    if(ptr && !memcmp(ptr, instr, sizeof(instr))) {
                         reason = DBG_BASIC_CURPC_WRITE;
                     }
                 } else {
