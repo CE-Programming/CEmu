@@ -602,6 +602,7 @@ private:
     QDir m_dir;
     QStringList m_equateFiles;
     VarTableModel *m_varTableModel;
+    VarTableSortFilterModel *m_varTableSortFilterModel;
     std::function<void(bool)> m_recvAction;
 
     bool m_uiEditMode = false;

@@ -4,6 +4,7 @@
 #include "../../core/vat.h"
 
 #include <QtCore/QAbstractTableModel>
+#include <QtCore/QSortFilterProxyModel>
 #include <QtGui/QFont>
 #include <vector>
 
@@ -58,6 +59,21 @@ private:
     mutable std::vector<VarData> vars;
     QFont varPreviewItalicFont;
     QFont varPreviewCEFont;
+};
+
+class VarTableSortFilterModel : public QSortFilterProxyModel {
+    Q_OBJECT
+
+public:
+    explicit VarTableSortFilterModel(VarTableModel *parent);
+
+    void setTypeFilter(int type);
+
+protected:
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
+
+private:
+    int typeFilter;
 };
 
 #endif // VARTABLEMODEL_H

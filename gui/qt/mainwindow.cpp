@@ -35,7 +35,6 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QBuffer>
 #include <QtCore/QProcess>
-#include <QtCore/QSortFilterProxyModel>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
@@ -139,12 +138,26 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     sendingHandler = new SendingHandler(this, m_btnCancelTranser, m_progressBar, ui->varLoadedView);
 
     m_varTableModel = new VarTableModel(ui->emuVarView);
-    QSortFilterProxyModel *varTableSortModel = new QSortFilterProxyModel(m_varTableModel);
-    varTableSortModel->setSourceModel(m_varTableModel);
-    varTableSortModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-    varTableSortModel->setSortLocaleAware(true);
-    ui->emuVarView->setModel(varTableSortModel);
+    m_varTableSortFilterModel = new VarTableSortFilterModel(m_varTableModel);
+    ui->emuVarView->setModel(m_varTableSortFilterModel);
+    ui->emuVarView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->emuVarView->sortByColumn(VarTableModel::VAR_NAME_COL, Qt::AscendingOrder);
+    ui->filterVarList->setItemData(0, -1);
+    for (int varType = CALC_VAR_TYPE_REAL; varType < CALC_VAR_TYPE_OPERATING_SYSTEM; varType++) {
+        if ((varType >= CALC_VAR_TYPE_UNDEF && varType <= CALC_VAR_TYPE_APP) ||
+            varType != calc_var_normalized_type((calc_var_type_t)varType))
+            continue;
+        QString varTypeName = calc_var_type_names[varType];
+        if (!varTypeName.contains(QStringLiteral("Unknown")) &&
+            !varTypeName.contains(QStringLiteral("Temp")) &&
+            !varTypeName.contains(QStringLiteral("New"))) {
+            ui->filterVarList->addItem(varTypeName.replace(QStringLiteral("Real"), QStringLiteral("Real/Complex")), varType);
+        }
+    }
+    // Scrollbar truncates text for some reason, so just show all items
+    ui->filterVarList->setMaxVisibleItems(ui->filterVarList->count());
+    connect(ui->filterVarList, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+        m_varTableSortFilterModel, [this](int index) { m_varTableSortFilterModel->setTypeFilter(ui->filterVarList->itemData(index).toInt()); });
 
     // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
@@ -1977,6 +1990,7 @@ void MainWindow::emuBlocked(int req) {
 void MainWindow::varUpdate() {
     ui->buttonEnableVarList->setText(guiReceive ? tr("Hide Calculator Variables") : tr("View Calculator Variables"));
     ui->buttonRefreshVarList->setEnabled(guiReceive);
+    ui->filterVarList->setEnabled(guiReceive);
     ui->buttonReceiveFiles->setEnabled(guiReceive);
     ui->buttonReceiveFile->setEnabled(guiReceive);
     ui->emuVarView->setEnabled(guiReceive);
@@ -1997,11 +2011,6 @@ void MainWindow::varShow() {
             if (isBlocked) {
                 emu.unblock();
             }
-
-            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_NAME_COL);
-            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_LOCATION_COL);
-            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_TYPE_COL);
-            ui->emuVarView->resizeColumnToContents(VarTableModel::VAR_SIZE_COL);
         });
     }
 }

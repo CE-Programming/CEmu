@@ -47,11 +47,11 @@ uint8_t VarTableModel::VarData::updateInfo(const calc_var_t &var) {
     }
     uint8_t *data = info.data;
     if (var.size != info.size) {
-        changed |= (1 << VAR_SIZE_COL) | (1 << VAR_PREVIEW_COL);
+        changed |= (1 << VAR_TYPE_COL) | (1 << VAR_SIZE_COL) | (1 << VAR_PREVIEW_COL);
         data = new uint8_t[var.size];
         delete[] info.data;
     } else if (0 != memcmp(var.data, data, var.size)) {
-        changed |= (1 << VAR_PREVIEW_COL);
+        changed |= (1 << VAR_TYPE_COL) | (1 << VAR_PREVIEW_COL);
     }
     info = var;
     info.data = data;
@@ -196,6 +196,8 @@ QVariant VarTableModel::data(const QModelIndex &index, int role) const {
                     QString var_type_str = calc_var_type_names[var.info.type];
                     if (calc_var_is_asmprog(&var.info)) {
                         var_type_str += QStringLiteral(" (ASM)");
+                    } else if (calc_var_is_python_appvar(&var.info)) {
+                        var_type_str += QStringLiteral(" (Python)");
                     }
                     return var_type_str;
                 }
@@ -280,4 +282,25 @@ int VarTableModel::columnCount(const QModelIndex &parent) const {
         return 0;
     }
     return VAR_NUM_COLS;
+}
+
+VarTableSortFilterModel::VarTableSortFilterModel(VarTableModel *parent) : QSortFilterProxyModel(parent), typeFilter(-1) {
+    setSourceModel(parent);
+    setSortCaseSensitivity(Qt::CaseInsensitive);
+    setSortLocaleAware(true);
+}
+
+void VarTableSortFilterModel::setTypeFilter(int type) {
+    if (type != typeFilter) {
+        typeFilter = type;
+        invalidateFilter();
+    }
+}
+
+bool VarTableSortFilterModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {
+    if (typeFilter < 0) {
+        return true;
+    }
+    calc_var_t var = sourceModel()->index(source_row, VarTableModel::VAR_NAME_COL, source_parent).data(Qt::UserRole).value<calc_var_t>();
+    return calc_var_normalized_type(var.type) == typeFilter;
 }
