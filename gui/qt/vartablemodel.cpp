@@ -133,9 +133,12 @@ void VarTableModel::refresh() {
             newInsertEnd = std::find_if_not(newIter, newVars.end(), [=](const calc_var_t &var) { return varLess(var, oldIter->info); });
         }
         if (newIter != newInsertEnd) {
-            beginInsertRows(QModelIndex(), row, row + (newInsertEnd - newIter - 1));
+            int lastRow = row + (newInsertEnd - newIter - 1);
+            beginInsertRows(QModelIndex(), row, lastRow);
             oldIter = vars.insert(oldIter, newIter, newInsertEnd);
             endInsertRows();
+            // Handle header resize because it doesn't care about inserted rows
+            emit dataChanged(index(row, 0), index(lastRow, VAR_NUM_COLS - 1), { Qt::SizeHintRole });
             oldIter += (newInsertEnd - newIter);
             newIter = newInsertEnd;
         } else {
@@ -294,6 +297,11 @@ void VarTableSortFilterModel::setTypeFilter(int type) {
     if (type != typeFilter) {
         typeFilter = type;
         invalidateFilter();
+        // Handle header resize because it doesn't care about inserted rows
+        int rows = rowCount(), cols = columnCount();
+        if (rows > 0 && cols > 0) {
+            emit dataChanged(index(0, 0), index(rows - 1, cols - 1), { Qt::SizeHintRole });
+        }
     }
 }
 
