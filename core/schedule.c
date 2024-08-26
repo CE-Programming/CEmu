@@ -516,6 +516,12 @@ double sched_get_clock_rate_precise(enum clock_id clock) {
     return (double)SCHED_BASE_CLOCK_RATE / sched.clocks[clock].tick_unit;
 }
 
+static void sched_init_events(void) {
+    sched.items[SCHED_SECOND].callback.event = sched_second;
+    sched_init_event(SCHED_RUN, CLOCK_RUN, sched_run_event);
+    sched.items[SCHED_NO_DMA].callback.dma = NULL;
+}
+
 void sched_reset(void) {
     const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 10000000, 60, 48000000, 24000000, 12000000, 6000000, 3000000, 1000000, 32768 };
 
@@ -533,17 +539,16 @@ void sched_reset(void) {
         update_reciprocal(&sched.clocks[clock]);
     }
 
-    sched.items[SCHED_SECOND].callback.event = sched_second;
+    sched_init_events();
+
     sched.items[SCHED_SECOND].clock = CLOCK_32K;
     sched.items[SCHED_SECOND].timestamp = SCHED_BASE_CLOCK_RATE;
     sched_update_next(SCHED_SECOND);
 
-    sched_init_event(SCHED_RUN, CLOCK_RUN, sched_run_event);
     sched_set(SCHED_RUN, 0);
 
     sched.items[SCHED_USB_DEVICE] = usb_device_item;
 
-    sched.items[SCHED_NO_DMA].callback.dma = NULL;
     sched.items[SCHED_NO_DMA].clock = CLOCK_48M;
     sched.items[SCHED_NO_DMA].timestamp = SCHED_INACTIVE_FLAG;
     sched.dma.next = SCHED_NO_DMA;
@@ -577,6 +582,8 @@ bool sched_restore(FILE *image) {
     bool ret;
     enum sched_item_id id;
     union sched_callback callbacks[SCHED_NUM_ITEMS];
+
+    sched_init_events();
 
     for (id = 0; id < SCHED_NUM_ITEMS; id++) {
         callbacks[id] = sched.items[id].callback;

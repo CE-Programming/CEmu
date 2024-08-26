@@ -411,12 +411,15 @@ static uint32_t lcd_dma(enum sched_item_id id) {
     return lcd.WTRMRK ? 19 : 11;
 }
 
+static void lcd_init_events(void) {
+    sched_init_event(SCHED_LCD, CLOCK_24M, lcd_event);
+    sched_init_dma(SCHED_LCD_DMA, CLOCK_48M, lcd_dma);
+}
+
 void lcd_reset(void) {
     memset(&lcd, 0, offsetof(lcd_state_t, useDma));
     lcd_update();
-
-    sched_init_event(SCHED_LCD, CLOCK_24M, lcd_event);
-    sched_init_dma(SCHED_LCD_DMA, CLOCK_48M, lcd_dma);
+    lcd_init_events();
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -694,6 +697,7 @@ bool lcd_save(FILE *image) {
 }
 
 bool lcd_restore(FILE *image) {
+    lcd_init_events();
     bool ret = fread(&lcd, offsetof(lcd_state_t, data), 1, image) == 1;
     lcd_update();
     return ret;

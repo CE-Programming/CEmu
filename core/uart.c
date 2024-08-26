@@ -461,13 +461,17 @@ eZ80portrange_t init_uart(void) {
     return puart;
 }
 
+static void uart_init_events(void) {
+    sched_init_event(SCHED_UART, CLOCK_3M, uart_event);
+}
+
 void uart_reset(void) {
     memset(&uart, 0, sizeof(uart));
     uart.lsr = 1 << 6 | 1 << 5;
 
     uart_set_device_funcs();
 
-    sched_init_event(SCHED_UART, CLOCK_3M, uart_event);
+    uart_init_events();
     uart_set_timer(true);
 }
 
@@ -476,6 +480,7 @@ bool uart_save(FILE *image) {
 }
 
 bool uart_restore(FILE *image) {
+    uart_init_events();
     if (fread(&uart, offsetof(uart_state_t, transmit_char), 1, image) == 1) {
         uart_set_device_funcs();
         return true;

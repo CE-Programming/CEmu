@@ -174,11 +174,15 @@ static void rtc_write(const uint16_t pio, const uint8_t byte, bool poke) {
     }
 }
 
-void rtc_reset() {
+static void rtc_init_events(void) {
+    sched_init_event(SCHED_RTC, CLOCK_32K, rtc_event);
+}
+
+void rtc_reset(void) {
     memset(&rtc, 0, sizeof rtc);
     rtc.revision = 0x00010500;
 
-    sched_init_event(SCHED_RTC, CLOCK_32K, rtc_event);
+    rtc_init_events();
 
     gui_console_printf("[CEmu] RTC reset.\n");
 }
@@ -198,5 +202,6 @@ bool rtc_save(FILE *image) {
 }
 
 bool rtc_restore(FILE *image) {
+    rtc_init_events();
     return fread(&rtc, sizeof(rtc), 1, image) == 1;
 }

@@ -173,17 +173,24 @@ static void gpt_write(uint16_t address, uint8_t value, bool poke) {
     }
 }
 
+static void gpt_init_events(void) {
+    enum sched_item_id id;
+    sched_init_event(SCHED_TIMER_DELAY, CLOCK_CPU, gpt_delay);
+    for (id = SCHED_TIMER1; id <= SCHED_TIMER3; id++) {
+        sched_init_event(id, CLOCK_CPU, gpt_event);
+    }
+    sched_init_event(SCHED_OSTIMER, CLOCK_32K, ost_event);
+}
+
 void gpt_reset() {
     enum sched_item_id id;
     memset(&gpt, 0, sizeof(gpt));
     gpt.revision = 0x00010801;
 
-    sched_init_event(SCHED_TIMER_DELAY, CLOCK_CPU, gpt_delay);
+    gpt_init_events();
     for (id = SCHED_TIMER1; id <= SCHED_TIMER3; id++) {
-        sched_init_event(id, CLOCK_CPU, gpt_event);
         gpt_refresh(id);
     }
-    sched_init_event(SCHED_OSTIMER, CLOCK_32K, ost_event);
     sched_set(SCHED_OSTIMER, 0);
     gui_console_printf("[CEmu] GPT reset.\n");
 }
@@ -203,5 +210,6 @@ bool gpt_save(FILE *image) {
 }
 
 bool gpt_restore(FILE *image) {
+    gpt_init_events();
     return fread(&gpt, sizeof(gpt), 1, image) == 1;
 }

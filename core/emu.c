@@ -83,7 +83,6 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 
         asic_free();
         asic_init();
-        asic_reset();
 
         if (!asic_restore(file)) {
             gui_console_err_printf("[CEmu] Error reading image.\n");

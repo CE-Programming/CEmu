@@ -1336,12 +1336,16 @@ void init_panel(void) {
     panel.clockRate = 9800000;
 }
 
+static void panel_init_events(void) {
+    sched_init_event(SCHED_PANEL, CLOCK_PANEL, panel_event);
+}
+
 void panel_reset(void) {
     memset(&panel, 0, offsetof(panel_state_t, lineBuffers));
     memset(&panel.lineBuffers, 0xFF, sizeof(panel.lineBuffers));
     memset(&panel.display, 0xFF, sizeof(panel.display));
 
-    sched_init_event(SCHED_PANEL, CLOCK_PANEL, panel_event);
+    panel_init_events();
     panel_hw_reset();
 }
 
@@ -1350,6 +1354,7 @@ bool panel_save(FILE *image) {
 }
 
 bool panel_restore(FILE *image) {
+    panel_init_events();
     if (fread(&panel, offsetof(panel_state_t, gammaLut), 1, image) == 1) {
         panel.gammaDirty = true;
         panel_generate_luts();

@@ -252,11 +252,15 @@ static const eZ80portrange_t pwatchdog = {
     .write = watchdog_write
 };
 
+static void watchdog_init_events(void) {
+    sched_init_event(SCHED_WATCHDOG, CLOCK_CPU, watchdog_event);
+}
+
 void watchdog_reset() {
     /* Initialize device to default state */
     memset(&watchdog, 0, sizeof watchdog);
 
-    sched_init_event(SCHED_WATCHDOG, CLOCK_CPU, watchdog_event);
+    watchdog_init_events();
     watchdog.revision = 0x00010602;
     watchdog.count = watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.pulseCount = watchdog.pulseLoad = 0xFF;
@@ -274,6 +278,7 @@ bool watchdog_save(FILE *image) {
 }
 
 bool watchdog_restore(FILE *image) {
+    watchdog_init_events();
     return fread(&watchdog, sizeof(watchdog), 1, image) == 1;
 }
 

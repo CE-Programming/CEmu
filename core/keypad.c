@@ -199,10 +199,14 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
     }
 }
 
+static void keypad_init_events(void) {
+    sched_init_event(SCHED_KEYPAD, CLOCK_6M, keypad_scan_event);
+}
+
 void keypad_reset(void) {
     keypad.row = 0;
 
-    sched_init_event(SCHED_KEYPAD, CLOCK_6M, keypad_scan_event);
+    keypad_init_events();
 
     gui_console_printf("[CEmu] Keypad reset.\n");
 }
@@ -226,5 +230,6 @@ bool keypad_save(FILE *image) {
 }
 
 bool keypad_restore(FILE *image) {
+    keypad_init_events();
     return fread(&keypad, sizeof(keypad), 1, image) == 1;
 }

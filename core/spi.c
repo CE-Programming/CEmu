@@ -259,12 +259,14 @@ static const eZ80portrange_t pspi = {
     .write = spi_write
 };
 
+static void spi_init_events(void) {
+    sched_init_event(SCHED_SPI, CLOCK_24M, spi_event);
+}
 
 void spi_reset(void) {
     memset(&spi, 0, sizeof(spi));
     spi_set_device_funcs();
-
-    sched_init_event(SCHED_SPI, CLOCK_24M, spi_event);
+    spi_init_events();
 }
 
 void spi_device_select(bool arm) {
@@ -287,6 +289,7 @@ bool spi_save(FILE *image) {
 }
 
 bool spi_restore(FILE *image) {
+    spi_init_events();
     if (fread(&spi, offsetof(spi_state_t, device_select), 1, image) == 1) {
         spi_set_device_funcs();
         return true;

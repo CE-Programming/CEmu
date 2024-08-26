@@ -448,6 +448,13 @@ static void usb_host_reset(void) {
     clear(usb.regs.rsvd1);
 }
 
+static void usb_init_events(void) {
+    sched_init_event(SCHED_USB, CLOCK_12M, usb_event);
+    if (!sched_active(SCHED_USB_DEVICE)) {
+        sched_init_event(SCHED_USB_DEVICE, CLOCK_1M, usb_device_event);
+    }
+}
+
 void usb_reset(void) {
     int i;
     usb_host_reset();
@@ -495,10 +502,7 @@ void usb_reset(void) {
     }
 #undef clear
 #undef fill
-    sched_init_event(SCHED_USB, CLOCK_12M, usb_event);
-    if (!sched_active(SCHED_USB_DEVICE)) {
-        sched_init_event(SCHED_USB_DEVICE, CLOCK_1M, usb_device_event);
-    }
+    usb_init_events();
 }
 
 static void usb_init_hccr(void) {
@@ -529,6 +533,7 @@ bool usb_save(FILE *image) {
 }
 
 bool usb_restore(FILE *image) {
+    usb_init_events();
     void *context = usb.event.context;
     bool success = fread(&usb, offsetof(usb_state_t, event), 1, image) == 1;
     usb.event.context = context;
