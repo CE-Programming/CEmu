@@ -158,6 +158,7 @@ static void flash_execute_command(void) {
     }
 }
 static uint8_t flash_read_command(bool peek) {
+    (void)peek;
     switch (flash.command[0xF]) {
         case 0x05: // Read Status Register-1
             return flash.commandStatus[1];

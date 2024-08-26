@@ -203,6 +203,7 @@ static uint8_t spi_read(uint16_t addr, bool peek) {
 
 /* Write to the SPI range of ports */
 static void spi_write(uint16_t addr, uint8_t byte, bool poke) {
+    (void)poke;
     uint32_t shift = (addr & 3) << 3, value = (uint32_t)byte << shift, mask = ~(0xFFu << shift);
     bool stateChanged = false;
     switch (addr >> 2) {
