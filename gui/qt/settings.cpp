@@ -15,6 +15,8 @@
 #include <QtGui/QStandardItemModel>
 #include <QtGui/QWindow>
 #include <QtCore/QFileInfo>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QApplication>
@@ -661,29 +663,41 @@ void MainWindow::checkUpdate(bool forceInfoBox) {
         return;
     }
 
-    static const QString currentVersionReleaseURL = QStringLiteral("https://github.com/CE-Programming/CEmu/releases/tag/" CEMU_VERSION);
+    static const QString latestReleaseURL = QStringLiteral("https://github.com/CE-Programming/CEmu/releases/latest");
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, &QNetworkAccessManager::finished, this, [this, manager, forceInfoBox](QNetworkReply* reply) {
-        QString newVersionURL = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
-        if (!newVersionURL.isEmpty()) {
-            if (newVersionURL.compare(currentVersionReleaseURL) == 0) {
+        const QByteArray respData = reply->readAll();
+        if (!respData.isEmpty()) {
+            QJsonParseError parseError;
+            const auto json = QJsonDocument::fromJson(respData, &parseError);
+            if (parseError.error != QJsonParseError::NoError || json.isNull()) {
+                goto updateCheckErr;
+            }
+            const auto tag_name = json[QStringLiteral("tag_name")].toString();
+            const auto name = json[QStringLiteral("name")].toString();
+            QMessageBox::warning(this, tag_name, name);
+            if (QStringLiteral(CEMU_VERSION).compare(tag_name) == 0) {
                 if (forceInfoBox) {
                     QMessageBox::information(this, tr("No update available"), tr("You already have the latest CEmu version") + QStringLiteral(" (" CEMU_VERSION ")"));
                 }
-            } else {
+            } else if (!tag_name.isEmpty()) {
                 QMessageBox updateInfoBox(this);
                 updateInfoBox.addButton(QMessageBox::Ok);
                 updateInfoBox.setIconPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/icon.png")));
                 updateInfoBox.setWindowTitle(tr("CEmu update"));
                 updateInfoBox.setText(tr("<b>A new version of CEmu is available!</b>"
-                                         "<br/>"
-                                         "You can <a href='%1'>download it here</a>.")
-                                     .arg(newVersionURL));
+                                         "<br/><br/>%1<br/><br/>"
+                                         "You can <a href='%2'>download it here</a>.")
+                                     .arg(name.isEmpty() ? tag_name : name)
+                                     .arg(latestReleaseURL));
                 updateInfoBox.setTextFormat(Qt::RichText);
                 updateInfoBox.show();
                 updateInfoBox.exec();
+            } else {
+                goto updateCheckErr;
             }
-        } else { // No internet connection? GitHub doesn't provide this redirection anymore?
+        } else {
+updateCheckErr:
             if (forceInfoBox) {
                 QMessageBox updateInfoBox(this);
                 updateInfoBox.addButton(QMessageBox::Ok);
@@ -691,7 +705,8 @@ void MainWindow::checkUpdate(bool forceInfoBox) {
                 updateInfoBox.setWindowTitle(tr("Update check failed"));
                 updateInfoBox.setText(tr("<b>An error occurred while checking for CEmu updates.</b>"
                                          "<br/>"
-                                         "You can however <a href='https://github.com/CE-Programming/CEmu/releases/latest'>go here</a> to check yourself."));
+                                         "You can however <a href='%1'>go here</a> to check yourself.")
+                                     .arg(latestReleaseURL));
                 updateInfoBox.setTextFormat(Qt::RichText);
                 updateInfoBox.show();
                 updateInfoBox.exec();
@@ -700,7 +715,7 @@ void MainWindow::checkUpdate(bool forceInfoBox) {
         manager->deleteLater();
     });
 
-    manager->get(QNetworkRequest(QUrl(QStringLiteral("https://github.com/CE-Programming/CEmu/releases/latest"))));
+    manager->get(QNetworkRequest(QUrl(QStringLiteral("https://api.github.com/repos/CE-Programming/CEmu/releases/latest"))));
 }
 
 void MainWindow::lcdAdjust() {
