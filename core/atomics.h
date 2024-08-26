@@ -17,22 +17,22 @@
 #else
  #define _Atomic(X) volatile X /* doesn't do anything, but makes me feel better... although if you are trying to do multithreading glhf */
  #define atomic_load_explicit(object, order) (*(object))
-static inline atomic8_fetch_and(volatile uint8_t *obj, uint8_t arg) {
+static inline uint8_t atomic8_fetch_and(volatile uint8_t *obj, uint8_t arg) {
     uint8_t result = *obj;
     *obj = result & arg;
     return result;
 }
-static inline atomic32_fetch_and(volatile uint32_t *obj, uint8_t arg) {
+static inline uint32_t atomic32_fetch_and(volatile uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result & arg;
     return result;
 }
-static inline atomic8_fetch_or(volatile uint8_t *obj, uint8_t arg) {
+static inline uint8_t atomic8_fetch_or(volatile uint8_t *obj, uint8_t arg) {
     uint8_t result = *obj;
     *obj = result | arg;
     return result;
 }
-static inline atomic32_fetch_or(volatile uint32_t *obj, uint8_t arg) {
+static inline uint32_t atomic32_fetch_or(volatile uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result | arg;
     return result;
@@ -49,22 +49,22 @@ static inline atomic32_fetch_or(volatile uint32_t *obj, uint8_t arg) {
 #else
  #define _Atomic(X) X
  #define atomic_load_explicit(object, order) (*(object))
-static inline atomic8_fetch_and(uint8_t *obj, uint8_t arg) {
+static inline uint8_t atomic8_fetch_and(uint8_t *obj, uint8_t arg) {
     uint8_t result = *obj;
     *obj = result & arg;
     return result;
 }
-static inline atomic32_fetch_and(uint32_t *obj, uint8_t arg) {
+static inline uint32_t atomic32_fetch_and(uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result & arg;
     return result;
 }
-static inline atomic8_fetch_or(uint8_t *obj, uint8_t arg) {
+static inline uint8_t atomic8_fetch_or(uint8_t *obj, uint8_t arg) {
     uint8_t result = *obj;
     *obj = result | arg;
     return result;
 }
-static inline atomic32_fetch_or(uint32_t *obj, uint8_t arg) {
+static inline uint32_t atomic32_fetch_or(uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result | arg;
     return result;

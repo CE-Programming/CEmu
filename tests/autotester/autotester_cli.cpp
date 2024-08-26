@@ -11,6 +11,7 @@
 #include <iostream>
 #include <chrono>
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -28,8 +29,16 @@ namespace cemucore
     extern "C"
     {
         void gui_console_clear() {}
-        void gui_console_printf(const char* format, ...) { (void)format; }
-        void gui_console_err_printf(const char* format, ...) { (void)format; }
+        void gui_console_printf(const char *format, ...) { (void)format; }
+        void gui_console_err_printf(const char *format, ...) {
+            static char message[512];
+            va_list ap;
+            va_start(ap, format);
+            if (vsnprintf(message, sizeof(message), format, ap) >= 0) {
+                std::cerr << message;
+            }
+            va_end(ap);
+        }
         asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
             (void)boot_ver;
             (void)loaded_rev;
