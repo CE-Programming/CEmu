@@ -222,14 +222,21 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-# TODO: adjust these automatically (based on CI, branch, if it's a github release build...)
-set(SHORT_VERSION "v2.0")
-set(VERSION_SUFFIX "dev")
+option(IS_OFFICIAL_RELEASE_VERSION "Whether the current build is for an official release" OFF)
+if(IS_OFFICIAL_RELEASE_VERSION)
+    set(VERSION_SUFFIX "")
+    set(CEMU_RELEASE_BOOL true)
+else()
+    set(VERSION_SUFFIX "dev")
+    set(CEMU_RELEASE_BOOL false)
+endif()
+
+set(SHORT_VERSION "v3.0" CACHE STRING "Version of CEmu in the form of 'vX.Y'")
 set(LONG_VERSION "${SHORT_VERSION}${VERSION_SUFFIX} (${GIT_CURR_BRANCH} - ${GIT_COMMIT_HASH})")
 
 target_compile_definitions(CEmu PRIVATE
     CEMU_GIT_SHA=\"${GIT_COMMIT_HASH}\"
-    CEMU_RELEASE=false
+    CEMU_RELEASE=${CEMU_RELEASE_BOOL}
     CEMU_VERSION=\"${SHORT_VERSION}${VERSION_SUFFIX}\"
     DEBUG_SUPPORT
     MULTITHREAD
