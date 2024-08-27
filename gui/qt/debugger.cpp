@@ -378,17 +378,21 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
 
         // in the case where the program is returning from a subprogram, the updates
-        // to the pc haven't finished yet on endpc, so skip this case
-        // the only bug is that entering a subprogram currently skips the first token
-        // I doubt most people will notice though
+        // to the pc haven't finished yet on endpc or program name, so defer to the
+        // program name write
         if (prevReason == DBG_BASIC_BEGPC_WRITE && reason == DBG_BASIC_CURPC_WRITE) {
             prevReason = reason;
             emu.resume();
             return;
         }
 
-        if ((debug.stepBasic == true || (debug.stepBasicNext == true && debug.stepBasicNextAddr == data)) &&
-                reason == DBG_BASIC_CURPC_WRITE) {
+        if (reason == DBG_BASIC_BASIC_PROG_WRITE) {
+            debugBasicPrgmLookup(false, Q_NULLPTR);
+        }
+
+        if ((reason == DBG_BASIC_CURPC_WRITE || reason == DBG_BASIC_BASIC_PROG_WRITE) &&
+            (debug.stepBasic == true ||
+             (debug.stepBasicNext == true && data >= debug.stepBasicNextBegin && data <= debug.stepBasicNextEnd))) {
             if (debugBasicRaise() == DBG_BASIC_NO_EXECUTING_PRGM) {
                 prevReason = reason;
                 emu.resume();
@@ -403,9 +407,6 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         }
         if (reason == DBG_BASIC_CURPC_WRITE) {
             debugBasicUpdate(false);
-        }
-        if (reason == DBG_BASIC_ENDPC_WRITE) {
-            debugBasicPgrmLookup(false, Q_NULLPTR);
         }
 
         prevReason = reason;

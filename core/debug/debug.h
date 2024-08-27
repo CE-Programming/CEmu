@@ -39,6 +39,7 @@ enum {
     DBG_BASIC_BEGPC_WRITE,   /* begpc write */
     DBG_BASIC_CURPC_WRITE,   /* curpc write */
     DBG_BASIC_ENDPC_WRITE,   /* endpc write */
+    DBG_BASIC_BASIC_PROG_WRITE, /* basic_prog write */
     DBG_BASIC_LIVE_END,
     DBG_NUMBER
 };
@@ -156,7 +157,8 @@ typedef struct {
     bool basicMode;
     bool stepBasic;
     bool stepBasicNext;
-    uint32_t stepBasicNextAddr;
+    uint16_t stepBasicNextBegin;
+    uint16_t stepBasicNextEnd;
 } debug_state_t;
 
 extern debug_state_t debug;

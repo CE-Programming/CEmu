@@ -7,11 +7,13 @@
 #include "tivars_lib_cpp/src/TIVarType.h"
 #include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
 
+#include "../../core/cpu.h"
 #include "../../core/mem.h"
 
 #include <QtWidgets/QScrollBar>
 
 void MainWindow::debugBasicInit() {
+    debugBasicClearCache();
     debugBasic(false);
     debugBasicDisable();
 
@@ -46,8 +48,7 @@ void MainWindow::debugBasic(bool enable) {
     if (enable) {
         debug_enable_basic_mode(m_basicShowFetches);
     } else {
-        ui->basicEdit->clear();
-        ui->basicTempEdit->clear();
+        debugBasicClearEdits();
         debug_disable_basic_mode();
     }
     if (guiDebugBasic == true) {
@@ -124,16 +125,23 @@ void MainWindow::debugBasicClearCache() {
 
     m_basicPrgmsTokensMap.clear();
     m_basicPrgmsMap.clear();
+    m_basicPrgmsOriginalBytes.clear();
     m_basicPrgmsOriginalCode.clear();
-    m_basicPrgmsFormattedCode.clear();
-    m_basicOriginalCode = Q_NULLPTR;
-    m_basicFormattedCode = Q_NULLPTR;
+    //m_basicPrgmsFormattedCode.clear();
+    m_basicCodeIndex = 0;
 
     m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
+    m_basicPrgmsOriginalBytes.push_back(QByteArray());
     m_basicPrgmsOriginalCode.push_back(QString());
-    m_basicPrgmsFormattedCode.push_back(QString());
+    //m_basicPrgmsFormattedCode.push_back(QString());
 
     m_basicClearCache = false;
+}
+
+void MainWindow::debugBasicClearEdits() {
+    ui->basicEdit->clear();
+    ui->basicTempEdit->clear();
+    m_basicCodeIndex = 0;
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
@@ -148,113 +156,110 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
     ui->btnDebugBasicStep->setEnabled(state);
     ui->btnDebugBasicStepNext->setEnabled(state);
 
-    m_basicClearCache = true;
+    //m_basicClearCache = true;
 
     if (state) {
         return debugBasicUpdate(true);
     } else if (!m_basicShowLiveExecution) {
-        ui->basicEdit->clear();
-        ui->basicTempEdit->clear();
+        debugBasicClearEdits();
     }
 
     return DBG_BASIC_NO_EXECUTING_PRGM;
 }
 
-MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwitch, int *idx) {
-    const QString *origReference = m_basicOriginalCode;
-
+MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwitch, int *idx) {
     if (m_basicClearCache == true) {
         debugBasicClearCache();
     }
 
-    m_basicTempOpen = false;
-
     char name[10];
     if (!debug_get_executing_basic_prgm(name)) {
         ui->labelBasicStatus->setText(tr("No Basic Program Executing."));
-        ui->basicEdit->clear();
-        ui->basicTempEdit->clear();
+        debugBasicClearEdits();
         return DBG_BASIC_NO_EXECUTING_PRGM;
-    } else {
-        QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1]), strlen(&name[1]), true));
+    }
 
-        // lookup in map to see if we've already parsed this file
-        if (m_basicPrgmsMap.contains(var_name)) {
-            int index = m_basicPrgmsMap[var_name];
-            if (idx) {
-                *idx = index;
-            }
-            if (*origReference != m_basicPrgmsOriginalCode.at(index)) {
-                m_basicOriginalCode = &m_basicPrgmsOriginalCode.at(index);
-                m_basicFormattedCode = &m_basicPrgmsFormattedCode.at(index);
-                return DBG_BASIC_NEED_REFRESH;
-            }
-            return DBG_BASIC_NO_REFRESH;
-        } else {
-            calc_var_type_t type = static_cast<calc_var_type_t>(name[0]);
+    // find the program in memory
+    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
+    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+    if (endPC < begPC) {
+        return DBG_BASIC_NO_EXECUTING_PRGM;
+    }
 
-            // find the program in memory
-            const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-            const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+    int prgmSize = endPC - begPC + 1;
+    const char *prgmBytesPtr = static_cast<const char *>(phys_mem_ptr(static_cast<uint32_t>(begPC), prgmSize));
+    if (!prgmBytesPtr) {
+        return DBG_BASIC_NO_EXECUTING_PRGM;
+    }
 
-            const QByteArray prgmBytes(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), endPC - begPC + 1);
-            QString str;
+    calc_var_type_t type = static_cast<calc_var_type_t>(name[0]);
+    QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1]), strlen(&name[1]), true));
 
-            try {
-                const options_t detok_opts = { { "fromRawBytes", true }, { "prettify", true } };
-                str = QString::fromStdString(tivars::TypeHandlers::TH_Tokenized::makeStringFromData(data_t(prgmBytes.constData(), prgmBytes.constEnd()), detok_opts));
-            } catch(...) {
-                return DBG_BASIC_NO_EXECUTING_PRGM;
-            }
+    int index = 0;
 
-            if (type == CALC_VAR_TYPE_TEMP_PROG ||
-                type == CALC_VAR_TYPE_EQU ||
-                name[1] == '$') {
+    if (type == CALC_VAR_TYPE_TEMP_PROG ||
+        type == CALC_VAR_TYPE_EQU ||
+        name[1] == '$') {
 
-                if (!m_basicShowTempParser) {
-                    return DBG_BASIC_NO_EXECUTING_PRGM;
-                }
-
-                debugBasicCreateTokenMap(0, prgmBytes);
-
-                if (allowSwitch) {
-                    ui->tabDebugBasic->setCurrentIndex(1);
-                }
-                m_basicTempOpen = true;
-                m_basicOriginalCodeTemp = str;
-                m_basicFormattedCodeTemp = QString::fromStdString(tivars::TypeHandlers::TH_Tokenized::reindentCodeString(str.toStdString()));
-                m_basicOriginalCode = &m_basicOriginalCodeTemp;
-                m_basicFormattedCode = &m_basicFormattedCodeTemp;
-            } else {
-                if (allowSwitch) {
-                    ui->tabDebugBasic->setCurrentIndex(0);
-                }
-
-                int index = m_basicPrgmsOriginalCode.count();
-                if (idx) {
-                    *idx = index;
-                }
-
-                m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
-                debugBasicCreateTokenMap(index, prgmBytes);
-
-                m_basicPrgmsMap[var_name] = index;
-                m_basicPrgmsOriginalCode.append(str);
-                m_basicPrgmsFormattedCode.append(str);
-                m_basicOriginalCode = &m_basicPrgmsOriginalCode.last();
-                m_basicFormattedCode = &m_basicPrgmsFormattedCode.last();
-            }
+        if (!m_basicShowTempParser) {
+            return DBG_BASIC_NO_EXECUTING_PRGM;
         }
-        if (m_basicTempOpen == false) {
-            ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
+    } else {
+        // lookup in map to see if we've already parsed this file
+        auto basicPrgmIter = m_basicPrgmsMap.constFind(var_name);
+        if (basicPrgmIter != m_basicPrgmsMap.constEnd()) {
+            index = *basicPrgmIter;
+        } else {
+            index = m_basicPrgmsOriginalBytes.count();
+            m_basicPrgmsMap[var_name] = index;
+            m_basicPrgmsOriginalBytes.push_back(QByteArray());
+            m_basicPrgmsOriginalCode.push_back(QString());
+            //m_basicPrgmsFormattedCode.push_back(QString());
+            m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
         }
     }
-    return DBG_BASIC_NEED_REFRESH;
+
+    debug_basic_status_t status = DBG_BASIC_NEED_REFRESH;
+    // check if the original program data matches
+    if (prgmSize == m_basicPrgmsOriginalBytes[index].size() &&
+        !memcmp(m_basicPrgmsOriginalBytes[index].constData(), prgmBytesPtr, prgmSize)) {
+        // check if the currently displayed program was switched
+        if (index == 0 || index == m_basicCodeIndex) {
+            status = DBG_BASIC_NO_REFRESH;
+        }
+    } else {
+        QByteArray prgmBytes(prgmBytesPtr, prgmSize);
+        QString str;
+        try {
+            const options_t detok_opts = { { "fromRawBytes", true }, { "prettify", true } };
+            str = QString::fromStdString(tivars::TypeHandlers::TH_Tokenized::makeStringFromData(data_t(prgmBytes.constData(), prgmBytes.constEnd()), detok_opts));
+        } catch (...) {
+            return DBG_BASIC_NO_EXECUTING_PRGM;
+        }
+
+        debugBasicCreateTokenMap(index, prgmBytes);
+        m_basicPrgmsOriginalBytes[index] = std::move(prgmBytes);
+        //m_basicPrgmsFormattedCode[index] = QString::fromStdString(tivars::TypeHandlers::TH_Tokenized::reindentCodeString(str.toStdString()));
+        m_basicPrgmsOriginalCode[index] = std::move(str);
+    }
+
+    if (idx) {
+        *idx = index;
+    }
+    if (allowSwitch) {
+        ui->tabDebugBasic->setCurrentIndex(index == 0);
+    }
+    if (index != 0 && status == DBG_BASIC_NEED_REFRESH) {
+        ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
+    }
+    return status;
 }
 
 // function to parse the program and store the mapping of all bytes to highlights
 // who cares about eating all of the user's ram
 void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
+    auto &tokensMap = m_basicPrgmsTokensMap[idx];
+    tokensMap.clear();
     token_highlight_t posinfo = { 0, 0, 0 };
     int i = 0;
 
@@ -294,7 +299,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
             }
             j++;
             while (j) {
-                m_basicPrgmsTokensMap[idx].append(posinfo);
+                tokensMap.append(posinfo);
                 j--;
             }
             posinfo.offset += posinfo.len + 1;
@@ -310,7 +315,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
             // check for newline
             if (token == 0x3F) {
                 posinfo.len = 1;
-                m_basicPrgmsTokensMap[idx].append(posinfo); // need new lines for temp parser
+                tokensMap.append(posinfo); // need new lines for temp parser
                 posinfo.line++;
                 posinfo.offset++;
                 i++;
@@ -324,20 +329,16 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
             tokBytes[1] = tokenNext;
             std::string tokStr = tivars::TypeHandlers::TH_Tokenized::tokenToString(tokBytes, &incr, { {"prettify", true } });
 
-            if (!tokStr.empty()) {
-                posinfo.len += utf8_strlen(tokStr.c_str());
-            }
+            posinfo.len = tokStr.empty() ? 0 : utf8_strlen(tokStr.c_str());
 
             if (incr == 2) {
-                m_basicPrgmsTokensMap[idx].append(posinfo);
-                m_basicPrgmsTokensMap[idx].append(posinfo);
+                tokensMap.append(posinfo);
+                tokensMap.append(posinfo);
             } else {
-                m_basicPrgmsTokensMap[idx].append(posinfo);
+                tokensMap.append(posinfo);
             }
 
-            if (!tokStr.empty()) {
-                posinfo.offset += posinfo.len;
-            }
+            posinfo.offset += posinfo.len;
             i += incr;
         }
     }
@@ -351,22 +352,29 @@ void MainWindow::debugBasicStep() {
 void MainWindow::debugBasicStepNext() {
     // locate next line
     const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-//    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
-//    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
+    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
-    int watchPC = begPC;
-/*
-    int curLine = m_basicPrgmsTokensMap[curPC].line;
-
-    for (int i = curPC; i < endPC; i++) {
-        if (m_basicPrgmsTokensMap[i].line == curLine + 1) {
-            watchPC = i;
-            break;
-        }
+    if (curPC < begPC || curPC > endPC) {
+        return;
     }
-*/
-    debug_step(DBG_BASIC_STEP_NEXT, static_cast<uint32_t>(watchPC));
-    debugBasicToggle();
+
+    int index = 0;
+    if (debugBasicPrgmLookup(false, &index) == DBG_BASIC_NO_EXECUTING_PRGM) {
+        return;
+    }
+
+    int offset = curPC - begPC;
+    auto &tokensMap = m_basicPrgmsTokensMap[index];
+    int curLine = tokensMap[offset].line;
+    auto first = std::find_if(tokensMap.constBegin() + offset, tokensMap.constEnd(), [=](const token_highlight_t &posInfo) { return posInfo.line != curLine; });
+    auto last = std::find_if(first, tokensMap.constEnd(), [=](const token_highlight_t &posInfo) { return posInfo.line != curLine + 1; });
+    uint16_t firstOffset = first - tokensMap.constBegin();
+    uint16_t lastOffset = last - tokensMap.constBegin();
+    if (firstOffset < lastOffset) {
+        debug_step(DBG_BASIC_STEP_NEXT, firstOffset | (static_cast<uint32_t>(lastOffset - 1) << 16));
+        debugBasicLeave(false);
+    }
 }
 
 QString MainWindow::debugBasicGetPrgmName() {
@@ -374,34 +382,29 @@ QString MainWindow::debugBasicGetPrgmName() {
     if (!debug_get_executing_basic_prgm(name)) {
         return QString();
     } else {
-        return QString(&name[1]);
+        return QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1]), strlen(&name[1]), true));
     }
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
     static int prevCurPC;
+    static int prevCpuPC;
     static token_highlight_t prevPosinfo = { 0, 0, 0 };
 
     if (!force && !m_basicShowLiveExecution) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
-    if (guiReceive) {
-        varShow();
-    }
-
     const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
     const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
     const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
-    if (curPC > endPC || curPC < begPC || prevCurPC == curPC) {
+    if (curPC > endPC || curPC < begPC) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
-    prevCurPC = curPC;
-
     int index = 0;
-    debug_basic_status_t status = debugBasicPgrmLookup(force, &index);
+    debug_basic_status_t status = debugBasicPrgmLookup(force, &index);
     if (status == DBG_BASIC_NO_EXECUTING_PRGM) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
@@ -409,44 +412,41 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
     // quick lookup using lists rather than map/hash
     const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
 
-    // skip already highlighted lines
+    // skip already highlighted lines, but allow self-looping
     if (!m_basicShowFetches &&
+        (prevCurPC != curPC || prevCpuPC != cpu.registers.pc.hl) &&
         prevPosinfo.len == posinfo.len &&
         prevPosinfo.offset == posinfo.offset &&
         prevPosinfo.line == posinfo.line) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
+    prevCurPC = curPC;
+    prevCpuPC = cpu.registers.pc.hl;
     prevPosinfo = posinfo;
 
+    if (guiReceive) {
+        varShow();
+    }
+
+    BasicEditor *basicEditor = (index != 0) ? ui->basicEdit : ui->basicTempEdit;
+
     if (status == DBG_BASIC_NEED_REFRESH) {
-        if (m_basicOriginalCode != Q_NULLPTR) {
-            if (m_basicTempOpen) {
-                ui->basicTempEdit->document()->setPlainText(*m_basicOriginalCode);
-            } else {
-                ui->basicEdit->document()->setPlainText(*m_basicOriginalCode);
-            }
+        basicEditor->document()->setPlainText(m_basicPrgmsOriginalCode[index]);
+        if (index != 0) {
+            m_basicCodeIndex = index;
         }
     }
 
-    if (m_basicTempOpen == false) {
-        m_basicCurrToken.cursor = QTextCursor(ui->basicEdit->document());
-    } else {
-        m_basicCurrToken.cursor = QTextCursor(ui->basicTempEdit->document());
-    }
+    m_basicCurrToken.cursor = QTextCursor(basicEditor->document());
 
     m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Start, QTextCursor::MoveMode::MoveAnchor, 0);
     m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.offset);
     m_basicCurrLine.cursor = m_basicCurrToken.cursor;
     m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
 
-    if (m_basicTempOpen == false) {
-        ui->basicEdit->setTextCursor(m_basicCurrLine.cursor);
-        ui->basicEdit->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
-    } else {
-        ui->basicTempEdit->setTextCursor(m_basicCurrLine.cursor);
-        ui->basicTempEdit->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
-    }
+    basicEditor->setTextCursor(m_basicCurrLine.cursor);
+    basicEditor->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
 
     return DBG_BASIC_SUCCESS;
 }
@@ -468,10 +468,11 @@ void MainWindow::debugBasicToggleShowTempParse(bool enabled) {
 }
 
 void MainWindow::debugBasicToggleLiveExecution(bool enabled) {
-    m_basicClearCache = true;
+    //m_basicClearCache = true;
+    if (!enabled && !guiDebugBasic) {
+        debugBasicClearEdits();
+    }
     m_basicShowLiveExecution = enabled;
-    ui->basicEdit->clear();
-    ui->basicTempEdit->clear();
 }
 
 

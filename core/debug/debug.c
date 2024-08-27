@@ -58,14 +58,16 @@ void debug_open(int reason, uint32_t data) {
     /* fixup reason for basic debugger */
     if (debug.basicMode == true) {
         if (reason == DBG_WATCHPOINT_WRITE) {
-            if (data == DBG_BASIC_CURPC) {
+            if (data == DBG_BASIC_CURPC+2) {
                 reason = DBG_BASIC_CURPC_WRITE;
-            }
-            else if (data == DBG_BASIC_BEGPC) {
+                data = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
+            } else if (data == DBG_BASIC_BEGPC+2) {
                 reason = DBG_BASIC_BEGPC_WRITE;
-            }
-            else if (data == DBG_BASIC_ENDPC) {
+            } else if (data == DBG_BASIC_ENDPC+2) {
                 reason = DBG_BASIC_ENDPC_WRITE;
+            } else if (data == DBG_BASIC_BASIC_PROG+8) {
+                reason = DBG_BASIC_BASIC_PROG_WRITE;
+                data = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
             }
         }
         if (reason == DBG_WATCHPOINT_READ) {
@@ -80,6 +82,7 @@ void debug_open(int reason, uint32_t data) {
                     const void *ptr = phys_mem_ptr(cpu.registers.PC - sizeof(instr), sizeof(instr));
                     if(ptr && !memcmp(ptr, instr, sizeof(instr))) {
                         reason = DBG_BASIC_CURPC_WRITE;
+                        data = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
                     }
                 } else {
                     return;
@@ -164,7 +167,8 @@ void debug_step(int mode, uint32_t addr) {
             break;
         case DBG_BASIC_STEP_NEXT:
             debug.stepBasicNext = true;
-            debug.stepBasicNextAddr = addr;
+            debug.stepBasicNextBegin = addr;
+            debug.stepBasicNextEnd = addr >> 16;
             break;
     }
 }
@@ -257,16 +261,18 @@ void debug_set_pc(uint32_t addr) {
 /* the gui should automatically update breakpoints, so it should be */
 /* fine if asm or C also uses these addresses */
 void debug_enable_basic_mode(bool fetches) {
-    debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, fetches);
-    debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, fetches);
-    debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, fetches);
+    debug_watch(DBG_BASIC_BEGPC+2, DBG_MASK_WRITE, fetches);
+    debug_watch(DBG_BASIC_CURPC+2, DBG_MASK_WRITE, fetches);
+    //debug_watch(DBG_BASIC_ENDPC+2, DBG_MASK_WRITE, fetches);
+    debug_watch(DBG_BASIC_BASIC_PROG+8, DBG_MASK_WRITE, fetches);
     debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, !fetches);
 }
 
 void debug_disable_basic_mode(void) {
-    debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, false);
-    debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, false);
-    debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, false);
+    debug_watch(DBG_BASIC_BEGPC+2, DBG_MASK_WRITE, false);
+    debug_watch(DBG_BASIC_CURPC+2, DBG_MASK_WRITE, false);
+    //debug_watch(DBG_BASIC_ENDPC+2, DBG_MASK_WRITE, false);
+    debug_watch(DBG_BASIC_BASIC_PROG+8, DBG_MASK_WRITE, false);
     debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, false);
 }
 
