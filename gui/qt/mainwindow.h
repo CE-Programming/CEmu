@@ -268,9 +268,10 @@ private:
     void debugBasicStep();
     void debugBasicStepNext();
     void debugBasicClearCache();
+    void debugBasicClearEdits();
     QString debugBasicGetPrgmName();
     debug_basic_status_t  debugBasicUpdate(bool force);
-    debug_basic_status_t debugBasicPgrmLookup(bool allowSwitch, int *idx);
+    debug_basic_status_t debugBasicPrgmLookup(bool allowSwitch, int *idx);
     void debugBasicCreateTokenMap(int idx, const QByteArray &data);
     debug_basic_status_t debugBasicGuiState(bool state);
     void debugBasicToggleHighlight(bool enabled);
@@ -611,12 +612,8 @@ private:
     bool m_shutdown = false;
     bool m_recording = false;
 
-    bool m_basicTempOpen = false;
     QString m_basicVariableName;
-    const QString *m_basicOriginalCode;
-    const QString *m_basicFormattedCode;
-    QString m_basicOriginalCodeTemp;
-    QString m_basicFormattedCodeTemp;
+    int m_basicCodeIndex = 0;
     bool m_basicShowHighlighted = true;
     bool m_basicShowFetches = false;
     bool m_basicShowTempParser = false;
@@ -624,8 +621,9 @@ private:
     bool m_basicClearCache = false;
     QList<QList<token_highlight_t>> m_basicPrgmsTokensMap;
     QMap<QString, int> m_basicPrgmsMap;
+    QList<QByteArray> m_basicPrgmsOriginalBytes;
     QStringList m_basicPrgmsOriginalCode;
-    QStringList m_basicPrgmsFormattedCode;
+    //QStringList m_basicPrgmsFormattedCode;
 
     QTextEdit::ExtraSelection m_basicCurrToken;
     QTextEdit::ExtraSelection m_basicCurrLine;
