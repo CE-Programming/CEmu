@@ -262,13 +262,15 @@ private:
     void debugBasicInit();
     debug_basic_status_t debugBasicRaise();
     void debugBasicToggle();
-    void debugBasicLeave(bool allowRefresh);
+    void debugBasicLeave();
     debug_basic_status_t debugBasicEnable();
     void debugBasicDisable();
     void debugBasicStep();
     void debugBasicStepNext();
+    void debugBasicStepInternal(bool next);
     void debugBasicClearCache();
     void debugBasicClearEdits();
+    void debugBasicClearHighlights();
     QString debugBasicGetPrgmName();
     debug_basic_status_t  debugBasicUpdate(bool force);
     debug_basic_status_t debugBasicPrgmLookup(bool allowSwitch, int *idx);
