@@ -32,6 +32,7 @@ enum {
     DBG_MISC_RESET,          /* miscellaneous reset */
     DBG_STEP,                /* step command executed */
     DBG_BASIC_USER,          /* user requested a basic debug session */
+    DBG_BASIC_STEP,          /* basic step command executed */
     DBG_BASIC_LIVE_START,
     DBG_BASIC_BEGPC_READ,    /* begpc read */
     DBG_BASIC_CURPC_READ,    /* curpc read */
@@ -77,7 +78,7 @@ void debug_step(int mode, uint32_t addr);            /* set a step mode, addr po
 void debug_open(int reason, uint32_t data);          /* open the debugger (Should only be called from gui_do_stuff) */
 bool debug_is_open(void);                            /* returns the status of the core debugger */
 int debug_get_flags(void);
-void debug_enable_basic_mode(bool fetches);
+void debug_enable_basic_mode(bool fetches, bool live);
 void debug_disable_basic_mode(void);
 bool debug_get_executing_basic_prgm(char *name);
 
@@ -155,10 +156,15 @@ typedef struct {
     uint8_t *addr;
     uint8_t *port;
     bool basicMode;
+    bool basicModeLive;
+    bool basicDeferPC;
     bool stepBasic;
     bool stepBasicNext;
-    uint16_t stepBasicNextBegin;
-    uint16_t stepBasicNextEnd;
+    uint32_t basicLastHookPC;
+    uint32_t stepBasicFromPC;
+    uint16_t stepBasicBegin;
+    uint16_t stepBasicEnd;
+    char stepBasicPrgm[10];
 } debug_state_t;
 
 extern debug_state_t debug;
@@ -169,7 +175,7 @@ enum {
     DBG_STEP_OVER,
     DBG_STEP_NEXT,
     DBG_RUN_UNTIL,
-    DBG_BASIC_STEP,
+    DBG_BASIC_STEP_IN,
     DBG_BASIC_STEP_NEXT,
 };
 

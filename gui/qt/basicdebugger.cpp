@@ -46,7 +46,7 @@ void MainWindow::debugBasic(bool enable) {
     ui->btnDebugBasicEnable->setChecked(enable);
     debug.basicMode = enable;
     if (enable) {
-        debug_enable_basic_mode(m_basicShowFetches);
+        debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
     } else {
         debugBasicClearEdits();
         debug_disable_basic_mode();
@@ -92,36 +92,22 @@ void MainWindow::debugBasicToggle() {
         debugBasicDisable();
     }
 
-    debug_enable_basic_mode(m_basicShowFetches);
+    debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
 
     emu.debug(!state, EmuThread::RequestBasicDebugger);
 }
 
-void MainWindow::debugBasicLeave(bool allowRefresh) {
-    bool state = guiDebugBasic;
-    bool live = m_basicShowLiveExecution;
-
-    if (m_pathRom.isEmpty()) {
+void MainWindow::debugBasicLeave() {
+    if (!guiDebugBasic) {
         return;
     }
 
-    if (allowRefresh && live) {
-        debugBasicToggleLiveExecution(!live);
-    }
-
-    if (state) {
-        debugBasicDisable();
-    }
-
-    if (allowRefresh && live) {
-        debugBasicToggleLiveExecution(live);
-    }
-
-    emu.debug(!state, EmuThread::RequestBasicDebugger);
+    debugBasicDisable();
+    emu.resume();
 }
 
 void MainWindow::debugBasicClearCache() {
-    debug_enable_basic_mode(m_basicShowFetches);
+    debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
 
     m_basicPrgmsTokensMap.clear();
     m_basicPrgmsMap.clear();
@@ -141,7 +127,14 @@ void MainWindow::debugBasicClearCache() {
 void MainWindow::debugBasicClearEdits() {
     ui->basicEdit->clear();
     ui->basicTempEdit->clear();
+    ui->labelBasicStatus->setText(tr("No Basic Program Executing."));
     m_basicCodeIndex = 0;
+}
+
+void MainWindow::debugBasicClearHighlights() {
+    QList<QTextEdit::ExtraSelection> extraSelections;
+    ui->basicEdit->setExtraSelections(extraSelections);
+    ui->basicTempEdit->setExtraSelections(extraSelections);
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
@@ -161,7 +154,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
     if (state) {
         return debugBasicUpdate(true);
     } else if (!m_basicShowLiveExecution) {
-        debugBasicClearEdits();
+        debugBasicClearHighlights();
     }
 
     return DBG_BASIC_NO_EXECUTING_PRGM;
@@ -174,19 +167,18 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
 
     char name[10];
     if (!debug_get_executing_basic_prgm(name)) {
-        ui->labelBasicStatus->setText(tr("No Basic Program Executing."));
         debugBasicClearEdits();
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
     // find the program in memory
-    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+    const uint32_t begPC = mem_peek_long(DBG_BASIC_BEGPC);
+    const uint32_t endPC = mem_peek_long(DBG_BASIC_ENDPC);
     if (endPC < begPC) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
-    int prgmSize = endPC - begPC + 1;
+    uint32_t prgmSize = endPC - begPC + 1;
     const char *prgmBytesPtr = static_cast<const char *>(phys_mem_ptr(static_cast<uint32_t>(begPC), prgmSize));
     if (!prgmBytesPtr) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
@@ -345,15 +337,18 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
 }
 
 void MainWindow::debugBasicStep() {
-    debug_step(DBG_BASIC_STEP, 0u);
-    debugBasicLeave(false);
+    debugBasicStepInternal(false);
 }
 
 void MainWindow::debugBasicStepNext() {
+    debugBasicStepInternal(true);
+}
+
+void MainWindow::debugBasicStepInternal(bool next) {
     // locate next line
-    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
-    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+    const uint32_t begPC = mem_peek_long(DBG_BASIC_BEGPC);
+    const uint32_t curPC = mem_peek_long(DBG_BASIC_CURPC);
+    const uint32_t endPC = mem_peek_long(DBG_BASIC_ENDPC);
 
     if (curPC < begPC || curPC > endPC) {
         return;
@@ -364,16 +359,20 @@ void MainWindow::debugBasicStepNext() {
         return;
     }
 
-    int offset = curPC - begPC;
-    auto &tokensMap = m_basicPrgmsTokensMap[index];
-    int curLine = tokensMap[offset].line;
-    auto first = std::find_if(tokensMap.constBegin() + offset, tokensMap.constEnd(), [=](const token_highlight_t &posInfo) { return posInfo.line != curLine; });
-    auto last = std::find_if(first, tokensMap.constEnd(), [=](const token_highlight_t &posInfo) { return posInfo.line != curLine + 1; });
-    uint16_t firstOffset = first - tokensMap.constBegin();
-    uint16_t lastOffset = last - tokensMap.constBegin();
-    if (firstOffset < lastOffset) {
-        debug_step(DBG_BASIC_STEP_NEXT, firstOffset | (static_cast<uint32_t>(lastOffset - 1) << 16));
-        debugBasicLeave(false);
+    uint32_t offset = curPC - begPC;
+    const auto &tokensMap = m_basicPrgmsTokensMap[index];
+    const auto stepField = m_basicShowFetches ? &token_highlight_t::offset : &token_highlight_t::line;
+    const int currField = tokensMap[offset].*stepField;
+    const auto compareFields = [=](const token_highlight_t &posInfo) {
+        return (posInfo.*stepField == currField) ^ next;
+    };
+    const auto first = std::find_if(tokensMap.constBegin() + offset, tokensMap.constEnd(), compareFields);
+    const auto last = std::find_if_not(first, tokensMap.constEnd(), compareFields);
+    if (first != last) {
+        const uint16_t firstOffset = (first - tokensMap.constBegin());
+        const uint16_t lastOffset = (last - tokensMap.constBegin()) - 1;
+        debug_step(next ? DBG_BASIC_STEP_NEXT : DBG_BASIC_STEP_IN, firstOffset | (static_cast<uint32_t>(lastOffset) << 16));
+        debugBasicLeave();
     }
 }
 
@@ -387,19 +386,7 @@ QString MainWindow::debugBasicGetPrgmName() {
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
-    static int prevCurPC;
-    static int prevCpuPC;
-    static token_highlight_t prevPosinfo = { 0, 0, 0 };
-
     if (!force && !m_basicShowLiveExecution) {
-        return DBG_BASIC_NO_EXECUTING_PRGM;
-    }
-
-    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
-    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
-
-    if (curPC > endPC || curPC < begPC) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
@@ -409,28 +396,21 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
-    // quick lookup using lists rather than map/hash
-    const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
-
-    // skip already highlighted lines, but allow self-looping
-    if (!m_basicShowFetches &&
-        (prevCurPC != curPC || prevCpuPC != cpu.registers.pc.hl) &&
-        prevPosinfo.len == posinfo.len &&
-        prevPosinfo.offset == posinfo.offset &&
-        prevPosinfo.line == posinfo.line) {
+    const uint32_t begPC = mem_peek_long(DBG_BASIC_BEGPC);
+    const uint32_t curPC = mem_peek_long(DBG_BASIC_CURPC);
+    const uint32_t endPC = mem_peek_long(DBG_BASIC_ENDPC);
+    if (curPC > endPC || curPC < begPC) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
-
-    prevCurPC = curPC;
-    prevCpuPC = cpu.registers.pc.hl;
-    prevPosinfo = posinfo;
 
     if (guiReceive) {
         varShow();
     }
 
-    BasicEditor *basicEditor = (index != 0) ? ui->basicEdit : ui->basicTempEdit;
+    // quick lookup using lists rather than map/hash
+    const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
 
+    BasicEditor *basicEditor = (index != 0) ? ui->basicEdit : ui->basicTempEdit;
     if (status == DBG_BASIC_NEED_REFRESH) {
         basicEditor->document()->setPlainText(m_basicPrgmsOriginalCode[index]);
         if (index != 0) {
@@ -469,8 +449,8 @@ void MainWindow::debugBasicToggleShowTempParse(bool enabled) {
 
 void MainWindow::debugBasicToggleLiveExecution(bool enabled) {
     //m_basicClearCache = true;
-    if (!enabled && !guiDebugBasic) {
-        debugBasicClearEdits();
+    if (!guiDebugBasic) {
+        debugBasicClearHighlights();
     }
     m_basicShowLiveExecution = enabled;
 }

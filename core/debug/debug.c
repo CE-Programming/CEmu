@@ -59,35 +59,56 @@ void debug_open(int reason, uint32_t data) {
     if (debug.basicMode == true) {
         if (reason == DBG_WATCHPOINT_WRITE) {
             if (data == DBG_BASIC_CURPC+2) {
+                if (debug.basicDeferPC) {
+                    return;
+                }
                 reason = DBG_BASIC_CURPC_WRITE;
-                data = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
             } else if (data == DBG_BASIC_BEGPC+2) {
+                /* in the case where the program is returning from a subprogram, the updates
+                   to the pc haven't finished yet on endpc or program name, so defer to the
+                   program name write */
+                debug.basicDeferPC = true;
                 reason = DBG_BASIC_BEGPC_WRITE;
             } else if (data == DBG_BASIC_ENDPC+2) {
+                debug.basicDeferPC = false;
                 reason = DBG_BASIC_ENDPC_WRITE;
             } else if (data == DBG_BASIC_BASIC_PROG+8) {
+                debug.basicDeferPC = false;
                 reason = DBG_BASIC_BASIC_PROG_WRITE;
-                data = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
             }
         }
         if (reason == DBG_WATCHPOINT_READ) {
             if (data == DBG_BASIC_SYSHOOKFLAG2) {
-
-                // verify basic program execution
+                debug.basicDeferPC = false;
+                /* verify basic program execution */
                 if ((mem_peek_byte(DBG_BASIC_NEWDISPF) & DBG_BASIC_PROGEXECUTING_BIT) &&
                     (mem_peek_byte(DBG_BASIC_CMDFLAGS) & DBG_BASIC_CMDEXEC_BIT)) {
 
-                    // check current pc for instruction "bit 1,(iy+$36)"
+                    /* check current pc for instruction "bit 1,(iy+$36)" */
                     static const uint8_t instr[] = { 0xFD, 0xCB, 0x36, 0x4E };
                     const void *ptr = phys_mem_ptr(cpu.registers.PC - sizeof(instr), sizeof(instr));
                     if(ptr && !memcmp(ptr, instr, sizeof(instr))) {
+                        debug.basicLastHookPC = cpu.registers.PC;
                         reason = DBG_BASIC_CURPC_WRITE;
-                        data = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
                     }
                 } else {
                     return;
                 }
             }
+        }
+        if (debug.stepBasic && (reason == DBG_BASIC_CURPC_WRITE || reason == DBG_BASIC_BASIC_PROG_WRITE)) {
+            uint32_t offset = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
+            /* Allow self-looping with Step In, but only if the hook PC is the same as what was stepped from */
+            bool inRange = offset >= debug.stepBasicBegin + (!debug.stepBasicNext && debug.basicLastHookPC == debug.stepBasicFromPC) &&
+                           offset <= debug.stepBasicEnd &&
+                           !strncmp(debug.stepBasicPrgm, phys_mem_ptr(DBG_BASIC_BASIC_PROG, 9), 9);
+            if (!inRange ^ debug.stepBasicNext) {
+                reason = DBG_BASIC_STEP;
+            }
+        }
+
+        if (!debug.basicModeLive && reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
+            return;
         }
     }
 
@@ -161,14 +182,15 @@ void debug_step(int mode, uint32_t addr) {
             gui_debug_close();
             debug.tempExec = addr;
             break;
-        case DBG_BASIC_STEP:
+        case DBG_BASIC_STEP_IN:
+        case DBG_BASIC_STEP_NEXT:
             gui_debug_close();
             debug.stepBasic = true;
-            break;
-        case DBG_BASIC_STEP_NEXT:
-            debug.stepBasicNext = true;
-            debug.stepBasicNextBegin = addr;
-            debug.stepBasicNextEnd = addr >> 16;
+            debug.stepBasicNext = (mode == DBG_BASIC_STEP_NEXT);
+            debug.stepBasicFromPC = debug.basicLastHookPC;
+            debug.stepBasicBegin = addr;
+            debug.stepBasicEnd = addr >> 16;
+            debug_get_executing_basic_prgm(debug.stepBasicPrgm);
             break;
     }
 }
@@ -260,7 +282,9 @@ void debug_set_pc(uint32_t addr) {
 /* internal breakpoints not visible in gui */
 /* the gui should automatically update breakpoints, so it should be */
 /* fine if asm or C also uses these addresses */
-void debug_enable_basic_mode(bool fetches) {
+void debug_enable_basic_mode(bool fetches, bool live) {
+    debug.basicMode = true;
+    debug.basicModeLive = live;
     debug_watch(DBG_BASIC_BEGPC+2, DBG_MASK_WRITE, fetches);
     debug_watch(DBG_BASIC_CURPC+2, DBG_MASK_WRITE, fetches);
     //debug_watch(DBG_BASIC_ENDPC+2, DBG_MASK_WRITE, fetches);
@@ -269,6 +293,8 @@ void debug_enable_basic_mode(bool fetches) {
 }
 
 void debug_disable_basic_mode(void) {
+    debug.basicMode = false;
+    debug.basicModeLive = false;
     debug_watch(DBG_BASIC_BEGPC+2, DBG_MASK_WRITE, false);
     debug_watch(DBG_BASIC_CURPC+2, DBG_MASK_WRITE, false);
     //debug_watch(DBG_BASIC_ENDPC+2, DBG_MASK_WRITE, false);

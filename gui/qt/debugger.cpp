@@ -369,47 +369,15 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         return;
     }
 
-    // handle basic commands first
+    // handle live basic commands first
     if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
-        static int prevReason = DBG_BASIC_CURPC_WRITE;
-
-        //fprintf(stderr, "reason: %d\n", reason);
-        //fflush(stderr);
-
-
-        // in the case where the program is returning from a subprogram, the updates
-        // to the pc haven't finished yet on endpc or program name, so defer to the
-        // program name write
-        if (prevReason == DBG_BASIC_BEGPC_WRITE && reason == DBG_BASIC_CURPC_WRITE) {
-            prevReason = reason;
-            emu.resume();
-            return;
-        }
-
+        guiDebugBasic = true;
         if (reason == DBG_BASIC_BASIC_PROG_WRITE) {
             debugBasicPrgmLookup(false, Q_NULLPTR);
-        }
-
-        if ((reason == DBG_BASIC_CURPC_WRITE || reason == DBG_BASIC_BASIC_PROG_WRITE) &&
-            (debug.stepBasic == true ||
-             (debug.stepBasicNext == true && data >= debug.stepBasicNextBegin && data <= debug.stepBasicNextEnd))) {
-            if (debugBasicRaise() == DBG_BASIC_NO_EXECUTING_PRGM) {
-                prevReason = reason;
-                emu.resume();
-                return;
-            } else {
-                debug.stepBasic = false;
-                debug.stepBasicNext = false;
-                prevReason = reason;
-                ui->lcd->disableBlend();
-                return;
-            }
-        }
-        if (reason == DBG_BASIC_CURPC_WRITE) {
+        } else if (reason == DBG_BASIC_CURPC_WRITE) {
             debugBasicUpdate(false);
         }
-
-        prevReason = reason;
+        guiDebugBasic = false;
         emu.resume();
         return;
     }
@@ -501,7 +469,13 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             debugRaise();
             return;
         case DBG_BASIC_USER:
-            debugBasicRaise();
+        case DBG_BASIC_STEP:
+            if (debugBasicRaise() == DBG_BASIC_NO_EXECUTING_PRGM && reason != DBG_BASIC_USER) {
+                debugBasicLeave();
+                return;
+            }
+            debug.stepBasic = false;
+            debug.stepBasicNext = false;
             ui->lcd->disableBlend();
             return;
     }
