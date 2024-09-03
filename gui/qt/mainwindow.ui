@@ -355,6 +355,9 @@
               <property name="centerOnScroll">
                <bool>false</bool>
               </property>
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
+              </property>
              </widget>
             </item>
             <item>
@@ -390,6 +393,9 @@
               </property>
               <property name="centerOnScroll">
                <bool>false</bool>
+              </property>
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
               </property>
              </widget>
             </item>
