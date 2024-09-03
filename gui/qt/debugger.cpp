@@ -367,6 +367,7 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
 
 void MainWindow::debugCommand(int reason, uint32_t data) {
     if (!guiEmuValid) {
+        emu.resume();
         return;
     }
 

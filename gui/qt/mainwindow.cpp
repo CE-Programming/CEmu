@@ -1389,6 +1389,8 @@ void MainWindow::emuSaved(bool success) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
+    guiEmuValid = false;
+
     if (!m_shutdown) {
         m_shutdown = true;
 
@@ -1422,7 +1424,6 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         }
     }
 
-    guiEmuValid = false;
     emu.stop();
     QMainWindow::closeEvent(e);
 }
