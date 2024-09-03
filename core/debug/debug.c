@@ -99,8 +99,8 @@ void debug_open(int reason, uint32_t data) {
         if (debug.stepBasic && (reason == DBG_BASIC_CURPC_WRITE || reason == DBG_BASIC_BASIC_PROG_WRITE)) {
             uint32_t offset = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
             /* Allow self-looping with Step In, but only if the hook PC is the same as what was stepped from */
-            bool inRange = offset >= debug.stepBasicBegin + (!debug.stepBasicNext && debug.basicLastHookPC == debug.stepBasicFromPC) &&
-                           offset <= debug.stepBasicEnd &&
+            bool inRange = offset >= (uint32_t)debug.stepBasicBegin + (!debug.stepBasicNext && debug.basicLastHookPC == debug.stepBasicFromPC) &&
+                           offset <= (uint32_t)debug.stepBasicEnd &&
                            !strncmp(debug.stepBasicPrgm, phys_mem_ptr(DBG_BASIC_BASIC_PROG, 9), 9);
             if (!inRange ^ debug.stepBasicNext) {
                 reason = DBG_BASIC_STEP;

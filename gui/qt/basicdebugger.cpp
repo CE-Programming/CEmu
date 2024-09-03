@@ -7,7 +7,6 @@
 #include "tivars_lib_cpp/src/TIVarType.h"
 #include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
 
-#include "../../core/cpu.h"
 #include "../../core/mem.h"
 
 #include <QtWidgets/QScrollBar>
@@ -180,7 +179,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
 
     debug_basic_status_t status = DBG_BASIC_NEED_REFRESH;
     // check if the original program data matches
-    if (prgmSize == m_basicPrgmsOriginalBytes[index].size() &&
+    if (prgmSize == (uint32_t)m_basicPrgmsOriginalBytes[index].size() &&
         !memcmp(m_basicPrgmsOriginalBytes[index].constData(), prgmBytesPtr, prgmSize)) {
         // check if the currently displayed program was switched
         if ((index == 0 && !m_basicTempParserNeedsRefresh) || index == m_basicCodeIndex) {
