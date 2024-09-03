@@ -447,9 +447,11 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             }
 
             text = tr("Hit ") + type + tr(" watchpoint ") + input + QStringLiteral(" (") + label + QStringLiteral(")");
-
-            gotoMemAddr(static_cast<uint32_t>(hex2int(input)));
-            break;
+            // Raise the debugger before going to the memory address so the memory docks are updated
+            ui->debuggerLabel->setText(text);
+            debugRaise();
+            gotoMemAddrNoRaise(static_cast<uint32_t>(hex2int(input)));
+            return;
         case DBG_PORT_READ:
         case DBG_PORT_WRITE:
             input = int2hex(data, 4);
@@ -1996,6 +1998,14 @@ QAction *MainWindow::gotoDisasmAction(QMenu *menu) {
 }
 
 void MainWindow::gotoMemAddr(uint32_t address) {
+    HexWidget *memWidget = gotoMemAddrNoRaise(address);
+    if (memWidget != Q_NULLPTR) {
+        raiseContainingDock(memWidget);
+        memWidget->setFocus();
+    }
+}
+
+HexWidget *MainWindow::gotoMemAddrNoRaise(uint32_t address) {
     HexWidget *memWidget = m_memWidget;
     bool didGoto = false;
     if (memWidget == Q_NULLPTR && !ui->debugMemoryWidget->isVisible()) {
@@ -2018,13 +2028,10 @@ void MainWindow::gotoMemAddr(uint32_t address) {
             memWidget = firstMemWidget();
         }
     }
-    if (memWidget != Q_NULLPTR) {
-        if (!didGoto) {
-            memGoto(memWidget, address);
-        }
-        raiseContainingDock(memWidget);
-        memWidget->setFocus();
+    if (memWidget != Q_NULLPTR && !didGoto) {
+        memGoto(memWidget, address);
     }
+    return memWidget;
 }
 
 QAction *MainWindow::gotoMemAction(QMenu *menu, bool vat) {
