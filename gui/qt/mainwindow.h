@@ -10,6 +10,7 @@
 #include "keyhistorywidget.h"
 #include "dockwidget.h"
 #include "datawidget.h"
+#include "basiccodeviewerwindow.h"
 #include "vartablemodel.h"
 #include "keypad/qtkeypadbridge.h"
 #include "debugger/hexwidget.h"
@@ -263,7 +264,6 @@ private:
     void debugBasicReconfigure(bool forceUpdate);
     void debugBasicInit();
     void debugBasicRaise();
-    void debugBasicToggle();
     void debugBasicStep();
     void debugBasicStepNext();
     void debugBasicStepInternal(bool next);
@@ -275,6 +275,7 @@ private:
     debug_basic_status_t debugBasicPrgmLookup(bool allowSwitch, int *idx);
     void debugBasicCreateTokenMap(int idx, const QByteArray &data);
     void debugBasicGuiState(bool state);
+    void debugBasicContextMenu(const QPoint &pos);
     void debugBasicToggleHighlight(bool enabled);
     void debugBasicToggleShowFetch(bool enabled);
     void debugBasicToggleShowTempParse(bool enabled);
@@ -859,6 +860,7 @@ private:
     QString ACTION_GOTO_DISASM_VIEW;
     QString ACTION_COPY_ADDR;
     QString ACTION_COPY_DATA;
+    QString ACTION_RUN_UNTIL;
 
     QTableWidget *m_breakpoints = Q_NULLPTR;
     QTableWidget *m_watchpoints = Q_NULLPTR;

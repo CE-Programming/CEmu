@@ -724,6 +724,7 @@ void MainWindow::translateExtras(int init) {
     ACTION_GOTO_DISASM_VIEW = tr("Goto Disasm View");
     ACTION_COPY_ADDR = tr("Copy Address");
     ACTION_COPY_DATA = tr("Copy Data");
+    ACTION_RUN_UNTIL = tr("Run Until");
 
     QString __TXT_MEM_DOCK = tr("Memory View");
     QString __TXT_VISUALIZER_DOCK = tr("Memory Visualizer");
@@ -2482,7 +2483,7 @@ void MainWindow::contextDisasm(const QPoint &posa) {
     uint32_t addr = static_cast<uint32_t>(hex2int(addrStr));
 
     QMenu menu;
-    QAction *runUntil = menu.addAction(tr("Run Until"));
+    QAction *runUntil = menu.addAction(ACTION_RUN_UNTIL);
     menu.addSeparator();
     QAction *toggleBreak = menu.addAction(ACTION_TOGGLE_BREAK);
     QAction *toggleRead = menu.addAction(ACTION_TOGGLE_READ);

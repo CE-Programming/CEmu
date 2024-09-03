@@ -33,6 +33,9 @@ void MainWindow::debugBasicInit() {
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
     ui->basicTempEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
 
+    connect(ui->basicEdit, &BasicEditor::customContextMenuRequested, this, &MainWindow::debugBasicContextMenu);
+    connect(ui->basicTempEdit, &BasicEditor::customContextMenuRequested, this, &MainWindow::debugBasicContextMenu);
+
     m_basicCurrLine.format.setProperty(QTextFormat::FullWidthSelection, true);
     debugBasicUpdateDarkMode();
 }
@@ -304,6 +307,51 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
             posinfo.offset += posinfo.len;
             i += incr;
         }
+    }
+}
+
+void MainWindow::debugBasicContextMenu(const QPoint &pos) {
+    BasicEditor *editor = static_cast<BasicEditor*>(sender());
+    bool valid = guiDebug && guiDebugBasic;
+    int index = 0;
+    if (editor == ui->basicEdit) {
+        index = m_basicCodeIndex;
+        valid &= (index != 0);
+    } else if (editor == ui->basicTempEdit) {
+        valid &= m_basicShowTempParser;
+    } else {
+        valid = false;
+    }
+
+    QMenu *menu = editor->createStandardContextMenu(pos);
+    menu->addSeparator();
+    QAction *runUntil = menu->addAction(ACTION_RUN_UNTIL);
+    runUntil->setEnabled(false);
+    uint32_t runUntilRange = 0;
+
+    int actualIndex = 0;
+    if (valid && debugBasicPrgmLookup(false, &actualIndex) != DBG_BASIC_NO_EXECUTING_PRGM && index == actualIndex) {
+        const auto &tokensMap = m_basicPrgmsTokensMap[index];
+        const int cursorOffset = editor->cursorForPosition(pos).position();
+        const auto last = std::make_reverse_iterator(
+            std::upper_bound(tokensMap.constBegin(), tokensMap.constEnd(), cursorOffset,
+                [](int offset, const token_highlight_t &posInfo) { return offset < posInfo.offset; }));
+        if (last != tokensMap.crend()) {
+            const auto stepField = m_basicShowFetches ? &token_highlight_t::offset : &token_highlight_t::line;
+            const int currField = (*last).*stepField;
+            const auto first = std::find_if(last + 1, tokensMap.crend(), [=](const token_highlight_t &posInfo) { return posInfo.*stepField != currField; });
+            const uint16_t firstOffset = first.base() - tokensMap.constBegin();
+            const uint16_t lastOffset = last.base() - tokensMap.constBegin() - 1;
+            runUntilRange = firstOffset | (static_cast<uint32_t>(lastOffset) << 16);
+            runUntil->setEnabled(true);
+        }
+    }
+    QAction *action = menu->exec(editor->mapToGlobal(pos));
+    if (action == runUntil && guiDebug && guiDebugBasic &&
+        debugBasicPrgmLookup(false, &actualIndex) != DBG_BASIC_NO_EXECUTING_PRGM && index == actualIndex) {
+        debugSync();
+        debug_step(DBG_BASIC_STEP_NEXT, runUntilRange);
+        emu.resume();
     }
 }
 
