@@ -398,9 +398,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
                 std::swap(thisEditor, otherEditor);
             }
             m_basicCurrToken.cursor = QTextCursor(thisEditor->document());
-
-            m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Start, QTextCursor::MoveMode::MoveAnchor, 0);
-            m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.offset);
+            m_basicCurrToken.cursor.setPosition(posinfo.offset);
             m_basicCurrLine.cursor = m_basicCurrToken.cursor;
             m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
 
