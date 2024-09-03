@@ -56,7 +56,7 @@ void debug_open(int reason, uint32_t data) {
     debug_clear_step();
 
     /* fixup reason for basic debugger */
-    if (debug.basicMode == true) {
+    if (debug.basicMode) {
         if (reason == DBG_WATCHPOINT_WRITE) {
             if (data == DBG_BASIC_CURPC+2) {
                 if (debug.basicDeferPC) {
@@ -200,6 +200,11 @@ void debug_clear_step(void) {
     debug.tempExec = debug.stepOut = ~0u;
 }
 
+void debug_clear_basic_step(void) {
+    debug.stepBasic = false;
+    debug.stepBasicNext = false;
+}
+
 void debug_inst_start(void) {
     uint32_t pc = cpu.registers.PC;
     debug.addr[pc] |= DBG_INST_START_MARKER;
@@ -295,6 +300,7 @@ void debug_enable_basic_mode(bool fetches, bool live) {
 void debug_disable_basic_mode(void) {
     debug.basicMode = false;
     debug.basicModeLive = false;
+    debug_clear_basic_step();
     debug_watch(DBG_BASIC_BEGPC+2, DBG_MASK_WRITE, false);
     debug_watch(DBG_BASIC_CURPC+2, DBG_MASK_WRITE, false);
     //debug_watch(DBG_BASIC_ENDPC+2, DBG_MASK_WRITE, false);

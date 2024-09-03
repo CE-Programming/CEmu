@@ -259,12 +259,10 @@ private:
 
     // ti-basic debugging
     void debugBasic(bool enable);
+    void debugBasicReconfigure(bool forceUpdate);
     void debugBasicInit();
-    debug_basic_status_t debugBasicRaise();
+    void debugBasicRaise();
     void debugBasicToggle();
-    void debugBasicLeave();
-    debug_basic_status_t debugBasicEnable();
-    void debugBasicDisable();
     void debugBasicStep();
     void debugBasicStepNext();
     void debugBasicStepInternal(bool next);
@@ -272,10 +270,10 @@ private:
     void debugBasicClearEdits();
     void debugBasicClearHighlights();
     QString debugBasicGetPrgmName();
-    debug_basic_status_t  debugBasicUpdate(bool force);
+    debug_basic_status_t debugBasicUpdate(bool force);
     debug_basic_status_t debugBasicPrgmLookup(bool allowSwitch, int *idx);
     void debugBasicCreateTokenMap(int idx, const QByteArray &data);
-    debug_basic_status_t debugBasicGuiState(bool state);
+    void debugBasicGuiState(bool state);
     void debugBasicToggleHighlight(bool enabled);
     void debugBasicToggleShowFetch(bool enabled);
     void debugBasicToggleShowTempParse(bool enabled);
@@ -616,6 +614,7 @@ private:
 
     QString m_basicVariableName;
     int m_basicCodeIndex = 0;
+    bool m_basicTempParserNeedsRefresh = true;
     bool m_basicShowHighlighted = true;
     bool m_basicShowFetches = false;
     bool m_basicShowTempParser = false;

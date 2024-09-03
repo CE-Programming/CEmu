@@ -31,7 +31,7 @@ enum {
     DBG_WATCHDOG_TIMEOUT,    /* watchdog timer reset */
     DBG_MISC_RESET,          /* miscellaneous reset */
     DBG_STEP,                /* step command executed */
-    DBG_BASIC_USER,          /* user requested a basic debug session */
+    DBG_BASIC_RECONFIG,      /* basic mode reconfiguration needed */
     DBG_BASIC_STEP,          /* basic step command executed */
     DBG_BASIC_LIVE_START,
     DBG_BASIC_BEGPC_READ,    /* begpc read */
@@ -182,6 +182,7 @@ enum {
 /* internal core functions */
 void debug_step_switch(void);
 void debug_clear_step(void);
+void debug_clear_basic_step(void);
 
 #ifdef __cplusplus
 }

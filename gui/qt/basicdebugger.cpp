@@ -15,7 +15,6 @@
 void MainWindow::debugBasicInit() {
     debugBasicClearCache();
     debugBasic(false);
-    debugBasicDisable();
 
     ui->btnDebugBasicHighlight->setChecked(m_basicShowHighlighted);
     ui->btnDebugBasicShowFetches->setChecked(m_basicShowFetches);
@@ -30,7 +29,7 @@ void MainWindow::debugBasicInit() {
 
     connect(ui->btnDebugBasicStep, &QPushButton::clicked, this, &MainWindow::debugBasicStep);
     connect(ui->btnDebugBasicStepNext, &QPushButton::clicked, this, &MainWindow::debugBasicStepNext);
-    connect(ui->btnDebugBasicRun, &QPushButton::clicked, this, &MainWindow::debugBasicToggle);
+    connect(ui->btnDebugBasicRun, &QPushButton::clicked, this, &MainWindow::debugToggle);
 
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
     ui->basicTempEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
@@ -41,85 +40,52 @@ void MainWindow::debugBasicInit() {
 }
 
 void MainWindow::debugBasic(bool enable) {
+    guiDebugBasic = enable;
     ui->tabDebugBasic->setEnabled(enable);
-    ui->btnDebugBasicRun->setEnabled(enable);
     ui->btnDebugBasicEnable->setChecked(enable);
-    debug.basicMode = enable;
-    if (enable) {
-        debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
+    debugBasicGuiState(guiDebug);
+    debugBasicReconfigure(true);
+}
+
+void MainWindow::debugBasicReconfigure(bool forceUpdate) {
+    if (guiDebug) {
+        if (guiDebugBasic) {
+            debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
+            debugBasicUpdate(forceUpdate);
+            if (!forceUpdate && !m_basicShowLiveExecution) {
+                debugBasicClearHighlights();
+            }
+        } else {
+            debug_disable_basic_mode();
+            debugBasicClearCache();
+            debugBasicClearEdits();
+        }
     } else {
-        debugBasicClearEdits();
-        debug_disable_basic_mode();
+        emu.debug(true, EmuThread::RequestBasicDebugger);
     }
-    if (guiDebugBasic == true) {
-        debugBasicToggle();
-    }
-
-    // disable other debugger / var list
-    ui->buttonSend->setEnabled(!enable);
-    ui->buttonResendFiles->setEnabled(!enable);
-    ui->buttonRun->setEnabled(!enable);
 }
 
-MainWindow::debug_basic_status_t MainWindow::debugBasicRaise() {
-    return debugBasicEnable();
-}
-
-MainWindow::debug_basic_status_t MainWindow::debugBasicEnable() {
-    guiDebugBasic = true;
-    return debugBasicGuiState(true);
-}
-
-void MainWindow::debugBasicDisable() {
-    guiDebugBasic = false;
-    debugBasicGuiState(false);
-}
-
-void MainWindow::debugBasicToggle() {
-    bool state = guiDebugBasic;
-
-    if (guiDebug || guiSend) {
-        return;
-    }
-
-    if (m_pathRom.isEmpty()) {
-        return;
-    }
-
-    debug_disable_basic_mode();
-
-    if (state) {
-        debugBasicDisable();
-    }
-
-    debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
-
-    emu.debug(!state, EmuThread::RequestBasicDebugger);
-}
-
-void MainWindow::debugBasicLeave() {
-    if (!guiDebugBasic) {
-        return;
-    }
-
-    debugBasicDisable();
-    emu.resume();
+void MainWindow::debugBasicRaise() {
+    debugRaise();
 }
 
 void MainWindow::debugBasicClearCache() {
-    debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
-
     m_basicPrgmsTokensMap.clear();
     m_basicPrgmsMap.clear();
     m_basicPrgmsOriginalBytes.clear();
     m_basicPrgmsOriginalCode.clear();
     //m_basicPrgmsFormattedCode.clear();
     m_basicCodeIndex = 0;
+    m_basicTempParserNeedsRefresh = false;
 
     m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
     m_basicPrgmsOriginalBytes.push_back(QByteArray());
     m_basicPrgmsOriginalCode.push_back(QString());
     //m_basicPrgmsFormattedCode.push_back(QString());
+
+    if (!m_basicShowTempParser) {
+        ui->basicTempEdit->clear();
+    }
 
     m_basicClearCache = false;
 }
@@ -137,7 +103,7 @@ void MainWindow::debugBasicClearHighlights() {
     ui->basicTempEdit->setExtraSelections(extraSelections);
 }
 
-MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
+void MainWindow::debugBasicGuiState(bool state) {
     if (state) {
         ui->btnDebugBasicRun->setText(tr("Run"));
         ui->btnDebugBasicRun->setIcon(m_iconRun);
@@ -146,22 +112,12 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
         ui->btnDebugBasicRun->setIcon(m_iconStop);
     }
 
-    ui->btnDebugBasicStep->setEnabled(state);
-    ui->btnDebugBasicStepNext->setEnabled(state);
-
-    //m_basicClearCache = true;
-
-    if (state) {
-        return debugBasicUpdate(true);
-    } else if (!m_basicShowLiveExecution) {
-        debugBasicClearHighlights();
-    }
-
-    return DBG_BASIC_NO_EXECUTING_PRGM;
+    ui->btnDebugBasicStep->setEnabled(state && guiDebugBasic);
+    ui->btnDebugBasicStepNext->setEnabled(state && guiDebugBasic);
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwitch, int *idx) {
-    if (m_basicClearCache == true) {
+    if (m_basicClearCache) {
         debugBasicClearCache();
     }
 
@@ -216,7 +172,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
     if (prgmSize == m_basicPrgmsOriginalBytes[index].size() &&
         !memcmp(m_basicPrgmsOriginalBytes[index].constData(), prgmBytesPtr, prgmSize)) {
         // check if the currently displayed program was switched
-        if (index == 0 || index == m_basicCodeIndex) {
+        if ((index == 0 && !m_basicTempParserNeedsRefresh) || index == m_basicCodeIndex) {
             status = DBG_BASIC_NO_REFRESH;
         }
     } else {
@@ -241,8 +197,12 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
     if (allowSwitch) {
         ui->tabDebugBasic->setCurrentIndex(index == 0);
     }
-    if (index != 0 && status == DBG_BASIC_NEED_REFRESH) {
-        ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
+    if (status == DBG_BASIC_NEED_REFRESH) {
+        if (index != 0) {
+            ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
+        } else {
+            m_basicTempParserNeedsRefresh = true;
+        }
     }
     return status;
 }
@@ -345,20 +305,25 @@ void MainWindow::debugBasicStepNext() {
 }
 
 void MainWindow::debugBasicStepInternal(bool next) {
-    // locate next line
+    if (!guiDebug || !guiDebugBasic) {
+        return;
+    }
+
     const uint32_t begPC = mem_peek_long(DBG_BASIC_BEGPC);
     const uint32_t curPC = mem_peek_long(DBG_BASIC_CURPC);
     const uint32_t endPC = mem_peek_long(DBG_BASIC_ENDPC);
-
-    if (curPC < begPC || curPC > endPC) {
-        return;
-    }
-
     int index = 0;
-    if (debugBasicPrgmLookup(false, &index) == DBG_BASIC_NO_EXECUTING_PRGM) {
+    if (curPC < begPC || curPC > endPC || debugBasicPrgmLookup(false, &index) == DBG_BASIC_NO_EXECUTING_PRGM) {
+        // step until valid
+        const uint16_t firstOffset = 1;
+        const uint16_t lastOffset = 0;
+        debugSync();
+        debug_step(DBG_BASIC_STEP_IN, firstOffset | (static_cast<uint32_t>(lastOffset) << 16));
+        emu.resume();
         return;
     }
 
+    // locate next line
     uint32_t offset = curPC - begPC;
     const auto &tokensMap = m_basicPrgmsTokensMap[index];
     const auto stepField = m_basicShowFetches ? &token_highlight_t::offset : &token_highlight_t::line;
@@ -371,8 +336,9 @@ void MainWindow::debugBasicStepInternal(bool next) {
     if (first != last) {
         const uint16_t firstOffset = (first - tokensMap.constBegin());
         const uint16_t lastOffset = (last - tokensMap.constBegin()) - 1;
+        debugSync();
         debug_step(next ? DBG_BASIC_STEP_NEXT : DBG_BASIC_STEP_IN, firstOffset | (static_cast<uint32_t>(lastOffset) << 16));
-        debugBasicLeave();
+        emu.resume();
     }
 }
 
@@ -386,10 +352,6 @@ QString MainWindow::debugBasicGetPrgmName() {
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
-    if (!force && !m_basicShowLiveExecution) {
-        return DBG_BASIC_NO_EXECUTING_PRGM;
-    }
-
     int index = 0;
     debug_basic_status_t status = debugBasicPrgmLookup(force, &index);
     if (status == DBG_BASIC_NO_EXECUTING_PRGM) {
@@ -399,36 +361,47 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
     const uint32_t begPC = mem_peek_long(DBG_BASIC_BEGPC);
     const uint32_t curPC = mem_peek_long(DBG_BASIC_CURPC);
     const uint32_t endPC = mem_peek_long(DBG_BASIC_ENDPC);
-    if (curPC > endPC || curPC < begPC) {
-        return DBG_BASIC_NO_EXECUTING_PRGM;
-    }
+    bool validPC = curPC >= begPC && curPC <= endPC;
 
-    if (guiReceive) {
-        varShow();
-    }
+    if (force || m_basicShowLiveExecution) {
+        // show variables only if this is a live update, they get shown already for normal debug stop
+        if (!force && guiReceive) {
+            varShow();
+        }
 
-    // quick lookup using lists rather than map/hash
-    const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
-
-    BasicEditor *basicEditor = (index != 0) ? ui->basicEdit : ui->basicTempEdit;
-    if (status == DBG_BASIC_NEED_REFRESH) {
-        basicEditor->document()->setPlainText(m_basicPrgmsOriginalCode[index]);
-        if (index != 0) {
+        if (status == DBG_BASIC_NEED_REFRESH && index != 0) {
+            ui->basicEdit->document()->setPlainText(m_basicPrgmsOriginalCode[index]);
             m_basicCodeIndex = index;
+        }
+        if (m_basicTempParserNeedsRefresh) {
+            ui->basicTempEdit->document()->setPlainText(m_basicPrgmsOriginalCode[0]);
+            m_basicTempParserNeedsRefresh = false;
+        }
+
+        if (validPC) {
+            // quick lookup using lists rather than map/hash
+            const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
+
+            BasicEditor *thisEditor = ui->basicEdit, *otherEditor = ui->basicTempEdit;
+            if (index == 0) {
+                std::swap(thisEditor, otherEditor);
+            }
+            m_basicCurrToken.cursor = QTextCursor(thisEditor->document());
+
+            m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Start, QTextCursor::MoveMode::MoveAnchor, 0);
+            m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.offset);
+            m_basicCurrLine.cursor = m_basicCurrToken.cursor;
+            m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
+
+            thisEditor->setTextCursor(m_basicCurrLine.cursor);
+            thisEditor->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
+            otherEditor->setExtraSelections({});
+        } else {
+            debugBasicClearHighlights();
         }
     }
 
-    m_basicCurrToken.cursor = QTextCursor(basicEditor->document());
-
-    m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Start, QTextCursor::MoveMode::MoveAnchor, 0);
-    m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.offset);
-    m_basicCurrLine.cursor = m_basicCurrToken.cursor;
-    m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
-
-    basicEditor->setTextCursor(m_basicCurrLine.cursor);
-    basicEditor->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
-
-    return DBG_BASIC_SUCCESS;
+    return validPC ? DBG_BASIC_SUCCESS : DBG_BASIC_NO_EXECUTING_PRGM;
 }
 
 void MainWindow::debugBasicToggleHighlight(bool enabled) {
@@ -440,19 +413,24 @@ void MainWindow::debugBasicToggleHighlight(bool enabled) {
 void MainWindow::debugBasicToggleShowFetch(bool enabled) {
     m_basicClearCache = true;
     m_basicShowFetches = enabled;
+    if (guiDebugBasic) {
+        debugBasicReconfigure(true);
+    }
 }
 
 void MainWindow::debugBasicToggleShowTempParse(bool enabled) {
     m_basicClearCache = true;
     m_basicShowTempParser = enabled;
+    if (guiDebugBasic) {
+        debugBasicReconfigure(true);
+    }
 }
 
 void MainWindow::debugBasicToggleLiveExecution(bool enabled) {
-    //m_basicClearCache = true;
-    if (!guiDebugBasic) {
-        debugBasicClearHighlights();
-    }
     m_basicShowLiveExecution = enabled;
+    if (guiDebugBasic) {
+        debugBasicReconfigure(true);
+    }
 }
 
 
