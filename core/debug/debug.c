@@ -49,11 +49,9 @@ int debug_get_flags(void) {
 }
 
 void debug_open(int reason, uint32_t data) {
-    if ((cpu_check_signals() & CPU_SIGNAL_EXIT) || debug_is_open() || ((debug_get_flags() & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
+    if ((cpu_check_signals() & CPU_SIGNAL_EXIT) || debug_is_open()) {
         return;
     }
-
-    debug_clear_step();
 
     /* fixup reason for basic debugger */
     if (debug.basicMode) {
@@ -111,6 +109,12 @@ void debug_open(int reason, uint32_t data) {
             return;
         }
     }
+
+    if ((debug_get_flags() & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE)) {
+        return;
+    }
+
+    debug_clear_step();
 
     debug.cpuCycles = cpu.cycles;
     debug.cpuNext = cpu.next;
