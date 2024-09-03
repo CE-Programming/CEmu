@@ -259,6 +259,7 @@ private:
 
     // ti-basic debugging
     void debugBasic(bool enable);
+    void debugBasicUpdateDarkMode();
     void debugBasicReconfigure(bool forceUpdate);
     void debugBasicInit();
     void debugBasicRaise();
