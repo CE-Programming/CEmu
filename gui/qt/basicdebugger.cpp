@@ -67,6 +67,7 @@ void MainWindow::debugBasicReconfigure(bool forceUpdate) {
             }
         } else {
             debug_disable_basic_mode();
+            watchUpdate();
             debugBasicClearCache();
             debugBasicClearEdits();
         }
