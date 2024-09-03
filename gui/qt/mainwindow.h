@@ -315,6 +315,7 @@ private:
     void gotoDisasmAddr(uint32_t addr);
     QAction *gotoDisasmAction(QMenu *menu);
     void gotoMemAddr(uint32_t addr);
+    HexWidget *gotoMemAddrNoRaise(uint32_t addr);
     QAction *gotoMemAction(QMenu *menu, bool vat = false);
 
     void handleCtrlClickText(QPlainTextEdit *edit);
