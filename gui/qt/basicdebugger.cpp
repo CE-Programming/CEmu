@@ -166,6 +166,9 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
         if (!m_basicShowTempParser) {
             return DBG_BASIC_NO_EXECUTING_PRGM;
         }
+    } else if (name[1] == '\0') {
+        // empty name happens during Input for some reason
+        return DBG_BASIC_NO_EXECUTING_PRGM;
     } else {
         // lookup in map to see if we've already parsed this file
         auto basicPrgmIter = m_basicPrgmsMap.constFind(var_name);
