@@ -117,28 +117,29 @@ void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
     HighlightingRule rule;
+    bool darkMode = isRunningInDarkMode();
 
-    numberFormat.setForeground(Qt::darkMagenta);
+    numberFormat.setForeground(QColor(darkMode ? "lime" : "darkmagenta"));
     rule.pattern = QRegularExpression(R"((((\b[0-9]+)?\.)?\b[0-9]+(ᴇ⁻?[0-9]+)?))");
     rule.format = numberFormat;
     highlightingRules.append(rule);
 
-    variableFormat.setForeground(Qt::darkYellow);
+    variableFormat.setForeground(QColor(darkMode ? "yellow" : "darkyellow"));
     rule.pattern = QRegularExpression(R"((\[[A-J]\])|([A-Zθ])|([\|?uvw])|((GDB|Str|Pic|Img)[0-9])|([XYr][₁₂₃₄₅₆₇₈₉]ᴛ?)|([XY](min|max|scl|res)))");
     rule.format = variableFormat;
     highlightingRules.append(rule);
 
-    listFormat.setForeground(Qt::blue);
+    listFormat.setForeground(QColor(darkMode ? "lightblue" : "blue"));
     rule.pattern = QRegularExpression("(⌊[A-Zθ][A-Z0-9θ]{0,4})|(L[₁₂₃₄₅₆₇₈₉])");
     rule.format = listFormat;
     highlightingRules.append(rule);
 
-    keywordFormat.setForeground(QColor(isRunningInDarkMode() ? "darkorange" : "darkblue"));
+    keywordFormat.setForeground(QColor(darkMode ? "darkorange" : "darkblue"));
     rule.pattern = QRegularExpression("\\b(Else|End|For|Goto|EndIf|ElseIf|End!If|If|!If|Lbl|Repeat|Return|Stop|Then|While)\\b");
     rule.format = keywordFormat;
     highlightingRules.append(rule);
 
-    builtinFormat.setForeground(Qt::darkCyan);
+    builtinFormat.setForeground(darkMode ? Qt::cyan : Qt::darkCyan);
     QStringList builtinPatterns;
     builtinPatterns << "\\bAns\\b" << "\\bAsmComp\\b" << "\\bAsm(8[34]CE?)?Prgm\\b" <<"\\bAUTO\\b"
                     << "\\bAxesOff\\b" << "\\bAxesOn\\b" << "\\bBackgroundOn\\b" << "\\bBackgroundOff\\b"
@@ -205,12 +206,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     rule.format = constFormat;
     highlightingRules.append(rule);
 
-    numberFormat.setForeground(Qt::darkMagenta);
-    rule.pattern = QRegularExpression(R"((((\b[0-9]+)?\.)?\b[0-9]+([eE][-+]?[0-9]+)?\b))");
-    rule.format = numberFormat;
-    highlightingRules.append(rule);
-
-    labelFormat.setForeground(QColor::fromRgb(0xBD, 0x3B, 0xB1));
+    labelFormat.setForeground(darkMode ? QColor(Qt::magenta) : QColor::fromRgb(0xBD, 0x3B, 0xB1));
     rule.pattern = QRegularExpression("\\b(Lbl|Goto) [A-Z0-9θ]{1,2}\\b");
     rule.format = labelFormat;
     highlightingRules.append(rule);
@@ -220,7 +216,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     rule.format = prgmFormat;
     highlightingRules.append(rule);
 
-    delvarFormat.setForeground(Qt::darkCyan);
+    delvarFormat.setForeground(darkMode ? Qt::cyan : Qt::darkCyan);
     rule.pattern = QRegularExpression("DelVar ");
     rule.format = delvarFormat;
     highlightingRules.append(rule);
@@ -230,7 +226,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     rule.format = quotationFormat;
     highlightingRules.append(rule);
 
-    otherFormat.setForeground(isRunningInDarkMode() ? Qt::darkGray : Qt::black);
+    otherFormat.setForeground(darkMode ? Qt::lightGray : Qt::black);
     rule.pattern = QRegularExpression("→");
     rule.format = otherFormat;
     highlightingRules.append(rule);

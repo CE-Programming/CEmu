@@ -947,8 +947,7 @@ void MainWindow::darkModeSwitch(bool darkMode) {
         m_cBack.setColor(QPalette::Text, Qt::black);
     }
     ui->disasm->updateDarkMode();
-    ui->basicEdit->updateDarkMode();
-    ui->basicTempEdit->updateDarkMode();
+    debugBasicUpdateDarkMode();
 }
 
 void MainWindow::changeEvent(QEvent* event) {

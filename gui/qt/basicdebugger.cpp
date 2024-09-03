@@ -34,9 +34,8 @@ void MainWindow::debugBasicInit() {
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
     ui->basicTempEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
 
-    m_basicCurrToken.format.setBackground(QColor(Qt::yellow).lighter(100));
-    m_basicCurrLine.format.setBackground(QColor(Qt::blue).lighter(180));
     m_basicCurrLine.format.setProperty(QTextFormat::FullWidthSelection, true);
+    debugBasicUpdateDarkMode();
 }
 
 void MainWindow::debugBasic(bool enable) {
@@ -45,6 +44,18 @@ void MainWindow::debugBasic(bool enable) {
     ui->btnDebugBasicEnable->setChecked(enable);
     debugBasicGuiState(guiDebug);
     debugBasicReconfigure(true);
+}
+
+void MainWindow::debugBasicUpdateDarkMode() {
+    bool darkMode = isRunningInDarkMode();
+    m_basicCurrLine.format.setBackground(darkMode ? QColor(Qt::darkBlue) : QColor(Qt::blue).lighter(180));
+    m_basicCurrToken.format.setBackground(darkMode ? QColor(Qt::darkMagenta) : QColor(Qt::yellow).lighter(100));
+    for (BasicEditor *basicEditor : { ui->basicEdit, ui->basicTempEdit }) {
+        basicEditor->updateDarkMode();
+        if (!basicEditor->extraSelections().isEmpty()) {
+            ui->basicEdit->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
+        }
+    }
 }
 
 void MainWindow::debugBasicReconfigure(bool forceUpdate) {
