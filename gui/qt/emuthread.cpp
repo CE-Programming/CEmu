@@ -11,6 +11,8 @@
 #include "capture/animated-png.h"
 
 #include <QtCore/QVector>
+#include <QtCore/QEventLoop>
+#include <QtCore/QTimer>
 
 #include <cassert>
 #include <cstdarg>
@@ -396,11 +398,15 @@ void EmuThread::load(emu_data_t fileType, const QString &filePath) {
 }
 
 void EmuThread::stop() {
+    // Need to run events to allow queued slots to be processed during exit
+    QEventLoop eventLoop;
+    connect(this, &QThread::finished, &eventLoop, [&]() { eventLoop.exit(0); });
     if (!isRunning()) {
         return;
     }
     emu_exit();
-    if (!wait(500)) {
+    QTimer::singleShot(500, &eventLoop, [&]() { eventLoop.exit(1); });
+    if (eventLoop.exec()) {
         terminate();
         wait(500);
     }
