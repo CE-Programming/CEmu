@@ -274,6 +274,7 @@ QString MainWindow::debugGetFile(bool save) {
 }
 
 void MainWindow::debugRaise() {
+    debug_clear_basic_step();
     debugEnable();
     debugPopulate();
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
@@ -371,13 +372,13 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
     // handle live basic commands first
     if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
-        guiDebugBasic = true;
+        guiDebug = true;
         if (reason == DBG_BASIC_BASIC_PROG_WRITE) {
             debugBasicPrgmLookup(false, Q_NULLPTR);
         } else if (reason == DBG_BASIC_CURPC_WRITE) {
             debugBasicUpdate(false);
         }
-        guiDebugBasic = false;
+        guiDebug = false;
         emu.resume();
         return;
     }
@@ -464,19 +465,22 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         case DBG_MISC_RESET:
             text = tr("Misc. reset");
             break;
-        default:
-        case DBG_USER:
-            debugRaise();
+        case DBG_BASIC_RECONFIG:
+            guiDebug = true;
+            debugBasicReconfigure(false);
+            guiDebug = false;
+            emu.resume();
             return;
-        case DBG_BASIC_USER:
         case DBG_BASIC_STEP:
-            if (debugBasicRaise() == DBG_BASIC_NO_EXECUTING_PRGM && reason != DBG_BASIC_USER) {
-                debugBasicLeave();
+            if (debugBasicUpdate(false) == DBG_BASIC_NO_EXECUTING_PRGM) {
+                emu.resume();
                 return;
             }
-            debug.stepBasic = false;
-            debug.stepBasicNext = false;
-            ui->lcd->disableBlend();
+            debugBasicRaise();
+            return;
+        case DBG_USER:
+        default:
+            debugRaise();
             return;
     }
 
@@ -570,6 +574,10 @@ void MainWindow::debugSync() {
     lcd_update();
 
     ui->debuggerLabel->clear();
+
+    if (guiDebugBasic && !m_basicShowLiveExecution) {
+        debugBasicClearHighlights();
+    }
 }
 
 void MainWindow::debugGuiState(bool state) {
@@ -634,14 +642,12 @@ void MainWindow::debugGuiState(bool state) {
             }
         }
     }
+
+    debugBasicGuiState(state);
 }
 
 void MainWindow::debugToggle() {
     bool state = guiDebug;
-
-    if (guiDebugBasic) {
-        return;
-    }
 
     if (m_pathRom.isEmpty()) {
         return;
@@ -837,6 +843,10 @@ void MainWindow::debugPopulate() {
     disasmUpdateAddr(m_prevDisasmAddr = cpu.registers.PC, true);
 
     memUpdate();
+
+    if (guiDebugBasic) {
+        debugBasicUpdate(true);
+    }
 
     if (guiReceive) {
         varShow();

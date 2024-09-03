@@ -1400,12 +1400,12 @@ void MainWindow::closeEvent(QCloseEvent *e) {
             return;
         }
 
-        if (guiDebug) {
-            debugToggle();
+        if (guiDebugBasic) {
+            debugBasic(false);
         }
 
-        if (guiDebugBasic) {
-            debugBasicToggle();
+        if (guiDebug) {
+            debugToggle();
         }
 
         if (guiReceive) {
@@ -1727,7 +1727,7 @@ void MainWindow::lcdCopy() {
 void MainWindow::recordAnimated() {
     static QString path;
 
-    if (guiDebug || guiDebugBasic || guiSend) {
+    if (guiDebug || guiSend) {
         return;
     }
 
@@ -1900,7 +1900,7 @@ void MainWindow::pauseEmu(Qt::ApplicationState state) {
 // ------------------------------------------------
 
 void MainWindow::varReceive(std::function<void(bool)> recvAction) {
-    if (guiDebug || guiDebugBasic) {
+    if (guiDebug) {
         recvAction(false);
     } else {
         m_recvAction = std::move(recvAction);
@@ -2313,11 +2313,11 @@ void MainWindow::resetEmu() {
     if (guiReceive) {
         varToggle();
     }
-    if (guiDebug) {
-        debugToggle();
-    }
     if (guiDebugBasic) {
         debugBasic(false);
+    }
+    if (guiDebug) {
+        debugToggle();
     }
 
     emu.reset();
@@ -2371,11 +2371,11 @@ void MainWindow::emuLoad(emu_data_t type) {
     if (guiReceive) {
         varToggle();
     }
-    if (guiDebug) {
-        debugToggle();
-    }
     if (guiDebugBasic) {
         debugBasic(false);
+    }
+    if (guiDebug) {
+        debugToggle();
     }
 
     switch (type) {

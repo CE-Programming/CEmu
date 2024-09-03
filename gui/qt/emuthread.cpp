@@ -151,7 +151,7 @@ void EmuThread::doStuff() {
                 debug_open(DBG_USER, 0);
                 break;
             case RequestBasicDebugger:
-                debug_open(DBG_BASIC_USER, 0);
+                debug_open(DBG_BASIC_RECONFIG, 0);
                 break;
             case RequestSave:
                 emit saved(emu_save(m_saveType, m_savePath.toStdString().c_str()));
