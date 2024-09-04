@@ -62,7 +62,7 @@ void LCDWidget::paintEvent(QPaintEvent*) {
             forceBilinear = false;
         }
         QRectF target = QRectF(QPointF(), targetSize);
-        target.moveCenter(cw.center());
+        target.moveCenter(QRectF(cw).center());
         QSize integerSize = QSize(qMax(qRound(widthScale), 1) * LCD_WIDTH, qMax(qRound(heightScale), 1) * LCD_HEIGHT);
         bool sharpUsesBilinear = m_upscale == SharpBilinear && integerSize != pixelSize;
         c.setRenderHint(QPainter::SmoothPixmapTransform, forceBilinear || sharpUsesBilinear);
