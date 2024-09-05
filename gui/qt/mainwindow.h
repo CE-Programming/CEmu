@@ -10,9 +10,7 @@
 #include "keyhistorywidget.h"
 #include "dockwidget.h"
 #include "datawidget.h"
-#include "basiccodeviewerwindow.h"
 #include "vartablemodel.h"
-#include "keypad/qtkeypadbridge.h"
 #include "debugger/hexwidget.h"
 #include "debugger/disasm.h"
 #include "capture/animated-png.h"
@@ -30,10 +28,10 @@
 #include <QtCore/QTimer>
 #include <QtCore/QPointer>
 #include <QtGui/QTextCursor>
-#include <QtGui/QFont>
-#include <QtWidgets/QMessageBox>
 #include <QtCore/QTranslator>
 #include <QtCore/QStandardPaths>
+
+#include <functional>
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {

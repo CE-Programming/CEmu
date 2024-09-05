@@ -3,11 +3,10 @@
 #include "sendinghandler.h"
 #include "dockwidget.h"
 #include "utils.h"
+#include "keypad/qtkeypadbridge.h"
 
-#include "../../core/schedule.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
-#include "../../core/link.h"
 #include "../../core/debug/debug.h"
 
 #include <cmath>

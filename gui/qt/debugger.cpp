@@ -26,7 +26,6 @@
 #include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
-#include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QScrollBar>
