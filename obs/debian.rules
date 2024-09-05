@@ -14,16 +14,16 @@ else
 CFLAGS += -O2
 endif
 
-CEMU_VERNUM = 1.3
+CEMU_VERNUM = 2.0
 
 build: build-stamp
 build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
-	cd cemu-$(CEMU_VERNUM)/gui/qt/capture/libpng-apng && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../../..
+	cd cemu-$(CEMU_VERNUM)/gui/qt/capture/libpng-apng && autoreconf -vif && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../../..
 	qmake cemu-$(CEMU_VERNUM)/gui/qt/CEmu.pro CEMU_VERSION=v$(CEMU_VERNUM) USE_LIBPNG=internal TARGET_NAME=cemu
-	make
+	make -j4
 	# --- end custom part for compiling
 
 	touch build-stamp
