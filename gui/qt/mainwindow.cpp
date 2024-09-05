@@ -1935,7 +1935,7 @@ QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &n
 }
 
 void MainWindow::varPressed(const QModelIndex &index) {
-    QModelIndex nameIndex = index.siblingAtColumn(VarTableModel::VAR_NAME_COL);
+    QModelIndex nameIndex = index.sibling(index.row(), VarTableModel::VAR_NAME_COL);
     if (!nameIndex.isValid()) {
         return;
     }
@@ -2525,7 +2525,8 @@ void MainWindow::varLaunch(const calc_var_t *prgm) {
 }
 
 void MainWindow::contextVars(const QPoint& posa) {
-    QModelIndex nameIndex = ui->emuVarView->indexAt(posa).siblingAtColumn(VarTableModel::VAR_NAME_COL);
+    QModelIndex nameIndex = ui->emuVarView->indexAt(posa);
+    nameIndex = nameIndex.sibling(nameIndex.row(), VarTableModel::VAR_NAME_COL);
     if (!nameIndex.isValid()) {
         return;
     }

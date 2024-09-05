@@ -672,8 +672,8 @@ void MainWindow::checkUpdate(bool forceInfoBox) {
             if (parseError.error != QJsonParseError::NoError || json.isNull()) {
                 goto updateCheckErr;
             }
-            const auto tag_name = json[QStringLiteral("tag_name")].toString();
-            const auto name = json[QStringLiteral("name")].toString();
+            const auto tag_name = json.object().value(QStringLiteral("tag_name")).toString();
+            const auto name = json.object().value(QStringLiteral("name")).toString();
             if (QStringLiteral(CEMU_VERSION).compare(tag_name) == 0) {
                 if (forceInfoBox) {
                     QMessageBox::information(this, tr("No update available"), tr("You already have the latest CEmu version") + QStringLiteral(" (" CEMU_VERSION ")"));
