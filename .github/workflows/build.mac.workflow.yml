@@ -5,8 +5,6 @@ on:
     branches: [ master, feature/github-actions ]
   pull_request:
     branches: [ master, feature/github-actions ]
-  release:
-    types: [published]
 
 jobs:
   build:
@@ -55,7 +53,7 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Mac-${{ matrix.arch }}-${{ matrix.qtver }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v2.0']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v2.0', '-DIS_OFFICIAL_RELEASE_VERSION=ON']"
         buildPreset: 'Mac-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-osx-release
@@ -63,8 +61,8 @@ jobs:
 
     - name: Move to temp folder
       run: |
-        mkdir -p /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
-        mv ${{ github.workspace }}/gui/qt/CEmu.build/Mac-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.app /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/
+        mkdir -p /tmp/CEmu-v2.0_mac_qt${{matrix.qtvershort}}/
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Mac-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.app /tmp/CEmu-v2.0_mac_qt${{matrix.qtvershort}}/
 
     - name: "Codesign CEmu.app"
       env:
@@ -81,21 +79,21 @@ jobs:
           security unlock-keychain -p $MACOS_KEYCHAIN_PWD build.keychain
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MACOS_KEYCHAIN_PWD build.keychain
-          /usr/bin/codesign --deep --force --verify --verbose --sign "$MACOS_CODESIGN_IDENT" --timestamp --options runtime /tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/CEmu.app
+          /usr/bin/codesign --deep --force --verify --verbose --sign "$MACOS_CODESIGN_IDENT" --timestamp --options runtime /tmp/CEmu-v2.0_mac_qt${{matrix.qtvershort}}/CEmu.app
 
     - name: "Create the DMG"
       run: |
           brew install create-dmg || brew install create-dmg; # we try twice because sometimes it fails...
           # The codesign variable may be empty (for forks) but that's fine, create-dmg only does code-signing if it's not empty.
           createDmgArgs="--codesign '${{ secrets.MACOS_CODESIGN_IDENT }}' \
-              --volname 'CEmu-nightly Qt${{matrix.qtvershort}}' \
+              --volname 'CEmu v2.0 Qt${{matrix.qtvershort}}' \
               --window-pos 200 120 \
               --window-size 600 400 \
               --icon-size 64 \
               --icon 'CEmu.app' 125 200 \
               --app-drop-link 400 200 \
-              'CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg' \
-              '/tmp/CEmu-nightly_mac_qt${{matrix.qtvershort}}/'"
+              'CEmu-v2.0_mac_qt${{matrix.qtvershort}}.dmg' \
+              '/tmp/CEmu-v2.0_mac_qt${{matrix.qtvershort}}/'"
           eval "create-dmg $createDmgArgs" || eval "create-dmg $createDmgArgs" # We also retry just in case...
 
     - name: "[macOS] Notarize and staple DMG"
@@ -107,21 +105,11 @@ jobs:
         APPLE_NOTARIZATION_TEAMID: ${{ secrets.APPLE_NOTARIZATION_TEAMID }}
       run: |
         xcrun notarytool store-credentials "notarytool-profile" --apple-id "$APPLE_NOTARIZATION_USERNAME" --team-id "$APPLE_NOTARIZATION_TEAMID" --password "$APPLE_NOTARIZATION_PASSWORD"
-        xcrun notarytool submit "CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg" --keychain-profile "notarytool-profile" --wait
-        xcrun stapler staple "CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg"
+        xcrun notarytool submit "CEmu-v2.0_mac_qt${{matrix.qtvershort}}.dmg" --keychain-profile "notarytool-profile" --wait
+        xcrun stapler staple "CEmu-v2.0_mac_qt${{matrix.qtvershort}}.dmg"
 
     - name: Upload dmg as artifact
       uses: actions/upload-artifact@v3
       with:
-          name: CEmu-nightly_mac_qt${{matrix.qtvershort}}
-          path: CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg
-
-    - name: Update nightly release
-      if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-      uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
-      with:
-        tag_name: nightly
-        prerelease: true
-        token: ${{secrets.GITHUB_TOKEN}}
-        files: |
-          CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg
+          name: CEmu-v2.0_mac_qt${{matrix.qtvershort}}
+          path: CEmu-v2.0_mac_qt${{matrix.qtvershort}}.dmg

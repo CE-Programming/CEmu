@@ -5,8 +5,6 @@ on:
     branches: [ master, feature/github-actions ]
   pull_request:
     branches: [ master, feature/github-actions ]
-  release:
-    types: [published]
 
 jobs:
   build:
@@ -53,7 +51,7 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v2.0']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v2.0', '-DIS_OFFICIAL_RELEASE_VERSION=ON']"
         buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows
@@ -65,20 +63,3 @@ jobs:
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe
-
-    - name: Prepare binary for release upload
-      if: ${{ matrix.config == 'Release' }}
-      run: |
-        $ReleaseName = "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc_${{ matrix.qtver }}.exe".Replace("Qt", "qt")
-        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe" -NewName $ReleaseName
-        echo "RELEASE_NAME=$ReleaseName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    - name: Update nightly release
-      if: ${{ matrix.config == 'Release' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
-      uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
-      with:
-        tag_name: nightly
-        prerelease: true
-        token: ${{secrets.GITHUB_TOKEN}}
-        files: |
-          ./gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/${{ env.RELEASE_NAME }}
