@@ -675,7 +675,6 @@ void MainWindow::checkUpdate(bool forceInfoBox) {
             }
             const auto tag_name = json[QStringLiteral("tag_name")].toString();
             const auto name = json[QStringLiteral("name")].toString();
-            QMessageBox::warning(this, tag_name, name);
             if (QStringLiteral(CEMU_VERSION).compare(tag_name) == 0) {
                 if (forceInfoBox) {
                     QMessageBox::information(this, tr("No update available"), tr("You already have the latest CEmu version") + QStringLiteral(" (" CEMU_VERSION ")"));
