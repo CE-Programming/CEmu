@@ -55,7 +55,7 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v2.0', '-DIS_OFFICIAL_RELEASE_VERSION=ON']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0']"
         buildPreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-linux-${{ matrix.host_triplet }}
@@ -66,3 +66,17 @@ jobs:
       with:
         name: CEmu_linux_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
+
+    - name: Prepare binary for release upload
+      run: |
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}
+
+    - name: Update nightly release
+      if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+      uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
+      with:
+        tag_name: nightly
+        prerelease: true
+        token: ${{secrets.GITHUB_TOKEN}}
+        files: |
+          ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}

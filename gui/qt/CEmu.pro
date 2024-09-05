@@ -11,7 +11,7 @@ if (lessThan(QT_MAJOR_VERSION, 6)) {
 CEMU_RELEASE = true
 CEMU_GIT_SHA = $$system(git describe --abbrev=7 --always)
 isEmpty(CEMU_VERSION) {
-    CEMU_VERSION = v2.0dev
+    CEMU_VERSION = v3.0dev
     CEMU_RELEASE = false
 }
 DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
