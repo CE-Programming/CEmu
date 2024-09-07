@@ -2,9 +2,9 @@ name: Build macOS
 
 on:
   push:
-    branches: [ master, feature/github-actions ]
+    branches: [ master, feature/github-actions, with_lua ]
   pull_request:
-    branches: [ master, feature/github-actions ]
+    branches: [ master, feature/github-actions, with_lua ]
 
 jobs:
   build:
