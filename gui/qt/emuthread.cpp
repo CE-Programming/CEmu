@@ -357,7 +357,7 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
     std::unique_lock<std::mutex> lock(m_mutexDebug);
     m_debug = true;
     emit debugCommand(reason, data);
-    m_cvDebug.wait(lock, [this](){ return !m_debug; });
+    m_cvDebug.wait(lock, [this] { return !m_debug; });
 }
 
 void EmuThread::resume() {
@@ -400,12 +400,12 @@ void EmuThread::load(emu_data_t fileType, const QString &filePath) {
 void EmuThread::stop() {
     // Need to run events to allow queued slots to be processed during exit
     QEventLoop eventLoop;
-    connect(this, &QThread::finished, &eventLoop, [&]() { eventLoop.exit(0); });
+    connect(this, &QThread::finished, &eventLoop, [&] { eventLoop.exit(0); });
     if (!isRunning()) {
         return;
     }
     emu_exit();
-    QTimer::singleShot(500, &eventLoop, [&]() { eventLoop.exit(1); });
+    QTimer::singleShot(500, &eventLoop, [&] { eventLoop.exit(1); });
     if (eventLoop.exec()) {
         terminate();
         wait(500);

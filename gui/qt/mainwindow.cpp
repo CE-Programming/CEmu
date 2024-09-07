@@ -537,7 +537,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRunLuaScript, &QPushButton::clicked, this, &MainWindow::runLuaScript);
     connect(ui->buttonLoadLuaScript, &QPushButton::clicked, this, &MainWindow::loadLuaScript);
     connect(ui->buttonSaveLuaScript, &QPushButton::clicked, this, &MainWindow::saveLuaScript);
-    connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [&](){ this->initLuaThings(repl_lua, true); });
+    connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [&] { this->initLuaThings(repl_lua, true); });
     connect(ui->clearREPLConsole, &QPushButton::clicked, ui->REPLConsole, &QPlainTextEdit::clear);
     connect(ui->REPLInput, &QLineEdit::returnPressed, this, &MainWindow::LuaREPLeval);
 
@@ -1065,7 +1065,7 @@ void MainWindow::setup() {
     const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
     if (restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) && restoreGeometry(geometry) && restoreGeometry(geometry)) {
         const QPoint position = m_config->value(SETTING_WINDOW_POSITION).toPoint();
-        QTimer::singleShot(0, [this, position]() { move(position); });
+        QTimer::singleShot(0, [this, position] { move(position); });
     } else {
         foreach (DockWidget *dw, m_dockPtrs) {
             dw->setVisible(true);
@@ -1838,12 +1838,12 @@ void MainWindow::showAbout() {
     aboutBox->setWindowTitle(tr("About CEmu"));
 
     QAbstractButton *buttonUpdateCheck = aboutBox->addButton(tr("Check for updates"), QMessageBox::ActionRole);
-    connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [this](){ this->checkUpdate(true); });
+    connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [this] { this->checkUpdate(true); });
 
     QAbstractButton *buttonCopyVersion = aboutBox->addButton(tr("Copy version"), QMessageBox::ActionRole);
     // Needed to prevent the button from closing the dialog
     buttonCopyVersion->disconnect();
-    connect(buttonCopyVersion, &QAbstractButton::clicked, this, [this, buttonCopyVersion](){ QApplication::clipboard()->setText("CEmu " CEMU_VERSION " (git: " CEMU_GIT_SHA ")", QClipboard::Clipboard); buttonCopyVersion->setEnabled(false); buttonCopyVersion->setText(tr("Version copied!")); });
+    connect(buttonCopyVersion, &QAbstractButton::clicked, this, [this, buttonCopyVersion] { QApplication::clipboard()->setText("CEmu " CEMU_VERSION " (git: " CEMU_GIT_SHA ")", QClipboard::Clipboard); buttonCopyVersion->setEnabled(false); buttonCopyVersion->setText(tr("Version copied!")); });
 
     QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();

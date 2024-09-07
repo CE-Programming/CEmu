@@ -149,7 +149,7 @@ void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
            }
            return !(ui->lcd->getImage().save(path, "PNG", 0));
        }),
-       "refresh",    sol::as_function([](){ QApplication::processEvents(); }),
+       "refresh",    sol::as_function([] { QApplication::processEvents(); }),
        "messageBox", sol::as_function([&](const std::string& t, const std::string& msg) {
            QMessageBox::information(this, QString::fromStdString("[Lua] " + t), QString::fromStdString(msg));
        }),
@@ -159,8 +159,8 @@ void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
     );
 
     lua.create_named_table("emu",
-       "reset",     sol::as_function([&](){ resetEmu(); }),
-       "reloadROM", sol::as_function([&](){ emuLoad(EMU_DATA_ROM); }),
+       "reset",     sol::as_function([&] { resetEmu(); }),
+       "reloadROM", sol::as_function([&] { emuLoad(EMU_DATA_ROM); }),
        "throttle",  sol::as_function([&](bool t){ setThrottle(t ? Qt::Checked : Qt::Unchecked); }),
        "setSpeed",  sol::as_function([&](int s){ s /= 10; setEmuSpeed(s<0 ? 0 : (s>50 ? 50 : s)); }), // todo: maybe fix this
        "sendFile",  sol::as_function([&](const std::string& path) {
@@ -171,12 +171,12 @@ void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
     );
 
     lua.create_named_table("debug",
-       "stop",      sol::as_function([&](){ if (!guiDebug) { debugToggle(); } }),
-       "resume",    sol::as_function([&](){ if (guiDebug)  { debugToggle(); } }),
-       "stepIn",    sol::as_function([&](){ stepIn(); }),
-       "stepOver",  sol::as_function([&](){ stepOver(); }),
-       "stepNext",  sol::as_function([&](){ stepNext(); }),
-       "stepOut",   sol::as_function([&](){ stepOut(); }),
+       "stop",      sol::as_function([&] { if (!guiDebug) { debugToggle(); } }),
+       "resume",    sol::as_function([&] { if (guiDebug)  { debugToggle(); } }),
+       "stepIn",    sol::as_function([&] { stepIn(); }),
+       "stepOver",  sol::as_function([&] { stepOver(); }),
+       "stepNext",  sol::as_function([&] { stepNext(); }),
+       "stepOut",   sol::as_function([&] { stepOut(); }),
        "disasm",    sol::as_function([&](uint32_t addr) -> auto {
            /* todo with zdis compat */
            (void)addr;
@@ -188,8 +188,8 @@ void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
 
     lua.create_named_table("autotester",
        "loadJSON",   sol::as_function([&](const std::string& path) -> int { return autotesterOpen(QString::fromStdString(path)); }),
-       "reloadJSON", sol::as_function([&](){ autotesterReload(); }),
-       "launchTest", sol::as_function([&](){ autotesterLaunch(); })
+       "reloadJSON", sol::as_function([&] { autotesterReload(); }),
+       "launchTest", sol::as_function([&] { autotesterLaunch(); })
 
       // todo: actually test this
     );
@@ -246,7 +246,7 @@ void MainWindow::runLuaScript() {
     this->initLuaThings(ed_lua, false);
     // TODO: maybe have a separate thread for Lua (because of infinite loops...)
     const std::string& code = ui->luaScriptEditor->toPlainText().toStdString();
-    const sol::protected_function_result& stringresult = ed_lua.do_string(code.c_str());
+    const sol::protected_function_result& stringresult = ed_lua.do_string(code);
     if (!stringresult.valid())
     {
         const sol::error& err = stringresult;
