@@ -60,7 +60,7 @@ TEMPLATE = app
 # Localization
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts i18n/zh_CN.ts
 
-CONFIG += c++14 c++2a c++20 console
+CONFIG += c++1z c++2a c++20 console
 
 # Seems to fix some LTO issues. See https://github.com/CE-Programming/CEmu/issues/366
 CONFIG += ltcg

@@ -40,7 +40,7 @@ set(CMAKE_SKIP_RPATH TRUE)
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
 message(STATUS "Detected system: ${CMAKE_SYSTEM_NAME} - host processor: ${CMAKE_HOST_SYSTEM_PROCESSOR} - CXX_COMPILER: ${CMAKE_CXX_COMPILER_ID}")
 
-# C11, and C++20 if supported otherwise C++14
+# C11, and C++20 if supported otherwise C++17
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 include(CheckCXXCompilerFlag)
@@ -53,7 +53,7 @@ if(COMPILER_SUPPORTS_CXX20)
     set(CMAKE_CXX_STANDARD 20)
     add_definitions(-DTH_GDB_SUPPORT=1)
 else()
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
