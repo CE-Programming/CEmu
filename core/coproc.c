@@ -13,11 +13,20 @@ void coproc_reset(void) {
     gui_console_printf("[CEmu] Reset Coprocessor Interface...\n");
     arm_destroy(coproc.arm);
     memset(&coproc, 0, sizeof(coproc));
-    coproc.arm = arm_create();
+    if (asic.python) {
+        coproc.arm = arm_create();
+    }
 }
 
 bool coproc_load(const char *path) {
-    return arm_load(coproc.arm, path);
+    if (asic.python && !coproc.arm) {
+        coproc.arm = arm_create();
+    }
+    if (coproc.arm) {
+        return arm_load(coproc.arm, path);
+    } else {
+        return false;
+    }
 }
 
 void coproc_uart_transmit(const uart_transfer_t *transfer) {
