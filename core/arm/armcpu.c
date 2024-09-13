@@ -273,8 +273,8 @@ static uint32_t arm_adds(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
     return arm_movs(cpu, x);
 #else
     uint32_t res = x + y;
-    flags->v = ((res ^ x) & (res ^ y)) >> 31;
-    flags->c = res < x;
+    cpu->v = ((res ^ x) & (res ^ y)) >> 31;
+    cpu->c = res < x;
     //int64_t res = (int64_t)(int32_t)x + (int32_t)y;
     //cpu->v = res != (int32_t)res;
     //cpu->c = (uint32_t)res < x;
@@ -777,13 +777,21 @@ void arm_cpu_execute(arm_t *arm) {
                 case 1: // Special data instructions and branch and exchange
                     switch (opc >> 8 & 3) {
                         case 0: // Add Registers
-                            cpu->r[(opc >> 4 & 8) | (opc >> 0 & 7)] += cpu->r[opc >> 3 & 0xF];
+                            i = (opc >> 4 & 8) | (opc >> 0 & 7);
+                            cpu->r[i] += cpu->r[opc >> 3 & 0xF];
+                            if (unlikely(i == 15)) {
+                                cpu->pc = (cpu->pc | 1) + 1;
+                            }
                             break;
                         case 1: // Compare Registers
                             arm_subs(cpu, cpu->r[(opc >> 4 & 8) | (opc >> 0 & 7)], cpu->r[opc >> 3 & 0xF]);
                             break;
                         case 2: // Move Registers
-                            cpu->r[(opc >> 4 & 8) | (opc >> 0 & 7)] = cpu->r[opc >> 3 & 0xF];
+                            i = (opc >> 4 & 8) | (opc >> 0 & 7);
+                            cpu->r[i] = cpu->r[opc >> 3 & 0xF];
+                            if (unlikely(i == 15)) {
+                                cpu->pc = (cpu->pc | 1) + 1;
+                            }
                             break;
                         case 3: // Branch (with Link) and Exchange
                             val = cpu->r[opc >> 3 & 0xF];
@@ -857,8 +865,8 @@ void arm_cpu_execute(arm_t *arm) {
                 arm_mem_store_word(arm, cpu->r[opc >> 8 & 7], cpu->sp + ((opc >> 0 & 0xFF) << 2));
             }
             break;
-        case 10: // Generate SP/PC
-            cpu->r[opc >> 8 & 7] = cpu->r[opc >> 11 & 1 ? 13 : 15] + ((opc >> 0 & 0xFF) << 2);
+        case 10: // Add SP/PC relative
+            cpu->r[opc >> 8 & 7] = (opc >> 11 & 1 ? cpu->sp : cpu->pc & ~2) + ((opc >> 0 & 0xFF) << 2);
             break;
         case 11: // Miscellaneous 16-bit instructions
             switch (opc >> 9 & 7) {
