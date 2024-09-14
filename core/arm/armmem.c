@@ -142,8 +142,8 @@ uint8_t arm_mem_spi_peek(arm_t *arm, uint8_t pin, uint32_t *res) {
                spi->CTRLA.bit.MODE !=
                SERCOM_SPI_CTRLA_MODE_SPI_SLAVE_Val ||
                !spi->CTRLB.bit.RXEN)) {
-        *res = 1 << 15;
-        return 16;
+        *res = 0;
+        return 1;
     }
     uint8_t bits = 8 | (spi->CTRLB.bit.CHSIZE & 1);
     *res = spi->BUFFER[1].bit.DATA;
@@ -177,24 +177,28 @@ void arm_mem_spi_xfer(arm_t *arm, uint8_t pin, uint32_t val) {
         } else {
             spi->BUFFER[2].bit.OVF = true;
         }
-        spi->BUFFER[1].bit.VLD = true;
+        //spi->BUFFER[1].bit.VLD = true;
     } else {
-        spi->INTFLAG.bit.DRE = true;
         spi->INTFLAG.bit.RXC = true;
-        if (likely(spi->INTEN.bit.DRE || spi->INTEN.bit.RXC)) {
+        if (likely(spi->INTEN.bit.RXC)) {
             arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
         }
         spi->BUFFER[3].reg = spi->BUFFER[2].reg;
         spi->BUFFER[2].reg = spi->BUFFER[1].reg;
-        if (likely(spi->BUFFER[1].bit.VLD = spi->BUFFER[0].bit.VLD)) {
-            spi->BUFFER[1].bit.DATA = spi->BUFFER[0].bit.DATA;
-            spi->BUFFER[0].reg = 0;
-        } else if (unlikely(spi->CTRLA.bit.MODE ==
-                            SERCOM_SPI_CTRLA_MODE_SPI_MASTER_Val)) {
-            spi->INTFLAG.bit.TXC = true;
-            if (likely(spi->INTEN.bit.TXC)) {
-                arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
-            }
+        spi->BUFFER[2].bit.VLD = true;
+    }
+    spi->INTFLAG.bit.DRE = true;
+    if (likely(spi->INTEN.bit.DRE)) {
+        arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
+    }
+    if (likely(spi->BUFFER[1].bit.VLD = spi->BUFFER[0].bit.VLD)) {
+        spi->BUFFER[1].bit.DATA = spi->BUFFER[0].bit.DATA;
+        spi->BUFFER[0].reg = 0;
+    } else if (unlikely(spi->CTRLA.bit.MODE ==
+                        SERCOM_SPI_CTRLA_MODE_SPI_MASTER_Val)) {
+        spi->INTFLAG.bit.TXC = true;
+        if (likely(spi->INTEN.bit.TXC)) {
+            arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
         }
     }
 }
