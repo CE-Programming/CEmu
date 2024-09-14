@@ -13,29 +13,30 @@
 
 spi_state_t spi;
 
-static uint8_t null_spi_select(uint32_t* rxData) {
+static void null_spi_select(bool low) {
+    (void)low;
+}
+
+static uint8_t null_spi_peek(uint32_t *rxData) {
     /* Hack to make OS 5.7.0 happy without a coprocessor */
     *rxData = 0xC3;
     return 8;
 }
 
-static uint8_t null_spi_transfer(uint32_t txData, uint32_t* rxData) {
+static uint8_t null_spi_transfer(uint32_t txData, uint32_t *rxData) {
     (void)txData;
-    return null_spi_select(rxData);
-}
-
-static void null_spi_deselect(void) {
+    return null_spi_peek(rxData);
 }
 
 static void spi_set_device_funcs(void) {
     if (spi.arm) {
         spi.device_select = null_spi_select;
+        spi.device_peek = null_spi_peek;
         spi.device_transfer = null_spi_transfer;
-        spi.device_deselect = null_spi_deselect;
     } else {
         spi.device_select = panel_spi_select;
+        spi.device_peek = panel_spi_peek;
         spi.device_transfer = panel_spi_transfer;
-        spi.device_deselect = panel_spi_deselect;
     }
 }
 
@@ -58,8 +59,13 @@ static void spi_update_thresholds(void) {
 
 static uint32_t spi_next_transfer(void) {
     if (spi.transferBits == 0) {
-        bool txAvailable = (spi.cr2 >> 8 & 1) && spi.tfve != 0;
+        bool txEnabled = (spi.cr2 >> 8 & 1);
+        bool txAvailable = txEnabled && spi.tfve != 0;
         if (unlikely(spi.cr2 >> 7 & 1)) {
+            /* If FLASH bit is reset and TX is enabled, only receive when the TX FIFO is non-empty */
+            if (!(spi.cr0 >> 11 & 1) && txEnabled && spi.tfve == 0) {
+                return 0;
+            }
             /* Odd RX behavior, allow transfer after 15 entries only if TX FIFO is non-empty */
             if (spi.rfve >= SPI_RXFIFO_DEPTH - (spi.tfve == 0)) {
                 return 0;
@@ -70,19 +76,22 @@ static uint32_t spi_next_transfer(void) {
         }
 
         spi.transferBits = (spi.cr1 >> 16 & 0x1F) + 1;
+        spi.txFrame = spi.txFifo[spi.tfvi & (SPI_TXFIFO_DEPTH - 1)] << (32 - spi.transferBits);
         if (likely(txAvailable)) {
-            spi.txFrame = spi.txFifo[spi.tfvi++ & (SPI_TXFIFO_DEPTH - 1)] << (32 - spi.transferBits);
+            spi.tfvi++;
             spi.tfve--;
             spi_update_thresholds();
-        } else {
-            /* For now, just send 0 bits when no TX data available */
-            spi.txFrame = 0;
-            if (spi.cr2 >> 8 & 1) {
-                /* Set TX underflow if TX enabled */
-                spi.intStatus |= 1 << 1;
-                intrpt_set(INT_SPI, spi.intCtrl & spi.intStatus);
-            }
+        } else if (unlikely(txEnabled)) {
+            /* Set TX underflow if TX enabled */
+            spi.intStatus |= 1 << 1;
+            intrpt_set(INT_SPI, spi.intCtrl & spi.intStatus);
         }
+    }
+
+    if (unlikely(spi.deviceBits == 0)) {
+        uint32_t rxData = 0;
+        spi.deviceBits = spi.device_peek(&rxData);
+        spi.deviceFrame = rxData << (32 - spi.deviceBits);
     }
 
     uint8_t bitCount = spi.transferBits < spi.deviceBits ? spi.transferBits : spi.deviceBits;
@@ -90,32 +99,34 @@ static uint32_t spi_next_transfer(void) {
 }
 
 static void spi_event(enum sched_item_id id) {
-    uint8_t bitCount = spi.transferBits < spi.deviceBits ? spi.transferBits : spi.deviceBits;
-    spi.rxFrame <<= bitCount;
-    /* Handle loopback */
-    if (unlikely(spi.cr0 >> 7 & 1)) {
-        spi.rxFrame |= spi.txFrame >> (32 - bitCount);
-    }
-    /* For now, allow only receives from coprocessor */
-    else if (spi.arm) {
-        spi.rxFrame |= spi.deviceFrame >> (32 - bitCount);
-    }
-    spi.deviceFrame <<= bitCount;
-    spi.deviceFrame |= spi.txFrame >> (32 - bitCount);
-    spi.txFrame <<= bitCount;
+    if (likely(spi.transferBits != 0)) {
+        uint8_t bitCount = spi.transferBits < spi.deviceBits ? spi.transferBits : spi.deviceBits;
+        spi.rxFrame <<= bitCount;
+        /* Handle loopback */
+        if (unlikely(spi.cr0 >> 7 & 1)) {
+            spi.rxFrame |= spi.txFrame >> (32 - bitCount);
+        }
+        /* For now, allow only receives from coprocessor */
+        else if (spi.arm) {
+            spi.rxFrame |= spi.deviceFrame >> (32 - bitCount);
+        }
+        spi.deviceFrame <<= bitCount;
+        spi.deviceFrame |= spi.txFrame >> (32 - bitCount);
+        spi.txFrame <<= bitCount;
 
-    spi.deviceBits -= bitCount;
-    if (spi.deviceBits == 0) {
-        uint32_t rxData = 0;
-        spi.deviceBits = spi.device_transfer(spi.deviceFrame, &rxData);
-        spi.deviceFrame = rxData << (32 - spi.deviceBits);
-    }
+        spi.deviceBits -= bitCount;
+        if (spi.deviceBits == 0) {
+            uint32_t rxData = 0;
+            spi.deviceBits = spi.device_transfer(spi.deviceFrame, &rxData);
+            spi.deviceFrame = rxData << (32 - spi.deviceBits);
+        }
 
-    spi.transferBits -= bitCount;
-    if (spi.transferBits == 0 && unlikely(spi.cr2 >> 7 & 1)) {
-        /* Note: rfve bound check was performed when starting the transfer */
-        spi.rxFifo[(spi.rfvi + spi.rfve++) & (SPI_RXFIFO_DEPTH - 1)] = spi.rxFrame;
-        spi_update_thresholds();
+        spi.transferBits -= bitCount;
+        if (spi.transferBits == 0 && unlikely(spi.cr2 >> 7 & 1)) {
+            /* Note: rfve bound check was performed when starting the transfer */
+            spi.rxFifo[(spi.rfvi + spi.rfve++) & (SPI_RXFIFO_DEPTH - 1)] = spi.rxFrame;
+            spi_update_thresholds();
+        }
     }
 
     uint32_t ticks = spi_next_transfer();
@@ -127,22 +138,23 @@ static void spi_event(enum sched_item_id id) {
 static void spi_update(void) {
     spi_update_thresholds();
     if (!(spi.cr2 & 1)) {
-        if (spi.deviceBits != 0) {
-            spi.device_deselect();
+        if (spi.deviceBits != 0 || sched_active(SCHED_SPI)) {
+            spi.device_select(false);
             spi.deviceFrame = spi.deviceBits = 0;
             spi.txFrame = spi.transferBits = 0;
             sched_clear(SCHED_SPI);
         }
-    } else if (spi.transferBits == 0) {
+    } else if (!sched_active(SCHED_SPI)) {
+        assert(spi.transferBits == 0);
         if (spi.deviceBits == 0) {
-            uint32_t rxData = 0;
-            spi.deviceBits = spi.device_select(&rxData);
-            spi.deviceFrame = rxData << (32 - spi.deviceBits);
-        }
-
-        uint32_t ticks = spi_next_transfer();
-        if (ticks) {
-            sched_set(SCHED_SPI, ticks);
+            spi.device_select(true);
+            /* Delay one bit length after enable and before first transfer */
+            sched_set(SCHED_SPI, (spi.cr1 & 0xFFFF) + 1);
+        } else {
+            uint32_t ticks = spi_next_transfer();
+            if (ticks) {
+                sched_set(SCHED_SPI, ticks);
+            }
         }
     }
 }
@@ -208,6 +220,9 @@ static void spi_write(uint16_t addr, uint8_t byte, bool poke) {
     bool stateChanged = false;
     switch (addr >> 2) {
         case 0x00 >> 2: // CR0
+            if ((spi.cr0 ^ value) & ~mask & (1 << 11)) {
+                stateChanged = true;
+            }
             value &= 0xFFFF;
             spi.cr0 &= mask;
             spi.cr0 |= value;
@@ -241,14 +256,16 @@ static void spi_write(uint16_t addr, uint8_t byte, bool poke) {
             spi.intStatus |= spi_get_threshold_status();
             intrpt_set(INT_SPI, spi.intCtrl & spi.intStatus);
             break;
-        case 0x18 >> 2: // DATA
-            spi.dtr &= mask;
-            spi.dtr |= value;
+        case 0x18 >> 2: { // DATA
+            uint32_t *fifoEntry = &spi.txFifo[(spi.tfvi + spi.tfve) & (SPI_TXFIFO_DEPTH - 1)];
+            *fifoEntry &= mask;
+            *fifoEntry |= value;
             if (!shift && spi.tfve != SPI_TXFIFO_DEPTH) {
-                spi.txFifo[(spi.tfvi + spi.tfve++) & (SPI_TXFIFO_DEPTH - 1)] = spi.dtr;
+                spi.tfve++;
                 stateChanged = true;
             }
             break;
+        }
     }
     if (stateChanged) {
         spi_update();
@@ -272,7 +289,7 @@ void spi_reset(void) {
 
 void spi_device_select(bool arm) {
     if (spi.arm != arm) {
-        spi.device_deselect();
+        spi.device_select(false);
         spi.arm = arm;
         spi_set_device_funcs();
         spi_update();

@@ -1316,7 +1316,11 @@ static void panel_write_param(uint8_t value) {
     }
 }
 
-uint8_t panel_spi_select(uint32_t* rxData) {
+void panel_spi_select(bool low) {
+    (void)low;
+}
+
+uint8_t panel_spi_peek(uint32_t *rxData) {
     (void)rxData;
     /* The first transfer frame is always 9 bits */
     return 9;
@@ -1327,9 +1331,6 @@ uint8_t panel_spi_transfer(uint32_t txData, uint32_t* rxData) {
     (txData & 0x100 ? panel_write_param : panel_write_cmd)((uint8_t)txData);
     /* TODO: return different frame length after read commands */
     return 9;
-}
-
-void panel_spi_deselect(void) {
 }
 
 void init_panel(void) {

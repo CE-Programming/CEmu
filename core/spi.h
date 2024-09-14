@@ -17,7 +17,7 @@ extern "C" {
 #define SPI_FEATURES 0xE
 
 typedef struct spi_state {
-    uint32_t cr0, cr1, cr2, intCtrl, dtr;
+    uint32_t cr0, cr1, cr2, intCtrl;
     uint32_t rxFrame, txFrame, deviceFrame;
     uint8_t transferBits, deviceBits;
     uint8_t rfvi, rfve, tfvi, tfve;
@@ -25,9 +25,9 @@ typedef struct spi_state {
     bool arm;
     uint32_t rxFifo[SPI_RXFIFO_DEPTH], txFifo[SPI_TXFIFO_DEPTH];
 
-    uint8_t (*device_select)(uint32_t*);
+    void (*device_select)(bool);
+    uint8_t (*device_peek)(uint32_t*);
     uint8_t (*device_transfer)(uint32_t, uint32_t*);
-    void (*device_deselect)(void);
 } spi_state_t;
 
 extern spi_state_t spi;

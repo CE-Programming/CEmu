@@ -611,9 +611,9 @@ void panel_vsync(void);
 void panel_clock_porch(uint32_t clocks);
 void panel_scan_until(uint32_t currTick);
 
-uint8_t panel_spi_select(uint32_t* rxData);
+void panel_spi_select(bool low);
+uint8_t panel_spi_peek(uint32_t* rxData);
 uint8_t panel_spi_transfer(uint32_t txData, uint32_t* rxData);
-void panel_spi_deselect(void);
 
 #ifdef __cplusplus
 }
