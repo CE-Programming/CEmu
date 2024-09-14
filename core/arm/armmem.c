@@ -1439,6 +1439,16 @@ void arm_mem_store_word(arm_t *arm, uint32_t val, uint32_t addr) {
             case 0x008: // VTOR
                 scb->vtor = val & SCB_VTOR_TBLOFF_Msk;
                 return;
+            case 0x00C: // AIRCR
+                if ((val & SCB_AIRCR_VECTKEY_Msk) == UINT32_C(0x05FA) << SCB_AIRCR_VECTKEY_Pos) {
+                    if (val & SCB_AIRCR_SYSRESETREQ_Msk) {
+                        arm_mem_reset(&arm->mem, PM_RCAUSE_SYST);
+                        arm_cpu_reset(arm);
+                        spsc_queue_clear(&arm->usart[0]);
+                        spsc_queue_clear(&arm->usart[1]);
+                    }
+                }
+                return;
             case 0x01C: // SHP[0]
                 scb->shp[0] = val & UINT32_C(0xC0000000);
                 return;
