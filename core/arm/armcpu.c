@@ -1135,8 +1135,8 @@ void arm_cpu_execute(arm_t *arm) {
                                         cpu->z = val >> 30 & 1;
                                         cpu->n = val >> 31 & 1;
                                         break;
-                                    case 0x80:
-                                    case 0x81:
+                                    case 0x08:
+                                    case 0x09:
                                         *((opc >> 0 & 1) == cpu->spsel ? &cpu->sp : &cpu->altsp) = val >> 0 & ~3;
                                         break;
                                     case 0x10:
