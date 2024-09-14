@@ -57,8 +57,8 @@ typedef struct {
 typedef union {
     struct {
         uint16_t DATA:9; /*!< bit:  0.. 8  Data Value                         */
-        bool VLD:1;      /*!< bit:      9  Valid Flag                         */
-        bool OVF:1;      /*!< bit:     10  Overflow Flag                      */
+        uint16_t VLD:1;  /*!< bit:      9  Valid Flag                         */
+        uint16_t OVF:1;  /*!< bit:     10  Overflow Flag                      */
     } bit;               /*!< Structure used for bit  access                  */
     uint16_t reg;        /*!< Type      used for register access              */
 } SERCOM_BUFFER_Type;
