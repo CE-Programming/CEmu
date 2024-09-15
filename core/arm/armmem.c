@@ -267,6 +267,7 @@ bool arm_mem_init(arm_mem_t *mem) {
         memset(mem->nvm, ~0, FLASH_SIZE);
         mem->ram = malloc(HMCRAMC0_SIZE);
         if (likely(mem->ram)) {
+            memset(mem->ram, 0, HMCRAMC0_SIZE);
             return true;
             free(mem->ram);
         }
@@ -281,7 +282,6 @@ void arm_mem_destroy(arm_mem_t *mem) {
 }
 
 void arm_mem_reset(arm_mem_t *mem, uint8_t rcause) {
-    memset(mem->ram, 0, HMCRAMC0_SIZE);
     arm_nvm_clear_page_buffer(mem);
     mem->pm.RCAUSE.reg = rcause;
     mem->nvmctrl.INTFLAG.bit.READY = true;
