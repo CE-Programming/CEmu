@@ -965,6 +965,10 @@ void arm_cpu_execute(arm_t *arm) {
                                         case 2: // Wait for Event hint
                                             break;
                                         case 3: // Wait for Interrupt hint
+                                            if ((arm->mem.pm.SLEEP.bit.IDLE == PM_SLEEP_IDLE_APB_Val) &&
+                                                (arm->cpu.scb.scr & SCB_SCR_SLEEPDEEP_Msk)) {
+                                                sync_sleep(&arm->sync);
+                                            }
                                             break;
                                         case 4: // Send Event hint
                                             break;
