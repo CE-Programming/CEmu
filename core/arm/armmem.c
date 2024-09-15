@@ -350,6 +350,8 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
             case ID_PM: {
                 PM_Type *pm = &arm->mem.pm;
                 switch (offset) {
+                    case PM_SLEEP_OFFSET >> 2:
+                        return pm->SLEEP.reg << 8;
                     case (PM_CPUSEL_OFFSET |
                           PM_APBASEL_OFFSET |
                           PM_APBBSEL_OFFSET |
@@ -792,6 +794,8 @@ uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
                 return scb->vtor;
             case 0x00C: // AIRCR
                 return 0;
+            case 0x010: // SCR
+                return scb->scr;
             case 0x014: // CCR
                 return SCB_CCR_STKALIGN_Msk |
                     SCB_CCR_UNALIGN_TRP_Msk;
@@ -850,6 +854,10 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
             case ID_PM: {
                 PM_Type *pm = &arm->mem.pm;
                 switch (offset) {
+                    case PM_SLEEP_OFFSET >> 2:
+                        pm->SLEEP.reg =
+                            ((pm->SLEEP.reg & mask >> 8) | val >> 8) & PM_SLEEP_MASK;
+                        return;
                     case (PM_CPUSEL_OFFSET |
                           PM_APBASEL_OFFSET |
                           PM_APBBSEL_OFFSET |
@@ -891,7 +899,7 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
                     case SYSCTRL_INTENSET_OFFSET >> 2:
                         break;
                     case SYSCTRL_INTFLAG_OFFSET >> 2:
-                        break;
+                        return;
                     case SYSCTRL_PCLKSR_OFFSET >> 2:
                         return;
                     case SYSCTRL_XOSC_OFFSET >> 2:
@@ -1477,6 +1485,9 @@ void arm_mem_store_word(arm_t *arm, uint32_t val, uint32_t addr) {
                         spsc_queue_clear(&arm->usart[1]);
                     }
                 }
+                return;
+            case 0x010: // SCR
+                scb->scr = val & (SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk);
                 return;
             case 0x01C: // SHP[0]
                 scb->shp[0] = val & UINT32_C(0xC0000000);
