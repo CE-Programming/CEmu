@@ -115,7 +115,7 @@ typedef union {
 } SERCOM_Type;
 
 typedef struct arm_mem {
-    uint32_t *ram, *nvm, pb[FLASH_PAGE_SIZE >> 2];
+    uint32_t *ram, *nvm, pb[FLASH_PAGE_SIZE >> 2], aux[FLASH_USER_PAGE_SIZE >> 2];
     PM_Type pm;
     GCLK_Type gclk;
     NVMCTRL_Type nvmctrl;
