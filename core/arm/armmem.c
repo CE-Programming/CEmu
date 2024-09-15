@@ -88,12 +88,15 @@ static bool arm_nvm_region_lock_check(arm_t *arm) {
     return false;
 }
 
+static bool arm_nvm_aux_region_check(arm_t *arm) {
+    return (arm->mem.nvmctrl.ADDR.bit.ADDR << 1 & -FLASH_USER_PAGE_SIZE) == NVMCTRL_USER - NVMCTRL_USER_PAGE_ADDRESS;
+}
+
 static void arm_nvm_clear_page_buffer(arm_mem_t *mem) {
     memset(mem->pb, ~0, FLASH_PAGE_SIZE);
 }
 
-static void arm_nvm_erase_row(arm_t *arm, bool aux) {
-    assert(!aux && "Not implemented");
+static void arm_nvm_erase_row(arm_t *arm) {
     if (likely(arm_nvm_region_lock_check(arm))) {
         memset(&arm->mem.nvm[(arm->mem.nvmctrl.ADDR.bit.ADDR << 1 &
                               (FLASH_SIZE - 1) & -FLASH_ROW_SIZE) >> 2],
@@ -101,13 +104,27 @@ static void arm_nvm_erase_row(arm_t *arm, bool aux) {
     }
 }
 
-static void arm_nvm_write_page(arm_t *arm, bool aux) {
-    uint32_t idx = (arm->mem.nvmctrl.ADDR.bit.ADDR << 1 &
-                    (FLASH_SIZE - 1) & -FLASH_PAGE_SIZE) >> 2;
-    assert(!aux && "Not implemented");
+static void arm_nvm_erase_aux_row(arm_t *arm) {
+    if (likely(arm_nvm_aux_region_check(arm))) {
+        memset(arm->mem.aux, ~0, FLASH_USER_PAGE_SIZE);
+    }
+}
+
+static void arm_nvm_write_page(arm_t *arm) {
     if (likely(arm_nvm_region_lock_check(arm))) {
+        uint32_t idx = (arm->mem.nvmctrl.ADDR.bit.ADDR << 1 &
+                        (FLASH_SIZE - 1) & -FLASH_PAGE_SIZE) >> 2;
         for (uint32_t off = 0; off != FLASH_PAGE_SIZE >> 2; ++off) {
             arm->mem.nvm[idx + off] &= arm->mem.pb[off];
+        }
+    }
+    arm_nvm_clear_page_buffer(&arm->mem);
+}
+
+static void arm_nvm_write_aux_page(arm_t *arm) {
+    if (likely(arm_nvm_aux_region_check(arm))) {
+        for (uint32_t off = 0; off != FLASH_USER_PAGE_SIZE >> 2; ++off) {
+            arm->mem.aux[off] &= arm->mem.pb[off];
         }
     }
     arm_nvm_clear_page_buffer(&arm->mem);
@@ -306,14 +323,11 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
         return arm->mem.nvm[(addr - FLASH_ADDR) >> 2];
     } else if (likely(addr - HMCRAMC0_ADDR < HMCRAMC0_SIZE)) { // Internal SRAM
         return arm->mem.ram[(addr - HMCRAMC0_ADDR) >> 2];
-    } else if (unlikely(addr < HPB0_ADDR)) {
-        if (addr - NVMCTRL_OTP1 < 8) {
-            return 0;
+    } else if (unlikely(addr < HPB0_ADDR)) { // Auxiliary Flash
+        if (addr - NVMCTRL_USER < FLASH_USER_PAGE_SIZE) {
+            return arm->mem.aux[(addr - NVMCTRL_USER) >> 2];
         }
-        if (addr - NVMCTRL_OTP2 < 8) {
-            return 0;
-        }
-        if (addr - NVMCTRL_OTP4 < 8) {
+        if (addr - NVMCTRL_OTP4 < 16) {
             return 0;
         }
         if (addr == 0x80A00C) {
@@ -801,21 +815,32 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
     uint8_t offset = addr >> 2 & 0xFF;
     assert(!((addr & 3) | (val & mask)) &&
            "Address should be aligned and mask should be valid");
-    if (unlikely(addr - FLASH_ADDR < FLASH_SIZE)) { // Page Buffer
+    if (likely(addr - HMCRAMC0_ADDR < HMCRAMC0_SIZE)) { // Internal SRAM
+        uint32_t *ptr = &arm->mem.ram[(addr - HMCRAMC0_ADDR) >> 2];
+        *ptr = (*ptr & mask) | val;
+        return;
+    } else if (unlikely(addr - FLASH_ADDR < FLASH_SIZE)) { // Page Buffer
         if (likely(!(mask & mask >> 16))) { // no 8-bit writes
             uint32_t *ptr = &arm->mem.pb[((addr - FLASH_ADDR) & (FLASH_PAGE_SIZE - 1)) >> 2];
             *ptr = (*ptr & mask) | val;
             arm->mem.nvmctrl.ADDR.bit.ADDR = (addr - FLASH_ADDR) >> 1 | (mask & 1);
             if (unlikely(!(mask >> 16) && !~(addr | -FLASH_PAGE_SIZE | 3) &&
-                         !arm->mem.nvmctrl.CTRLB.bit.MANW)) {
-                arm_nvm_write_page(arm, false);
+                !arm->mem.nvmctrl.CTRLB.bit.MANW)) {
+                arm_nvm_write_page(arm);
             }
             return;
         }
-    } else if (likely(addr - HMCRAMC0_ADDR < HMCRAMC0_SIZE)) { // Internal SRAM
-        uint32_t *ptr = &arm->mem.ram[(addr - HMCRAMC0_ADDR) >> 2];
-        *ptr = (*ptr & mask) | val;
-        return;
+    } else if (unlikely(addr - NVMCTRL_USER < FLASH_USER_PAGE_SIZE)) { // User Page Buffer
+        if (likely(!(mask & mask >> 16))) { // no 8-bit writes
+            uint32_t *ptr = &arm->mem.pb[((addr - NVMCTRL_USER) & (FLASH_USER_PAGE_SIZE - 1)) >> 2];
+            *ptr = (*ptr & mask) | val;
+            arm->mem.nvmctrl.ADDR.bit.ADDR = (addr - FLASH_USER_PAGE_ADDR) >> 1 | (mask & 1);
+            if (unlikely(!(mask >> 16) && !~(addr | -FLASH_USER_PAGE_SIZE | 3) &&
+                !arm->mem.nvmctrl.CTRLB.bit.MANW)) {
+                arm_nvm_write_aux_page(arm);
+            }
+            return;
+        }
     } else if (unlikely(addr < HPB0_ADDR)) {
     } else if (unlikely(addr < HPB1_ADDR)) { // Peripheral Bridge A
         uint32_t id = ID_PAC0 + ((addr - HPB0_ADDR) >> 10);
@@ -969,16 +994,16 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
                     if ((val & NVMCTRL_CTRLA_CMDEX_Msk) == NVMCTRL_CTRLA_CMDEX_KEY) {
                         switch (val & NVMCTRL_CTRLA_CMD_Msk) {
                             case NVMCTRL_CTRLA_CMD_ER:
-                                arm_nvm_erase_row(arm, false);
+                                arm_nvm_erase_row(arm);
                                 return;
                             case NVMCTRL_CTRLA_CMD_WP:
-                                arm_nvm_write_page(arm, false);
+                                arm_nvm_write_page(arm);
                                 return;
                             case NVMCTRL_CTRLA_CMD_EAR:
-                                arm_nvm_erase_row(arm, true);
+                                arm_nvm_erase_aux_row(arm);
                                 return;
                             case NVMCTRL_CTRLA_CMD_WAP:
-                                arm_nvm_write_page(arm, true);
+                                arm_nvm_write_aux_page(arm);
                                 return;
                             case NVMCTRL_CTRLA_CMD_SF:
                                 break;
