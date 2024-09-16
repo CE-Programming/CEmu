@@ -1128,6 +1128,10 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
             switch (offset) {
                 case (USB_CTRLA_OFFSET | USB_SYNCBUSY_OFFSET | USB_QOSCTRL_OFFSET) >> 2:
                     return;
+                case USB_DEVICE_EPSTATUSSET_OFFSET >> 2:
+                    return;
+                case USB_DEVICE_EPINTENSET_OFFSET >> 2:
+                    return;
             }
         } else if (addr < (uint32_t)SBMATRIX) { // MTB
             switch (offset) {
