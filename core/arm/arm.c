@@ -25,7 +25,7 @@ static int arm_thrd(void *context) {
         uint16_t val;
         do {
             arm_cpu_execute(arm);
-        } while (++i);
+        } while (++i && !arm->sync.slp);
         peek = spsc_queue_peek(&arm->usart[0]);
         if (unlikely(peek != SPSC_QUEUE_INVALID_ENTRY &&
                      arm_mem_usart_recv(arm, 3, peek))) {
@@ -150,6 +150,7 @@ bool arm_usart_send(arm_t *arm, uint8_t val) {
     bool success = spsc_queue_enqueue(&arm->usart[0], val);
     if (likely(success)) {
         (void)spsc_queue_flush(&arm->usart[0]);
+        debug_char(false, val);
     }
     return success;
 }
@@ -157,5 +158,8 @@ bool arm_usart_send(arm_t *arm, uint8_t val) {
 bool arm_usart_recv(arm_t *arm, uint8_t *val) {
     spsc_queue_entry_t entry = spsc_queue_dequeue(&arm->usart[1]);
     *val = entry;
+    if (entry != SPSC_QUEUE_INVALID_ENTRY) {
+        debug_char(true, *val);
+    }
     return entry != SPSC_QUEUE_INVALID_ENTRY;
 }
