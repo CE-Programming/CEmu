@@ -35,7 +35,7 @@ typedef union arm_cpu {
     struct {
         uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, ip, sp, lr, pc, altsp;
         uint64_t active;
-        bool v, c, z, n, pm, spsel, exc;
+        bool v, c, z, n, pm, spsel, exc, wfi;
         arm_systick_t systick;
         arm_nvic_t nvic;
         arm_scb_t scb;
