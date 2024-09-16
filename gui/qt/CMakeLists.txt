@@ -291,6 +291,9 @@ else()
     message(WARNING "No LibPNG found! APNG capture will not be available")
 endif()
 
+find_package(KDDockWidgets-qt6 CONFIG REQUIRED)
+target_link_libraries(CEmu PRIVATE KDAB::kdbindings KDAB::kddockwidgets)
+
 target_link_libraries(CEmu PRIVATE
     Qt::Core
     Qt::Gui

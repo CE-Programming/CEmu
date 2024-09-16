@@ -7,6 +7,7 @@
     "pkgconf",
     "libiconv",
     "libusb",
+    "kddockwidgets",
     {
       "name": "libarchive",
       "default-features": false
