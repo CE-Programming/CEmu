@@ -7,18 +7,27 @@
 #if !defined(__STDC_NO_ATOMICS__) || (defined(_MSC_VER) && _MSC_VER >= 1935)
  #include <stdatomic.h>
  #define atomic8_fetch_and atomic_fetch_and
+ #define atomic16_fetch_and atomic_fetch_and
  #define atomic32_fetch_and atomic_fetch_and
  #define atomic8_fetch_and_explicit atomic_fetch_and_explicit
+ #define atomic16_fetch_and_explicit atomic_fetch_and_explicit
  #define atomic32_fetch_and_explicit atomic_fetch_and_explicit
  #define atomic8_fetch_or atomic_fetch_or
+ #define atomic16_fetch_or atomic_fetch_or
  #define atomic32_fetch_or atomic_fetch_or
  #define atomic8_fetch_or_explicit atomic_fetch_or_explicit
+ #define atomic16_fetch_or_explicit atomic_fetch_or_explicit
  #define atomic32_fetch_or_explicit atomic_fetch_or_explicit
 #else
  #define _Atomic(X) volatile X /* doesn't do anything, but makes me feel better... although if you are trying to do multithreading glhf */
  #define atomic_load_explicit(object, order) (*(object))
 static inline uint8_t atomic8_fetch_and(volatile uint8_t *obj, uint8_t arg) {
     uint8_t result = *obj;
+    *obj = result & arg;
+    return result;
+}
+static inline uint16_t atomic16_fetch_and(volatile uint16_t *obj, uint16_t arg) {
+    uint16_t result = *obj;
     *obj = result & arg;
     return result;
 }
@@ -32,14 +41,21 @@ static inline uint8_t atomic8_fetch_or(volatile uint8_t *obj, uint8_t arg) {
     *obj = result | arg;
     return result;
 }
+static inline uint16_t atomic16_fetch_or(volatile uint16_t *obj, uint16_t arg) {
+    uint16_t result = *obj;
+    *obj = result | arg;
+    return result;
+}
 static inline uint32_t atomic32_fetch_or(volatile uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result | arg;
     return result;
 }
  #define atomic8_fetch_and_explicit(object, arg, order) atomic8_fetch_and(object, arg)
+ #define atomic16_fetch_and_explicit(object, arg, order) atomic16_fetch_and(object, arg)
  #define atomic32_fetch_and_explicit(object, arg, order) atomic32_fetch_and(object, arg)
  #define atomic8_fetch_or_explicit(object, arg, order) atomic8_fetch_or(object, arg)
+ #define atomic16_fetch_or_explicit(object, arg, order) atomic16_fetch_or(object, arg)
  #define atomic32_fetch_or_explicit(object, arg, order) atomic32_fetch_or(object, arg)
 #endif
 #else
@@ -54,6 +70,11 @@ static inline uint8_t atomic8_fetch_and(uint8_t *obj, uint8_t arg) {
     *obj = result & arg;
     return result;
 }
+static inline uint16_t atomic16_fetch_and(uint16_t *obj, uint16_t arg) {
+    uint16_t result = *obj;
+    *obj = result & arg;
+    return result;
+}
 static inline uint32_t atomic32_fetch_and(uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result & arg;
@@ -64,14 +85,21 @@ static inline uint8_t atomic8_fetch_or(uint8_t *obj, uint8_t arg) {
     *obj = result | arg;
     return result;
 }
+static inline uint16_t atomic16_fetch_or(uint16_t *obj, uint16_t arg) {
+    uint16_t result = *obj;
+    *obj = result | arg;
+    return result;
+}
 static inline uint32_t atomic32_fetch_or(uint32_t *obj, uint32_t arg) {
     uint32_t result = *obj;
     *obj = result | arg;
     return result;
 }
  #define atomic8_fetch_and_explicit(object, arg, order) atomic8_fetch_and(object, arg)
+ #define atomic16_fetch_and_explicit(object, arg, order) atomic16_fetch_and(object, arg)
  #define atomic32_fetch_and_explicit(object, arg, order) atomic32_fetch_and(object, arg)
  #define atomic8_fetch_or_explicit(object, arg, order) atomic8_fetch_or(object, arg)
+ #define atomic16_fetch_or_explicit(object, arg, order) atomic16_fetch_or(object, arg)
  #define atomic32_fetch_or_explicit(object, arg, order) atomic32_fetch_or(object, arg)
 #endif
 

@@ -18,7 +18,7 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE0018
+#define IMAGE_VERSION 0xCECE0019
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu_set_signal(CPU_SIGNAL_EXIT);

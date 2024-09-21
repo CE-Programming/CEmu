@@ -18,7 +18,7 @@
 keypad_state_t keypad;
 
 typedef struct keypad_atomics {
-    _Atomic(uint32_t) keyMap[KEYPAD_MAX_ROWS];
+    _Atomic(uint16_t) keyMap[KEYPAD_ACTUAL_ROWS];
     _Atomic(uint8_t) onKey;
 } keypad_atomics_t;
 
@@ -32,14 +32,91 @@ static inline uint8_t keypad_row_limit() {
     return keypad.rows >= KEYPAD_MAX_ROWS ? KEYPAD_MAX_ROWS : keypad.rows;
 }
 
+static inline uint8_t keypad_actual_row_limit() {
+    return keypad.rows >= KEYPAD_ACTUAL_ROWS ? KEYPAD_ACTUAL_ROWS : keypad.rows;
+}
+
 static inline uint16_t keypad_data_mask() {
-    uint8_t colLimit = keypad.cols >= KEYPAD_MAX_COLS ? KEYPAD_MAX_COLS : keypad.cols;
+    uint8_t colLimit = keypad.cols >= KEYPAD_ACTUAL_COLS ? KEYPAD_ACTUAL_COLS : keypad.cols;
     return (1 << colLimit) - 1;
 }
 
-static inline uint16_t keypad_query_keymap(uint8_t row) {
-    uint32_t data = atomic32_fetch_and_explicit(&keypad_atomics.keyMap[row], (1 << KEYPAD_MAX_COLS) - 1, memory_order_relaxed);
-    return (data | data >> KEYPAD_MAX_COLS) & ((1 << KEYPAD_MAX_COLS) - 1);
+static inline uint8_t keypad_query_keymap(uint8_t row) {
+    uint32_t data = atomic16_fetch_and_explicit(&keypad_atomics.keyMap[row], (1 << KEYPAD_ACTUAL_COLS) - 1, memory_order_relaxed);
+    return (data | data >> KEYPAD_ACTUAL_COLS) & ((1 << KEYPAD_ACTUAL_COLS) - 1);
+}
+
+static inline uint8_t keypad_peek_keymap(uint8_t row) {
+    uint32_t data = atomic_load_explicit(&keypad_atomics.keyMap[row], memory_order_relaxed);
+    return data & ((1 << KEYPAD_ACTUAL_COLS) - 1);
+}
+
+static uint64_t matrix_transpose(uint64_t matrix) {
+    /* See Hacker's Delight 2nd edition section 7-3 */
+    uint64_t temp;
+
+    /* Transpose 2x2 submatrices */
+    temp = (matrix ^ (matrix >> 7)) & UINT64_C(0x00AA00AA00AA00AA);
+    matrix ^= temp ^ (temp << 7);
+    /* Transpose 4x4 submatrices */
+    temp = (matrix ^ (matrix >> 14)) & UINT64_C(0x0000CCCC0000CCCC);
+    matrix ^= temp ^ (temp << 14);
+    /* Transpose 8x8 matrix */
+    temp = (matrix ^ (matrix >> 28)) & UINT64_C(0x00000000F0F0F0F0);
+    matrix ^= temp ^ (temp << 28);
+
+    return matrix;
+}
+
+static uint64_t matrix_mul(uint64_t a, uint64_t b) {
+    uint64_t result = 0;
+    do {
+        result |= (a & UINT64_C(0x0101010101010101)) * (uint8_t)b;
+        a >>= 1;
+        b >>= 8;
+    } while (b);
+    return result;
+}
+
+static uint8_t keypad_handle_ghosting(uint8_t data, uint8_t queryMask) {
+    /* build a bit matrix with the initial data as the first row */
+    uint64_t ghostMatrix = data;
+    uint8_t peekRows = 0;
+    uint8_t ghostData = 0;
+    uint8_t shift = 0;
+    for (uint8_t row = 0; row < KEYPAD_ACTUAL_ROWS; row++) {
+        if (!(queryMask & (1 << row))) {
+            uint8_t peekData = keypad_peek_keymap(row);
+            /* only rows with at least two bits set can contribute to ghosting */
+            if (peekData & (peekData - 1)) {
+                ghostData |= peekData;
+                ghostMatrix |= (uint64_t)peekData << (++peekRows * 8);
+            }
+        }
+    }
+    if ((data & ghostData) == 0) {
+        /* if no other rows have keys pressed in the same columns, ghosting is impossible */
+        return data;
+    } else if (--peekRows == 0) {
+        /* if exactly one other row has keys pressed in the same columns, combine directly */
+        return data | ghostData;
+    }
+    /* now determine the reachable columns when treating the keypresses as a biadjacency matrix */
+    /* first get a row adjacency matrix by multiplying the biadjacency matrix by its transpose */
+    uint64_t adjacency = matrix_mul(ghostMatrix, matrix_transpose(ghostMatrix));
+    /* repeatedly double the number of steps to get reachability to all peeked rows */
+    do {
+        adjacency = matrix_mul(adjacency, adjacency);
+    } while (peekRows >>= 1);
+    /* get mask of reachability from the first row (which is also the first column in the adjacency matrix) */
+    adjacency &= UINT64_C(0x0101010101010101);
+    adjacency = (adjacency << 8) - adjacency;
+    /* combine columns from all reachable rows */
+    ghostMatrix &= adjacency;
+    uint32_t ghostMatrix32 = ghostMatrix | (ghostMatrix >> 32);
+    uint16_t ghostMatrix16 = ghostMatrix32 | (ghostMatrix32 >> 16);
+    uint8_t ghostMatrix8 = ghostMatrix16 | (ghostMatrix16 >> 8);
+    return ghostMatrix8 & (1 << KEYPAD_ACTUAL_COLS) - 1;
 }
 
 void keypad_any_check(void) {
@@ -47,16 +124,30 @@ void keypad_any_check(void) {
     if (keypad.mode != 1) {
         return;
     }
-    uint16_t any = 0;
-    uint8_t rowLimit = keypad_row_limit();
+    uint16_t any = 0, mask = keypad.mask;
+    uint8_t rowLimit = keypad_actual_row_limit();
+    uint8_t queryMask = mask & ((1 << rowLimit) - 1);
     for (row = 0; row < rowLimit; row++) {
-        any |= keypad_query_keymap(row);
+        if (queryMask & (1 << row)) {
+            any |= keypad_query_keymap(row);
+        }
     }
-    any &= keypad_data_mask();
+    uint16_t dataMask = keypad_data_mask();
+    /* if not all rows were queried, ghosting is possible */
+    if (unlikely(queryMask != (1 << KEYPAD_ACTUAL_ROWS) - 1)) {
+        /* if at least one key was pressed and not every data bit is filled, ghosting is possible */
+        if (any != 0 && (any & dataMask) != dataMask) {
+            any = keypad_handle_ghosting(any, queryMask);
+        }
+    }
+    any &= dataMask;
+    rowLimit = keypad_row_limit();
     for (row = 0; row < rowLimit; row++) {
-        keypad.data[row] = any;
+        if (mask & (1 << row)) {
+            keypad.data[row] = any;
+        }
     }
-    if (any) {
+    if (any & mask) {
         keypad.status |= 4;
         keypad_intrpt_check();
     }
@@ -83,13 +174,13 @@ void EMSCRIPTEN_KEEPALIVE emu_keypad_event(unsigned int row, unsigned int col, b
             atomic8_fetch_and_explicit(&keypad_atomics.onKey, ~ON_KEY_PRESSED, memory_order_relaxed);
         }
         cpu_set_signal(CPU_SIGNAL_ON_KEY);
-    } else if (row < KEYPAD_MAX_ROWS && col < KEYPAD_MAX_COLS) {
+    } else if (row < KEYPAD_ACTUAL_ROWS && col < KEYPAD_ACTUAL_COLS) {
         if (press) {
-            atomic32_fetch_or_explicit(&keypad_atomics.keyMap[row], (1 | 1 << KEYPAD_MAX_COLS) << col, memory_order_relaxed);
-            cpu_set_signal(CPU_SIGNAL_ANY_KEY);
+            atomic16_fetch_or_explicit(&keypad_atomics.keyMap[row], (1 | 1 << KEYPAD_ACTUAL_COLS) << col, memory_order_relaxed);
         } else {
-            atomic32_fetch_and_explicit(&keypad_atomics.keyMap[row], ~(1 << col), memory_order_relaxed);
+            atomic16_fetch_and_explicit(&keypad_atomics.keyMap[row], ~(1 << col), memory_order_relaxed);
         }
+        cpu_set_signal(CPU_SIGNAL_ANY_KEY);
     }
 }
 
@@ -133,7 +224,16 @@ static void keypad_scan_event(enum sched_item_id id) {
     uint8_t row = keypad.row++;
     if (row < keypad_row_limit()) {
         /* scan each data row */
-        uint16_t data = keypad_query_keymap(row) & keypad_data_mask();
+        uint16_t data = 0;
+        if (row < KEYPAD_ACTUAL_ROWS) {
+            data = keypad_query_keymap(row);
+            uint16_t dataMask = keypad_data_mask();
+            /* if at least one key was pressed and not every data bit is filled, ghosting is possible */
+            if (data != 0 && (data & dataMask) != dataMask) {
+                data = keypad_handle_ghosting(data, 1 << row);
+            }
+            data &= dataMask;
+        }
 
         /* if mode 3 or 2, generate data change interrupt */
         if (keypad.data[row] != data) {
@@ -173,6 +273,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x01:
             write8(keypad.size, bit_offset, byte);
+            keypad_any_check();
             break;
         case 0x02:
             write8(keypad.status, bit_offset, keypad.status >> bit_offset & ~byte);
@@ -186,8 +287,10 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x04: case 0x05: case 0x06: case 0x07:
         case 0x08: case 0x09: case 0x0A: case 0x0B:
             if (poke) {
-                write8(keypad.data[(pio - 0x10) >> 1 & 15], pio << 3 & 8, byte);
-                write8(keypad_atomics.keyMap[pio >> 1 & 15], pio << 3 & 8, byte);
+                write8(keypad.data[(pio - 0x10) >> 1 & (KEYPAD_MAX_ROWS - 1)], pio << 3 & 8, byte);
+                if ((pio & 0x21) == 0) {
+                    write8(keypad_atomics.keyMap[pio >> 1 & (KEYPAD_ACTUAL_ROWS - 1)], 0, byte);
+                }
             }
             break;
         case 0x10:
@@ -205,6 +308,7 @@ static void keypad_init_events(void) {
 
 void keypad_reset(void) {
     keypad.row = 0;
+    keypad.mask = 0xFFFF;
 
     keypad_init_events();
 

@@ -14,6 +14,8 @@ extern "C" {
 
 #define KEYPAD_MAX_COLS 16
 #define KEYPAD_MAX_ROWS 16
+#define KEYPAD_ACTUAL_COLS 8
+#define KEYPAD_ACTUAL_ROWS 8
 
 typedef struct keypad_state {
     union {
@@ -29,9 +31,9 @@ typedef struct keypad_state {
     union {
         struct {
 #if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
-            uint32_t rows : 8, cols : 8, : 16;
+            uint32_t rows : 8, cols : 8, mask : 16;
 #else
-            uint32_t : 16, cols : 8, rows : 8;
+            uint32_t mask : 16, cols : 8, rows : 8;
 #endif
         };
         uint32_t size;
