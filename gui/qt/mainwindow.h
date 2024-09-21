@@ -401,6 +401,7 @@ private:
     void keypadChanged();
     void setKeymap(const QString &value);
     void setKeypadColor(unsigned int color);
+    void setKeypadGhosting(bool enabled);
     void setKeypadHolding(bool enabled);
     void setCalcSkinTopFromType(bool python);
 
@@ -750,6 +751,7 @@ private:
     static const QString SETTING_SCREEN_RESPONSE;
     static const QString SETTING_KEYPAD_KEYMAP;
     static const QString SETTING_KEYPAD_COLOR;
+    static const QString SETTING_KEYPAD_GHOSTING;
     static const QString SETTING_KEYPAD_HOLDING;
     static const QString SETTING_WINDOW_FULLSCREEN;
     static const QString SETTING_WINDOW_GROUP_DRAG;

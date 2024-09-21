@@ -56,6 +56,7 @@ bool keypad_save(FILE *image);
 
 /* api functions */
 void emu_keypad_event(unsigned int row, unsigned int col, bool press);
+void emu_set_keypad_ghosting(int enable);
 
 #ifdef __cplusplus
 }

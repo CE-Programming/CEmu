@@ -9607,14 +9607,38 @@ QPushButton:pressed {
                 </layout>
                </item>
                <item>
-                <widget class="QCheckBox" name="checkPythonEdition">
-                 <property name="text">
-                  <string>Emulate Python Edition</string>
-                 </property>
-                 <property name="tristate">
-                  <bool>true</bool>
-                 </property>
-                </widget>
+                <layout class="QHBoxLayout" name="horizontalLayout_31">
+                 <item>
+                  <widget class="QCheckBox" name="checkPythonEdition">
+                   <property name="text">
+                    <string>Emulate Python Edition</string>
+                   </property>
+                   <property name="tristate">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="checkKeypadGhosting">
+                   <property name="text">
+                    <string>Emulate keypad ghosting</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_30">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_16">

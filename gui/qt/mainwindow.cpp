@@ -382,6 +382,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
     connect(ui->comboBoxAsicRev, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setAsicRevision);
     connect(ui->checkPythonEdition, &QCheckBox::stateChanged, this, &MainWindow::setPythonEdition);
+    connect(ui->checkKeypadGhosting, &QCheckBox::stateChanged, this, &MainWindow::setKeypadGhosting);
     connect(ui->checkDma, &QCheckBox::toggled, this, &MainWindow::setLcdDma);
     connect(ui->checkGamma, &QCheckBox::toggled, this, &MainWindow::setLcdGamma);
     connect(ui->checkResponse, &QCheckBox::toggled, this, &MainWindow::setLcdResponse);
@@ -592,6 +593,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setLcdGamma(m_config->value(SETTING_SCREEN_GAMMA, true).toBool());
     setLcdResponse(m_config->value(SETTING_SCREEN_RESPONSE, true).toBool());
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
+    setKeypadGhosting(m_config->value(SETTING_KEYPAD_GHOSTING, true).toBool());
     setKeypadHolding(m_config->value(SETTING_KEYPAD_HOLDING, true).toBool());
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
     ui->checkSaveRestore->setChecked(m_config->value(SETTING_SAVE_ON_CLOSE, true).toBool());

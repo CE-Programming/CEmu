@@ -7,6 +7,7 @@
 
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
+#include "../../core/keypad.h"
 #include "../../core/debug/debug.h"
 
 #include <cmath>
@@ -65,6 +66,7 @@ const QString MainWindow::SETTING_SCREEN_RESPONSE           = QStringLiteral("Sc
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
 const QString MainWindow::SETTING_KEYPAD_CUSTOM_PATH        = QStringLiteral("Keypad/custom_path");
+const QString MainWindow::SETTING_KEYPAD_GHOSTING           = QStringLiteral("Keypad/ghosting");
 const QString MainWindow::SETTING_KEYPAD_HOLDING            = QStringLiteral("Keypad/holding");
 const QString MainWindow::SETTING_WINDOW_GROUP_DRAG         = QStringLiteral("Window/group_dock_drag");
 const QString MainWindow::SETTING_WINDOW_FULLSCREEN         = QStringLiteral("Window/fullscreen");
@@ -493,6 +495,12 @@ void MainWindow::setFont(int fontSize) {
 void MainWindow::setKeypadColor(unsigned int color) {
     ui->keypadWidget->setType(get_device_type(), color);
     m_config->setValue(SETTING_KEYPAD_COLOR, color);
+}
+
+void MainWindow::setKeypadGhosting(bool state) {
+    ui->checkKeypadGhosting->setChecked(state);
+    emu_set_keypad_ghosting(state);
+    m_config->setValue(SETTING_KEYPAD_GHOSTING, state);
 }
 
 void MainWindow::setKeypadHolding(bool enabled) {

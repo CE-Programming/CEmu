@@ -20,9 +20,14 @@ keypad_state_t keypad;
 typedef struct keypad_atomics {
     _Atomic(uint16_t) keyMap[KEYPAD_ACTUAL_ROWS];
     _Atomic(uint8_t) onKey;
+    _Atomic(bool) ghosting;
 } keypad_atomics_t;
 
 static keypad_atomics_t keypad_atomics;
+
+void emu_set_keypad_ghosting(int enable) {
+    keypad_atomics.ghosting = enable;
+}
 
 static inline void keypad_intrpt_check() {
     intrpt_set(INT_KEYPAD, keypad.status & keypad.enable);
@@ -134,7 +139,8 @@ void keypad_any_check(void) {
     }
     uint16_t dataMask = keypad_data_mask();
     /* if not all rows were queried, ghosting is possible */
-    if (unlikely(queryMask != (1 << KEYPAD_ACTUAL_ROWS) - 1)) {
+    if (unlikely(queryMask != (1 << KEYPAD_ACTUAL_ROWS) - 1) &&
+        atomic_load_explicit(&keypad_atomics.ghosting, memory_order_relaxed)) {
         /* if at least one key was pressed and not every data bit is filled, ghosting is possible */
         if (any != 0 && (any & dataMask) != dataMask) {
             any = keypad_handle_ghosting(any, queryMask);
@@ -229,7 +235,8 @@ static void keypad_scan_event(enum sched_item_id id) {
             data = keypad_query_keymap(row);
             uint16_t dataMask = keypad_data_mask();
             /* if at least one key was pressed and not every data bit is filled, ghosting is possible */
-            if (data != 0 && (data & dataMask) != dataMask) {
+            if (atomic_load_explicit(&keypad_atomics.ghosting, memory_order_relaxed) &&
+                data != 0 && (data & dataMask) != dataMask) {
                 data = keypad_handle_ghosting(data, 1 << row);
             }
             data &= dataMask;
