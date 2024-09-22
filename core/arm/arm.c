@@ -35,7 +35,7 @@ static int arm_thrd(void *context) {
         }
         if (unlikely(spsc_queue_flush(&arm->usart[1]) &&
                      arm_mem_usart_send(arm, 3, &val))) {
-            bool success = spsc_queue_enqueue(&arm->usart[0], val);
+            bool success = spsc_queue_enqueue(&arm->usart[1], val);
             (void)success;
             assert(success && "Already successfully flushed, so can't fail");
         }
