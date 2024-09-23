@@ -3,6 +3,7 @@
 
 #include "keyconfig.h"
 #include "key.h"
+class CalculatorWidget;
 
 #include <QtCore/QList>
 #include <QtCore/QMultiHash>
@@ -16,26 +17,42 @@ class QEvent;
 class QMouseEvent;
 QT_END_NAMESPACE
 
-enum keypad_colors { KEYPAD_BLACK=0, KEYPAD_WHITE, KEYPAD_TRUE_BLUE, KEYPAD_DENIM, KEYPAD_SILVER, KEYPAD_PINK, KEYPAD_PLUM, KEYPAD_RED, KEYPAD_LIGHTNING, KEYPAD_GOLDEN, KEYPAD_SPACEGREY, KEYPAD_CORAL, KEYPAD_MINT, KEYPAD_ROSEGOLD, KEYPAD_CRYSTALCLEAR, KEYPAD_MATTEBLACK, KEYPAD_TANGENTTEAL, KEYPAD_TOTALLYTEAL };
-
-class KeypadWidget : public QWidget {
+class KeypadWidget : public QWidget
+{
     Q_OBJECT
 
 public:
-    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, cclrBackground{Qt::gray}, mKeys{} {
-        setAttribute(Qt::WA_AcceptTouchEvents);
-        cclrBackground.setAlpha(100);
-        keypadPath.setFillRule(Qt::WindingFill);
-        keypadPath.addRoundedRect(sBaseRect, 20, 20);
-        keypadPath.addRect(QRect(0, 0, 20, 20));
-        keypadPath.addRect(QRect(sBaseRect.width()-20, 0, 20, 20));
-        keypadPath = keypadPath.simplified();
-    }
+    explicit KeypadWidget(CalculatorWidget *parent);
     virtual ~KeypadWidget();
+    CalculatorWidget *parent() const;
 
-    void setType(bool, unsigned int);
+    enum class Color {
+        Black,
+        White,
+        TrueBlue,
+        Denim,
+        Silver,
+        Pink,
+        Plum,
+        Red,
+        Lightning,
+        Gold,
+        SpaceGrey,
+        Coral,
+        Mint,
+        RoseGold,
+        CrystalClear,
+        MatteBlack,
+        TangentTeal,
+        TotallyTeal
+    };
+
+    Color color();
+    void setColor(Color color);
+    void setType(bool is83);
     void setHolding(bool);
-    unsigned getCurrColor(void);
+
+    static const QRect sBaseRect;
 
 signals:
     void keyPressed(const QString& key);
@@ -56,13 +73,14 @@ public slots:
 private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
+    void reset();
 
-    unsigned int color = KEYPAD_BLACK;
+    Color mColor = KeypadWidget::Color::Black;
+    bool m83 = false;
     bool mHoldingEnabled = true;
     QColor cclrBackground;
     QPainterPath keypadPath;
     static const size_t sRows{8}, sCols{8};
-    static const QRect sBaseRect;
     KeyConfig mConfig;
     QLinearGradient mBackground;
     QTransform mTransform, mInverseTransform;
@@ -72,7 +90,6 @@ private:
 #ifndef Q_OS_WIN
     int fontId = -2;
 #endif
-    QColor cCenter, cSides, cNum, cText, cOther, cGraph;
 };
 
 #endif

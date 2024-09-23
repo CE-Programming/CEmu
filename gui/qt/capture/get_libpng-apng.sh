@@ -28,15 +28,14 @@
 becho() { echo -e "\033[1m$@\033[0m"; }
 cerr() { becho "An error occurred. Please see output above for details." && exit 1; }
 
-dlLibPNG() { curl -s -L -O "https://downloads.sourceforge.net/sourceforge/libpng/libpng-$1.tar.xz"; }
-
-LIBPNG_VERSION_CONSTANT="1.6.43"
+LIBPNG_VERSION_CONSTANT="1.6.34"
 
 becho " ** Detecting latest version of libpng..."
 
-# We do this from the latest available APNG patch
-LIBPNG_VERSION=$(curl -L -s 'https://sourceforge.net/projects/libpng-apng/rss?path=/' -H 'User-Agent: Mozilla' |
-                 grep -oh -m1 'libpng-1\..\...\?-apng.patch.gz' | grep -oh '1\..\...\?')
+LIBPNG_VERSION=$(curl -L -s 'https://sourceforge.net/p/libpng/code/ref/master/tags/' |
+                     sed -n 's,.*<a[^>]*>v\([0-9][^<]*\)<.*,\1,p' |
+                     grep -v alpha | grep -v beta | grep -v rc | 
+                     sort -t. -s -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr | head -n1 | tail -1)
 
 ([ ! "$?" = "0" ] || [ -z "$LIBPNG_VERSION" ]) && becho "Couldn't autodetect latest libpng, using v$LIBPNG_VERSION_CONSTANT." && LIBPNG_VERSION="$LIBPNG_VERSION_CONSTANT"
 
@@ -46,29 +45,10 @@ sleep 3
 
 # Download libpng
 becho " ** Downloading libpng..."
-dlLibPNG ${LIBPNG_VERSION}
-if [ $? -ne 0 ]; then
-    if [ "$LIBPNG_VERSION" != "$LIBPNG_VERSION_CONSTANT" ]; then
-        becho "The download failed, let's try again with v$LIBPNG_VERSION_CONSTANT just in case..."
-        LIBPNG_VERSION="$LIBPNG_VERSION_CONSTANT"
-        dlLibPNG ${LIBPNG_VERSION} || cerr
-    else
-        cerr
-    fi
-fi
+curl -s -L -O "https://downloads.sourceforge.net/sourceforge/libpng/libpng-${LIBPNG_VERSION}.tar.xz" || cerr
 
 becho " ** Extracting libpng..."
-tar -xJf libpng-${LIBPNG_VERSION}.tar.xz
-if [ $? -ne 0 ]; then
-    if [ "$LIBPNG_VERSION" != "$LIBPNG_VERSION_CONSTANT" ]; then
-        becho "The download failed, let's try again with v$LIBPNG_VERSION_CONSTANT just in case..."
-        LIBPNG_VERSION="$LIBPNG_VERSION_CONSTANT"
-        dlLibPNG ${LIBPNG_VERSION} || cerr
-        tar -xJf libpng-${LIBPNG_VERSION}.tar.xz || cerr
-    else
-        cerr
-    fi
-fi
+tar -xJf libpng-${LIBPNG_VERSION}.tar.xz || cerr
 
 becho " ** Cleaning up libpng archive..."
 rm -f libpng-${LIBPNG_VERSION}.tar.xz || cerr
@@ -90,8 +70,7 @@ rm -f ../libpng-${LIBPNG_VERSION}-apng.patch || cerr
 
 # Build libpng-apng
 becho " ** Configuring libpng-apng..."
-export MACOSX_DEPLOYMENT_TARGET=10.15
-autoreconf -vif && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" || cerr
+./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" || cerr
 
 becho " ** Building libpng-apng..."
 make -j2 || cerr

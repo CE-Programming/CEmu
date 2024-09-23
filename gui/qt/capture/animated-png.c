@@ -9,13 +9,10 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#if defined(_MSC_VER) && !defined(__clang__)
-#include <intrin.h>
-#endif
 
 #include "../../core/schedule.h"
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#ifdef _MSC_VER
 static inline int clzll(unsigned long long input_num) {
     unsigned long index;
 #ifdef _WIN64
@@ -34,18 +31,18 @@ static inline int clzll(unsigned long long input_num) {
 #define clzll(x) __builtin_clzll(x)
 #endif
 
-static apng_t apng;
+apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
-    /* temp file used for saving rgb888 data rather than storing everything in ram */
+    // temp file used for saving rgb888 data rather than storing everything in ram
     if (!(apng.tmp = fopen(tmp_name, "w+b"))) {
         return false;
     }
 
-    /* set frameskip rate */
-    apng.frameskip = (unsigned int)frameskip + 1;
+    // set frameskip rate
+    apng.frameskip = frameskip + 1;
 
-    /* init recording items */
+    // init recording items
     apng.recording = true;
     apng.skipped = 0;
     apng.n = 0;
@@ -56,8 +53,8 @@ bool apng_start(const char *tmp_name, int frameskip) {
 static void apng_write_delay(void) {
     uint64_t time = sched_total_time(CLOCK_48M) - apng.prev_time;
     int logo = 48 - clzll(time);
-    uint64_t shift = logo > 10 ? (uint64_t)logo : 10;
-    png_uint_16 num = time >> shift, den = sched_get_clock_rate(CLOCK_48M) >> shift;
+    uint64_t shift = logo > 10 ? logo : 10;
+    png_uint_16 num = time >> shift, den = sched.clockRates[CLOCK_48M] >> shift;
     fwrite(&num, sizeof(num), 1, apng.tmp);
     fwrite(&den, sizeof(den), 1, apng.tmp);
     apng.prev_time += num << shift;
@@ -99,16 +96,15 @@ bool apng_save(const char *filename, bool optimize) {
     png_colorp palette;
     png_color_16 trans;
     FILE *f;
-    uint32_t count = ~0, pixel = 0;
-    bool have_trans = false;
-    uint32_t i, j, probe, hash;
+
+    bool have_trans = true;
+    uint32_t count = ~0, pixel = 0, i, j, probe, hash;
     int x, y;
     struct { int x[2], y[2]; } frame;
 
     if (optimize) {
         rewind(apng.tmp);
         memset(apng.table, 0, sizeof(apng.table));
-        have_trans = true;
         count = 1;
         for (i = 0; i != apng.n; i++) {
             for (j = 0; j != LCD_SIZE; j++) {
@@ -131,7 +127,7 @@ bool apng_save(const char *filename, bool optimize) {
                 hash = pixel % TABLE_SIZE;
                 probe = 1;
                 while (true) {
-                    if (!apng.table[hash]) { /* empty */
+                    if (!apng.table[hash]) { // empty
                         apng.table[hash] = count++ << 24 | (pixel & UINT32_C(0xFFFFFF));
                         break;
                     }
@@ -175,16 +171,16 @@ bool apng_save(const char *filename, bool optimize) {
         for (i = 0; i != TABLE_SIZE; i++) {
             if (apng.table[i]) {
                 j = apng.table[i] >> 24;
-                palette[j].red = apng.table[i] >> 16;
+                palette[j].red = apng.table[i];
                 palette[j].green = apng.table[i] >> 8;
-                palette[j].blue = apng.table[i];
+                palette[j].blue = apng.table[i] >> 16;
             }
         }
-        palette[0].red = palette[0].green = palette[0].blue = 0; /* transparent */
+        palette[0].red = palette[0].green = palette[0].blue = 0; // transparent
         png_set_PLTE(png_ptr, info_ptr, palette, count);
         png_set_tRNS(png_ptr, info_ptr, &palette[0].red, 1, NULL);
     } else if (have_trans) {
-        trans.red = trans.green = trans.blue = 0xFE; /* transparent */
+        trans.red = trans.green = trans.blue = 0xFE; // transparent
         png_set_tRNS(png_ptr, info_ptr, NULL, 0, &trans);
     }
 
@@ -193,12 +189,7 @@ bool apng_save(const char *filename, bool optimize) {
     if (count <= 1 << 8) {
         png_set_packing(png_ptr);
     } else {
-#if CEMU_BYTE_ORDER == CEMU_LITTLE_ENDIAN
-        png_set_bgr(png_ptr);
         png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
-#else
-        png_set_filler(png_ptr, 0, PNG_FILLER_BEFORE);
-#endif
     }
 
     for (i = 0; i != apng.n; i++) {
@@ -211,7 +202,7 @@ bool apng_save(const char *filename, bool optimize) {
         frame.x[1] = frame.y[1] = 0;
         prev = &apng.prev[0][0];
         cur = &apng.frame[0][0];
-        if (count <= 1 << 8) {
+	if (count <= 1 << 8) {
             dst = (png_bytep)cur;
             for (y = 0; y != LCD_HEIGHT; y++) {
                 apng.row_ptrs[y] = dst;
@@ -254,16 +245,6 @@ bool apng_save(const char *filename, bool optimize) {
                     cur++;
                 }
             }
-
-            /* Hack around libpng-apng bug that doesn't like 1 row frames */
-            if (frame.y[0] == frame.y[1]) {
-                if (frame.y[0]) {
-                    --frame.y[0];
-                } else {
-                    ++frame.y[1];
-                }
-            }
-
             if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
                 frame.x[0] = frame.y[0] = 0;
                 frame.x[1] = frame.y[1] = -1;
@@ -298,17 +279,8 @@ bool apng_save(const char *filename, bool optimize) {
                     cur++;
                 }
             }
-
-            /* Hack around libpng-apng bug that doesn't like 1 row frames */
-            if (frame.y[0] == frame.y[1]) {
-                if (frame.y[0]) {
-                    --frame.y[0];
-                } else {
-                    ++frame.y[1];
-                }
-            }
-
             if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
+                printf("zero on frame %u/%u\n", i, apng.n);
                 frame.x[0] = frame.y[0] = 0;
                 frame.x[1] = frame.y[1] = -1;
             }
@@ -333,9 +305,5 @@ err:
 
     return true;
 }
-
-#else
-
-#warning "LibPNG APNG functions not available - Animated PNG capture will not be available"
 
 #endif

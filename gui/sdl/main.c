@@ -15,31 +15,19 @@ typedef struct {
 typedef struct {
     char *rom;
     char *image;
-    int dma;
-    int gamma;
+    int spi;
     int limit;
     int fullscreen;
     sdl_t sdl;
 } cemu_sdl_t;
 
 static const cemu_sdl_key_t *keymap = cemu_keymap;
-static asic_rev_t asic_rev = ASIC_REV_AUTO;
-static int8_t python_rev = -1;
 
 void gui_console_clear() {}
 void gui_console_printf(const char *format, ...) { (void)format; }
 void gui_console_err_printf(const char *format, ...) { (void)format; }
-asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
-    (void)boot_ver;
-    (void)loaded_rev;
-    (void)default_rev;
-    if (python_rev >= 0) {
-        *python = python_rev;
-    }
-    return asic_rev;
-}
 
-bool sdl_update_lcd(void *data) {
+void sdl_update_lcd(void *data) {
     sdl_t *sdl = (sdl_t*)data;
     void *pixels;
     int pitch;
@@ -48,14 +36,12 @@ bool sdl_update_lcd(void *data) {
         emu_lcd_drawframe(pixels);
         SDL_UnlockTexture(sdl->texture);
     }
-    return true;
 }
 
 void sdl_cemu_configure(cemu_sdl_t *cemu) {
     emu_set_run_rate(1000);
     emu_set_lcd_callback(sdl_update_lcd, &cemu->sdl);
-    emu_set_lcd_dma(cemu->dma);
-    emu_set_lcd_gamma(cemu->gamma);
+    emu_set_lcd_spi(cemu->spi);
 }
 
 bool sdl_cemu_load(cemu_sdl_t *cemu) {
@@ -93,7 +79,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not create renderer: %s\n", SDL_GetError());
         return;
     }
-    sdl->texture = SDL_CreateTexture(sdl->renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, LCD_WIDTH, LCD_HEIGHT);
+    sdl->texture = SDL_CreateTexture(sdl->renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, LCD_WIDTH, LCD_HEIGHT);
     if (sdl->texture == NULL) {
         fprintf(stderr, "could not create texture: %s\n", SDL_GetError());
         return;
@@ -132,7 +118,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         emu_run(actual_ticks);
 
         if (control.ports[5] & 1 << 4) {
-            uint8_t brightness = (!cemu->dma && backlight.factor < 1.0f) ? (uint8_t)(backlight.factor * 255.0f) : 255;
+            uint8_t brightness = backlight.factor < 1 ? backlight.factor * 255 : 255;
             SDL_SetTextureColorMod(sdl->texture, brightness, brightness, brightness);
             SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
         } else {
@@ -164,7 +150,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                                 break;
                         }
                     }
-                    fallthrough;
+                    // fallthrough
                 case SDL_KEYUP:
                     for (const cemu_sdl_key_t *key = keymap; key && (key->row | key->col) >= 0; key++) {
                         if (keysyms_match(&key->keysym, &event.key.keysym, event.type == SDL_KEYUP)) {
@@ -206,8 +192,7 @@ int main(int argc, char **argv) {
     cemu.fullscreen = 0;
     cemu.image = NULL;
     cemu.rom = NULL;
-    cemu.dma = 1;
-    cemu.gamma = 0;
+    cemu.spi = 0;
 
     for (;;) {
         int c;
@@ -219,26 +204,17 @@ int main(int argc, char **argv) {
             {"rom",        required_argument, 0,  'r' },
             {"image",      required_argument, 0,  'i' },
             {"limit",      required_argument, 0,  'l' },
-            {"nodma",      no_argument,       0,  'd' },
-            {"gamma",      no_argument,       0,  'g' },
+            {"spi",        no_argument,       0,  's' },
             {"keymap",     required_argument, 0,  'k' },
-            {"asic",       required_argument, 0,  'a' },
-            {"python",     no_argument,       0,  'p' },
-            {"nonpython",  no_argument,       0,  'P' },
-            {}
+            {"yum",        no_argument,       0,  'y' },
         };
 
-        c = getopt_long(argc, argv, "fr:i:l:dgk:a:pP", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:l:sk:y", long_options, &option_index);
         if (c == -1) {
             break;
         }
 
         switch (c) {
-            case 'f':
-                fprintf(stdout, "fullscreen: yes\n");
-                cemu.fullscreen = 1;
-                break;
-
             case 'r':
                 fprintf(stdout, "rom: %s\n", optarg);
                 cemu.rom = optarg;
@@ -255,14 +231,14 @@ int main(int argc, char **argv) {
                 cemu.limit = number;
                 break;
 
-            case 'd':
-                fprintf(stdout, "dma: no\n");
-                cemu.dma = 0;
+            case 's':
+                fprintf(stdout, "spi: yes\n");
+                cemu.spi = 1;
                 break;
 
-            case 'g':
-                fprintf(stdout, "gamma: yes\n");
-                cemu.gamma = 1;
+            case 'f':
+                fprintf(stdout, "fullscreen: yes\n");
+                cemu.fullscreen = 1;
                 break;
 
             case 'k':
@@ -272,29 +248,6 @@ int main(int argc, char **argv) {
                 if (!strcmp(optarg, "smartpad")) {
                     keymap = smartpad_keymap;
                 }
-                break;
-
-            case 'a':
-                if (strlen(optarg) == 1) {
-                    char rev = toupper(optarg[0]);
-                    if (rev < 'I') {
-                        asic_rev = ASIC_REV_A;
-                    } else if (rev < 'M') {
-                        asic_rev = ASIC_REV_I;
-                    } else {
-                        asic_rev = ASIC_REV_M;
-                    }
-                }
-                break;
-
-            case 'p':
-                fprintf(stdout, "python: yes\n");
-                python_rev = true;
-                break;
-
-            case 'P':
-                fprintf(stdout, "python: no\n");
-                python_rev = false;
                 break;
 
             default:

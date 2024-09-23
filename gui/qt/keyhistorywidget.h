@@ -1,37 +1,45 @@
+/*
+ * Copyright (c) 2015-2021 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef KEYHISTORYWIDGET_H
 #define KEYHISTORYWIDGET_H
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QPlainTextEdit>
-#include <QtWidgets/QSpacerItem>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QSpinBox>
-#include <QtWidgets/QCheckBox>
+#include "dockedwidget.h"
 
-class KeyHistoryWidget : public QWidget {
+#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QWidget>
+
+class KeyHistoryWidget : public DockedWidget
+{
     Q_OBJECT
 
 public:
-    explicit KeyHistoryWidget(QWidget *parent = Q_NULLPTR, int size = 9);
+    explicit KeyHistoryWidget(CoreWindow *coreWindow);
     ~KeyHistoryWidget();
 
 public slots:
     void add(const QString &entry);
     int getFontSize();
 
-signals:
-    void fontSizeChanged();
-
 private:
     void setFontSize(int size);
 
-    QLabel *m_label;
-    QSpinBox *m_size;
-    QSpacerItem *m_spacer;
-    QPlainTextEdit *m_view;
-    QPushButton *m_btnClear;
-    QCheckBox *m_chkBoxVertical;
+    QSpinBox *mFontSize;
+    QPlainTextEdit *mText;
 };
 
 #endif

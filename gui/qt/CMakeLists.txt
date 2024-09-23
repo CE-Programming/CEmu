@@ -145,25 +145,56 @@ set(CEmu_Sources
     ../../core/vat.c ../../core/vat.h
     ../../tests/autotester/autotester.cpp ../../tests/autotester/autotester.h
     archive/extractor.c archive/extractor.h
-    basiccodeviewerwindow.cpp basiccodeviewerwindow.h basiccodeviewerwindow.ui
-    basicdebugger.cpp
-    capture/animated-png.c capture/animated-png.h
-    cemuopts.h
-    datawidget.cpp datawidget.h
-    debugger.cpp
-    debugger/disasm.cpp debugger/disasm.h
-    debugger/hexwidget.cpp debugger/hexwidget.h
-    debugger/visualizerdisplaywidget.cpp debugger/visualizerdisplaywidget.h
+    main.cpp
+    calculatorwidget.cpp calculatorwidget.h
+    capturewidget.cpp capturewidget.h
+    console.cpp console.h
+    consolewidget.cpp consolewidget.h
+    corethread.cpp corethread.h
+    corewindow.cpp corewindow.h
+    dockedwidget.cpp dockedwidget.h
     dockwidget.cpp dockwidget.h
-    emuthread.cpp emuthread.h
-    ipc.cpp ipc.h
     keyhistorywidget.cpp keyhistorywidget.h
+    overlaywidget.cpp overlaywidget.h
+    romdialog.cpp romdialog.h
+    screenshotwidget.cpp screenshotwidget.h
+    screenwidget.cpp screenwidget.h
+    settings.cpp settings.h
+    settingsdialog.cpp settingsdialog.h
+    statewidget.cpp statewidget.h
+    tablewidget.cpp tablewidget.h
+    util.cpp util.h
+    variablewidget.cpp variablewidget.h
+
+    developer/autotesterwidget.cpp developer/autotesterwidget.h
+    developer/basicwidget.cpp developer/basicwidget.h
+    developer/clockswidget.cpp developer/clockswidget.h
+    developer/controlwidget.cpp developer/controlwidget.h
+    developer/cpuwidget.cpp developer/cpuwidget.h
+    developer/devmiscwidget.cpp developer/devmiscwidget.h
+    developer/disassemblywidget.cpp developer/disassemblywidget.h
+    developer/memorywidget.cpp developer/memorywidget.h
+    developer/osstackswidget.cpp developer/osstackswidget.h
+    developer/osvarswidget.cpp developer/osvarswidget.h
+    developer/performancewidget.cpp developer/performancewidget.h
+    developer/portmonitorwidget.cpp developer/portmonitorwidget.h
+    developer/sourceswidget.cpp developer/sourceswidget.h
+    developer/usbwidget.cpp developer/usbwidget.h
+    developer/visualizerwidget.cpp developer/visualizerwidget.h
+    developer/watchpointswidget.cpp developer/watchpointswidget.h
+    developer/widgets/disassembler.cpp developer/widgets/disassembler.h
+    developer/widgets/disassemblerwidget.cpp developer/widgets/disassemblerwidget.h
+    developer/widgets/hexwidget.cpp developer/widgets/hexwidget.h
+    developer/widgets/highlighteditwidget.cpp developer/widgets/highlighteditwidget.h
+    developer/widgets/memwidget.cpp developer/widgets/memwidget.h
+    developer/widgets/sliderpanner.cpp developer/widgets/sliderpanner.h
+    developer/widgets/visualizerlcdwidget.cpp developer/widgets/visualizerlcdwidget.h
     keypad/alphakey.h
     keypad/arrowkey.cpp keypad/arrowkey.h
     keypad/graphkey.h
-    keypad/key.h
     keypad/keycode.h
     keypad/keyconfig.h
+    keypad/key.h
     keypad/keymap.cpp keypad/keymap.h
     keypad/keypadwidget.cpp keypad/keypadwidget.h
     keypad/numkey.h
@@ -172,15 +203,6 @@ set(CEmu_Sources
     keypad/qtkeypadbridge.cpp keypad/qtkeypadbridge.h
     keypad/rectkey.cpp keypad/rectkey.h
     keypad/secondkey.h
-    lcdwidget.cpp lcdwidget.h
-    main.cpp
-    mainwindow.cpp mainwindow.h mainwindow.ui
-    memorywidget.cpp
-    romselection.cpp romselection.h romselection.ui
-    searchwidget.cpp searchwidget.h searchwidget.ui
-    sendinghandler.cpp sendinghandler.h
-    settings.cpp
-    tablewidget.cpp tablewidget.h
     tivars_lib_cpp/src/BinaryFile.cpp tivars_lib_cpp/src/BinaryFile.h
     tivars_lib_cpp/src/CommonTypes.h
     tivars_lib_cpp/src/TIModel.cpp tivars_lib_cpp/src/TIModel.h
@@ -206,9 +228,6 @@ set(CEmu_Sources
     tivars_lib_cpp/src/TypeHandlers/TH_Tokenized.cpp
     tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h
     tivars_lib_cpp/src/tivarslib_utils.cpp tivars_lib_cpp/src/tivarslib_utils.h
-    utils.cpp utils.h
-    vartablemodel.cpp vartablemodel.h
-    visualizerwidget.cpp visualizerwidget.h
     ${CEmu_Resources}
 )
 
@@ -293,6 +312,19 @@ endif()
 
 find_package(KDDockWidgets-qt6 CONFIG REQUIRED)
 target_link_libraries(CEmu PRIVATE KDAB::kdbindings KDAB::kddockwidgets)
+
+if(WIN32)
+    find_package(unofficial-readline-win32 CONFIG REQUIRED)
+    if(unofficial-readline-win32_FOUND)
+        target_compile_definitions(CEmu PRIVATE "HAS_READLINE")
+    target_link_libraries(CEmu PRIVATE unofficial::readline-win32::readline)
+    endif()
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(readline REQUIRED IMPORTED_TARGET readline)
+    target_link_libraries(CEmu PRIVATE PkgConfig::readline)
+    target_compile_definitions(CEmu PRIVATE "HAS_READLINE")
+endif()
 
 target_link_libraries(CEmu PRIVATE
     Qt::Core

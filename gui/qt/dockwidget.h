@@ -1,42 +1,35 @@
+/*
+ * Copyright (c) 2015-2024 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef DOCKWIDGET_H
 #define DOCKWIDGET_H
 
-#include <QtWidgets/QDockWidget>
+namespace KDDockWidgets
+{
+    class DockWidgetBase;
+}
 
-QT_BEGIN_NAMESPACE
-class QTabWidget;
-QT_END_NAMESPACE
-
-class DockWidget : public QDockWidget {
-    Q_OBJECT
-    Q_PROPERTY(bool closable READ isClosable WRITE setClosable)
-    Q_PROPERTY(bool expandable READ isExpandable WRITE setExpandable)
-
+class DockWidgetFactory : public KDDockWidgets::DefaultWidgetFactory
+{
 public:
-    explicit DockWidget(QWidget *parent = Q_NULLPTR);
-    DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
-    DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
-    void makeCloseableFloat(bool state);
-    void setState(bool visible);
-    bool isClosable() const { return m_closable; }
-    void setClosable(bool closable) { m_closable = closable; }
-    bool isExpandable() const { return m_expandable; }
-    void setExpandable(bool expandable) { m_expandable = expandable; }
-
-signals:
-    void closed();
-
-protected:
-    virtual bool event(QEvent *event) Q_DECL_OVERRIDE;
-    QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);
-    virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
-    void updateExpandability(const QList<DockWidget *> &tabs);
-    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
-
-private:
-    QWidget *m_titleHide;
-    DockWidget *m_tabs;
-    bool m_closable : 1, m_expandable : 1, m_closeablefloat : 1;
+    KDDockWidgets::Frame *createFrame(KDDockWidgets::QWidgetOrQuick *parent = nullptr, KDDockWidgets::FrameOptions options = KDDockWidgets::FrameOption_None) const override;
+    KDDockWidgets::TitleBar *createTitleBar(KDDockWidgets::Frame *frame) const override;
+    KDDockWidgets::TitleBar *createTitleBar(KDDockWidgets::FloatingWindow *fw) const override;
+    Layouting::Separator *createSeparator(Layouting::Widget *parent = nullptr) const override;
+    static KDDockWidgets::DockWidgetBase *dockWidgetFactory(const QString &name);
 };
 
 #endif

@@ -13,31 +13,11 @@
         KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none,          \
         KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none                   \
     }
-// Alt+Win
-#define AW(code) { Qt::Key_##code, 0, 0, Qt::AltModifier | Qt::MetaModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
-// Ctrl+Win
-#define CW(code) { Qt::Key_##code, 0, 0, Qt::ControlModifier | Qt::MetaModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
-// Alt+Ctrl+Win
-#define ACW(code) { Qt::Key_##code, 0, 0, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
-// Alt+Win+Shift
-#define AWS(code) { Qt::Key_##code, 0, 0, Qt::AltModifier | Qt::MetaModifier | Qt::ShiftModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
-// Ctrl+Win+Shift
-#define CWS(code) { Qt::Key_##code, 0, 0, Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
-// Alt+Ctrl+Win+Shift
-#define ACWS(code) { Qt::Key_##code, 0, 0, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier, QStringLiteral(#code) }
 
-//This applies the final key to calc conversion for the following macros
 #define HK(code, nativeCode, nativeMask, modifier, mask) { Qt::Key_##code, nativeCode, nativeMask, Qt::modifier##Modifier, Qt::mask##Modifier, QStringLiteral(#code) }
-// NoRMal ignores modifiers
 #define NRM(code) HK(code, 0, 0, No, No)
-//NATive supports distinguishing what would otherwise be identical keys like left and right shift
 #define NAT(code, nativeCode, nativeMask) HK(code, nativeCode, nativeMask, No, No)
-//MODifiers supports checking a single modifier for being pressed (Shift, Shift) or not being pressed (No, Shift)
 #define MOD(code, modifier, mask) HK(code, 0, 0, modifier, mask)
-
-//Note:
-//{ <key> , <key2> , none}
-//This is an OR statement. Valid if <key> OR <key2> is pressed.
 
 static HostKey none = { Qt::Key(0), 0, 0, Qt::NoModifier, Qt::NoModifier, {} };
 
@@ -304,75 +284,6 @@ static const HostKey KEY(on)[] = { NRM(F12), none };
 const KEYMAP(_83pce);
 const KEYMAP(_84pce);
 #undef KEY
-
-// ------------
-// SmartPad section
-// ------------
-#define KEY(key) smartpad_k##key
-
-static const HostKey KEY(enter)[] = { NRM(Enter), NRM(Return), none };
-static const HostKey KEY(2nd)[]   = { CW(F6), none };
-static const HostKey KEY(alpha)[] = { CW(F7), none };
-static const HostKey KEY(sto)[]   = { ACW(F4), none };
-static const HostKey KEY(clr)[]   = { CWS(F9), none };
-static const HostKey KEY(del)[]   = { ACWS(F4), none };
-
-static const HostKey KEY(math)[] = { CW(F8), none };
-static const HostKey KEY(apps)[] = { ACW(F8), none };
-static const HostKey KEY(prgm)[] = { ACWS(F6), none };
-static const HostKey KEY(vars)[] = { CWS(F2), none };
-static const HostKey KEY(stat)[] = { ACWS(F5), none };
-static const HostKey KEY(mode)[] = { ACW(F6), none };
-static const HostKey KEY(xton)[] = { ACW(F7), none };
-
-static const HostKey KEY(neg)[] = { CWS(F8), none };
-static const HostKey KEY(add)[] = { CW(Plus), none };
-static const HostKey KEY(sub)[] = { CW(Minus), none };
-static const HostKey KEY(mul)[] = { CW(Asterisk), none };
-static const HostKey KEY(div)[] = { CW(Slash), none };
-static const HostKey KEY(pow)[] = { CWS(F11), none };
-
-static const HostKey KEY(sq)[]  = { ACW(F1), none };
-static const HostKey KEY(inv)[] = { CW(F9), none };
-static const HostKey KEY(ln)[]  = { ACW(F3), none };
-static const HostKey KEY(log)[] = { ACW(F2), none };
-static const HostKey KEY(sin)[] = { ACW(F9), none };
-static const HostKey KEY(cos)[] = { ACWS(F7), none };
-static const HostKey KEY(tan)[] = { CWS(F3), none };
-
-static const HostKey KEY(down)[]  = { AWS(Down), none };
-static const HostKey KEY(left)[]  = { AWS(Left), none };
-static const HostKey KEY(right)[] = { AWS(Right), none };
-static const HostKey KEY(up)[]    = { AWS(Up), none };
-
-static const HostKey KEY(0)[] = { ACWS(F3), none };
-static const HostKey KEY(1)[] = { ACWS(F2), none };
-static const HostKey KEY(2)[] = { ACWS(F11), none };
-static const HostKey KEY(3)[] = { CWS(F7), none };
-static const HostKey KEY(4)[] = { ACWS(F1), none };
-static const HostKey KEY(5)[] = { ACWS(F10), none };
-static const HostKey KEY(6)[] = { CWS(F6), none };
-static const HostKey KEY(7)[] = { ACW(F11), none };
-static const HostKey KEY(8)[] = { ACWS(F9), none };
-static const HostKey KEY(9)[] = { CWS(F5), none };
-
-static const HostKey KEY(dot)[] ={ CWS(F1), none };
-static const HostKey KEY(comma)[] = { ACW(F10), none };
-static const HostKey KEY(lpar)[] = { ACWS(F8), none };
-static const HostKey KEY(rpar)[] = { CWS(F4), none };
-
-static const HostKey KEY(yequ)[] = { CW(F1) , none };
-static const HostKey KEY(wind)[] = { CW(F2) , none };
-static const HostKey KEY(zoom)[] = { CW(F3), none };
-static const HostKey KEY(trace)[] = { CW(T), none };
-static const HostKey KEY(graph)[] = { CW(F5), none };
-static const HostKey KEY(on)[] = { ACW(F5), none };
-
-const KEYMAP(_83pce);
-const KEYMAP(_84pce);
-#undef KEY
-
-
 
 // ----------------
 // custom section
