@@ -762,19 +762,19 @@ void MainWindow::debugPopulate() {
     ui->flashMissesView->setPalette(tmp == ui->flashMissesView->text() ? m_cNone : m_cBack);
     ui->flashMissesView->setText(tmp);
 
-    tmp = QString::number(rtc.readSec);
+    tmp = QString::number(rtc.counter.sec);
     ui->seconds->setPalette(tmp == ui->seconds->text() ? m_cNone : m_cBack);
     ui->seconds->setText(tmp);
 
-    tmp = QString::number(rtc.readMin);
+    tmp = QString::number(rtc.counter.min);
     ui->minutes->setPalette(tmp == ui->minutes->text() ? m_cNone : m_cBack);
     ui->minutes->setText(tmp);
 
-    tmp = QString::number(rtc.readHour);
+    tmp = QString::number(rtc.counter.hour);
     ui->hours->setPalette(tmp == ui->hours->text() ? m_cNone : m_cBack);
     ui->hours->setText(tmp);
 
-    tmp = QString::number(rtc.readDay);
+    tmp = QString::number(rtc.counter.day);
     ui->days->setPalette(tmp == ui->days->text() ? m_cNone : m_cBack);
     ui->days->setText(tmp);
 

@@ -3,68 +3,148 @@
 #include "schedule.h"
 #include "interrupt.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
 /* Global GPT state */
 rtc_state_t rtc;
 
-static void rtc_event(enum sched_item_id id) {
-    /* Update exactly once a second */
-    sched_repeat(id, 32768);
+#define RTC_TIME_BITS (8 * 3)
+#define RTC_DATETIME_BITS (RTC_TIME_BITS + 16)
+#define RTC_DATETIME_MASK ((UINT64_C(1) << RTC_DATETIME_BITS) - 1)
 
-    if (rtc.control & 64) { /* (Bit 6) -- Load time */
-        rtc.readSec = rtc.writeSec;
-        rtc.readMin = rtc.writeMin;
-        rtc.readHour = rtc.writeHour;
-        rtc.readDay = rtc.writeDay;
-        rtc.control &= ~64;
-        rtc.interrupt |= 32;  /* Load operation complete */
-        intrpt_set(INT_RTC, true);
-    }
+#define TICKS_PER_SECOND 32768
+#define LATCH_TICK_OFFSET 16429
+#define LOAD_LATCH_TICK_OFFSET (LATCH_TICK_OFFSET + 7)
 
-    rtc.readSec++;
-    if (rtc.control & 2) {
-        rtc.interrupt |= 1;
-        intrpt_set(INT_RTC, true);
-    }
-    if (rtc.readSec > 59) {
-        rtc.readSec = 0;
-        if (rtc.control & 4) {
-            rtc.interrupt |= 2;
-            intrpt_set(INT_RTC, true);
-        }
-        rtc.readMin++;
-        if (rtc.readMin > 59) {
-            rtc.readMin = 0;
-            if (rtc.control & 8) {
-                rtc.interrupt |= 4;
-                intrpt_set(INT_RTC, true);
-            }
-            rtc.readHour++;
-            if (rtc.readHour > 23) {
-                rtc.readHour = 0;
-                if (rtc.control & 16) {
-                    rtc.interrupt |= 8;
-                    intrpt_set(INT_RTC, true);
-                }
-                rtc.readDay++;
-            }
-        }
-    }
+/* Load status gets set 1 tick after each load completes */
+#define LOAD_SEC_FINISHED (1 + 8)
+#define LOAD_MIN_FINISHED (LOAD_SEC_FINISHED + 8)
+#define LOAD_HOUR_FINISHED (LOAD_MIN_FINISHED + 8)
+#define LOAD_DAY_FINISHED (LOAD_HOUR_FINISHED + 16)
+#define LOAD_TOTAL_TICKS (LOAD_DAY_FINISHED + 10)
+#define LOAD_PENDING UINT8_MAX
 
-    if ((rtc.control & 32) && (rtc.readSec == rtc.alarmSec) &&
-        (rtc.readMin == rtc.alarmMin) && (rtc.readHour == rtc.alarmHour)) {
-            rtc.interrupt |= 16;
-            intrpt_set(INT_RTC, true);
+static void rtc_process_load(uint8_t endTick) {
+    assert(endTick <= LOAD_TOTAL_TICKS);
+    uint8_t startTick = rtc.loadTicksProcessed;
+    assert(startTick != LOAD_PENDING);
+    if (endTick <= startTick) {
+        assert(endTick == startTick);
+        return;
     }
+    rtc.loadTicksProcessed = endTick;
+    if (startTick >= RTC_DATETIME_BITS) {
+        return;
+    }
+    if (endTick >= RTC_DATETIME_BITS) {
+        rtc.control &= ~64;  /* Load bit is cleared after all bits are loaded */
+        endTick = RTC_DATETIME_BITS;
+    }
+    /* Load is processed 1 bit at a time in each register from most to least significant */
+    uint64_t writeMask = (RTC_DATETIME_MASK >> startTick) & ~(RTC_DATETIME_MASK >> endTick);
+    rtc.counter.value = (rtc.counter.value & ~writeMask) | (rtc.load.value & writeMask);
 }
 
-static void hold_read(void) {
-    rtc.holdSec = rtc.readSec;
-    rtc.holdMin = rtc.readMin;
-    rtc.holdHour = rtc.readHour;
-    rtc.holdDay = rtc.readDay;
+static void rtc_update_load(void) {
+    if (likely(rtc.loadTicksProcessed >= LOAD_TOTAL_TICKS)) {
+        return;
+    }
+    /* Get the number of ticks passed since the latch event */
+    uint16_t ticks = sched_ticks_remaining(SCHED_RTC);
+    if (rtc.mode == RTC_TICK) {
+        ticks = (TICKS_PER_SECOND - LATCH_TICK_OFFSET) - ticks;
+    } else {
+        assert(rtc.mode == RTC_LOAD_LATCH);
+        ticks = (LOAD_LATCH_TICK_OFFSET - LATCH_TICK_OFFSET) - ticks;
+    }
+    /* Add 1 because the end of the tick range is exclusive */
+    rtc_process_load(ticks < LOAD_TOTAL_TICKS ? ticks + 1 : LOAD_TOTAL_TICKS);
+}
+
+static void rtc_event(enum sched_item_id id) {
+    uint8_t control = rtc.control, interrupts;
+
+    switch (rtc.mode) {
+        case RTC_TICK:
+            /* Process any remaining load operations */
+            if (rtc.loadTicksProcessed < LOAD_TOTAL_TICKS) {
+                rtc_process_load(LOAD_TOTAL_TICKS);
+            }
+
+            /* Next event is latch */
+            rtc.mode = RTC_LATCH;
+            sched_repeat(id, LATCH_TICK_OFFSET);
+
+            if (!likely(control & 1)) { /* (Bit 0) -- Enable ticking */
+                break;
+            }
+
+            interrupts = 1;
+            if (unlikely(++rtc.counter.sec >= 60)) {
+                if (likely(rtc.counter.sec == 60)) {
+                    interrupts |= 2;
+                    if (unlikely(++rtc.counter.min >= 60)) {
+                        if (likely(rtc.counter.min == 60)) {
+                            interrupts |= 4;
+                            if (unlikely(++rtc.counter.hour >= 24)) {
+                                if (likely(rtc.counter.hour == 24)) {
+                                    interrupts |= 8;
+                                    rtc.counter.day++;
+                                }
+                                rtc.counter.hour = 0;
+                            }
+                        }
+                        rtc.counter.min = 0;
+                    }
+                }
+                rtc.counter.sec = 0;
+            }
+
+            if ((uint32_t)(rtc.counter.value >> (RTC_DATETIME_BITS - RTC_TIME_BITS)) == rtc.alarm.value) {
+                interrupts |= 16;
+            }
+            if (interrupts &= control >> 1) {
+                if (!rtc.interrupt) {
+                    intrpt_set(INT_RTC, true);
+                }
+                rtc.interrupt |= interrupts;
+            }
+            break;
+
+        case RTC_LATCH:
+            if (likely(control & 128)) {  /* (Bit 7) -- Latch enable */
+                rtc.latched = rtc.counter;
+            }
+            if (unlikely(control & 64)) { /* (Bit 6) -- Load operation */
+                /* Enable load processing */
+                assert(rtc.loadTicksProcessed == LOAD_PENDING);
+                rtc.loadTicksProcessed = 0;
+                /* Next event is load latch */
+                rtc.mode = RTC_LOAD_LATCH;
+                sched_repeat(id, LOAD_LATCH_TICK_OFFSET - LATCH_TICK_OFFSET);
+            } else {
+                /* Next event is tick */
+                rtc.mode = RTC_TICK;
+                sched_repeat(id, TICKS_PER_SECOND - LATCH_TICK_OFFSET);
+            }
+            break;
+
+        case RTC_LOAD_LATCH:
+            /* Always latches regardless of control register */
+            rtc.latched = rtc.load;
+            /* Load latch complete interrupt */
+            rtc.interrupt |= 32;
+            intrpt_set(INT_RTC, true);
+            /* Next event is tick */
+            rtc.mode = RTC_TICK;
+            sched_repeat(id, TICKS_PER_SECOND - LOAD_LATCH_TICK_OFFSET);
+            break;
+
+        default:
+            unreachable();
+    }
 }
 
 static uint8_t rtc_read(const uint16_t pio, bool peek) {
@@ -76,50 +156,67 @@ static uint8_t rtc_read(const uint16_t pio, bool peek) {
 
     switch (index) {
         case 0x00:
-            value = (rtc.control & 128) ? rtc.readSec : rtc.holdSec;
+            value = rtc.latched.sec;
             break;
         case 0x04:
-            value = (rtc.control & 128) ? rtc.readMin : rtc.holdMin;
+            value = rtc.latched.min;
             break;
         case 0x08:
-            value = (rtc.control & 128) ? rtc.readHour : rtc.holdHour;
+            value = rtc.latched.hour;
             break;
         case 0x0C: case 0x0D:
-            value = read8((rtc.control & 128) ? rtc.readDay : rtc.holdDay, bit_offset);
+            value = read8(rtc.latched.day, bit_offset);
             break;
         case 0x10:
-            value = rtc.alarmSec;
+            value = rtc.alarm.sec;
             break;
         case 0x14:
-            value = rtc.alarmMin;
+            value = rtc.alarm.min;
             break;
         case 0x18:
-            value = rtc.alarmHour;
+            value = rtc.alarm.hour;
             break;
         case 0x20:
+            rtc_update_load();
             value = rtc.control;
             break;
         case 0x24:
-            value = rtc.writeSec;
+            value = rtc.load.sec;
             break;
         case 0x28:
-            value = rtc.writeMin;
+            value = rtc.load.min;
             break;
         case 0x2C:
-            value = rtc.writeHour;
+            value = rtc.load.hour;
             break;
         case 0x30: case 0x31:
-            value = read8(rtc.writeDay, bit_offset);
+            value = read8(rtc.load.day, bit_offset);
             break;
         case 0x34:
             value = rtc.interrupt;
             break;
         case 0x3C: case 0x3D: case 0x3E: case 0x3F:
-            value = read8(rtc.revision, bit_offset);
+            value = read8(0x00010500, bit_offset);
             break;
-        case 0x44: case 0x45: case 0x46: case 0x47:
-            value = read8(rtc.readSec | (rtc.readMin<<6) | (rtc.readHour<<12) | (rtc.readDay<<17), bit_offset);
+        case 0x40: {
+            rtc_update_load();
+            /* Convert to signed to treat LOAD_PENDING as negative */
+            int8_t ticks = rtc.loadTicksProcessed;
+            if (likely(ticks >= LOAD_TOTAL_TICKS)) {
+                value = 0;
+            } else {
+                value = 8 | ((ticks < LOAD_SEC_FINISHED)  << 4)
+                          | ((ticks < LOAD_MIN_FINISHED)  << 5)
+                          | ((ticks < LOAD_HOUR_FINISHED) << 6)
+                          | ((ticks < LOAD_DAY_FINISHED)  << 7);
+            }
             break;
+        }
+        case 0x44: case 0x45: case 0x46: case 0x47: {
+            uint32_t combined = rtc.latched.sec | (rtc.latched.min << 6) | (rtc.latched.hour << 12) | (rtc.latched.day << 17);
+            value = read8(combined, bit_offset);
+            break;
+        }
         default:
             break;
     }
@@ -134,40 +231,46 @@ static void rtc_write(const uint16_t pio, const uint8_t byte, bool poke) {
 
     switch (index) {
         case 0x10:
-            rtc.alarmSec = byte;
+            rtc.alarm.sec = byte & 63;
             break;
         case 0x14:
-            rtc.alarmMin = byte;
+            rtc.alarm.min = byte & 63;
             break;
         case 0x18:
-            rtc.alarmHour = byte;
+            rtc.alarm.hour = byte & 31;
             break;
         case 0x20:
-            rtc.control = byte;
-            if (rtc.control & 1) {
-                sched_repeat_relative(SCHED_RTC, SCHED_SECOND, 0, 0);
+            if (byte & 64) {
+                rtc_update_load();
+                if (!(rtc.control & 64)) {
+                    /* Load can be pended as soon as the previous one is finished */
+                    assert(rtc.loadTicksProcessed >= RTC_DATETIME_BITS);
+                    rtc.loadTicksProcessed = LOAD_PENDING;
+                }
+                rtc.control = byte;
             } else {
-                sched_clear(SCHED_RTC);
-            }
-            if (!(rtc.control & 128)) {
-                hold_read();
+                /* Don't allow resetting the load bit via write */
+                rtc.control = byte | (rtc.control & 64);
             }
             break;
         case 0x24:
-            rtc.writeSec = byte;
+            rtc_update_load();
+            rtc.load.sec = byte & 63;
             break;
         case 0x28:
-            rtc.writeMin = byte;
+            rtc_update_load();
+            rtc.load.min = byte & 63;
             break;
         case 0x2C:
-            rtc.writeHour = byte;
+            rtc_update_load();
+            rtc.load.hour = byte & 31;
             break;
         case 0x30: case 0x31:
-            write8(rtc.writeDay, bit_offset, byte);
+            rtc_update_load();
+            write8(rtc.load.day, bit_offset, byte);
             break;
         case 0x34:
-            rtc.interrupt &= ~byte;
-            intrpt_set(INT_RTC, rtc.interrupt & rtc.control & 15);
+            intrpt_set(INT_RTC, rtc.interrupt &= ~byte);
             break;
         default:
             break;
@@ -180,9 +283,11 @@ static void rtc_init_events(void) {
 
 void rtc_reset(void) {
     memset(&rtc, 0, sizeof rtc);
-    rtc.revision = 0x00010500;
+    rtc.mode = RTC_LATCH;
+    rtc.loadTicksProcessed = LOAD_TOTAL_TICKS;
 
     rtc_init_events();
+    sched_repeat_relative(SCHED_RTC, SCHED_SECOND, 0, LATCH_TICK_OFFSET);
 
     gui_console_printf("[CEmu] RTC reset.\n");
 }
