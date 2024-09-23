@@ -1,45 +1,37 @@
 #include "tablewidget.h"
+#include "util.h"
 
-#include <QtGui/QDropEvent>
+#include <QtWidgets/QHeaderView>
+#include <QtGui/QKeyEvent>
 
-TableWidget::TableWidget(QWidget *parent) : QTableWidget{parent} {}
-
-void TableWidget::dropEvent(QDropEvent *e) {
-    if(e->source() != this) {
-        e->ignore();
-        return;
-    }
-
-    int newrow = indexAt(e->pos()).row();
-    if (newrow < 0) {
-        newrow = rowCount();
-    }
-
-    blockSignals(true);
-
-    QList<QTableWidgetItem*> items = this->selectedItems();
-    if (items.isEmpty()) {
-        e->ignore();
-        return;
-    }
-
-    insertRow(newrow);
-    int oldrow = items.first()->row();
-    foreach(QTableWidgetItem *item, items) {
-        int col = item->column();
-        takeItem(oldrow, col);
-        setItem(newrow, col, item);
-        setCellWidget(newrow, col, cellWidget(oldrow, col));
-    }
-
-    removeRow(oldrow);
-    if (oldrow <= newrow) {
-        newrow--;
-    }
-    if (newrow < 0) {
-        newrow = 0;
-    }
-
-    blockSignals(false);
-    setCurrentCell(newrow, 0);
+TableWidget::TableWidget(int rows, int cols, QWidget *parent)
+    : QTableWidget{rows, cols, parent}
+{
+    setItemDelegate(new TableWidgetItemFocusDelegate{this});
+    verticalHeader()->setSectionsMovable(true);
+    setFont(Util::monospaceFont());
 }
+
+void TableWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Delete)
+    {
+        emit deletePressed();
+    }
+
+    QTableWidget::keyPressEvent(event);
+}
+
+void TableWidgetItemFocusDelegate::initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const
+{
+    QStyledItemDelegate::initStyleOption(option, index);
+    option->state &= ~QStyle::State_HasFocus;
+
+    if (option->features & QStyleOptionViewItem::HasDecoration)
+    {
+        QSize s{option->decorationSize};
+        s.setWidth(option->rect.width());
+        option->decorationSize = s;
+    }
+}
+

@@ -1,56 +1,86 @@
+/*
+ * Copyright (c) 2015-2021 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "keyhistorywidget.h"
+#include "settings.h"
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QPushButton>
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QWidget>
 
-KeyHistoryWidget::KeyHistoryWidget(QWidget *parent, int size) : QWidget{parent} {
-    QHBoxLayout *hlayout = new QHBoxLayout();
+KeyHistoryWidget::KeyHistoryWidget(CoreWindow *coreWindow)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Key History")},
+                   QIcon(QStringLiteral(":/assets/icons/kindle.svg")),
+                   coreWindow}
+{
+    QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear History"), this);
+    QLabel *lblSize = new QLabel(tr("Font size") + ':', this);
 
-    m_btnClear = new QPushButton(tr("Clear History"));
-    m_label = new QLabel(tr("Size"));
-    m_view = new QPlainTextEdit();
-    m_size = new QSpinBox();
-    m_spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
-    m_chkBoxVertical = new QCheckBox(tr("Print Vertically"));
+    mText = new QPlainTextEdit;
+    mFontSize = new QSpinBox;
 
-    m_view->setReadOnly(true);
-    m_view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    mText->setReadOnly(true);
+    mText->setMaximumBlockCount(1000);
+    mText->setMinimumSize(10, 100);
 
-    hlayout->addWidget(m_btnClear);
-    hlayout->addSpacerItem(m_spacer);
-    hlayout->addWidget(m_label);
-    hlayout->addWidget(m_size);
-    hlayout->addWidget(m_chkBoxVertical);
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->addWidget(lblSize);
+    hLayout->addWidget(mFontSize);
+    hLayout->addStretch();
+    hLayout->addWidget(btnClear);
 
-    QVBoxLayout *vlayout = new QVBoxLayout();
-    vlayout->addWidget(m_view);
-    vlayout->addLayout(hlayout);
-    setLayout(vlayout);
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->addWidget(mText);
+    vLayout->addLayout(hLayout);
+    setLayout(vLayout);
 
-    connect(m_btnClear, &QPushButton::clicked, m_view, &QPlainTextEdit::clear);
-    connect(m_size, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistoryWidget::setFontSize);
+    setFontSize(Settings::intOption(Settings::KeyHistoryFont));
 
-    setFontSize(size);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    connect(btnClear, &QPushButton::clicked, mText, &QPlainTextEdit::clear);
+    connect(mFontSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistoryWidget::setFontSize);
 }
 
-KeyHistoryWidget::~KeyHistoryWidget() = default;
-
-void KeyHistoryWidget::add(const QString &entry) {
-    m_view->moveCursor(QTextCursor::End);
-    m_view->insertPlainText(entry + (m_chkBoxVertical->isChecked() ? "\n" : ""));
-    m_view->moveCursor(QTextCursor::End);
+KeyHistoryWidget::~KeyHistoryWidget()
+{
 }
 
-void KeyHistoryWidget::setFontSize(int size) {
+void KeyHistoryWidget::add(const QString &entry)
+{
+    mText->moveCursor(QTextCursor::End);
+    mText->insertPlainText(entry);
+    mText->moveCursor(QTextCursor::End);
+}
+
+void KeyHistoryWidget::setFontSize(int size)
+{
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     monospace.setStyleHint(QFont::Monospace);
-    m_size->setValue(size);
+    mFontSize->setValue(size);
     monospace.setPointSize(size);
-    m_view->setFont(monospace);
-    emit fontSizeChanged();
+    mText->setFont(monospace);
+
+    Settings::setIntOption(Settings::KeyHistoryFont, size);
 }
 
-int KeyHistoryWidget::getFontSize() {
-    return m_size->value();
+int KeyHistoryWidget::getFontSize()
+{
+    return mFontSize->value();
 }

@@ -1,136 +1,93 @@
+/*
+ * Copyright (c) 2015-2024 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "dockwidget.h"
-#include "utils.h"
 
-#include <QtWidgets/QStyle>
+#include <kddockwidgets/DockWidget.h>
+#include <kddockwidgets/private/multisplitter/Separator_qwidget.h>
+#include <kddockwidgets/private/widgets/FrameWidget_p.h>
+#include <kddockwidgets/private/widgets/TitleBarWidget_p.h>
+
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QStackedLayout>
-#include <QtWidgets/QTabWidget>
-#include <QtGui/QHoverEvent>
-#include <QtGui/QWindow>
-#include <QtGui/QScreen>
 
-DockWidget::DockWidget(QWidget *parent)
-    : QDockWidget{parent}, m_titleHide{new QWidget{this}}, m_tabs{this},
-      m_closable{true}, m_expandable{true} {
-    // If we just use a vanilla new QWidget for m_titleHide, as a Qt source
-    // comment tells us to, then m_titleHide->sizeHint() will return {-1, -1}
-    // which, as the exact same Qt comment hints at, doesn't work and causes,
-    // at the very least, one pixel to be cropped off of the top of the dock's
-    // child widget.  Therefore, our two choices are to subclass QWidget and
-    // override sizeHint and minimumSizeHint to both return {0, 0}, or to just
-    // set a dummy layout as we do below.
-    m_titleHide->setLayout(new QStackedLayout{m_titleHide});
-    m_closeablefloat = false;
-}
-
-DockWidget::DockWidget(const QString &title, QWidget *parent) : DockWidget{parent} {
-    setWindowTitle(title);
-    setObjectName(title + QStringLiteral("_dock"));
-}
-
-DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tabText(0), parent} {
-    setObjectName(tabs->widget(0)->objectName() + QStringLiteral("_dock"));
-    setWindowIcon(tabs->tabIcon(0));
-    setWidget(tabs->widget(0));
-    setExpandable(!(objectName() == QStringLiteral("debugAutoTesterWidget_dock") ||
-                    objectName() == QStringLiteral("debugCpuStatusWidget_dock") ||
-                    objectName() == QStringLiteral("debugControlWidget_dock") ||
-                    objectName() == QStringLiteral("debugTimerWidget_dock") ||
-                    objectName() == QStringLiteral("debugMiscWidget_dock") ||
-                    objectName() == QStringLiteral("settingsWidget_dock") ||
-                    objectName() == QStringLiteral("captureWidget_dock"))); // TODO: lolz fixme plz
-}
-
-void DockWidget::setState(bool edit) {
-    QDockWidget::DockWidgetFeatures features;
-    if (edit) {
-        setAllowedAreas(Qt::AllDockWidgetAreas);
-        features = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
-        if (isClosable()) {
-            features |= QDockWidget::DockWidgetClosable;
-        }
-    } else {
-        setAllowedAreas(Qt::NoDockWidgetArea);
-        features = QDockWidget::NoDockWidgetFeatures;
-        if (isFloating()) {
-            features |= QDockWidget::DockWidgetFloatable;
-        }
-        if (m_closeablefloat) {
-            features |= QDockWidget::DockWidgetClosable;
-        }
+class DockTitleBar : public KDDockWidgets::TitleBarWidget
+{
+public:
+    explicit DockTitleBar(KDDockWidgets::Frame *frame)
+        : KDDockWidgets::TitleBarWidget(frame)
+    {
     }
-    setFeatures(features);
-    setTitleBarWidget(isFloating() || edit ? Q_NULLPTR : m_titleHide);
+
+    explicit DockTitleBar(KDDockWidgets::FloatingWindow *fw)
+        : KDDockWidgets::TitleBarWidget(fw)
+    {
+    }
+
+    void paintEvent(QPaintEvent *event) override
+    {
+        KDDockWidgets::TitleBarWidget::paintEvent(event);
+    }
+};
+
+class DockSeparator : public Layouting::SeparatorWidget
+{
+public:
+    explicit DockSeparator(Layouting::Widget *parent)
+        : Layouting::SeparatorWidget(parent)
+    {
+        setContentsMargins(0, 0, 0, 0);
+    }
+};
+
+class DockFrame : public KDDockWidgets::FrameWidget
+{
+public:
+    explicit DockFrame(QWidget *parent, KDDockWidgets::FrameOptions options)
+        : KDDockWidgets::FrameWidget(parent, options)
+    {
+        setContentsMargins(0, 0, 0, 0);
+    }
+
+    void paintEvent(QPaintEvent *event) override
+    {
+        KDDockWidgets::FrameWidget::paintEvent(event);
+    }
+};
+
+KDDockWidgets::Frame *DockWidgetFactory::createFrame(KDDockWidgets::QWidgetOrQuick *parent, KDDockWidgets::FrameOptions options) const
+{
+    return new DockFrame(parent, options);
 }
 
-bool DockWidget::event(QEvent *event) {
-    if (event->type() == QEvent::MouseButtonDblClick &&
-        allowedAreas() == Qt::NoDockWidgetArea) {
-        return QWidget::event(event);
-    }
-    return QDockWidget::event(event);
+KDDockWidgets::TitleBar *DockWidgetFactory::createTitleBar(KDDockWidgets::Frame *frame) const
+{
+    return new DockTitleBar(frame);
 }
 
-QList<DockWidget *> DockWidget::tabs(DockWidget *without) {
-    QList<DockWidget *> tabs;
-    if (this != without) {
-        tabs << this;
-    }
-    if (QMainWindow *window = findParent<QMainWindow *>(this)) {
-        for (QDockWidget *tab : window->tabifiedDockWidgets(this)) {
-            if (tab != without) {
-                tabs << qobject_cast<DockWidget *>(tab);
-            }
-        }
-    }
-    return tabs;
+KDDockWidgets::TitleBar *DockWidgetFactory::createTitleBar(KDDockWidgets::FloatingWindow *fw) const
+{
+    return new DockTitleBar(fw);
 }
 
-void DockWidget::showEvent(QShowEvent *event) {
-    if (event->spontaneous()) {
-        return;
-    }
-    if (m_tabs != this) {
-        m_tabs->updateExpandability(m_tabs->tabs(this));
-    }
-    updateExpandability(tabs());
+Layouting::Separator *DockWidgetFactory::createSeparator(Layouting::Widget *parent) const
+{
+    return new DockSeparator(parent);
 }
 
-void DockWidget::updateExpandability(const QList<DockWidget *> &tabs) {
-    bool expandable = false;
-    for (DockWidget *tab : tabs) {
-        if (tab->isExpandable()) {
-            expandable = true;
-            break;
-        }
-    }
-    DockWidget *other = tabs.last();
-    for (DockWidget *tab : tabs) {
-        if (QWidget *widget = tab->widget()) {
-            if (expandable || tab->isExpandable()) {
-                widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-            } else {
-                widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
-            }
-        }
-        tab->m_tabs = other;
-        other = tab;
-    }
+KDDockWidgets::DockWidgetBase *DockWidgetFactory::dockWidgetFactory(const QString &name)
+{
+    return name.contains('#') ? new KDDockWidgets::DockWidget(name) : nullptr;
 }
-
-void DockWidget::makeCloseableFloat(bool state) {
-    m_closeablefloat = state;
-}
-
-void DockWidget::closeEvent(QCloseEvent *event) {
-    setFloating(true);
-    setGeometry(QStyle::alignedRect(Qt::LeftToRight,
-                                    Qt::AlignCenter,
-                                    minimumSize(),
-                                    qApp->screens().first()->availableGeometry()));
-    emit closed();
-    event->accept();
-    QDockWidget::closeEvent(event);
-}
-

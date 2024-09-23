@@ -1,0 +1,22 @@
+sudo: false
+
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  - CFLAGS="-std=c11 -O2 -DDEBUG_SUPPORT"
+
+script:
+  - $CC $CFLAGS -c zdis.c
+  - $CC $CFLAGS test.c zdis.o
+  
+notifications:
+  irc:
+    channels:
+      - "irc.choopa.net#cemu-dev"
+    on_success: change
+    on_failure: always
+    skip_join: true
