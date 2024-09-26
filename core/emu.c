@@ -100,6 +100,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         const uint8_t *data;
         uint32_t outer_field_size;
         uint32_t data_field_size;
+        ti_model_t model_id = TIMODEL_8384CE;
         ti_device_t device_type = TI84PCE;
         uint32_t offset;
         size_t size;
@@ -139,7 +140,8 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 
             /* Inner 0x801(0) field: calculator model */
             if (cert_field_get(outer, outer_field_size, &field_type, &data, &data_field_size)) break;
-            if (field_type != 0x8012 || data[0] != 0x13) break;
+            if (field_type != 0x8012 || (data[0] != TIMODEL_8384CE && data[0] != TIMODEL_82AEP)) break;
+            model_id = (ti_model_t)data[0];
 
             /* Inner 0x802(0) field: skip. */
             data_field_size = outer_field_size - (data + data_field_size - outer);
@@ -179,7 +181,18 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             /* If we come here, we've found something. */
             gotType = true;
 
-            gui_console_printf("[CEmu] Loaded ROM Image.\n");
+            gui_console_printf("[CEmu] Loaded ROM Image. \n");
+
+            {
+                static const uint16_t python_path[] = { 0x0330, 0x0430 };
+                bool isPython = !cert_field_find_path(mem.flash.block + 0x3B0001, SIZE_FLASH_SECTOR_64K, python_path, 2, NULL, NULL);
+                gui_console_printf("[CEmu] Info from cert: Device type = %d (%s). Model = %d (%s). Is Python? %s.\n",
+                                   device_type, (device_type == TI84PCE) ? "84+CE-like" : "83PCE-like",
+                                   model_id, (model_id == TIMODEL_8384CE) ? "CE" : "82AdvPy",
+                                   isPython ? "Yes" : "No");
+            }
+
+
             break;
         }
 

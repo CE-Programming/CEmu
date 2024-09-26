@@ -15,6 +15,11 @@ typedef enum {
 } ti_device_t;
 
 typedef enum {
+    TIMODEL_8384CE = 0x13,
+    TIMODEL_82AEP = 0x15
+} ti_model_t;
+
+typedef enum {
     ASIC_REV_AUTO = 0, /* Used only with set_asic_revision() */
     ASIC_REV_A = 1,
     ASIC_REV_I = 2,
