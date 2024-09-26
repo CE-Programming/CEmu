@@ -88,7 +88,7 @@ static void plug_devices(void) {
     gui_console_printf("[CEmu] Initialized Advanced Peripheral Bus...\n");
 }
 
-static asic_rev_t report_reset(asic_rev_t loaded_rev, bool* python) {
+static asic_rev_t report_reset(asic_rev_t loaded_rev, emu_device_t device, bool* python) {
     /* Parse boot code routines to determine version. */
     asic_rev_t default_rev = ASIC_REV_A;
     boot_ver_t boot_ver;
@@ -99,7 +99,7 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, bool* python) {
 
         /* Determine the newest ASIC revision that is compatible */
         for (int rev = ASIC_REV_A; rev <= ASIC_REV_M; rev++) {
-            if (bootver_check_rev(&boot_ver, (asic_rev_t)rev)) {
+            if (bootver_check_rev(&boot_ver, (asic_rev_t)rev, device)) {
                 default_rev = rev;
             }
         }
@@ -114,13 +114,14 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, bool* python) {
     }
     gui_console_printf("[CEmu] Default ASIC revision is Rev %c.\n", "AIM"[(int)default_rev - 1]);
 
-    loaded_rev = gui_handle_reset((gotVer ? &boot_ver : NULL), loaded_rev, default_rev, python);
+    loaded_rev = gui_handle_reset((gotVer ? &boot_ver : NULL), loaded_rev, default_rev, device, python);
     return (loaded_rev != ASIC_REV_AUTO) ? loaded_rev : default_rev;
 }
 
 static void set_features() {
     asic.im2 = (asic.revision < ASIC_REV_I);
     asic.serFlash = (asic.revision >= ASIC_REV_M);
+    asic.hasWorkingSPIReads = (asic.device == TI82AEP);
 }
 
 void asic_init(void) {
@@ -148,7 +149,7 @@ void asic_reset(void) {
     /* Update the Python state first, so it can be read by the reset handler if needed */
     static const uint16_t path[] = { 0x0330, 0x0430 };
     asic.python = !cert_field_find_path(mem.flash.block + 0x3B0001, SIZE_FLASH_SECTOR_64K, path, 2, NULL, NULL);
-    asic.revision = report_reset(ASIC_REV_AUTO, &asic.python);
+    asic.revision = report_reset(ASIC_REV_AUTO, asic.device, &asic.python);
     set_features();
 
     for (unsigned int i = 0; i < reset_proc_count; i++) {
@@ -156,11 +157,11 @@ void asic_reset(void) {
     }
 }
 
-void set_device_type(ti_device_t device) {
+void set_device_type(emu_device_t device) {
     asic.device = device;
 }
 
-ti_device_t EMSCRIPTEN_KEEPALIVE get_device_type(void) {
+emu_device_t EMSCRIPTEN_KEEPALIVE get_device_type(void) {
     return asic.device;
 }
 
@@ -203,7 +204,7 @@ bool asic_restore(FILE *image) {
      && fgetc(image) == EOF)
     {
         bool python = asic.python;
-        (void)report_reset(asic.revision, &python);
+        (void)report_reset(asic.revision, asic.device, &python);
         return true;
     }
     return false;

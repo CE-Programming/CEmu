@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/skin">
+        <file>resources/skin/ti82aep.png</file>
         <file>resources/skin/ti84pce.png</file>
         <file>resources/skin/ti83pce.png</file>
         <file>resources/skin/ti83pce_ep.png</file>

@@ -18,7 +18,7 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE001A
+#define IMAGE_VERSION 0xCECE001B
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu_set_signal(CPU_SIGNAL_EXIT);
@@ -100,7 +100,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         const uint8_t *data;
         uint32_t outer_field_size;
         uint32_t data_field_size;
-        ti_device_t device_type = TI84PCE;
+        emu_device_t device_type = TI84PCE;
         uint32_t offset;
         size_t size;
 
@@ -139,7 +139,8 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 
             /* Inner 0x801(0) field: calculator model */
             if (cert_field_get(outer, outer_field_size, &field_type, &data, &data_field_size)) break;
-            if (field_type != 0x8012 || data[0] != 0x13) break;
+            if (field_type != 0x8012 || (data[0] != 0x13 && data[0] != 0x15)) break;
+            const enum { MODEL_8384CE=0x13, MODEL_82AEP=0x15 } model_id = data[0];
 
             /* Inner 0x802(0) field: skip. */
             data_field_size = outer_field_size - (data + data_field_size - outer);
@@ -174,10 +175,24 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             if (field_type != 0x80C2) break;
 
             if (data[1] != 0 && data[1] != 1) break;
-            device_type = (ti_device_t)(data[1]);
+            const enum { DEVICE_84PCE=0, DEVICE_83PCE=1 } device_id = data[1];
 
-            /* If we come here, we've found something. */
-            gotType = true;
+            gui_console_printf("[CEmu] Info from cert: Device type = 0x%02X (%s). Model = 0x%02X (%s).\n",
+                               device_id, (device_id == DEVICE_84PCE) ? "84+CE-like" : "83PCE-like",
+                               model_id, (model_id == MODEL_8384CE) ? "CE" : "82AEP");
+
+            if (model_id == MODEL_82AEP && device_id == DEVICE_83PCE) {
+                device_type = TI82AEP;
+                gotType = true;
+            } else if (model_id == MODEL_8384CE && device_id == DEVICE_84PCE) {
+                device_type = TI84PCE;
+                gotType = true;
+            } else if (model_id == MODEL_8384CE && device_id == DEVICE_83PCE) {
+                device_type = TI83PCE;
+                gotType = true;
+            } else {
+                gui_console_err_printf("[CEmu] Got model<->device discrepency!?\n");
+            }
 
             gui_console_printf("[CEmu] Loaded ROM Image.\n");
             break;

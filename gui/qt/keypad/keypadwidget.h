@@ -1,6 +1,7 @@
 #ifndef KEYPADWIDGET_H
 #define KEYPADWIDGET_H
 
+#include "../../../core/asic.h"
 #include "keyconfig.h"
 #include "key.h"
 
@@ -33,7 +34,7 @@ public:
     }
     virtual ~KeypadWidget();
 
-    void setType(bool, unsigned int);
+    void setType(emu_device_t, unsigned int);
     void setHolding(bool);
     unsigned getCurrColor(void);
 

@@ -1,16 +1,18 @@
 #include "bootver.h"
 
-static const boot_ver_t asic_min_ver[] = {
-    { 5, 0, 0, 0 }, /* Rev A */
-    { 5, 0, 0, 0 }, /* Rev I */
-    { 5, 3, 6, 0 }, /* Rev M */
-};
+static const boot_ver_t minRevA_CE = {   5,   0,   0,     0 }; /* Rev A */
+static const boot_ver_t minRevI_CE = {   5,   0,   0,     0 }; /* Rev I */
+static const boot_ver_t minRevM_CE = {   5,   3,   6,     0 }; /* Rev M */
+static const boot_ver_t minRevM_82 = {   5,   6,   3,     0 }; /* Rev pre-A of 82AEP, but otherwise the same JB-007 ASIC as M on CE */
+static const boot_ver_t maxRevA_CE = {   5,   3,   5, 65535 }; /* Rev A */
+static const boot_ver_t maxRevI_CE = {   5,   3,   5, 65535 }; /* Rev I */
+static const boot_ver_t maxRev     = { 255, 255, 255, 65535 }; /* Rev M */
 
-static const boot_ver_t asic_max_ver[] = {
-    {   5,   3,   5, 65535 }, /* Rev A */
-    {   5,   3,   5, 65535 }, /* Rev I */
-    { 255, 255, 255, 65535 }, /* Rev M */
-};
+/* NULL means unsupported */
+static const boot_ver_t* asic_min_ver_8384CE[] = { &minRevA_CE, &minRevI_CE, &minRevM_CE };
+static const boot_ver_t* asic_max_ver_8384CE[] = { &maxRevA_CE, &maxRevI_CE, &maxRev };
+static const boot_ver_t* asic_min_ver_82AEP[]  = { NULL,        NULL,        &minRevM_82 };
+static const boot_ver_t* asic_max_ver_82AEP[]  = { NULL,        NULL,        &maxRev };
 
 static bool parse_entry(const uint8_t* data, uint32_t entry, uint32_t* addr) {
     if (entry + 4 >= SIZE_BOOTCODE) {
@@ -98,6 +100,9 @@ bool bootver_parse(const uint8_t* data, boot_ver_t* boot_ver) {
 }
 
 bool bootver_check_ver(const boot_ver_t* ver, const boot_ver_t* check) {
+    if (!ver || !check) {
+        return false;
+    }
     if (ver->major != check->major) {
         return ver->major > check->major;
     }
@@ -110,9 +115,10 @@ bool bootver_check_ver(const boot_ver_t* ver, const boot_ver_t* check) {
     return ver->build >= check->build;
 }
 
-bool bootver_check_rev(const boot_ver_t* ver, asic_rev_t rev) {
+bool bootver_check_rev(const boot_ver_t* ver, asic_rev_t rev, emu_device_t device) {
     unsigned int index = (unsigned int)rev - 1;
-    if (index >= sizeof(asic_min_ver) / sizeof(boot_ver_t)) {
+    if (((device == TI83PCE || device == TI84PCE) && index >= sizeof(asic_min_ver_8384CE) / sizeof(boot_ver_t*)) ||
+        ((device == TI82AEP)                      && index >= sizeof(asic_min_ver_82AEP)  / sizeof(boot_ver_t*))) {
         return false;
     }
 
@@ -120,6 +126,8 @@ bool bootver_check_rev(const boot_ver_t* ver, asic_rev_t rev) {
         return true;
     }
 
-    return bootver_check_ver(ver, asic_min_ver + index)
-        && bootver_check_ver(asic_max_ver + index, ver);
+    const boot_ver_t** asic_min_ver = (device == TI83PCE || device == TI84PCE) ? asic_min_ver_8384CE : asic_min_ver_82AEP;
+    const boot_ver_t** asic_max_ver = (device == TI83PCE || device == TI84PCE) ? asic_max_ver_8384CE : asic_max_ver_82AEP;
+    return bootver_check_ver(ver, asic_min_ver[index])
+        && bootver_check_ver(asic_max_ver[index], ver);
 }
