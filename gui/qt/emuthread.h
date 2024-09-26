@@ -38,7 +38,7 @@ public:
     void setAsicRev(int rev);
     void setAllowAnyRev(bool allow);
     void setForcePython(Qt::CheckState state);
-    asic_rev_t handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, bool* python);
+    asic_rev_t handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, emu_device_t device, bool* python);
     void writeConsole(int console, const char *format, va_list args);
     void debugOpen(int reason, uint32_t addr);
     void save(emu_data_t fileType, const QString &filePath);

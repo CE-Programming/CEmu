@@ -29,7 +29,7 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             value = control.readBatteryStatus;
             break;
         case 0x03:
-            value = get_device_type() | asic.serFlash << 4;
+            value = (get_device_type() == TI84PCE ? 0 : 1) | asic.serFlash << 4;
             break;
         case 0x06:
             value = control.protectedPortsUnlocked;

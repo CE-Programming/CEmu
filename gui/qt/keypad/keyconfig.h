@@ -9,7 +9,7 @@
 struct KeyConfig {
     QFont labelFont, secondFont, alphaFont;
     QColor secondColor, alphaColor, graphColor, numColor, otherColor,
-        blackColor, whiteColor, textColor;
+        blackColor, whiteColor, textColor, alphaKeyTextColor;
     KeyCode key;
     KeyCode next() {
         KeyCode old = key;

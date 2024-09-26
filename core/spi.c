@@ -160,6 +160,7 @@ static void spi_update(void) {
 }
 
 /* Read from the SPI range of ports */
+/* TODO: something with asic.hasWorkingSPIReads probably */
 static uint8_t spi_read(uint16_t addr, bool peek) {
     static const uint16_t cr0_masks[16] = {
         0xF18C, 0xF8EF, 0xF0AC, 0xF3FC, 0xF18C, 0xF4C0, 0xF3AC, 0xF3AC,

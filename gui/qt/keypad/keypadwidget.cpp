@@ -12,7 +12,6 @@
 #include "numkey.h"
 #include "arrowkey.h"
 
-#include "../../../core/asic.h"
 #include "../../../core/keypad.h"
 
 const QRect KeypadWidget::sBaseRect{{}, QSize{162, 238}};
@@ -29,7 +28,7 @@ unsigned KeypadWidget::getCurrColor() {
     return color;
 }
 
-void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
+void KeypadWidget::setType(emu_device_t device_type, unsigned int color_scheme) {
     color = color_scheme;
 
     cNum   = QColor::fromRgb(0xeeeeee);
@@ -37,8 +36,15 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     cOther = QColor::fromRgb(0x1d1d1d);
     cGraph = QColor::fromRgb(0xeeeeee);
 
+    const bool is82AEP = (device_type == TI82AEP);
+    const bool isFR = is82AEP || (device_type == TI83PCE);
+
     this->setAttribute(Qt::WA_TranslucentBackground, false);
     this->setAutoFillBackground(false);
+
+    if (is82AEP) {
+        color_scheme = KEYPAD_BLACK;
+    }
 
     switch(color_scheme) {
         default:
@@ -159,7 +165,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
         // Font not loaded yet, load it now!
         fontId = QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/resources/custom_fonts/LiberationSansNarrow-Bold.ttf"));
     }
-    
+
     if (fontId != -1) {
         // Successfully loaded, use the internal font!
         QString family = QFontDatabase::applicationFontFamilies(fontId).at(0);
@@ -205,8 +211,8 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     mConfig.labelFont   = font;
     mConfig.secondFont  = font;
     mConfig.alphaFont   = font;
-    mConfig.secondColor = QColor::fromRgb(0x93c3f3);
-    mConfig.alphaColor  = QColor::fromRgb(0xa0ca1e);
+    mConfig.secondColor = QColor::fromRgb(is82AEP ? 0xb02036 : 0x93c3f3);
+    mConfig.alphaColor  = QColor::fromRgb(is82AEP ? 0x8cd0f6 : 0xa0ca1e);
     mConfig.graphColor  = cGraph;
     mConfig.numColor    = cNum;
     mConfig.otherColor  = cOther;
@@ -214,66 +220,67 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     mConfig.whiteColor  = QColor::fromRgb(0xeeeeee);
     mConfig.textColor   = cText;
     mConfig.key         = {1, 0};
+    mConfig.alphaKeyTextColor = is82AEP ? mConfig.blackColor : mConfig.textColor;
 
-#define LabelFrEn(fr, en)   (is83 ? Label(fr) : Label(en))
+#define LabelFrEn(fr, en)   (isFR ? Label(fr) : Label(en))
 
-    addKey(new GraphKey{mConfig, LabelFrEn("graphe", "graph"), Label("table"), Label("f5"), 15, 2, 2 - is83});
-    addKey(new GraphKey{mConfig, Label("trace"), LabelFrEn("calculs", "calc"), Label("f4"), 12, 2 + is83 * 2, 1});
-    addKey(new GraphKey{mConfig, Label("zoom"), Label("format"), Label("f3"), 13, 2 + is83 * 2, is83 ? 1 : 5});
-    addKey(new GraphKey{mConfig, LabelFrEn("fenêtre", "window"), LabelFrEn("déf table", "tblset"), Label("f2"), 17 - is83, is83 ? 8 : 2, 4 - is83});
-    addKey(new GraphKey{mConfig, is83 ? Label("f(x)") : Label("y="), LabelFrEn("graph stats", "stat plot"), Label("f1"), 6 + is83, is83 ? 6 : 2, is83 ? 10 : 8});
+    addKey(new GraphKey{mConfig, LabelFrEn("graphe", "graph"), Label("table"), Label("f5"), 15, 2, 2 - isFR});
+    addKey(new GraphKey{mConfig, Label("trace"), LabelFrEn("calculs", "calc"), Label("f4"), 12, 2 + isFR * 2, 1});
+    addKey(new GraphKey{mConfig, Label("zoom"), Label("format"), Label("f3"), 13, 2 + isFR * 2, isFR ? 1 : 5});
+    addKey(new GraphKey{mConfig, LabelFrEn("fenêtre", "window"), LabelFrEn("déf table", "tblset"), Label("f2"), 17 - isFR, isFR ? 8 : 2, 4 - isFR});
+    addKey(new GraphKey{mConfig, isFR ? Label("f(x)") : Label("y="), LabelFrEn("graph stats", "stat plot"), Label("f1"), 6 + isFR, isFR ? 6 : 2, isFR ? 10 : 8});
 
     addKey(new SecondKey{mConfig, LabelFrEn("2nde", "2nd")});
 
-    addKey(new OtherKey{mConfig, 16 - is83 * 2, 45, 37, isMac ? Label(" mode") : Label("mode"), LabelFrEn("quitter", "quit")});
-    addKey(new OtherKey{mConfig, is83 ? 14 : 8, 72, 37, LabelFrEn("suppr", "del"), LabelFrEn("insérer", "ins")});
+    addKey(new OtherKey{mConfig, 16 - isFR * 2, 45, 37, isMac ? Label(" mode") : Label("mode"), LabelFrEn("quitter", "quit")});
+    addKey(new OtherKey{mConfig, isFR ? 14 : 8, 72, 37, LabelFrEn("suppr", "del"), LabelFrEn("insérer", "ins")});
     addKey(new OtherKey{mConfig, 7, Label("on"), Label("off")});
-    addKey(new OtherKey{mConfig, 13, Label("sto→"), LabelFrEn("rappel", "rcl"), Label("X"), is83 * 2, is83 * 3});
-    addKey(new OtherKey{mConfig, 7, isMac ? Label(" ln") : Label("ln"), Label("eˣ"), Label("S"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{mConfig, 9, isMac ? Label(" log") : Label("log"), Label("10ˣ"), Label("N"), is83 * 2, is83 * 3});
-    addKey(new OtherKey{mConfig, 6, Label("x²"), Label("√‾‾"), Label("I"), is83, is83 * 3});
-    addKey(new OtherKey{mConfig, is83 ? 6 : 8, LabelFrEn("◀ ▶", "x⁻¹"), LabelFrEn("angle", "matrix"), Label("D"), is83 * 2, is83 ? 2 : 4});
-    addKey(new OtherKey{mConfig, 14, isMac ? Label(" math") : Label("math"), LabelFrEn("tests", "test"), Label("A"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{mConfig, 13, Label("sto→"), LabelFrEn("rappel", "rcl"), Label("X"), isFR * 2, isFR * 3});
+    addKey(new OtherKey{mConfig, 7, isMac ? Label(" ln") : Label("ln"), Label("eˣ"), Label("S"), isFR * 2, isFR * 2});
+    addKey(new OtherKey{mConfig, 9, isMac ? Label(" log") : Label("log"), Label("10ˣ"), Label("N"), isFR * 2, isFR * 3});
+    addKey(new OtherKey{mConfig, 6, Label("x²"), Label("√‾‾"), Label("I"), isFR, isFR * 3});
+    addKey(new OtherKey{mConfig, isFR ? 6 : 8, LabelFrEn("◀ ▶", "x⁻¹"), LabelFrEn("angle", "matrix"), Label("D"), isFR * 2, isFR ? 2 : 4});
+    addKey(new OtherKey{mConfig, 14, isMac ? Label(" math") : Label("math"), LabelFrEn("tests", "test"), Label("A"), isFR * 2, isFR * 2});
 
     addKey(new AlphaKey{mConfig, LabelFrEn("verr A", "A-lock")});
 
-    addKey(new NumKey{mConfig, Label("0"), Label("catalog"), Label("_"), is83 * 2, 6});
-    addKey(new NumKey{mConfig, Label("1"), Label("L1"), Label("Y"), is83 * 2, is83 ? 3 : 1});
-    addKey(new NumKey{mConfig, Label("4"), Label("L4"), Label("T"), is83 * 2, is83 ? 3 : 1});
+    addKey(new NumKey{mConfig, Label("0"), Label("catalog"), Label("_"), isFR * 2, 6});
+    addKey(new NumKey{mConfig, Label("1"), Label("L1"), Label("Y"), isFR * 2, isFR ? 3 : 1});
+    addKey(new NumKey{mConfig, Label("4"), Label("L4"), Label("T"), isFR * 2, isFR ? 3 : 1});
 
-    addKey(new NumKey{mConfig, Label("7"), (isMac || isWin) ? LabelFrEn("un", "u") : LabelFrEn("uₙ", "u"), Label("O"), is83 * 2, 1 + is83});
-    addKey(new OtherKey{mConfig, 2, Label(","), Label("EE"), Label("J"), is83 * 2, 1 + is83});
-    addKey(new OtherKey{mConfig, 8 + is83, LabelFrEn("trig", "sin"), LabelFrEn("π", "sin⁻¹"), Label("E"), is83 * 2, 1});
-    addKey(new OtherKey{mConfig, 14 + is83*5, isMac ? LabelFrEn("matrice ", "  apps") : LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
+    addKey(new NumKey{mConfig, Label("7"), (isMac || isWin) ? LabelFrEn("un", "u") : LabelFrEn("uₙ", "u"), Label("O"), isFR * 2, 1 + isFR});
+    addKey(new OtherKey{mConfig, 2, Label(","), Label("EE"), Label("J"), isFR * 2, 1 + isFR});
+    addKey(new OtherKey{mConfig, 8 + isFR, LabelFrEn("trig", "sin"), LabelFrEn("π", "sin⁻¹"), Label("E"), isFR * 2, 1});
+    addKey(new OtherKey{mConfig, 14 + isFR*5, isMac ? LabelFrEn("matrice ", "  apps") : LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), isFR * 2, 1});
 
-    addKey(new OtherKey{mConfig, 15, (isWin || isMac) ? Label("X,T,θ,n") : Label(" X,T,θ,n "), LabelFrEn("échanger", "link"), QString{}, (isWin || isMac) ? is83*2 : 1, (isWin || isMac) ? is83*3 : 1});
-    addKey(new NumKey{mConfig, is83 * 2});
-    addKey(new NumKey{mConfig, Label("2"), Label("L2"), Label("Z"), is83 * 2, is83 * 3});
-    addKey(new NumKey{mConfig, Label("5"), Label("L5"), Label("U"), is83 * 2, is83 * 3});
-    addKey(new NumKey{mConfig, Label("8"), (isMac || isWin) ? LabelFrEn("vn", "v") : LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{mConfig, 15, (isWin || isMac) ? Label("X,T,θ,n") : Label(" X,T,θ,n "), LabelFrEn("échanger", "link"), QString{}, (isWin || isMac) ? isFR*2 : 1, (isWin || isMac) ? isFR*3 : 1});
+    addKey(new NumKey{mConfig, isFR * 2});
+    addKey(new NumKey{mConfig, Label("2"), Label("L2"), Label("Z"), isFR * 2, isFR * 3});
+    addKey(new NumKey{mConfig, Label("5"), Label("L5"), Label("U"), isFR * 2, isFR * 3});
+    addKey(new NumKey{mConfig, Label("8"), (isMac || isWin) ? LabelFrEn("vn", "v") : LabelFrEn("vₙ", "v"), Label("P"), isFR * 2, isFR * 2});
 
-    addKey(new OtherKey{mConfig, 3, isMac ? Label(" (") : Label("("), Label("{"), Label("K"), is83 * 2, is83});
-    addKey(new OtherKey{mConfig, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{mConfig, 14, isMac ? Label(" prgm") : Label("prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{mConfig, 11 + is83, isMac ? LabelFrEn("stats", " stat") : LabelFrEn("stats", "stat"), LabelFrEn("listes", "list")});
+    addKey(new OtherKey{mConfig, 3, isMac ? Label(" (") : Label("("), Label("{"), Label("K"), isFR * 2, isFR});
+    addKey(new OtherKey{mConfig, isFR ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), isFR * 2, isFR * 2});
+    addKey(new OtherKey{mConfig, 14, isMac ? Label(" prgm") : Label("prgm"), LabelFrEn("dessin", "draw"), Label("C"), isFR * 2, isFR * 2});
+    addKey(new OtherKey{mConfig, 11 + isFR, isMac ? LabelFrEn("stats", " stat") : LabelFrEn("stats", "stat"), LabelFrEn("listes", "list")});
 
-    addKey(new NumKey{mConfig, Label("(-)"), LabelFrEn("rép", "ans"), Label("?"), is83 * 2, is83 * 3, 11});
-    addKey(new NumKey{mConfig, Label("3"), Label("L3"), Label("θ"), is83 * 2, is83 * 3});
-    addKey(new NumKey{mConfig, Label("6"), Label("L6"), Label("V"), is83 * 2, is83 * 3});
-    addKey(new NumKey{mConfig, Label("9"), (isMac || isWin) ? LabelFrEn("wn", "w") : LabelFrEn("wₙ", "w"), Label("Q"), is83 * 2, is83 * 3});
+    addKey(new NumKey{mConfig, Label("(-)"), LabelFrEn("rép", "ans"), Label("?"), isFR * 2, isFR * 3, 11});
+    addKey(new NumKey{mConfig, Label("3"), Label("L3"), Label("θ"), isFR * 2, isFR * 3});
+    addKey(new NumKey{mConfig, Label("6"), Label("L6"), Label("V"), isFR * 2, isFR * 3});
+    addKey(new NumKey{mConfig, Label("9"), (isMac || isWin) ? LabelFrEn("wn", "w") : LabelFrEn("wₙ", "w"), Label("Q"), isFR * 2, isFR * 3});
 
-    addKey(new OtherKey{mConfig, 3, isMac ? Label(" )") : Label(")"), Label("}"), Label("L"), is83 * 2, is83});
+    addKey(new OtherKey{mConfig, 3, isMac ? Label(" )") : Label(")"), Label("}"), Label("L"), isFR * 2, isFR});
 
-    addKey(new OtherKey{mConfig, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{mConfig, is83 ? 8 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
+    addKey(new OtherKey{mConfig, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋d▫‣", "tan⁻¹"), Label("G"), isFR * 2, isFR * 2});
+    addKey(new OtherKey{mConfig, isFR ? 8 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, isFR});
     mConfig.next();
-    addKey(new OperKey{mConfig, isMac ? LabelFrEn("  entrer", "  enter") : LabelFrEn("entrer", "enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
-    addKey(new OperKey{mConfig, isMac ? Label(" + ") : Label("+"), LabelFrEn("mém", "mem"), Label("“"), is83 * 2, is83 * 5});
-    addKey(new OperKey{mConfig, Label("—"), Label("]"), Label("W"), is83 * 2, is83 * 2});
-    addKey(new OperKey{mConfig, isMac ? Label(" × ") : Label("×"), Label("["), Label("R"), is83 * 2, is83 * 2});
-    addKey(new OperKey{mConfig, Label("÷"), Label("e"), Label("M"), is83 * 2, is83 * 2});
+    addKey(new OperKey{mConfig, isMac ? LabelFrEn("  entrer", "  enter") : LabelFrEn("entrer", "enter"), LabelFrEn("précéd", "entry"), isFR ? QString{} : Label("solve"), 6, isFR ? 0 : 5, {16, 5}});
+    addKey(new OperKey{mConfig, isMac ? Label(" + ") : Label("+"), LabelFrEn("mém", "mem"), Label("“"), isFR * 2, isFR * 5});
+    addKey(new OperKey{mConfig, Label("—"), Label("]"), Label("W"), isFR * 2, isFR * 2});
+    addKey(new OperKey{mConfig, isMac ? Label(" × ") : Label("×"), Label("["), Label("R"), isFR * 2, isFR * 2});
+    addKey(new OperKey{mConfig, Label("÷"), Label("e"), Label("M"), isFR * 2, isFR * 2});
 
-    addKey(new OtherKey{mConfig, is83 ? QString{} : Label("π"), is83 * 2});
+    addKey(new OtherKey{mConfig, isFR ? QString{} : Label("π"), isFR * 2});
     addKey(new OtherKey{mConfig, 15, isMac ? LabelFrEn(" annul", "  clear") : LabelFrEn("annul", "clear")});
 
 #undef Label

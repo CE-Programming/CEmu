@@ -2114,7 +2114,7 @@ void MainWindow::varSelect() {
        return;
     }
 
-    QStringList fileNames = varDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8eu *.8pu *.b84 *.b83);;All Files (*.*)"), Q_NULLPTR);
+    QStringList fileNames = varDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek *.8yu *.8eu *.8pu *.b84 *.b83);;All Files (*.*)"), Q_NULLPTR);
 
     sendingHandler->sendFiles(fileNames, LINK_FILE);
     equatesRefresh();
@@ -2546,7 +2546,8 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
 
     if (state == EMU_STATE_VALID) {
         ui->lcd->setMain();
-        setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+        const bool is83 = get_device_type() == TI83PCE;
+        setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, is83 ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
         for (const auto &dock : findChildren<DockWidget*>()) {
             if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {
                 static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();

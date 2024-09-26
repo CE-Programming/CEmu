@@ -24,7 +24,7 @@ extern "C" {
 
     bool bootver_check_ver(const boot_ver_t* ver, const boot_ver_t* check);
 
-    bool bootver_check_rev(const boot_ver_t* ver, asic_rev_t rev);
+    bool bootver_check_rev(const boot_ver_t* ver, asic_rev_t rev, emu_device_t device);
 
 #ifdef __cplusplus
 }

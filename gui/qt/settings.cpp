@@ -511,10 +511,17 @@ void MainWindow::setKeypadHolding(bool enabled) {
 
 void MainWindow::setCalcSkinTopFromType(bool python) {
     QString fileName;
-    if (get_device_type() == TI83PCE) {
-        fileName = python ? "ti83pce_ep.png" : "ti83pce.png";
-    } else {
-        fileName = python ? "ti84pce_py.png" : "ti84pce.png";
+    switch (get_device_type()) {
+        case TI82AEP:
+            fileName = "ti82aep.png";
+            break;
+        case TI83PCE:
+            fileName = python ? "ti83pce_ep.png" : "ti83pce.png";
+            break;
+        default:
+        case TI84PCE:
+            fileName = python ? "ti84pce_py.png" : "ti84pce.png";
+            break;
     }
     ui->calcSkinTop->setStyleSheet(".QFrame { border-image: url(:/skin/resources/skin/" + fileName + ") 0 0 0 0 stretch stretch; }");
 }
