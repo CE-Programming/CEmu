@@ -651,6 +651,9 @@ std::vector<std::string> globVector(const std::string& pattern)
 
 bool sendFilesForTest()
 {
+    int linkRet;
+    bool transfersDone = false;
+    std::vector<const char*> files;
     std::vector<std::string> forced_files;
     const char* forced_libs_group = getenv("AUTOTESTER_LIBS_GROUP");
     const char* forced_libs_dir   = getenv("AUTOTESTER_LIBS_DIR");
@@ -680,21 +683,9 @@ bool sendFilesForTest()
         {
             if (debugMode)
             {
-                std::cout << "- Sending forced file " << file << "... ";
+                std::cout << "- Will send forced file " << file << "... ";
             }
-            if (cemucore::emu_send_variable(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
-            {
-                if (debugMode)
-                {
-                    std::cout << std::endl;
-                }
-                std::cerr << "[Error] Forced file couldn't be sent" << std::endl;
-                return false;
-            }
-            if (debugMode)
-            {
-                std::cout << "[OK]" << std::endl;
-            }
+            files.push_back(strdup(file.c_str()));
         }
     }
 
@@ -702,22 +693,35 @@ bool sendFilesForTest()
     {
         if (debugMode)
         {
-            std::cout << "- Sending file " << file << "... ";
+            std::cout << "- Will send file " << file << "... " << std::endl;
         }
-        if (cemucore::emu_send_variable(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
-        {
-            if (debugMode)
-            {
-                std::cout << std::endl;
-            }
-            std::cerr << "[Error] File couldn't be sent" << std::endl;
-            return false;
-        }
-        if (debugMode)
-        {
-            std::cout << "[OK]" << std::endl;
-        }
+        files.push_back(file.c_str());
     }
+
+    linkRet = cemucore::emu_send_variables(files.data(), files.size(), cemucore::LINK_FILE, [](void* done, int value, int total) {
+        if (total) {
+            if (debugMode && (value % 10 == 0)) {
+                std::cout << " transfer progress: " << value << "/" << total << std::endl;
+            }
+        } else {
+            std::cerr << " transfer issue" << std::endl;
+        }
+
+        *(bool*)done = (value == total);
+        return false;
+    }, &transfersDone);
+
+    if (linkRet == cemucore::LINK_ERR)
+    {
+        std::cerr << " emu_send_variables error" << std::endl;
+    } else {
+        while (!transfersDone)
+        {
+            cemucore::emu_run(1000);
+        }
+        cemucore::emu_run(1000);
+    }
+
     return true;
 }
 
