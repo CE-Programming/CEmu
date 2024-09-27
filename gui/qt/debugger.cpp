@@ -2401,12 +2401,18 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size, 4));
         QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name, var.namelen, var.named)));
         QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));
+        QTableWidgetItem *varType1 = new QTableWidgetItem(int2hex(var.type1, 2));
+        QTableWidgetItem *varType2 = new QTableWidgetItem(int2hex(var.type2, 2));
+        QTableWidgetItem *varVersion = new QTableWidgetItem(int2hex(var.version, 2));
 
         varAddr->setFont(monospace);
         varVatAddr->setFont(monospace);
         varSize->setFont(monospace);
         varName->setFont(monospace);
         varType->setFont(monospace);
+        varType1->setFont(monospace);
+        varType2->setFont(monospace);
+        varVersion->setFont(monospace);
 
         ui->vatView->setRowCount(index+1);
 
@@ -2415,6 +2421,9 @@ void MainWindow::osUpdate() {
         ui->vatView->setItem(index, VAT_SIZE_COL, varSize);
         ui->vatView->setItem(index, VAT_NAME_COL, varName);
         ui->vatView->setItem(index, VAT_TYPE_COL, varType);
+        ui->vatView->setItem(index, VAT_TYPE1_COL, varType1);
+        ui->vatView->setItem(index, VAT_TYPE2_COL, varType2);
+        ui->vatView->setItem(index, VAT_VERSION_COL, varVersion);
 
         index++;
     }
@@ -2424,6 +2433,9 @@ void MainWindow::osUpdate() {
     ui->vatView->resizeColumnToContents(VAT_NAME_COL);
     ui->vatView->resizeColumnToContents(VAT_TYPE_COL);
     ui->vatView->resizeColumnToContents(VAT_SIZE_COL);
+    ui->vatView->resizeColumnToContents(VAT_TYPE1_COL);
+    ui->vatView->resizeColumnToContents(VAT_TYPE2_COL);
+    ui->vatView->resizeColumnToContents(VAT_VERSION_COL);
 
     connect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
     connect(ui->fpStack, &QTableWidget::itemChanged, this, &MainWindow::fpModified);

@@ -147,7 +147,10 @@ private:
         VAT_VAT_ADDR_COL,
         VAT_SIZE_COL,
         VAT_NAME_COL,
-        VAT_TYPE_COL
+        VAT_TYPE_COL,
+        VAT_TYPE1_COL,
+        VAT_TYPE2_COL,
+        VAT_VERSION_COL
     };
 
     enum {

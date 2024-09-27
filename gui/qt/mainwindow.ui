@@ -5084,6 +5084,21 @@
                <string>Data Type</string>
               </property>
              </column>
+             <column>
+              <property name="text">
+               <string>Type 1</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Type 2</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Version</string>
+              </property>
+             </column>
             </widget>
            </item>
           </layout>
