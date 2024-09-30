@@ -22,6 +22,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Screen capture, copy, and drag'n'drop (PNG)
 * Screen recording (animated PNG)
 * USB emulation for transfers (including for Apps and OSes)
+* USB emulation for flash drive images and external devices (via libusb)
 * Customizable keybindings with multiple presets
 * Keypress recording and history
 * Full screen modes (F11 key)

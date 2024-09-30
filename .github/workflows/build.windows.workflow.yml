@@ -2,7 +2,7 @@ name: Build Windows
 
 on:
   push:
-    branches: [ master, feature/github-actions, test/libusb ]
+    branches: [ master, feature/github-actions ]
   pull_request:
     branches: [ master, feature/github-actions ]
 
