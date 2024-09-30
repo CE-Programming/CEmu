@@ -122,7 +122,7 @@ struct device {
         DEVICE_STATE_CONFIGURED,
     } state : 2;
     uint8_t address : 7, numPorts : 7;
-    hub_t hub[];
+    hub_t hub;
 };
 
 struct context {
@@ -261,7 +261,7 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
                                                 (unsigned char *)&hub_desc,
                                                 offsetof(struct usb_hub_descriptor,
                                                          wHubCharacteristics), 1000));
-        size += sizeof(hub_t) + sizeof(port_t) * hub_desc.bNbrPorts;
+        size += sizeof(port_t) * hub_desc.bNbrPorts;
     }
     if (error != USB_SUCCESS) {
         libusb_close(handle);
@@ -280,9 +280,9 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
     device->address = 0;
     device->numPorts = hub_desc.bNbrPorts;
     if (device->numPorts) {
-        device->hub->statusChange.value = 0;
+        device->hub.statusChange.value = 0;
         for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
-            port_t *port = &device->hub->ports[portIdx];
+            port_t *port = &device->hub.ports[portIdx];
             port->device = NULL;
             port->statusChange.value = 0;
         }
@@ -293,7 +293,7 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
         if (parent->handle && libusb_get_device(parent->handle) == libusb_parent) {
             uint8_t portNum = libusb_get_port_number(libusb_device);
             if (0 < portNum && portNum <= parent->numPorts) {
-                port_t *port = &parent->hub->ports[portNum - 1];
+                port_t *port = &parent->hub.ports[portNum - 1];
                 port->device = device;
                 if (port->status.power) {
                     device->state = DEVICE_STATE_POWERED;
@@ -340,7 +340,7 @@ static device_t *device_detach(context_t *context, device_t *device) {
                 if (parent->handle && libusb_get_device(parent->handle) == libusb_parent) {
                     uint8_t portNum = libusb_get_port_number(libusb_device);
                     if (0 < portNum && portNum <= parent->numPorts) {
-                        port_t *port = &parent->hub->ports[portNum - 1];
+                        port_t *port = &parent->hub.ports[portNum - 1];
                         port->device = NULL;
                         if (port->status.power) {
                             UPDATE_STATUS_CHANGE(port, connection, false);
@@ -470,8 +470,8 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                     }
                     if (device->state >= DEVICE_STATE_CONFIGURED && !setup->wValue && !setup->wIndex) {
                         *status = LIBUSB_TRANSFER_COMPLETED;
-                        transfer_append(transfer, &device->hub->statusChange,
-                                        sizeof(device->hub->statusChange));
+                        transfer_append(transfer, &device->hub.statusChange,
+                                        sizeof(device->hub.statusChange));
                     }
                     break;
                 case LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_OTHER:
@@ -481,8 +481,8 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                     if (device->state >= DEVICE_STATE_CONFIGURED
                         && !setup->wValue && setup->wIndex && setup->wIndex <= device->numPorts) {
                         *status = LIBUSB_TRANSFER_COMPLETED;
-                        transfer_append(transfer, &device->hub->ports[setup->wIndex - 1].statusChange,
-                                        sizeof(device->hub->ports[setup->wIndex - 1].statusChange));
+                        transfer_append(transfer, &device->hub.ports[setup->wIndex - 1].statusChange,
+                                        sizeof(device->hub.ports[setup->wIndex - 1].statusChange));
                     }
                     break;
                 default:
@@ -498,7 +498,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                     if (device->state >= DEVICE_STATE_CONFIGURED
                         && setup->wValue < 2 && !setup->wIndex) {
                         *status = LIBUSB_TRANSFER_COMPLETED;
-                        device->hub->change.value &= ~(UINT16_C(1) << setup->wValue);
+                        device->hub.change.value &= ~(UINT16_C(1) << setup->wValue);
                     }
                     break;
                 case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_OTHER:
@@ -510,7 +510,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                         && setup->wIndex && setup->wIndex <= device->numPorts) {
                         *status = LIBUSB_TRANSFER_COMPLETED;
                         if (UINT32_C(0x5F0106) >> setup->wValue & 1) {
-                            port_t *port = &device->hub->ports[setup->wIndex - 1];
+                            port_t *port = &device->hub.ports[setup->wIndex - 1];
                             port->statusChange.value &= ~(UINT32_C(1) << setup->wValue);
                             switch (setup->wValue) {
                                 case 8:
@@ -537,7 +537,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                     if (device->state >= DEVICE_STATE_CONFIGURED
                         && setup->wValue < 2 && !setup->wIndex) {
                         *status = LIBUSB_TRANSFER_COMPLETED;
-                        device->hub->change.value |= UINT16_C(1) << setup->wValue;
+                        device->hub.change.value |= UINT16_C(1) << setup->wValue;
                     }
                     break;
                 case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_OTHER:
@@ -549,7 +549,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                         && setup->wIndex && setup->wIndex <= device->numPorts) {
                         *status = LIBUSB_TRANSFER_COMPLETED;
                         if (UINT32_C(0x7F0114) >> setup->wValue & 1) {
-                            port_t *port = &device->hub->ports[setup->wIndex - 1];
+                            port_t *port = &device->hub.ports[setup->wIndex - 1];
                             port->statusChange.value |= UINT32_C(1) << setup->wValue;
                             switch (setup->wValue) {
                                 case 4:
@@ -875,7 +875,7 @@ static int device_intercept_interrupt(device_t *device, transfer_t *transfer) {
     struct libusb_transfer *libusb_transfer = transfer->transfer;
     if (transfer->state >= TRANSFER_STATE_PENDING && libusb_transfer->endpoint & LIBUSB_ENDPOINT_IN
         && device->numPorts) {
-        uint8_t any = 0, byte = !!device->hub->change.value;
+        uint8_t any = 0, byte = !!device->hub.change.value;
         for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
             uint8_t bit = (1 + portIdx) & 7;
             if (!bit) {
@@ -883,7 +883,7 @@ static int device_intercept_interrupt(device_t *device, transfer_t *transfer) {
                 any |= byte;
                 byte = 0;
             }
-            if (device->hub->ports[portIdx].change.value) {
+            if (device->hub.ports[portIdx].change.value) {
                 byte |= UINT8_C(1) << bit;
             }
         }

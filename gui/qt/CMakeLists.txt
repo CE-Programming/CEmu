@@ -270,6 +270,7 @@ else()
     message(WARNING "No LibArchive found! CE Bundle extraction/transfer will not be available")
 endif()
 
+find_package(PkgConfig REQUIRED)
 if(PkgConfig_FOUND)
     pkg_check_modules(LibUsb libusb-1.0>=1.0.16)
     if(LibUsb_FOUND)
