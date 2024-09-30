@@ -167,8 +167,8 @@ void EmuThread::writeConsole(int console, const char *format, va_list args) {
 void EmuThread::doStuff() {
     {
         std::unique_lock<std::mutex> requestLock{m_requestMutex};
-        while (!m_reqQueue.isEmpty()) {
-            int req = m_reqQueue.dequeue();
+        while (!m_requestQueue.isEmpty()) {
+            int req = m_requestQueue.dequeue();
             requestLock.unlock();
             switch (+req) {
                 default:

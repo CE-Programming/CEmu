@@ -115,8 +115,6 @@ private:
 
     static constexpr size_t PerfArraySize = 20;
 
-    QQueue<int> m_reqQueue;
-
     int m_speed, m_actualSpeed;
     bool m_throttle, m_backupThrottleForTransfers;
     std::chrono::steady_clock::time_point m_lastTime;
