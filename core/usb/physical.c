@@ -18,15 +18,18 @@
 
 #define NODE_EMPTY(head) \
     ((head)->next == (head))
+
 #define NODE_ITEM(type, item)     \
     ((type *)((uint8_t *)(item) - \
               offsetof(type, node)))
+
 #define NODE_FIRST(type, head) \
     (NODE_EMPTY(head) ? NULL : NODE_ITEM(type, (head)->next))
+
 #define NODE_FOREACH(current, head)                 \
     for (node_t *next = (head)->next;               \
          ((current) = next != (head)                \
-              ? NODE_ITEM(typeof(*(current)), next) \
+              ? NODE_ITEM(CEMU_TYPEOF(*(current)), next) \
               : NULL), next = next->next, (current); )
 
 #define UPDATE_STATUS_CHANGE(pointer, field, value) do { \

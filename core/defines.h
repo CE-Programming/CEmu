@@ -39,6 +39,12 @@
 # define strcasecmp _stricmp
 #endif
 
+#ifdef _MSC_VER
+# define CEMU_TYPEOF __typeof__
+#else
+# define CEMU_TYPEOF typeof
+#endif
+
 #ifdef __EMSCRIPTEN__
 # include <emscripten.h>
 #else
