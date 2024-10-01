@@ -114,16 +114,18 @@ struct hub {
     port_t ports[];
 };
 
+enum device_state {
+    DEVICE_STATE_ATTACHED,
+    DEVICE_STATE_POWERED,
+    DEVICE_STATE_DEFAULT_OR_ADDRESS,
+    DEVICE_STATE_CONFIGURED,
+};
+
 struct device {
     node_t node;
     libusb_device_handle *handle;
     endpoint_t endpoints[0x20];
-    enum device_state {
-        DEVICE_STATE_ATTACHED,
-        DEVICE_STATE_POWERED,
-        DEVICE_STATE_DEFAULT_OR_ADDRESS,
-        DEVICE_STATE_CONFIGURED,
-    } state : 2;
+    uint8_t state : 2; /* enum device_state */
     uint8_t address : 7, numPorts : 7;
     hub_t hub;
 };

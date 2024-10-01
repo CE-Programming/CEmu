@@ -51,7 +51,7 @@ typedef struct usb_transfer_info {
     uint16_t length, max_pkt_size;
     usb_transfer_status_t status : 8;
     uint8_t address : 7, : 1, endpoint : 4;
-    usb_transfer_type_t type : 3;
+    uint8_t type : 3; /* usb_transfer_type_t */
     bool direction : 1;
 } usb_transfer_info_t;
 
@@ -72,7 +72,7 @@ typedef struct usb_event {
     usb_progress_handler_t *progress_handler;
     void *progress_context, *context;
     bool host : 1;
-    usb_speed_t speed : 2;
+    uint8_t speed : 2; /* usb_speed_t */
     usb_event_type_t type;
     union {
         usb_init_info_t init;
