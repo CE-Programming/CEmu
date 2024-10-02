@@ -15,7 +15,6 @@
 
 #define CONTROL_MPS 0x40
 
-/* Global GPT state */
 usb_state_t usb;
 
 typedef enum usb_qtype {
@@ -244,8 +243,10 @@ static void usb_unplug(void) {
 static void usb_plug_complete(void) {
     if (usb.device != usb_disconnected_device) {
         usb_plug();
+        sched_set(SCHED_USB, 1);
     } else {
         usb_unplug();
+        sched_clear(SCHED_USB);
     }
 }
 

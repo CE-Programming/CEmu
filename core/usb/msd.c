@@ -1,6 +1,7 @@
 #include "device.h"
 
 #include "../os/os.h"
+#include "../emu.h"
 
 #include <errno.h>
 #include <stdbool.h>
@@ -167,6 +168,8 @@ int usb_msd_device(usb_event_t *event) {
                         transfer->length = 0;
                         transfer->status = USB_TRANSFER_COMPLETED;
                     } else {
+                        gui_console_printf("[MSD] Unhandled control transfer %02X:%02X %04X:%04X\n",
+                            bmRequestType, bRequest, wValue, wIndex);
                         transfer->buffer = NULL;
                         transfer->length = 0;
                         transfer->status = USB_TRANSFER_STALLED;
