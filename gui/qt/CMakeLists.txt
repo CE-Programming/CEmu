@@ -148,7 +148,6 @@ set(CEmu_Sources
     main.cpp
     calculatorwidget.cpp calculatorwidget.h
     capturewidget.cpp capturewidget.h
-    console.cpp console.h
     consolewidget.cpp consolewidget.h
     corethread.cpp corethread.h
     corewindow.cpp corewindow.h
@@ -177,7 +176,6 @@ set(CEmu_Sources
     developer/osvarswidget.cpp developer/osvarswidget.h
     developer/performancewidget.cpp developer/performancewidget.h
     developer/portmonitorwidget.cpp developer/portmonitorwidget.h
-    developer/sourceswidget.cpp developer/sourceswidget.h
     developer/usbwidget.cpp developer/usbwidget.h
     developer/visualizerwidget.cpp developer/visualizerwidget.h
     developer/watchpointswidget.cpp developer/watchpointswidget.h

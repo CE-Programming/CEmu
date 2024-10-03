@@ -31,7 +31,6 @@
 #include "developer/osvarswidget.h"
 #include "developer/performancewidget.h"
 #include "developer/portmonitorwidget.h"
-#include "developer/sourceswidget.h"
 #include "developer/usbwidget.h"
 #include "developer/visualizerwidget.h"
 #include "developer/watchpointswidget.h"
@@ -207,15 +206,15 @@ void CoreWindow::createDeveloperWidgets()
     auto *osStacks = new OsStacksWidget{this};
     auto *osVars = new OsVarsWidget{this};
     auto *portMonitor = new PortMonitorWidget{this, portmonitorList};
+    auto *watchpoints = new WatchpointsWidget{this, watchpointList};
+    auto *performance = new PerformanceWidget{this};
 #ifdef HAS_LIBUSB
     auto *usbDevices = new UsbWidget{this};
 #endif
-    auto *sources = new SourcesWidget{this};
-    auto *watchpoints = new WatchpointsWidget{this, watchpointList};
-    auto *performance = new PerformanceWidget{this};
 
-    mDevMenu->addAction(console->dock()->toggleAction());
+    mDevMenu->addAction(basic->dock()->toggleAction());
     mDevMenu->addAction(control->dock()->toggleAction());
+    mDevMenu->addAction(console->dock()->toggleAction());
     mDevMenu->addAction(cpu->dock()->toggleAction());
     mDevMenu->addAction(disassembly->dock()->toggleAction());
     mDevMenu->addAction(watchpoints->dock()->toggleAction());
@@ -225,13 +224,10 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(osStacks->dock()->toggleAction());
     mDevMenu->addAction(devMisc->dock()->toggleAction());
     mDevMenu->addAction(performance->dock()->toggleAction());
+    mDevMenu->addAction(autotester->dock()->toggleAction());
 #ifdef HAS_LIBUSB
     mDevMenu->addAction(usbDevices->dock()->toggleAction());
 #endif
-    mDevMenu->addAction(sources->dock()->toggleAction());
-    mDevMenu->addAction(basic->dock()->toggleAction());
-    mDevMenu->addAction(autotester->dock()->toggleAction());
-
     mDevMenu->addSeparator();
 
     auto *memoryAction = mDevMenu->addAction(tr("Add Memory View"));
