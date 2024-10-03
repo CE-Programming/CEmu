@@ -46,6 +46,7 @@
 #include "variablewidget.h"
 
 #include <kddockwidgets/LayoutSaver.h>
+#include <kddockwidgets/core/DockWidget.h>
 
 #include <QtCore/QEvent>
 #include <QtCore/QJsonDocument>
@@ -382,22 +383,24 @@ bool CoreWindow::restoreLayout()
     {
         return false;
     }
+
 /*
     for (auto *restoredDockWidget : saver.restoredDockWidgets())
     {
         auto name = restoredDockWidget->uniqueName();
-        auto *dockedWidget = static_cast<DockedWidget *>(restoredDockWidget->widget());
+        auto *dockWidget = static_cast<KDDockWidgets::QtWidgets::DockWidget *>(restoredDockWidget);
+        auto *dockedWidget = static_cast<DockedWidget *>(dockWidget);
         if (!dockedWidget)
         {
             if (name.startsWith(QLatin1String("Visualizer #")))
             {
-                auto *visualizer = new VisualizerWidget{this, restoredDockWidget};
+                auto *visualizer = new VisualizerWidget{this, dockWidget};
                 //connect(&mCore, &CoreWrapper::lcdFrame, visualizer, &VisualizerWidget::lcdFrame);
                 dockedWidget = visualizer;
             }
             else if (name.startsWith(QLatin1String("Memory #")))
             {
-                dockedWidget = new MemoryWidget{this, restoredDockWidget};
+                dockedWidget = new MemoryWidget{this, dockWidget};
             }
             else
             {
@@ -420,7 +423,7 @@ void CoreWindow::softCmd()
     }
     for (auto &dockedWidget : mDockedWidgets)
     {
-        //dockedWidget.enableDebugWidgets(false);
+        dockedWidget.enableDebugWidgets(false);
         //dockedWidget.storeToCore(mCore);
     }
     //mCore.wake();

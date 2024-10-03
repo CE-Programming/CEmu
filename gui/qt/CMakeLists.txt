@@ -85,10 +85,10 @@ endif()
 include(GNUInstallDirs)
 
 if(USE_QT5)
-    find_package(Qt5 REQUIRED COMPONENTS Core DBus Gui Network Widgets)
+    find_package(Qt5 REQUIRED COMPONENTS Core DBus Gui Network Widgets Svg)
 else()
     find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-    find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets Svg)
 endif()
 
 set(CMAKE_AUTORCC ON)
@@ -318,6 +318,7 @@ target_link_libraries(CEmu PRIVATE
     Qt::DBus # needed at runtime by QtGui for some reason...?
     Qt::Network
     Qt::Widgets
+    Qt::Svg
 )
 
 include(CheckIPOSupported)
