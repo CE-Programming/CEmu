@@ -24,6 +24,10 @@
         {
           "name": "qt5-base",
           "default-features": false
+        },
+        {
+          "name": "qt5-svg",
+          "default-features": false
         }
       ]
     },
@@ -40,6 +44,10 @@
           "default-features": false,
           "features": [ "fontconfig", "xcb" ],
           "platform": "linux"
+        },
+        {
+          "name": "qtsvg",
+          "default-features": false
         }
       ]
     }
