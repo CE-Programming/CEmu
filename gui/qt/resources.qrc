@@ -58,6 +58,5 @@
         <file>assets/icons/usb.svg</file>
         <file>assets/icons/basic.svg</file>
         <file>assets/icons/broken_link.svg</file>
-        <file>assets/icons/c.svg</file>
     </qresource>
 </RCC>

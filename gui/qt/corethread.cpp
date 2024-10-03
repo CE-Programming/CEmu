@@ -1,4 +1,4 @@
-#include "CoreThread.h"
+#include "corethread.h"
 
 #include "../../core/bootver.h"
 #include "../../core/control.h"
@@ -362,11 +362,11 @@ void CoreThread::doSend() {
     setThrottle(false);
     emu_send_variables(args.args(), args.size(), sendLoc,
                        [](void *context, int value, int total) {
-                           CoreThread* CoreThread = reinterpret_cast<CoreThread *>(context);
+                           CoreThread* thread = reinterpret_cast<CoreThread *>(context);
                            if (value == 1 && total == 1) {
-                               CoreThread->setThrottle(CoreThread->m_backupThrottleForTransfers);
+                               thread->setThrottle(thread->m_backupThrottleForTransfers);
                            }
-                           emit CoreThread->linkProgress(value, total);
+                           emit thread->linkProgress(value, total);
                            return false;
                        }, this);
 }

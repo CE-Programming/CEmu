@@ -16,7 +16,6 @@
 
 #include "consolewidget.h"
 
-#include "console.h"
 #include "corethread.h"
 #include "settings.h"
 
@@ -40,7 +39,6 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
 {
     mConsole = new QPlainTextEdit;
     QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear"), this);
-    QLineEdit *inputLine = new QLineEdit;
     mChkAuto = new QCheckBox(tr("Autoscroll"));
 
     mConsole->setReadOnly(true);
@@ -51,6 +49,7 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
 
     QHBoxLayout *hLayout = new QHBoxLayout;
     hLayout->addWidget(mChkAuto);
+    hLayout->addStretch();
     hLayout->addWidget(btnClear);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
@@ -68,8 +67,6 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
     {
         setAutoScroll(Qt::Unchecked);
     }
-
-    Console *console = new Console{this};
 
     connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
