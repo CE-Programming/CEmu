@@ -37,7 +37,7 @@ const uint32_t WatchpointsWidget::sMaxSize = (2 << 24);
 const uint32_t WatchpointsWidget::sMaxAddr = (2 << 24) - 1;
 
 WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpoint> &watchpoints)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Watchpoints")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Watchpoints")},
                    QIcon(QStringLiteral(":/assets/icons/flash_on.svg")),
                    coreWindow},
       mWpNum{0},
@@ -122,7 +122,7 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
 
 void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 {
-    int id = core().get(cemucore::CEMUCORE_PROP_WATCH, -1);
+    int id = -1;//core().get(cemucore::CEMUCORE_PROP_WATCH, -1);
     if (id == -1)
     {
         return;
@@ -190,27 +190,28 @@ void WatchpointsWidget::setWatchpointMode(int row, int mode)
 {
     const QString space = QStringLiteral(" ");
     int id = mTbl->item(row, Column::Enabled)->data(Role::Id).toInt();
+    (void)id;
 
     QString addrStr = mTbl->item(row, Column::Address)->text();
     if (Util::isHexAddress(addrStr))
     {
-        core().set(cemucore::CEMUCORE_PROP_WATCH_ADDR, id, Util::hex2int(addrStr));
+        //core().set(cemucore::CEMUCORE_PROP_WATCH_ADDR, id, Util::hex2int(addrStr));
     }
 
     QString sizeStr = mTbl->item(row, Column::Size)->text();
     if (Util::isDecString(sizeStr, 1, sMaxSize))
     {
-        core().set(cemucore::CEMUCORE_PROP_WATCH_SIZE, id, sizeStr.toUInt());
+        //core().set(cemucore::CEMUCORE_PROP_WATCH_SIZE, id, sizeStr.toUInt());
     }
 
-    QFlags<cemucore::watch_flags> flags;
-    flags |= cemucore::CEMUCORE_WATCH_AREA_MEM;
-    flags |= cemucore::CEMUCORE_WATCH_MODE_ANY;
+    //QFlags<cemucore::watch_flags> flags;
+    //flags |= cemucore::CEMUCORE_WATCH_AREA_MEM;
+    //flags |= cemucore::CEMUCORE_WATCH_MODE_ANY;
 
     if (mode & Watchpoint::Mode::E)
     {
         mTbl->item(row, Column::Enabled)->setText(QStringLiteral("e"));
-        flags |= cemucore::CEMUCORE_WATCH_ENABLE;
+        //flags |= cemucore::CEMUCORE_WATCH_ENABLE;
     }
     else
     {
@@ -220,7 +221,7 @@ void WatchpointsWidget::setWatchpointMode(int row, int mode)
     if (mode & Watchpoint::Mode::R)
     {
         mTbl->item(row, Column::Read)->setText(QStringLiteral("r"));
-        flags |= cemucore::CEMUCORE_WATCH_TYPE_READ;
+        //flags |= cemucore::CEMUCORE_WATCH_TYPE_READ;
     }
     else
     {
@@ -230,7 +231,7 @@ void WatchpointsWidget::setWatchpointMode(int row, int mode)
     if (mode & Watchpoint::Mode::W)
     {
         mTbl->item(row, Column::Write)->setText(QStringLiteral("w"));
-        flags |= cemucore::CEMUCORE_WATCH_TYPE_WRITE;
+        //flags |= cemucore::CEMUCORE_WATCH_TYPE_WRITE;
     }
     else
     {
@@ -240,7 +241,7 @@ void WatchpointsWidget::setWatchpointMode(int row, int mode)
     if (mode & Watchpoint::Mode::X)
     {
         mTbl->item(row, Column::Execute)->setText(QStringLiteral("x"));
-        flags |= cemucore::CEMUCORE_WATCH_TYPE_EXECUTE;
+        //flags |= cemucore::CEMUCORE_WATCH_TYPE_EXECUTE;
     }
     else
     {
@@ -248,7 +249,7 @@ void WatchpointsWidget::setWatchpointMode(int row, int mode)
     }
 
     mTbl->item(row, Column::Enabled)->setData(Role::Mode, mode);
-    core().set(cemucore::CEMUCORE_PROP_WATCH_FLAGS, id, flags);
+    //core().set(cemucore::CEMUCORE_PROP_WATCH_FLAGS, id, flags);
 }
 
 void WatchpointsWidget::removeSelected()
@@ -260,7 +261,8 @@ void WatchpointsWidget::removeSelected()
         if (mTbl->item(i, Column::Address)->isSelected())
         {
             int id = mTbl->item(i, Column::Enabled)->data(Role::Id).toInt();
-            core().set(cemucore::CEMUCORE_PROP_WATCH, id, -1);
+            //core().set(cemucore::CEMUCORE_PROP_WATCH, id, -1);
+            (void)id;
             mTbl->removeRow(i);
         }
     }

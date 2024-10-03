@@ -33,7 +33,7 @@
 #include <QtWidgets/QVBoxLayout>
 
 CaptureWidget::CaptureWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Screen Capture")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Screen Capture")},
                    QIcon(QStringLiteral(":/assets/icons/picture.svg")),
                    coreWindow}
 {
@@ -119,5 +119,5 @@ void CaptureWidget::copyScreen()
 {
     QApplication::clipboard()->setImage(QImage(QStringLiteral(":/assets/test/screen.png")), QClipboard::Clipboard);
 
-    QToolTip::showText(mBtnCopyScreen->mapToGlobal({0, 5}), tr("Copied screen to clipboard"), mBtnCopyScreen);
+    QToolTip::showText(mBtnCopyScreen->mapToGlobal(QPoint{0, 5}), tr("Copied screen to clipboard"), mBtnCopyScreen);
 }

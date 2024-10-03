@@ -31,8 +31,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-MemoryWidget::MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock)
-    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Memory #") + Util::randomString(6)},
+MemoryWidget::MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::QtWidgets::DockWidget *dock)
+    : DockedWidget{dock ? dock : new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Memory #") + Util::randomString(6)},
                    QIcon(QStringLiteral(":/assets/icons/add_grid.svg")),
                    coreWindow}
 {

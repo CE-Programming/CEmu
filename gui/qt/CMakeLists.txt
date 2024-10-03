@@ -153,7 +153,6 @@ set(CEmu_Sources
     corethread.cpp corethread.h
     corewindow.cpp corewindow.h
     dockedwidget.cpp dockedwidget.h
-    dockwidget.cpp dockwidget.h
     keyhistorywidget.cpp keyhistorywidget.h
     overlaywidget.cpp overlaywidget.h
     romdialog.cpp romdialog.h
@@ -312,19 +311,6 @@ endif()
 
 find_package(KDDockWidgets-qt6 CONFIG REQUIRED)
 target_link_libraries(CEmu PRIVATE KDAB::kdbindings KDAB::kddockwidgets)
-
-if(WIN32)
-    find_package(unofficial-readline-win32 CONFIG REQUIRED)
-    if(unofficial-readline-win32_FOUND)
-        target_compile_definitions(CEmu PRIVATE "HAS_READLINE")
-    target_link_libraries(CEmu PRIVATE unofficial::readline-win32::readline)
-    endif()
-else()
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(readline REQUIRED IMPORTED_TARGET readline)
-    target_link_libraries(CEmu PRIVATE PkgConfig::readline)
-    target_compile_definitions(CEmu PRIVATE "HAS_READLINE")
-endif()
 
 target_link_libraries(CEmu PRIVATE
     Qt::Core

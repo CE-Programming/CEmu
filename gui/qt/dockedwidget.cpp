@@ -18,12 +18,10 @@
 
 #include "corewindow.h"
 
-#include <kddockwidgets/DockWidgetBase.h>
-
 #include <QtCore/QString>
 #include <QtCore/QtGlobal>
 
-DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock,
+DockedWidget::DockedWidget(KDDockWidgets::QtWidgets::DockWidget *dock,
                            const QIcon &icon,
                            CoreWindow *coreWindow)
     : QWidget{dock},
@@ -41,9 +39,9 @@ DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock,
     dock->setWidget(this);
 }
 
-KDDockWidgets::DockWidgetBase *DockedWidget::dock()
+KDDockWidgets::QtWidgets::DockWidget *DockedWidget::dock()
 {
-    return static_cast<KDDockWidgets::DockWidgetBase *>(parent());
+    return static_cast<KDDockWidgets::QtWidgets::DockWidget *>(parent());
 }
 
 CoreWindow *DockedWidget::coreWindow()

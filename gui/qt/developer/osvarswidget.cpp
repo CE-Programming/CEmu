@@ -25,7 +25,7 @@
 #include <QtWidgets/QTableWidget>
 
 OsVarsWidget::OsVarsWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Variables")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("OS Variables")},
                    QIcon(QStringLiteral(":/assets/icons/data_sheet.svg")),
                    coreWindow}
 {

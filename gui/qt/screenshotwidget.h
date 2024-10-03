@@ -37,14 +37,13 @@ signals:
     void saveScreenshot();
 
 protected:
-    void enterEvent(QEvent *event) override;
-    void leaveEvent(QEvent *event) override;
+    void enterEvent(QEnterEvent *event) Q_DECL_OVERRIDE;
+    void leaveEvent(QEvent *event) Q_DECL_OVERRIDE;
 
 private:
     QPushButton *mBtnSave;
     QPushButton *mBtnRemove;
 };
-
 
 class ScreenshotWidget : public QLabel
 {

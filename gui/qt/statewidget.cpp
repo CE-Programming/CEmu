@@ -36,7 +36,7 @@ const QString StateWidget::sDefaultStateName = tr("State");
 const QString StateWidget::sStateExtension = QStringLiteral(".cemu");
 
 StateWidget::StateWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("States")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("States")},
                    QIcon(QStringLiteral(":/assets/icons/filing_cabinet.svg")),
                    coreWindow},
       mStateNum{1}

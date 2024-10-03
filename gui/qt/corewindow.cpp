@@ -35,7 +35,7 @@
 #include "developer/usbwidget.h"
 #include "developer/visualizerwidget.h"
 #include "developer/watchpointswidget.h"
-#include "dockwidget.h"
+#include "dockedwidget.h"
 #include "keyhistorywidget.h"
 #include "keypad/qtkeypadbridge.h"
 #include "romdialog.h"
@@ -62,13 +62,10 @@
 CoreWindow::CoreWindow(const QString &uniqueName,
                        KDDockWidgets::MainWindowOptions options,
                        QWidget *parent)
-    : KDDockWidgets::MainWindow(uniqueName, options, parent),
+    : KDDockWidgets::QtWidgets::MainWindow(uniqueName, options, parent),
       mKeypadBridge{new QtKeypadBridge{this}},
-      mCalcOverlay{nullptr},
-      mCore{this}
+      mCalcOverlay{nullptr}
 {
-    //connect(&mCore, &CoreWrapper::softCmd, this, &CoreWindow::softCmd);
-
     auto *menubar = menuBar();
 
     mCalcsMenu = new QMenu(tr("Calculator"), this);
@@ -209,7 +206,9 @@ void CoreWindow::createDeveloperWidgets()
     auto *osStacks = new OsStacksWidget{this};
     auto *osVars = new OsVarsWidget{this};
     auto *portMonitor = new PortMonitorWidget{this, portmonitorList};
+#ifdef HAS_LIBUSB
     auto *usbDevices = new UsbWidget{this};
+#endif
     auto *sources = new SourcesWidget{this};
     auto *watchpoints = new WatchpointsWidget{this, watchpointList};
     auto *performance = new PerformanceWidget{this};
@@ -225,7 +224,9 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(osStacks->dock()->toggleAction());
     mDevMenu->addAction(devMisc->dock()->toggleAction());
     mDevMenu->addAction(performance->dock()->toggleAction());
+#ifdef HAS_LIBUSB
     mDevMenu->addAction(usbDevices->dock()->toggleAction());
+#endif
     mDevMenu->addAction(sources->dock()->toggleAction());
     mDevMenu->addAction(basic->dock()->toggleAction());
     mDevMenu->addAction(autotester->dock()->toggleAction());
@@ -295,14 +296,14 @@ void CoreWindow::exportRom()
         const QString romFile = dialog.selectedFiles().first();
         if (!romFile.isEmpty())
         {
-            mCore.command({"store", "rom", romFile});
+            //mCore.command({"store", "rom", romFile});
         }
     }
 }
 
 void CoreWindow::resetEmu()
 {
-    mCalcOverlay->setVisible(mCore.command({"load", "rom", Settings::textOption(Settings::RomFile)}));
+    //mCalcOverlay->setVisible(mCore.command({"load", "rom", Settings::textOption(Settings::RomFile)}));
 }
 
 void CoreWindow::showPreferences()
@@ -381,7 +382,7 @@ bool CoreWindow::restoreLayout()
     {
         return false;
     }
-
+/*
     for (auto *restoredDockWidget : saver.restoredDockWidgets())
     {
         auto name = restoredDockWidget->uniqueName();
@@ -406,7 +407,7 @@ bool CoreWindow::restoreLayout()
         }
         dockedWidget->unserialize(json.take(name));
     }
-
+*/
     return json.isEmpty();
 }
 
@@ -414,15 +415,15 @@ void CoreWindow::softCmd()
 {
     for (auto &dockedWidget : mDockedWidgets)
     {
-        dockedWidget.loadFromCore(mCore);
+        //dockedWidget.loadFromCore(mCore);
         dockedWidget.enableDebugWidgets(true);
     }
     for (auto &dockedWidget : mDockedWidgets)
     {
         //dockedWidget.enableDebugWidgets(false);
-        dockedWidget.storeToCore(mCore);
+        //dockedWidget.storeToCore(mCore);
     }
-    mCore.wake();
+    //mCore.wake();
 }
 
 void CoreWindow::closeEvent(QCloseEvent *)

@@ -34,7 +34,7 @@
 #include <QtWidgets/QSpacerItem>
 
 ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Console")},
                    QIcon(QStringLiteral(":/assets/icons/command_line.svg")),
                    coreWindow}
 {
@@ -44,13 +44,12 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
     mChkAuto = new QCheckBox(tr("Autoscroll"));
 
     mConsole->setReadOnly(true);
-    mConsole->setMaximumBlockCount(2500);
+    mConsole->setMaximumBlockCount(8192);
     mConsole->setMinimumSize(10, 100);
     mFormat.setBackground(mConsole->palette().color(QPalette::Base));
     mFormat.setForeground(mConsole->palette().color(QPalette::Text));
 
     QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addWidget(inputLine);
     hLayout->addWidget(mChkAuto);
     hLayout->addWidget(btnClear);
 
@@ -70,16 +69,7 @@ ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
         setAutoScroll(Qt::Unchecked);
     }
 
-    connect(this, &ConsoleWidget::inputLine,
-            &core(), QOverload<const QString &>::of(&CoreWrapper::command));
-    connect(inputLine, &QLineEdit::returnPressed, [this, inputLine]()
-    {
-        processInputLine(inputLine->text());
-        inputLine->clear();
-    });
     Console *console = new Console{this};
-    connect(console, &Console::inputLine, this, &ConsoleWidget::processInputLine);
-    connect(this, &ConsoleWidget::inputLine, console, &Console::addHistoryLine);
 
     connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
@@ -250,24 +240,4 @@ void ConsoleWidget::setAutoScroll(int state)
                             Qt::CheckState::Unchecked);
 
     Settings::setBoolOption(Settings::ConsoleAutoScroll, mAutoscroll);
-}
-
-void ConsoleWidget::processInputLine(QString line)
-{
-    if (line.isEmpty())
-    {
-        line = mLastInputLine;
-    }
-    else
-    {
-        mLastInputLine = line;
-    }
-    if (!line.isEmpty())
-    {
-        QTextCharFormat format;
-        format.setBackground(mConsole->palette().color(QPalette::Base));
-        format.setForeground(Qt::darkGray);
-        append(QStringLiteral("> %1\n").arg(line.trimmed()), format);
-        emit inputLine(line);
-    }
 }

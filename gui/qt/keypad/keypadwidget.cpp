@@ -428,7 +428,7 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected)
     if (selected != wasSelected)
     {
         update(mTransform.mapRect(key->keyGeometry()));
-        parent()->core().set(cemucore::CEMUCORE_PROP_KEY, key->keycode().code(), selected);
+        //emu_keypad_event(key->keycode().row(), key->keycode().col(), selected);
         if (selected)
         {
             QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
@@ -601,9 +601,15 @@ void KeypadWidget::touchEvent(QTouchEvent *event)
     {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
             if (event->device()->capabilities().testFlag(QTouchDevice::Position))
             {
                 touchUpdate(event->touchPoints());
+#else
+            if (event->device()->capabilities().testFlag(QInputDevice::Capability::Position))
+            {
+                touchUpdate(event->points());
+#endif
             }
             else
             {

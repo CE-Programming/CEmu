@@ -30,7 +30,7 @@
 #include <QtWidgets/QSizePolicy>
 
 DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Disassembly")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Disassembly")},
                    QIcon(QStringLiteral(":/assets/icons/fine_print.svg")),
                    coreWindow}
 {

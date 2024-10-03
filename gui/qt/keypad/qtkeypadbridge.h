@@ -24,7 +24,7 @@ public:
     bool eventFilter(QObject *obj, QEvent *e);
 
 public slots:
-    void setDev(cemucore::dev dev);
+    void setDev(cemucore_dev_t dev);
     void setKeymap(Keymap map);
 
 signals:
@@ -38,7 +38,7 @@ private:
 
     CoreWindow *parent() const;
 
-    cemucore::dev mDev = cemucore::CEMUCORE_DEV_TI84PCE;
+    cemucore_dev_t mDev = cemucore_dev_t::CEMUCORE_DEV_TI84PCE;
     Keymap mKeymap = Keymap::CEmu;
     QHash<quint32, KeyCode> pressed;
     const HostKey *const *keymap = nullptr;

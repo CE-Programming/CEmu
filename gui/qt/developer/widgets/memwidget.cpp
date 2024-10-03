@@ -209,7 +209,7 @@ void MemWidget::selectCharset()
     menu.addAction(mCharsetTiAsciiText);
     menu.addAction(mCharsetNoneText);
 
-    QAction *action = menu.exec(mBtnCharset->mapToGlobal({0, mBtnCharset->height() + 1}));
+    QAction *action = menu.exec(mBtnCharset->mapToGlobal(QPoint{0, mBtnCharset->height() + 1}));
     if (action)
     {
         mBtnCharset->setText(action->text());
@@ -237,7 +237,7 @@ void MemWidget::selectArea()
     menu.addAction(mAreaFlashText);
     menu.addAction(mAreaPortsText);
 
-    QAction *action = menu.exec(mBtnArea->mapToGlobal({0, mBtnArea->height() + 1}));
+    QAction *action = menu.exec(mBtnArea->mapToGlobal(QPoint{0, mBtnArea->height() + 1}));
     if (action)
     {
         mBtnArea->setText(action->text());
@@ -270,7 +270,7 @@ void MemWidget::selectSearchType()
     menu.addAction(mSearchHexText);
     menu.addAction(mSearchAsciiText);
 
-    QAction *action = menu.exec(mBtnSearchType->mapToGlobal({0, mBtnSearchType->height() + 1}));
+    QAction *action = menu.exec(mBtnSearchType->mapToGlobal(QPoint{0, mBtnSearchType->height() + 1}));
     if (action)
     {
         mBtnSearchType->setText(action->text());

@@ -30,7 +30,7 @@
 #include <QtWidgets/QSizePolicy>
 
 AutotesterWidget::AutotesterWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Autotester")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Autotester")},
                    QIcon(QStringLiteral(":/assets/icons/todo_list.svg")),
                    coreWindow}
 {

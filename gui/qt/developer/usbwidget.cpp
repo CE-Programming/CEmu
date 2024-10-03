@@ -30,7 +30,7 @@
 #include <QtWidgets/QSizePolicy>
 
 UsbWidget::UsbWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("USB Devices")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("USB Devices")},
                    QIcon(QStringLiteral(":/assets/icons/usb.svg")),
                    coreWindow}
 {

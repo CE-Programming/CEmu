@@ -29,7 +29,7 @@
 #include <QtWidgets/QSizePolicy>
 
 SourcesWidget::SourcesWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("C Debug View")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("C Debug View")},
                    QIcon(QStringLiteral(":/assets/icons/c.svg")),
                    coreWindow}
 {

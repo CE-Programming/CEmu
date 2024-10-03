@@ -25,7 +25,7 @@
 #include <QtWidgets/QWidget>
 
 KeyHistoryWidget::KeyHistoryWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Key History")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Key History")},
                    QIcon(QStringLiteral(":/assets/icons/kindle.svg")),
                    coreWindow}
 {

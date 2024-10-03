@@ -50,7 +50,7 @@ public:
     explicit CalculatorWidget(CoreWindow *coreWindow);
 
 public slots:
-    void setDev(cemucore::dev);
+    void setDev(cemucore_dev_t dev);
     void setColor(int color);
     void changeKeyState(KeyCode keycode, bool press);
 

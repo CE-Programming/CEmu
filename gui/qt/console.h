@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 CE Programming.
+ * Copyright (c) 2015-2024 CE Programming.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,78 +19,13 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QTextStream>
-#include <QtNetwork/QLocalServer>
+#include <QtCore/QString>
+
 QT_BEGIN_NAMESPACE
 class QLocalSocket;
 class QString;
 class QThread;
 QT_END_NAMESPACE
-
-#include <cstdio>
-
-namespace readline
-{
-
-class Worker : public QObject
-{
-    Q_OBJECT
-
-public:
-    Worker(QObject *parent = nullptr);
-    ~Worker() override;
-
-signals:
-    void inputLine(const QString &line);
-
-public slots:
-    void start(const QString &name);
-    void addHistoryLine(const QString &line);
-
-private slots:
-    void inputReady();
-
-private:
-    void connected(::FILE *socket);
-    static Worker *sInstance;
-    QTextCodec *mUtf8Codec;
-    QTextCodec::ConverterState mUtf8State;
-};
-
-class Controller : public QObject
-{
-    Q_OBJECT
-
-public:
-    Controller(QObject *parent = nullptr);
-    ~Controller();
-
-    void connectToServer(const QLocalServer &server);
-
-signals:
-    void start(const QString &name);
-    void inputLine(const QString &line);
-    void addHistoryLine(const QString &line);
-
-private:
-    Worker mWorker;
-    QThread *mThread = nullptr;
-};
-
-}
-
-class Connection : public QObject
-{
-    Q_OBJECT
-
-public:
-    Connection(QLocalSocket *socket, QObject *parent = nullptr);
-
-private slots:
-    void readyRead();
-
-private:
-    QTextStream mStream;
-};
 
 class Console : public QObject
 {
@@ -100,20 +35,9 @@ public:
     Console(QObject *parent = nullptr);
     ~Console() override;
 
-signals:
-    void inputLine(const QString &line);
-    void addHistoryLine(const QString &line);
-
 public slots:
     void outputText(const QString &text);
     void errorText(const QString &text);
-
-private slots:
-    void connection();
-
-private:
-    readline::Controller mReadline;
-    QLocalServer mServer;
 };
 
 #endif

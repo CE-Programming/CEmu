@@ -51,7 +51,7 @@ ScreenshotOverlayWidget::ScreenshotOverlayWidget(QWidget *parent)
     connect(mBtnSave, &QPushButton::clicked, this, &ScreenshotOverlayWidget::saveScreenshot);
 }
 
-void ScreenshotOverlayWidget::enterEvent(QEvent *event)
+void ScreenshotOverlayWidget::enterEvent(QEnterEvent *event)
 {
     QWidget::enterEvent(event);
     mBtnSave->setVisible(true);

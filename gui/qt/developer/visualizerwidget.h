@@ -3,11 +3,7 @@
 
 #include "../dockedwidget.h"
 #include "widgets/visualizerlcdwidget.h"
-
-namespace KDDockWidgets
-{
-class DockWidgetBase;
-}
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtCore/QString>
 #include <QtWidgets/QWidget>
@@ -27,7 +23,7 @@ class VisualizerWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock = nullptr);
+    explicit VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::QtWidgets::DockWidget *dock = nullptr);
 
     void setConfig(const QString &config);
     QString getConfig() const;

@@ -28,7 +28,7 @@
 #include <QtGui/QDrag>
 #include <QtGui/QPainter>
 #include <QtWidgets/QMenu>
-#include <QtWidgets/QAction>
+#include <QAction>
 #include <QtWidgets/QApplication>
 
 VisualizerLcdWidget::VisualizerLcdWidget(QWidget *parent)

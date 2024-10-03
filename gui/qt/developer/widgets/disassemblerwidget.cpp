@@ -71,7 +71,7 @@ void DisassemblerWidget::mousePressEvent(QMouseEvent *event)
     QTableWidgetItem *item = itemAt(event->pos());
 
     if (item && item->column() == Column::Address &&
-        event->x() >= 0 && event->x() <= verticalHeader()->defaultSectionSize())
+        event->position().x() >= 0 && event->position().x() <= verticalHeader()->defaultSectionSize())
     {
         Watchpoint watchpoint;
 
@@ -85,21 +85,23 @@ void DisassemblerWidget::mousePressEvent(QMouseEvent *event)
         auto it = mBreakpoints.find(watchpoint.addr);
         if (it == mBreakpoints.end())
         {
-            int id = parent()->core().get(cemucore::CEMUCORE_PROP_WATCH, -1);
+            int id = -1;
             if (id != -1)
             {
                 mBreakpoints.insert(watchpoint.addr, id);
+                /*
                 parent()->core().set(cemucore::CEMUCORE_PROP_WATCH_ADDR, id, watchpoint.addr);
                 parent()->core().set(cemucore::CEMUCORE_PROP_WATCH_FLAGS, id,
                                      cemucore::CEMUCORE_WATCH_AREA_MEM |
                                      cemucore::CEMUCORE_WATCH_MODE_ANY |
                                      cemucore::CEMUCORE_WATCH_TYPE_EXECUTE |
                                      cemucore::CEMUCORE_WATCH_ENABLE);
+                                     */
             }
         }
         else
         {
-            parent()->core().set(cemucore::CEMUCORE_PROP_WATCH, *it, -1);
+            //parent()->core().set(cemucore::CEMUCORE_PROP_WATCH, *it, -1);
             mBreakpoints.erase(it);
         }
 
@@ -138,10 +140,8 @@ void DisassemblerWidget::updateRow(int row)
     {
         return;
     }
-    auto flags = cemucore::watch_flags(
-            parent()->core().get(cemucore::CEMUCORE_PROP_MEM_ADL_WATCH_FLAGS,
-                                 Util::hex2int(addrItem->text())));
-    addrItem->setData(Role::Breakpoint, bool(flags & cemucore::CEMUCORE_WATCH_TYPE_EXECUTE));
+    auto flags = 0;
+    //addrItem->setData(Role::Breakpoint, bool(flags & cemucore::CEMUCORE_WATCH_TYPE_EXECUTE));
     for (int col = 0; col != columnCount(); ++col)
     {
         auto *curItem = item(row, col);
@@ -149,8 +149,8 @@ void DisassemblerWidget::updateRow(int row)
         {
             continue;
         }
-        curItem->setData(Role::ReadWatchpoint, bool(flags & cemucore::CEMUCORE_WATCH_TYPE_READ));
-        curItem->setData(Role::WriteWatchpoint, bool(flags & cemucore::CEMUCORE_WATCH_TYPE_WRITE));
+        //curItem->setData(Role::ReadWatchpoint, bool(flags & cemucore::CEMUCORE_WATCH_TYPE_READ));
+        //curItem->setData(Role::WriteWatchpoint, bool(flags & cemucore::CEMUCORE_WATCH_TYPE_WRITE));
     }
 }
 
@@ -161,7 +161,7 @@ bool DisassemblerWidget::gotoAddress(const QString &addrStr)
     // todo: lookup the string in equates map
     uint32_t addr = Util::hex2int(addrStr);
 
-    mPcAddr = parent()->core().get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_PC);
+    mPcAddr = 0;//parent()->core().get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_PC);
 
     mTopAddress = addr;
 
@@ -259,7 +259,7 @@ void DisassemblerWidget::prepend()
 
 QPair<QString, QString> DisassemblerWidget::disassemble(uint32_t &addr)
 {
-    return mDis.disassemble(parent()->core(), addr);
+    return mDis.disassemble(addr);
 }
 
 int DisassemblerWidget::selectedAddress()
@@ -543,7 +543,7 @@ void DisassemblerWidgetDelegate::paint(QPainter* painter, const QStyleOptionView
 
     opt.rect.moveRight(opt.rect.right() + metrics.horizontalAdvance(' ') / 2);
 
-    for (int i = 0, t = string.count(); i < t; ++i)
+    for (int i = 0, t = string.size(); i < t; ++i)
     {
         bool reset = false;
 

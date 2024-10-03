@@ -17,8 +17,9 @@
 #ifndef CEMUCORE_H
 #define CEMUCORE_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum cemucore_dev
 {
@@ -34,7 +35,5 @@ typedef enum cemucore_dev
 #ifdef __cplusplus
 }
 #endif
-
-#undef export
 
 #endif

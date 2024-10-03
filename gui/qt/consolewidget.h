@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 CE Programming.
+ * Copyright (c) 2015-2024 CE Programming.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,19 +39,12 @@ public slots:
     void append(const char *str, int size);
     void setAutoScroll(int state);
 
-private slots:
-    void processInputLine(QString line);
-
-signals:
-    void inputLine(const QString &line);
-
 private:
     QCheckBox *mChkAuto;
     QPlainTextEdit *mConsole;
 
     bool mAutoscroll;
 
-    QString mLastInputLine;
     QTextCharFormat mFormat;
     int mAnsiEscapeState;
 };

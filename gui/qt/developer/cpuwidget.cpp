@@ -35,7 +35,7 @@
 #include <QtWidgets/QSpinBox>
 
 CpuWidget::CpuWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("CPU")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("CPU")},
                    QIcon(QStringLiteral(":/assets/icons/electronics.svg")),
                    coreWindow}
 {
@@ -477,7 +477,7 @@ bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
             return QObject::eventFilter(obj, event);
         }
 
-        QToolTip::showText(widget->mapToGlobal({0, 5}), t, widget);
+        QToolTip::showText(widget->mapToGlobal(QPoint{0, 5}), t, widget);
     }
 
     return QObject::eventFilter(obj, event);
