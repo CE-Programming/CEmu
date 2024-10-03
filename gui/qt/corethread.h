@@ -34,11 +34,7 @@
 #include <chrono>
 #include <condition_variable>
 
-namespace cemucore
-{
-    Q_NAMESPACE
 #include <../../core/cemucore.h>
-}
 
 #define CONSOLE_BUFFER_SIZE 512
 

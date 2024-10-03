@@ -4,8 +4,9 @@
 
 #include <QtCore/QMetaEnum>
 #include <QtCore/QSettings>
+#include <QtWidgets/QFileDialog>
 
-QtKeypadBridge *keypadBridge = nullptr;
+QtKeypadBridge *keypadBridge = Q_NULLPTR;
 
 static const QString custom_keys[8][8] = {
     { "", "", "", "", "", "", "", "" },
@@ -57,8 +58,6 @@ void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
             }
         }
     }
-
-    //parent()->core().set(cemucore::CEMUCORE_PROP_GPIO_ENABLE, 11, true);
 }
 
 void QtKeypadBridge::kEvent(QString text, int key, bool repeat) {
@@ -106,7 +105,13 @@ CoreWindow *QtKeypadBridge::parent() const
     return static_cast<CoreWindow *>(QObject::parent());
 }
 
-bool QtKeypadBridge::keymapExport(const QString &path) {
+bool QtKeypadBridge::keymapExport(const QString &path)
+{
+    if (!keymap)
+    {
+        return false;
+    }
+
     QSettings config(path, QSettings::IniFormat);
     config.clear();
 
@@ -139,6 +144,13 @@ bool QtKeypadBridge::keymapExport(const QString &path) {
 }
 
 bool QtKeypadBridge::keymapImport(const QString &path) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+    file.close();
+
     QSettings config(path, QSettings::IniFormat);
 
     for (unsigned row = 0; row < 8; ++row) {
@@ -207,7 +219,7 @@ bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e) {
     return true;
 }
 
-void QtKeypadBridge::setDev(cemucore::dev dev)
+void QtKeypadBridge::setDev(cemucore_dev_t dev)
 {
     mDev = dev;
     updateKeymap();
@@ -224,15 +236,15 @@ void QtKeypadBridge::updateKeymap()
     bool is83 = false;
     switch (mDev)
     {
-        case cemucore::CEMUCORE_DEV_UNKNOWN:
-        case cemucore::CEMUCORE_DEV_TI84PCE:
-        case cemucore::CEMUCORE_DEV_TI84PCEPE:
-        case cemucore::CEMUCORE_DEV_TI84PCET:
-        case cemucore::CEMUCORE_DEV_TI84PCETPE:
+        case cemucore_dev_t::CEMUCORE_DEV_UNKNOWN:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCEPE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCET:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCETPE:
             is83 = false;
             break;
-        case cemucore::CEMUCORE_DEV_TI83PCE:
-        case cemucore::CEMUCORE_DEV_TI83PCEEP:
+        case cemucore_dev_t::CEMUCORE_DEV_TI83PCE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI83PCEEP:
             is83 = true;
             break;
     }

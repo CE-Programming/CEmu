@@ -152,7 +152,7 @@ HexWidget::HexWidget(MemWidget *parent)
         viewport()->update();
     });
 
-    setProp(cemucore::CEMUCORE_PROP_MEM_ADL, INT32_C(1) << 24);
+    //setProp(cemucore::CEMUCORE_PROP_MEM_ADL, INT32_C(1) << 24);
 }
 
 MemWidget *HexWidget::parent() const
@@ -160,7 +160,7 @@ MemWidget *HexWidget::parent() const
     return static_cast<MemWidget *>(QAbstractScrollArea::parent());
 }
 
-cemucore::prop HexWidget::prop() const
+int HexWidget::prop() const
 {
     return mProp;
 }
@@ -170,7 +170,7 @@ int HexWidget::len() const
     return mLastPos >> 1;
 }
 
-void HexWidget::setProp(cemucore::prop prop, int len)
+void HexWidget::setProp(int prop, int len)
 {
     mProp = prop;
     mLastPos = (len << 1) - 1;
@@ -234,7 +234,7 @@ void HexWidget::undo()
         return;
     }
     auto &entry = mUndoStack.at(mUndoPos);
-    core().set(mProp, entry.mPos.addr(), entry.mBefore);
+    //core().set(mProp, entry.mPos.addr(), entry.mBefore);
     mUndoPos -= 1;
     setCurPos(entry.mPos, false);
     if (entry.mBefore.length() > 1)
@@ -251,7 +251,7 @@ void HexWidget::redo()
     }
     mUndoPos += 1;
     auto &entry = mUndoStack.at(mUndoPos);
-    core().set(mProp, entry.mPos.addr(), entry.mAfter);
+    //core().set(mProp, entry.mPos.addr(), entry.mAfter);
     setCurPos(entry.mPos, false);
     if (entry.mAfter.length() > 1)
     {
@@ -267,7 +267,8 @@ void HexWidget::copy(bool selection)
         return;
     }
     QString text;
-    auto data = core().get(mProp, mCurPos.withMinOff(mSelEnd).addr(), mCurPos.byteDiff(mSelEnd));
+    /*
+    auto data = {0, 0};//core().get(mProp, mCurPos.withMinOff(mSelEnd).addr(), mCurPos.byteDiff(mSelEnd));
     if (mCurPos.isChar())
     {
         text.reserve(data.length());
@@ -279,7 +280,7 @@ void HexWidget::copy(bool selection)
     else
     {
         text = QString::fromLatin1(data.toHex().toUpper());
-    }
+    }*/
     clip->setText(text, selection ? QClipboard::Selection : QClipboard::Clipboard);
 }
 
@@ -320,7 +321,7 @@ void HexWidget::paste(bool selection)
 
 QChar HexWidget::tiasciiToUnicode(char c, QChar placeholder)
 {
-    static const QChar sTIAsciiToUnicode[] =
+    static const uint16_t sTIAsciiToUnicode[] =
     {
         0x0000, 0xF00E, 0x0000, 0x0000, 0x0000, 0xF014, 0x0000, 0xF016,
         0x222B, 0x00D7, 0x25AB, 0x207A, 0x2022, 0xF038, 0x00B3, 0xF02E,
@@ -355,13 +356,13 @@ QChar HexWidget::tiasciiToUnicode(char c, QChar placeholder)
         0x0000, 0x0000, 0x2074, 0xF015, 0x00DF, 0x0000, 0x0000, 0x0000,
         0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     };
-    QChar r = sTIAsciiToUnicode[quint8(c)];
+    QChar r{sTIAsciiToUnicode[quint8(c)]};
     return r.isNull() ? placeholder : r;
 }
 
 char HexWidget::unicodeToTIAscii(QChar c, char placeholder)
 {
-    static const QHash<QChar, char> sUnicodeToTIAscii
+    static const QHash<uint16_t, char> sUnicodeToTIAscii
     {
         {0x000A, 0xD6}, {0x0020, 0x20}, {0x0021, 0x21}, {0x0022, 0x22},
         {0x0023, 0x23}, {0x0024, 0x24}, {0x0025, 0x25}, {0x0026, 0x26},
@@ -417,7 +418,7 @@ char HexWidget::unicodeToTIAscii(QChar c, char placeholder)
         {0xF015, 0xF3}, {0xF016, 0x07}, {0xF01D, 0x1D}, {0xF021, 0xDA},
         {0xF022, 0xD8}, {0xF02E, 0x0F}, {0xF02F, 0xD7}, {0xF038, 0x0D},
     };
-    return sUnicodeToTIAscii.value(c, placeholder);
+    return sUnicodeToTIAscii.value(c.unicode(), placeholder);
 }
 
 QChar HexWidget::charToUnicode(char c) const
@@ -536,11 +537,11 @@ void HexWidget::overwriteRange(Pos pos, QByteArray data)
         mUndoStack.removeLast();
     }
     data.truncate(pos.byteDiff(mLastPos));
-    auto lock = core().lock();
-    mUndoStack.append({pos, core().get(mProp, pos.addr(), data.length()), data});
+    //auto lock = core().lock();
+    //mUndoStack.append({pos, core().get(mProp, pos.addr(), data.length()), data});
     mUndoStack.normalizeIndexes();
     mUndoPos = mUndoStack.lastIndex();
-    core().set(mProp, pos.addr(), data);
+    //core().set(mProp, pos.addr(), data);
 }
 
 void HexWidget::overwriteNibble(Pos pos, int digit)
@@ -549,8 +550,9 @@ void HexWidget::overwriteNibble(Pos pos, int digit)
     {
         mUndoStack.removeLast();
     }
-    auto lock = core().lock();
-    char before = core().get(mProp, pos.addr()), after;
+    //auto lock = core().lock();
+    char before = 0;//core().get(mProp, pos.addr());
+    char after;
     if (pos.low())
     {
         after = (before & 0xF0) | (digit << 0 & 0x0F);
@@ -562,7 +564,7 @@ void HexWidget::overwriteNibble(Pos pos, int digit)
     mUndoStack.append({pos, {1, before}, {1, after}});
     mUndoStack.normalizeIndexes();
     mUndoPos = mUndoStack.lastIndex();
-    core().set(mProp, pos.addr(), after);
+    //core().set(mProp, pos.addr(), after);
 }
 
 void HexWidget::resizeEvent(QResizeEvent *)
@@ -856,10 +858,11 @@ void HexWidget::paintEvent(QPaintEvent *event)
         }
     }
 
-    int pos = mTopLine * mStride - mOff, startPos = qMax(0, pos);
-    auto data = core().get(mProp, startPos >> 1,
+    int pos = mTopLine * mStride - mOff;
+    //int startPos = qMax(0, pos);
+    QByteArray data("00");/*core().get(mProp, startPos >> 1,
                            qMin(mVisibleLines * mStride,
-                                mLastPos + 1 - startPos) >> 1);
+                                mLastPos + 1 - startPos) >> 1);*/
     auto hex = QString::fromLatin1(data.toHex().toUpper());
     for (int line = 0, linePos = 0, startIndex = 0, startCol = mTopLine ? 0 : mOff;
          line < mVisibleLines && startIndex < hex.length();

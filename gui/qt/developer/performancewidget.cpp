@@ -30,7 +30,7 @@
 #include <QtWidgets/QSpinBox>
 
 PerformanceWidget::PerformanceWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Cycle Counter")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Cycle Counter")},
                    QIcon(QStringLiteral(":/assets/icons/statistics.svg")),
                    coreWindow}
 {

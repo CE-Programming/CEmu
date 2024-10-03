@@ -17,19 +17,11 @@
 #ifndef DOCKWIDGET_H
 #define DOCKWIDGET_H
 
+#include <kddockwidgets/DockWidget.h>
+
 namespace KDDockWidgets
 {
-    class DockWidgetBase;
+    class DockWidget;
 }
-
-class DockWidgetFactory : public KDDockWidgets::DefaultWidgetFactory
-{
-public:
-    KDDockWidgets::Frame *createFrame(KDDockWidgets::QWidgetOrQuick *parent = nullptr, KDDockWidgets::FrameOptions options = KDDockWidgets::FrameOption_None) const override;
-    KDDockWidgets::TitleBar *createTitleBar(KDDockWidgets::Frame *frame) const override;
-    KDDockWidgets::TitleBar *createTitleBar(KDDockWidgets::FloatingWindow *fw) const override;
-    Layouting::Separator *createSeparator(Layouting::Widget *parent = nullptr) const override;
-    static KDDockWidgets::DockWidgetBase *dockWidgetFactory(const QString &name);
-};
 
 #endif

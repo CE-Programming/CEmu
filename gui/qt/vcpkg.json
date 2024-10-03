@@ -8,7 +8,6 @@
     "libiconv",
     "libusb",
     "kddockwidgets",
-    "readline",
     {
       "name": "libarchive",
       "default-features": false

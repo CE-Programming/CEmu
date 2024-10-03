@@ -29,7 +29,7 @@
 #include <QtWidgets/QSizePolicy>
 
 BasicWidget::BasicWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("TI-BASIC Debug View")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("TI-BASIC Debug View")},
                    QIcon(QStringLiteral(":/assets/icons/basic.svg")),
                    coreWindow}
 {

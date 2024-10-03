@@ -35,7 +35,7 @@ QT_END_NAMESPACE
 class CalculatorOverlay;
 class CalculatorWidget;
 
-class CoreWindow : public KDDockWidgets::MainWindow
+class CoreWindow : public KDDockWidgets::QtWidgets::MainWindow
 {
     Q_OBJECT
 public:

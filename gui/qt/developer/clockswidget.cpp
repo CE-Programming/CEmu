@@ -30,7 +30,7 @@
 #include <QtWidgets/QSizePolicy>
 
 ClocksWidget::ClocksWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget(QStringLiteral("Clocks")),
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget(QStringLiteral("Clocks")),
                    QIcon(QStringLiteral(":/assets/icons/clock.svg")),
                    coreWindow}
 {

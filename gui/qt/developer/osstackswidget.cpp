@@ -25,7 +25,7 @@
 #include <QtWidgets/QTableWidget>
 
 OsStacksWidget::OsStacksWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Stacks")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("OS Stacks")},
                    QIcon(QStringLiteral(":/assets/icons/database.svg")),
                    coreWindow}
 {

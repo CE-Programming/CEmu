@@ -71,7 +71,7 @@ void CalculatorOverlay::paintEvent(QPaintEvent *)
 }
 
 CalculatorWidget::CalculatorWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Calculator")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Calculator")},
                    QIcon(QStringLiteral(":/assets/icons/calculator.svg")),
                    coreWindow}
 {
@@ -99,43 +99,43 @@ CalculatorWidget::CalculatorWidget(CoreWindow *coreWindow)
     mScreen->setScreen(QStringLiteral(":/assets/test/screen.png"));
 }
 
-void CalculatorWidget::setDev(cemucore::dev dev)
+void CalculatorWidget::setDev(cemucore_dev_t dev)
 {
     switch (dev)
     {
-        case cemucore::CEMUCORE_DEV_UNKNOWN:
-        case cemucore::CEMUCORE_DEV_TI84PCE:
-        case cemucore::CEMUCORE_DEV_TI84PCEPE:
-        case cemucore::CEMUCORE_DEV_TI84PCET:
-        case cemucore::CEMUCORE_DEV_TI84PCETPE:
+        case cemucore_dev_t::CEMUCORE_DEV_UNKNOWN:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCEPE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCET:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCETPE:
             mKeypad->setType(false);
             break;
-        case cemucore::CEMUCORE_DEV_TI83PCE:
-        case cemucore::CEMUCORE_DEV_TI83PCEEP:
+        case cemucore_dev_t::CEMUCORE_DEV_TI83PCE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI83PCEEP:
             mKeypad->setType(true);
             break;
     }
     switch (dev)
     {
-        case cemucore::CEMUCORE_DEV_UNKNOWN:
-        case cemucore::CEMUCORE_DEV_TI84PCE:
+        case cemucore_dev_t::CEMUCORE_DEV_UNKNOWN:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCE:
             mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"));
             break;
-        case cemucore::CEMUCORE_DEV_TI84PCEPE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCEPE:
             mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"),
                               QStringLiteral("PYTHON EDITION"));
             break;
-        case cemucore::CEMUCORE_DEV_TI83PCE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI83PCE:
             mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE"));
             break;
-        case cemucore::CEMUCORE_DEV_TI83PCEEP:
+        case cemucore_dev_t::CEMUCORE_DEV_TI83PCEEP:
             mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE"),
                               QStringLiteral("EDITION PYTHON"));
             break;
-        case cemucore::CEMUCORE_DEV_TI84PCET:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCET:
             mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE-T"));
             break;
-        case cemucore::CEMUCORE_DEV_TI84PCETPE:
+        case cemucore_dev_t::CEMUCORE_DEV_TI84PCETPE:
             mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE-T"),
                               QStringLiteral("PYTHON EDITION"));
             break;

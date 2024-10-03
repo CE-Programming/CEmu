@@ -15,7 +15,7 @@
  */
 
 #include "corewindow.h"
-#include "dockwidget.h"
+#include "dockedwidget.h"
 #include "settings.h"
 #include "util.h"
 
@@ -53,10 +53,6 @@ int main(int argc, char **argv)
     parser.setApplicationDescription(QStringLiteral("CEmu Emulator"));
     parser.addHelpOption();
     parser.addVersionOption();
-
-    KDDockWidgets::Config::self().setFrameworkWidgetFactory(new DockWidgetFactory());
-    KDDockWidgets::Config::self().setDockWidgetFactoryFunc(DockWidgetFactory::dockWidgetFactory);
-    KDDockWidgets::Config::self().setSeparatorThickness(3);
 
     auto flags = KDDockWidgets::Config::self().flags();
     flags |= KDDockWidgets::Config::Flag_AlwaysTitleBarWhenFloating;

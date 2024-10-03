@@ -26,7 +26,7 @@
 #include <QtWidgets/QComboBox>
 
 ControlWidget::ControlWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Control")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Control")},
                    QIcon(QStringLiteral(":/assets/icons/services.svg")),
                    coreWindow},
       mInDebug{false}

@@ -29,7 +29,7 @@
 #include <QtWidgets/QSpinBox>
 
 DevMiscWidget::DevMiscWidget(CoreWindow *coreWindow)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Miscellaneous")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Miscellaneous")},
                    QIcon(QStringLiteral(":/assets/icons/charge_battery.svg")),
                    coreWindow}
 {

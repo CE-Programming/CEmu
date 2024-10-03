@@ -4,9 +4,7 @@
 #include "../keypad/keypadwidget.h"
 #include "../util.h"
 
-#include <kddockwidgets/DockWidget.h>
-
-#include <QtWidgets/QAction>
+#include <QAction>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
@@ -23,8 +21,8 @@
 
 #define SETBITS(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
-VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock)
-    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Visualizer #") + Util::randomString(6)},
+VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::QtWidgets::DockWidget *dock)
+    : DockedWidget{dock ? dock : new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Visualizer #") + Util::randomString(6)},
                    QIcon(QStringLiteral(":/assets/icons/add_image.svg")),
                    coreWindow}
 {
@@ -172,7 +170,7 @@ void VisualizerWidget::showPresets()
     menu.addAction(preset3);
     menu.addAction(preset4);
 
-    QAction *item = menu.exec(mBtnLcd->mapToGlobal({0, mBtnLcd->height() + 1}));
+    QAction *item = menu.exec(mBtnLcd->mapToGlobal(QPoint{0, mBtnLcd->height() + 1}));
     if (item)
     {
         if (item->text() == preset1)
@@ -231,9 +229,9 @@ void VisualizerWidget::closeEvent(QCloseEvent *)
 void VisualizerWidget::stringToView()
 {
     QStringList string = mConfigStr->text().split(',');
-    QRegExp hex_reg("^[0-9A-F]{6}$", Qt::CaseInsensitive);
-    QRegExp bpp_reg("^\\d{1,6}bpp$", Qt::CaseInsensitive);
-    QRegExp fps_reg("^\\d+fps$", Qt::CaseInsensitive);
+    QRegularExpression hex_reg("^[0-9A-F]{6}$", QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression bpp_reg("^\\d{1,6}bpp$", QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression fps_reg("^\\d+fps$", QRegularExpression::CaseInsensitiveOption);
 
     mFps = 30;
     mScale = 100;
@@ -287,11 +285,11 @@ void VisualizerWidget::stringToView()
         {
             str.remove(0, 1);
         }
-        if (hex_reg.exactMatch(str))
+        if (hex_reg.match(str).hasMatch())
         {
             mLcdConfig.mBaseAddr = str.toUInt(nullptr, 16);
         }
-        if (bpp_reg.exactMatch(str))
+        if (bpp_reg.match(str).hasMatch())
         {
             str.chop(3);
             uint8_t bpp;
@@ -313,7 +311,7 @@ void VisualizerWidget::stringToView()
                 mLcdConfig.mCtlReg |= static_cast<unsigned int>(bpp << 1);
             }
         }
-        if (fps_reg.exactMatch(str))
+        if (fps_reg.match(str).hasMatch())
         {
             str.chop(3);
             mFps = str.toInt();
@@ -334,8 +332,8 @@ void VisualizerWidget::resetView()
 
     mLcdConfig.mWidth = 320;
     mLcdConfig.mHeight = 240;
-    mLcdConfig.mBaseAddr = core().get(cemucore::CEMUCORE_PROP_PORT, 0x4010);
-    mLcdConfig.mCtlReg = core().get(cemucore::CEMUCORE_PROP_PORT, 0x4018);
+    mLcdConfig.mBaseAddr = 0;//core().get(cemucore::CEMUCORE_PROP_PORT, 0x4010);
+    mLcdConfig.mCtlReg = 0;//core().get(cemucore::CEMUCORE_PROP_PORT, 0x4018);
     mLcdConfig.mGrid = false;
     viewToString();
 }

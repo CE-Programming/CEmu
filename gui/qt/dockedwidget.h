@@ -19,10 +19,7 @@
 
 class CoreWindow;
 
-namespace KDDockWidgets
-{
-    class DockWidgetBase;
-}
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtCore/QJsonValue>
 #include <QtWidgets/QWidget>
@@ -127,11 +124,13 @@ class DockedWidget : public QWidget, protected DockedWidgetList
     friend class DockedWidgetList;
 
 protected:
-    DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &icon, CoreWindow *coreWindow);
+    DockedWidget(KDDockWidgets::QtWidgets::DockWidget *dock, const QIcon &icon, CoreWindow *coreWindow);
 
 public:
-    KDDockWidgets::DockWidgetBase *dock();
+    KDDockWidgets::QtWidgets::DockWidget *dock();
     CoreWindow *coreWindow();
+    virtual void loadFromCore() {}
+    virtual void storeToCore() const {}
     virtual void enableDebugWidgets(bool) {}
     virtual QJsonValue serialize() const { return QJsonValue::Undefined; }
     virtual bool unserialize(const QJsonValue &config) { return config.isUndefined(); }

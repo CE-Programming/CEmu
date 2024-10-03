@@ -98,9 +98,9 @@ public:
     HexWidget(MemWidget *parent);
     MemWidget *parent() const;
 
-    cemucore::prop prop() const;
+    int prop() const;
     int len() const;
-    void setProp(cemucore::prop prop, int len);
+    void setProp(int prop, int len);
     int addrBytes() const;
     int bytesPerLine() const;
     void setBytesPerLine(int bytesPerLine);
@@ -143,7 +143,7 @@ private:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 
-    cemucore::prop mProp;
+    int mProp;
     int mLastPos, mStride, mOff;
     Charset mCharset;
 

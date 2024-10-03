@@ -251,7 +251,7 @@ void RomDialog::parseROMSegments()
             return;
         }
     }
-    mDropArea->setText(tr("Drop ROMData files here (%1/%2)").arg(mNumSentSegments).arg(mTotalSegments == 0 ? "unk" : QString(mTotalSegments)));
+    mDropArea->setText(tr("Drop ROMData files here (%1/%2)").arg(mNumSentSegments).arg(mTotalSegments == 0 ? "unk" : QString::number(mTotalSegments)));
 
     mSegments.clear();
     if (mHasMetaSegment && mNumSentSegments == mTotalSegments)

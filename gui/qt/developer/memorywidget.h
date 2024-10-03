@@ -20,17 +20,14 @@
 #include "../dockedwidget.h"
 class MemWidget;
 
-namespace KDDockWidgets
-{
-class DockWidgetBase;
-}
+#include <kddockwidgets/DockWidget.h>
 
 class MemoryWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock = nullptr);
+    explicit MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::QtWidgets::DockWidget *dock = nullptr);
 
     void enableDebugWidgets(bool) override;
 

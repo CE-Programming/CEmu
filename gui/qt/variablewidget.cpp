@@ -27,7 +27,7 @@
 #include <QtWidgets/QTableWidget>
 
 VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recentVars)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Variable Transfer")},
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Variable Transfer")},
                    QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")),
                    coreWindow}
 {
