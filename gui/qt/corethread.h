@@ -18,6 +18,7 @@
 #define CORETHREAD_H
 
 #include "../../core/debug/debug.h"
+#include "../../core/cemucore.h"
 #include "../../core/emu.h"
 #include "../../core/link.h"
 #include "../../core/usb/usb.h"
@@ -34,9 +35,7 @@
 #include <chrono>
 #include <condition_variable>
 
-#include <../../core/cemucore.h>
-
-#define CONSOLE_BUFFER_SIZE 512
+#define CONSOLE_BUFFER_SIZE 1024
 
 class CoreThread : public QThread {
     Q_OBJECT
@@ -133,8 +132,8 @@ private:
 
     static constexpr size_t PerfArraySize = 20;
 
-    int m_speed, m_actualSpeed;
-    bool m_throttle, m_backupThrottleForTransfers;
+    int mSpeed, m_actualSpeed;
+    bool mThrottle, m_backupThrottleForTransfers;
     std::chrono::steady_clock::time_point m_lastTime;
     std::mutex m_mutexSpeed;
     std::condition_variable m_cvSpeed;

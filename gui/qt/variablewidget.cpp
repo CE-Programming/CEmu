@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 CE Programming.
+ * Copyright (c) 2015-2024 CE Programming.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recentVars)
-    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Variable Transfer")},
+VariableWidget::VariableWidget(CoreWindow *coreWindow)
+    : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Calculator Variables")},
                    QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")),
                    coreWindow}
 {
@@ -38,38 +38,13 @@ VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recent
     mCalcVars->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mCalcVars->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    mSentVars = new TableWidget(0, 1);
-    mSentVars->setHorizontalHeaderLabels({tr("Recently Sent")});
-    mSentVars->horizontalHeader()->setStretchLastSection(true);
-    mSentVars->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    mSentVars->setSelectionBehavior(QAbstractItemView::SelectRows);
-
     mBtnSaveSelected = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), tr("Save"));
     mBtnSaveGroup = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), tr("Save as group"));
-    mBtnResendVars = new QPushButton(QIcon(QStringLiteral(":/assets/icons/internal.svg")), tr("Resend"));
-    mBtnRemoveVars = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove"));
 
-    mBtnResendVars->setEnabled(false);
-    mBtnRemoveVars->setEnabled(false);
     mBtnSaveSelected->setEnabled(false);
     mBtnSaveGroup->setEnabled(false);
 
-    QGroupBox *grpSent = new QGroupBox(tr("Send variables to calculator"));
-    QGroupBox *grpCalc = new QGroupBox(tr("Get variables from calculator"));
-
-    QPushButton *btnSendVars = new QPushButton(QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")), tr("Send variables"));
     QPushButton *btnRefreshList = new QPushButton(QIcon(QStringLiteral(":/assets/icons/process.svg")), tr("Refresh list"));
-
-    QHBoxLayout *hboxSentBtns = new QHBoxLayout;
-    hboxSentBtns->addWidget(btnSendVars);
-    hboxSentBtns->addStretch(1);
-    hboxSentBtns->addWidget(mBtnResendVars);
-    hboxSentBtns->addWidget(mBtnRemoveVars);
-
-    QVBoxLayout *vboxSent = new QVBoxLayout;
-    vboxSent->addLayout(hboxSentBtns);
-    vboxSent->addWidget(mSentVars);
-    grpSent->setLayout(vboxSent);
 
     QHBoxLayout *hboxCalcBtns = new QHBoxLayout;
     hboxCalcBtns->addWidget(btnRefreshList);
@@ -80,52 +55,8 @@ VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recent
     QVBoxLayout *vboxCalc = new QVBoxLayout;
     vboxCalc->addLayout(hboxCalcBtns);
     vboxCalc->addWidget(mCalcVars);
-    grpCalc->setLayout(vboxCalc);
 
-    QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addWidget(grpSent);
-    vLayout->addWidget(grpCalc);
-    setLayout(vLayout);
-
-    foreach (const QString &var, recentVars)
-    {
-        addRecentVar(var);
-    }
-
-    connect(mBtnRemoveVars, &QPushButton::clicked, this, &VariableWidget::removeRecentSelected);
-    connect(mSentVars, &TableWidget::deletePressed, this, &VariableWidget::removeRecentSelected);
+    setLayout(vboxCalc);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-}
-
-void VariableWidget::addRecentVar(const QString &path)
-{
-    if (mSentVars->rowCount() == 0)
-    {
-        mBtnResendVars->setEnabled(true);
-        mBtnRemoveVars->setEnabled(true);
-    }
-
-    mSentVars->insertRow(0);
-    mSentVars->setItem(0, 0, new QTableWidgetItem(path));
-    mSentVars->setVerticalHeaderItem(0, new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/updown.svg")), QString()));
-}
-
-void VariableWidget::removeRecentSelected()
-{
-    Q_ASSERT(mSentVars->rowCount() != 0);
-
-    for (int i = mSentVars->rowCount() - 1; i >= 0; --i)
-    {
-        if (mSentVars->item(i, 0)->isSelected())
-        {
-            mSentVars->removeRow(i);
-        }
-    }
-
-    if (mSentVars->rowCount() == 0)
-    {
-        mBtnResendVars->setEnabled(false);
-        mBtnRemoveVars->setEnabled(false);
-    }
 }

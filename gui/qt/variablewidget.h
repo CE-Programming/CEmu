@@ -31,20 +31,13 @@ class VariableWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit VariableWidget(CoreWindow *coreWindow, const QStringList &recentVars);
-
-public slots:
-    void addRecentVar(const QString &path);
-    void removeRecentSelected();
+    explicit VariableWidget(CoreWindow *coreWindow);
 
 private:
     TableWidget *mCalcVars;
-    TableWidget *mSentVars;
 
     QPushButton *mBtnSaveSelected;
     QPushButton *mBtnSaveGroup;
-    QPushButton *mBtnResendVars;
-    QPushButton *mBtnRemoveVars;
 };
 
 #endif

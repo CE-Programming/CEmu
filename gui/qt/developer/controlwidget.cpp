@@ -24,12 +24,12 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QComboBox>
+#include <QShortcut>
 
 ControlWidget::ControlWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::QtWidgets::DockWidget{QStringLiteral("Control")},
                    QIcon(QStringLiteral(":/assets/icons/services.svg")),
-                   coreWindow},
-      mInDebug{false}
+                   coreWindow}
 {
     int maxMonoWidth = QFontMetrics(Util::monospaceFont()).maxWidth();
 
@@ -38,15 +38,12 @@ ControlWidget::ControlWidget(CoreWindow *coreWindow)
     mBtnOver = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down_right.svg")), tr("Over"));
     mBtnNext = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down.svg")), tr("Next"));
     mBtnOut = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right_up2.svg")), tr("Out"));
-    mCmbMode = new QComboBox;
-    mCmbMode->addItems({ tr("ASM"), tr("C"), tr("Disable") });
 
     mBtnRun->setFont(Util::monospaceFont());
     mBtnStep->setFont(Util::monospaceFont());
     mBtnOver->setFont(Util::monospaceFont());
     mBtnNext->setFont(Util::monospaceFont());
     mBtnOut->setFont(Util::monospaceFont());
-    mCmbMode->setFont(Util::monospaceFont());
 
     mBtnRun->setMinimumWidth(mBtnRun->iconSize().width() + maxMonoWidth * (mBtnRun->text().length() + 2));
     mBtnStep->setMinimumWidth(mBtnStep->iconSize().width() + maxMonoWidth * (mBtnStep->text().length() + 2));
@@ -62,7 +59,6 @@ ControlWidget::ControlWidget(CoreWindow *coreWindow)
     hLayout->addWidget(mBtnOver);
     hLayout->addWidget(mBtnNext);
     hLayout->addWidget(mBtnOut);
-    hLayout->addWidget(mCmbMode);
     hLayout->addStretch();
 
     QVBoxLayout *vLayout = new QVBoxLayout;
@@ -74,31 +70,37 @@ ControlWidget::ControlWidget(CoreWindow *coreWindow)
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    connect(mBtnRun, &QPushButton::clicked, [this]
-    {
-        if (mInDebug)
-        {
-            emit run();
-        }
-        else
-        {
-            emit stop();
-        }
-    });
+    QShortcut *shortcutRun = new QShortcut(QKeySequence(Qt::Key_F10), this);
+    QShortcut *shortcutStepIn = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    QShortcut *shortcutStepOver = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    QShortcut *shortcutStepNext = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    QShortcut *shortcutStepOut = new QShortcut(QKeySequence(Qt::Key_F9), this);
+
+    shortcutRun->setAutoRepeat(false);
+
+    connect(shortcutRun, &QShortcut::activated, this, &ControlWidget::toggleDebug);
+    connect(shortcutStepIn, &QShortcut::activated, this, &ControlWidget::stepIn);
+    connect(shortcutStepOver, &QShortcut::activated, this, &ControlWidget::stepOver);
+    connect(shortcutStepNext, &QShortcut::activated, this, &ControlWidget::stepNext);
+    connect(shortcutStepOut, &QShortcut::activated, this, &ControlWidget::stepOut);
+
+    connect(mBtnRun, &QPushButton::clicked, this, &ControlWidget::toggleDebug);
+    connect(mBtnStep, &QPushButton::clicked, this, &ControlWidget::stepIn);
+    connect(mBtnOver, &QPushButton::clicked, this, &ControlWidget::stepOver);
+    connect(mBtnNext, &QPushButton::clicked, this, &ControlWidget::stepNext);
+    connect(mBtnOut, &QPushButton::clicked, this, &ControlWidget::stepOut);
 
     enableDebugWidgets(false);
 }
 
 void ControlWidget::enableDebugWidgets(bool enabled)
 {
-    mInDebug = enabled;
+    mBtnStep->setEnabled(enabled);
+    mBtnOver->setEnabled(enabled);
+    mBtnNext->setEnabled(enabled);
+    mBtnOut->setEnabled(enabled);
 
-    mBtnStep->setEnabled(mInDebug);
-    mBtnOver->setEnabled(mInDebug);
-    mBtnNext->setEnabled(mInDebug);
-    mBtnOut->setEnabled(mInDebug);
-
-    if (mInDebug)
+    if (enabled)
     {
         mBtnRun->setText(tr("Run"));
         mBtnRun->setIcon(QIcon(QStringLiteral(":/assets/icons/run.svg")));

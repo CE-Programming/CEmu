@@ -18,18 +18,16 @@
 #include <cstdarg>
 #include <thread>
 
-static CoreThread *emu;
-
-// reimplemented callbacks
+static CoreThread *cemucore;
 
 void gui_console_clear(void) {
-    emu->consoleClear();
+    cemucore->consoleClear();
 }
 
 void gui_console_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu->writeConsole(CoreThread::ConsoleNorm, format, args);
+    cemucore->writeConsole(CoreThread::ConsoleNorm, format, args);
     va_end(args);
 }
 
@@ -41,15 +39,15 @@ void gui_console_err_printf(const char *format, ...) {
 }
 
 void gui_debug_open(int reason, uint32_t data) {
-    emu->debugOpen(reason, data);
+    cemucore->debugOpen(reason, data);
 }
 
 void gui_debug_close(void) {
-    emu->debugDisable();
+    cemucore->debugDisable();
 }
 
 asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
-    return emu->handleReset(boot_ver, loaded_rev, default_rev, python);
+    return cemucore->handleReset(boot_ver, loaded_rev, default_rev, python);
 }
 
 namespace {
@@ -88,12 +86,14 @@ std::size_t ArgList::size() {
 
 }
 
-CoreThread::CoreThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
-                                        m_speed{100}, m_throttle{true},
-                                        m_lastTime{std::chrono::steady_clock::now()},
-                                        m_debug{false} {
-    assert(emu == nullptr);
-    emu = this;
+CoreThread::CoreThread(QObject *parent) :
+    QThread{parent},
+    write{CONSOLE_BUFFER_SIZE},
+    mSpeed{100},
+    mThrottle{true},
+    m_lastTime{std::chrono::steady_clock::now()},
+    m_debug{false}
+{
     std::fill(m_perfArray, m_perfArray + PerfArraySize, m_lastTime);
 }
 
@@ -228,13 +228,13 @@ void CoreThread::throttleWait() {
     bool throttle;
     {
         std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
-        speed = m_speed;
-        throttle = m_throttle;
+        speed = mSpeed;
+        throttle = mThrottle;
         if (!speed && throttle) {
             emit sendSpeed(0);
-            m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0 || !m_throttle; });
-            speed = m_speed;
-            throttle = m_throttle;
+            m_cvSpeed.wait(lockSpeed, [this] { return mSpeed != 0 || !mThrottle; });
+            speed = mSpeed;
+            throttle = mThrottle;
             m_lastTime = std::chrono::steady_clock::now();
         }
     }
@@ -357,7 +357,7 @@ void CoreThread::doSend() {
     std::unique_lock<std::mutex> requestLock{m_requestMutex};
     ArgList args{m_vars, false};
     int sendLoc = m_sendLoc;
-    m_backupThrottleForTransfers = m_throttle;
+    m_backupThrottleForTransfers = mThrottle;
     requestLock.unlock();
     setThrottle(false);
     emu_send_variables(args.args(), args.size(), sendLoc,
@@ -419,7 +419,7 @@ void CoreThread::save(emu_data_t fileType, const QString &filePath) {
 void CoreThread::setSpeed(int value) {
     {
         std::lock_guard<std::mutex> lockSpeed(m_mutexSpeed);
-        m_speed = value;
+        mSpeed = value;
     }
     if (value) {
         m_cvSpeed.notify_one();
@@ -428,7 +428,7 @@ void CoreThread::setSpeed(int value) {
 
 void CoreThread::setThrottle(bool state) {
     std::lock_guard<std::mutex> lockSpeed(m_mutexSpeed);
-    m_throttle = state;
+    mThrottle = state;
     if (!state) {
         m_cvSpeed.notify_one();
     }

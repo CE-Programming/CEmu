@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 CE Programming.
+ * Copyright (c) 2015-2024 CE Programming.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,39 +14,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONTROLWIDGET_H
-#define CONTROLWIDGET_H
+#ifndef CONFIGURATIONWIDGET_H
+#define CONFIGURATIONWIDGET_H
 
 #include "../dockedwidget.h"
 
-QT_BEGIN_NAMESPACE
-class QComboBox;
-class QPushButton;
-QT_END_NAMESPACE
-
-class ControlWidget : public DockedWidget
+class ConfigurationWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit ControlWidget(CoreWindow *coreWindow);
-
-    void enableDebugWidgets(bool) override;
-
-signals:
-    void toggleDebug();
-    void stepIn();
-    void stepOver();
-    void stepNext();
-    void stepOut();
+    explicit ConfigurationWidget(CoreWindow *coreWindow);
 
 private:
-    QPushButton *mBtnRun;
-    QPushButton *mBtnStep;
-    QPushButton *mBtnOver;
-    QPushButton *mBtnNext;
-    QPushButton *mBtnOut;
-    QComboBox *mCmbMode;
 };
 
 #endif

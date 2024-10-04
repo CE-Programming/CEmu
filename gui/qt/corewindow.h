@@ -57,11 +57,10 @@ private slots:
     void createRom();
     void importRom();
     void exportRom();
-    void resetEmu();
+    void reloadRom();
     void showPreferences();
     bool saveLayout(bool ignoreErrors = false);
     bool restoreLayout();
-    void softCmd();
 
 private:
     void createFileMenu();
@@ -72,6 +71,10 @@ private:
     void createDockWidgets();
     void createDeveloperWidgets();
     void setKeymap();
+
+    void enableDebug();
+    void disableDebug();
+    void toggleDebug();
 
     void closeEvent(QCloseEvent *) override;
 
@@ -86,6 +89,8 @@ private:
 
     CalculatorOverlay *mCalcOverlay;
     CalculatorWidget *mCalcWidget;
+
+    bool mDebug;
 };
 
 #endif

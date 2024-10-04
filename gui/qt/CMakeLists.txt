@@ -163,10 +163,12 @@ set(CEmu_Sources
     tablewidget.cpp tablewidget.h
     util.cpp util.h
     variablewidget.cpp variablewidget.h
+    variablesendwidget.cpp variablesendwidget.h
 
     developer/autotesterwidget.cpp developer/autotesterwidget.h
     developer/basicwidget.cpp developer/basicwidget.h
     developer/clockswidget.cpp developer/clockswidget.h
+    developer/configurationwidget.cpp developer/configurationwidget.h
     developer/controlwidget.cpp developer/controlwidget.h
     developer/cpuwidget.cpp developer/cpuwidget.h
     developer/devmiscwidget.cpp developer/devmiscwidget.h

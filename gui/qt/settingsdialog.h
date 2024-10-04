@@ -59,45 +59,6 @@ signals:
     void reset(int mode);
 };
 
-class SettingsDeveloperTab : public QWidget
-{
-    Q_OBJECT
-
-public:
-    explicit SettingsDeveloperTab(QWidget *parent = nullptr);
-
-public slots:
-    void saveSettings();
-
-private:
-    QCheckBox *mChkSoftCmds;
-    QCheckBox *mChkTiOs;
-    QCheckBox *mChkResetNmi;
-};
-
-class SettingsEmulationTab : public QWidget
-{
-    Q_OBJECT
-
-public:
-    explicit SettingsEmulationTab(QWidget *parent = nullptr);
-
-public slots:
-    void saveSettings();
-
-signals:
-    void changedKeypadColor(int id);
-
-private:
-    QSpinBox *mSpnSpeed;
-    QSpinBox *mSpnFrameSkip;
-    QCheckBox *mChkThrottle;
-    QCheckBox *mChkFrameSkip;
-    QCheckBox *mChkLcdSpi;
-    QCheckBox *mChkPreI;
-    int mKeypadColor;
-};
-
 class SettingsGeneralTab : public QWidget
 {
     Q_OBJECT
@@ -109,6 +70,7 @@ public slots:
     void saveSettings();
 
 signals:
+    void changedKeypadColor(int id);
     void changeLanguage();
     void changePortable();
 
@@ -118,6 +80,7 @@ private:
     QButtonGroup *mKeybind;
     QComboBox *mCmbLang;
     int mLang;
+    int mKeypadColor;
     bool mPortable;
 };
 

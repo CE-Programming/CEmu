@@ -14,39 +14,34 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONTROLWIDGET_H
-#define CONTROLWIDGET_H
+#ifndef VARIABLESENDWIDGET_H
+#define VARIABLESENDWIDGET_H
 
-#include "../dockedwidget.h"
+#include "dockedwidget.h"
+class TableWidget;
 
+#include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
-class QComboBox;
 class QPushButton;
+class QTableWidget;
 QT_END_NAMESPACE
 
-class ControlWidget : public DockedWidget
+class VariableSendWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit ControlWidget(CoreWindow *coreWindow);
+    explicit VariableSendWidget(CoreWindow *coreWindow, const QStringList &recentVars);
 
-    void enableDebugWidgets(bool) override;
-
-signals:
-    void toggleDebug();
-    void stepIn();
-    void stepOver();
-    void stepNext();
-    void stepOut();
+public slots:
+    void addRecentVar(const QString &path);
+    void removeRecentSelected();
 
 private:
-    QPushButton *mBtnRun;
-    QPushButton *mBtnStep;
-    QPushButton *mBtnOver;
-    QPushButton *mBtnNext;
-    QPushButton *mBtnOut;
-    QComboBox *mCmbMode;
+    TableWidget *mSentVars;
+
+    QPushButton *mBtnResendVars;
+    QPushButton *mBtnRemoveVars;
 };
 
 #endif

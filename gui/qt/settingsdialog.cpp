@@ -43,14 +43,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
                                    QDialogButtonBox::Save);
 
     SettingsGeneralTab *genTab = new SettingsGeneralTab;
-    SettingsEmulationTab *emuTab = new SettingsEmulationTab;
-    SettingsDeveloperTab *devTab = new SettingsDeveloperTab;
     SettingsResetTab *resetTab = new SettingsResetTab;
 
     mTabWidget = new QTabWidget;
     mTabWidget->addTab(genTab, tr("General"));
-    mTabWidget->addTab(emuTab, tr("Emu"));
-    mTabWidget->addTab(devTab, tr("Developer"));
     mTabWidget->addTab(resetTab, tr("Reset"));
 
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -60,11 +56,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
     connect(genTab, &SettingsGeneralTab::changeLanguage, [this]{ mReset = Settings::Reset::Langauge; });
     connect(genTab, &SettingsGeneralTab::changePortable, [this]{ mReset = Settings::Reset::Portable; });
-    connect(emuTab, &SettingsEmulationTab::changedKeypadColor, this, &SettingsDialog::changedKeypadColor);
+    connect(genTab, &SettingsGeneralTab::changedKeypadColor, this, &SettingsDialog::changedKeypadColor);
     connect(resetTab, &SettingsResetTab::reset, [this](int reset){ mReset = reset; accept(); });
     connect(mBtnBox, &QDialogButtonBox::accepted, genTab, &SettingsGeneralTab::saveSettings);
-    connect(mBtnBox, &QDialogButtonBox::accepted, emuTab, &SettingsEmulationTab::saveSettings);
-    connect(mBtnBox, &QDialogButtonBox::accepted, devTab, &SettingsDeveloperTab::saveSettings);
     connect(mBtnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(mBtnBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
@@ -121,10 +115,17 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     gbox->addWidget(btn5, 1, 2);
     grpKeys->setLayout(gbox);
 
+    QGroupBox *grpKeyColor = new QGroupBox(tr("Keypad color"));
+    QPushButton *btnColor = new QPushButton(tr("Change Keypad Color"));
+    QHBoxLayout *hboxColor = new QHBoxLayout;
+    hboxColor->addWidget(btnColor);
+    grpKeyColor->setLayout(hboxColor);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(grpLang);
     mainLayout->addWidget(grpConfig);
     mainLayout->addWidget(grpKeys);
+    mainLayout->addWidget(grpKeyColor);
     mainLayout->addStretch(1);
     setLayout(mainLayout);
 
@@ -153,6 +154,18 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     }
     mCmbLang->setCurrentIndex(mLang);
 
+    mKeypadColor = Settings::intOption(Settings::KeypadColor);
+    connect(btnColor, &QPushButton::clicked, [this]
+    {
+        KeyColorDialog dialog(mKeypadColor);
+        connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsGeneralTab::changedKeypadColor);
+        if (dialog.exec())
+        {
+            mKeypadColor = dialog.getColor();
+        }
+        emit changedKeypadColor(mKeypadColor);
+    });
+
     mChkAutoUpdate->setChecked(Settings::boolOption(Settings::AutoUpdate));
     mChkPortable->setChecked(Settings::boolOption(Settings::PortableMode));
 }
@@ -162,6 +175,7 @@ void SettingsGeneralTab::saveSettings()
     Settings::setIntOption(Settings::Language, mCmbLang->currentIndex());
     Settings::setIntOption(Settings::KeyMap, mKeybind->checkedId());
     Settings::setBoolOption(Settings::AutoUpdate, mChkAutoUpdate->isChecked());
+    Settings::setIntOption(Settings::KeypadColor, mKeypadColor);
 
     if (mPortable != mChkPortable->isChecked())
     {
@@ -173,148 +187,6 @@ void SettingsGeneralTab::saveSettings()
     {
         emit changeLanguage();
     }
-}
-
-SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)
-    : QWidget(parent)
-{
-    mChkThrottle = new QCheckBox(tr("Throttle"));
-    mSpnSpeed = new QSpinBox;
-
-    mSpnSpeed->setMinimum(0);
-    mSpnSpeed->setMaximum(5000);
-    mSpnSpeed->setSuffix(QStringLiteral("%"));
-
-    QGroupBox *grpSpeed = new QGroupBox(tr("Speed"));
-    QHBoxLayout *hbox = new QHBoxLayout;
-    QVBoxLayout *vbox = new QVBoxLayout;
-    hbox->addWidget(mChkThrottle);
-    hbox->addWidget(mSpnSpeed);
-    vbox->addLayout(hbox);
-    vbox->addStretch(1);
-    grpSpeed->setLayout(vbox);
-
-    mChkFrameSkip = new QCheckBox(tr("Frame skip"));
-    mSpnFrameSkip = new QSpinBox;
-    mChkLcdSpi = new QCheckBox(tr("Emulate LCD SPI"));
-
-    mSpnFrameSkip->setMinimum(0);
-    mSpnFrameSkip->setMaximum(99);
-    mSpnFrameSkip->setEnabled(false);
-
-    QGroupBox *grpDisplay = new QGroupBox(tr("Display"));
-    QGridLayout *gbox = new QGridLayout;
-    gbox->addWidget(mChkFrameSkip, 0, 0);
-    gbox->addWidget(mSpnFrameSkip, 0, 1);
-    gbox->addWidget(mChkLcdSpi, 1, 0);
-    grpDisplay->setLayout(gbox);
-
-    mChkPreI = new QCheckBox(tr("Emulate Pre-Revision I (IM 2)"));
-
-    QGroupBox *grpKeyColor = new QGroupBox(tr("Keypad color"));
-    QPushButton *btnColor = new QPushButton(tr("Change Keypad Color"));
-    QHBoxLayout *hboxColor = new QHBoxLayout;
-    hboxColor->addWidget(btnColor);
-    grpKeyColor->setLayout(hboxColor);
-
-    QGroupBox *grpEmu = new QGroupBox(tr("Emulation"));
-    QVBoxLayout *vbo = new QVBoxLayout;
-    vbo->addWidget(mChkPreI);
-    vbo->addStretch(1);
-    grpEmu->setLayout(vbo);
-
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(grpSpeed);
-    mainLayout->addWidget(grpDisplay);
-    mainLayout->addWidget(grpEmu);
-    mainLayout->addWidget(grpKeyColor);
-    mainLayout->addStretch(1);
-    setLayout(mainLayout);
-
-    connect(mChkThrottle, &QCheckBox::stateChanged, [this](int state)
-    {
-        mSpnSpeed->setEnabled(state == Qt::Checked);
-    });
-
-    connect(mChkFrameSkip, &QCheckBox::stateChanged, [this](int state)
-    {
-        mSpnFrameSkip->setEnabled(state == Qt::Checked);
-    });
-
-    mKeypadColor = Settings::intOption(Settings::KeypadColor);
-    connect(btnColor, &QPushButton::clicked, [this]
-    {
-        KeyColorDialog dialog(mKeypadColor);
-        connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsEmulationTab::changedKeypadColor);
-        if (dialog.exec())
-        {
-            mKeypadColor = dialog.getColor();
-        }
-        emit changedKeypadColor(mKeypadColor);
-    });
-
-    int speed = Settings::intOption(Settings::EmuSpeed);
-    if (speed > 5000 || speed < 0)
-    {
-        speed = 100;
-        Settings::setIntOption(Settings::EmuSpeed, speed);
-    }
-    mSpnSpeed->setValue(speed);
-
-    int frameskip = Settings::intOption(Settings::EmuFrameSkipRate);
-    if (frameskip < 0 || frameskip > 99)
-    {
-        frameskip = 0;
-        Settings::setIntOption(Settings::EmuFrameSkipRate, frameskip);
-    }
-    mSpnFrameSkip->setValue(frameskip);
-
-    mChkThrottle->setChecked(Settings::boolOption(Settings::EmuThrottle));
-    mChkFrameSkip->setChecked(Settings::boolOption(Settings::EmuFrameSkip));
-    mChkLcdSpi->setChecked(Settings::boolOption(Settings::EmuLcdSpi));
-    mChkPreI->setChecked(Settings::boolOption(Settings::EmuPreI));
-}
-
-void SettingsEmulationTab::saveSettings()
-{
-    Settings::setIntOption(Settings::KeypadColor, mKeypadColor);
-    Settings::setIntOption(Settings::EmuSpeed, mSpnSpeed->value());
-    Settings::setIntOption(Settings::EmuFrameSkipRate, mSpnFrameSkip->value());
-    Settings::setBoolOption(Settings::EmuFrameSkip, mChkFrameSkip->isChecked());
-    Settings::setBoolOption(Settings::EmuLcdSpi, mChkLcdSpi->isChecked());
-    Settings::setBoolOption(Settings::EmuPreI, mChkPreI->isChecked());
-}
-
-SettingsDeveloperTab::SettingsDeveloperTab(QWidget *parent)
-    : QWidget(parent)
-{
-    mChkSoftCmds = new QCheckBox(tr("Enable soft commands"));
-    mChkTiOs = new QCheckBox(tr("Assume ROM has TI-OS"));
-    mChkResetNmi = new QCheckBox(tr("Open debugger on reset or NMI"));
-
-    QGroupBox *grpConfig = new QGroupBox(tr("Configuration"));
-    QVBoxLayout *vbox = new QVBoxLayout;
-    vbox->addWidget(mChkSoftCmds);
-    vbox->addWidget(mChkTiOs);
-    vbox->addWidget(mChkResetNmi);
-    vbox->addStretch(1);
-    grpConfig->setLayout(vbox);
-
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(grpConfig);
-    mainLayout->addStretch(1);
-    setLayout(mainLayout);
-
-    mChkSoftCmds->setChecked(Settings::boolOption(Settings::DevSoftCmds));
-    mChkTiOs->setChecked(Settings::boolOption(Settings::DevTIOS));
-    mChkResetNmi->setChecked(Settings::boolOption(Settings::DevOpenDebug));
-}
-
-void SettingsDeveloperTab::saveSettings()
-{
-    Settings::setBoolOption(Settings::DevSoftCmds, mChkSoftCmds->isChecked());
-    Settings::setBoolOption(Settings::DevTIOS, mChkTiOs->isChecked());
-    Settings::setBoolOption(Settings::DevOpenDebug, mChkResetNmi->isChecked());
 }
 
 SettingsResetTab::SettingsResetTab(QWidget *parent)

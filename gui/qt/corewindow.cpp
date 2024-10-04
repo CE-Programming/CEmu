@@ -22,6 +22,7 @@
 #include "developer/autotesterwidget.h"
 #include "developer/basicwidget.h"
 #include "developer/clockswidget.h"
+#include "developer/configurationwidget.h"
 #include "developer/controlwidget.h"
 #include "developer/cpuwidget.h"
 #include "developer/devmiscwidget.h"
@@ -43,6 +44,7 @@
 #include "statewidget.h"
 #include "util.h"
 #include "variablewidget.h"
+#include "variablesendwidget.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 #include <kddockwidgets/core/DockWidget.h>
@@ -64,7 +66,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
                        QWidget *parent)
     : KDDockWidgets::QtWidgets::MainWindow(uniqueName, options, parent),
       mKeypadBridge{new QtKeypadBridge{this}},
-      mCalcOverlay{nullptr}
+      mCalcOverlay{nullptr},
+      mDebug{false}
 {
     auto *menubar = menuBar();
 
@@ -76,9 +79,9 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     menubar->addMenu(mDocksMenu);
     menubar->addMenu(mDevMenu);
 
-    auto *resetAction = mCalcsMenu->addAction(tr("Reset"));
-    resetAction->setIcon(QIcon(QStringLiteral(":/assets/icons/synchronize.svg")));
-    connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
+    auto *actReloadRom = mCalcsMenu->addAction(tr("Reload ROM"));
+    actReloadRom->setIcon(QIcon(QStringLiteral(":/assets/icons/synchronize.svg")));
+    connect(actReloadRom, &QAction::triggered, this, &CoreWindow::reloadRom);
 
     mCalcsMenu->addSeparator();
 
@@ -124,11 +127,11 @@ CoreWindow::CoreWindow(const QString &uniqueName,
         resize(screenGeometry.height() * .325, screenGeometry.height() * .8);
     }
 
-    connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
+    connect(this, &CoreWindow::romChanged, this, &CoreWindow::reloadRom);
 
     mCalcWidget->setColor(Settings::intOption(Settings::KeypadColor));
 
-    resetEmu();
+    reloadRom();
 }
 
 CoreWindow::~CoreWindow()
@@ -150,7 +153,8 @@ void CoreWindow::createDockWidgets()
 
     mCalcWidget = new CalculatorWidget{this};
     auto *capture = new CaptureWidget{this};
-    auto *variable = new VariableWidget{this, QStringList{"test", "test2"}};
+    auto *variable = new VariableWidget{this};
+    auto *send = new VariableSendWidget{this, QStringList{"test", "test2"}};
     auto *keyHistory = new KeyHistoryWidget{this};
     auto *state = new StateWidget{this};
 
@@ -170,6 +174,7 @@ void CoreWindow::createDockWidgets()
     mDocksMenu->addAction(mCalcWidget->dock()->toggleAction());
     mDocksMenu->addAction(capture->dock()->toggleAction());
     mDocksMenu->addAction(keyHistory->dock()->toggleAction());
+    mDocksMenu->addAction(send->dock()->toggleAction());
     mDocksMenu->addAction(variable->dock()->toggleAction());
     mDocksMenu->addAction(state->dock()->toggleAction());
 
@@ -196,6 +201,7 @@ void CoreWindow::createDeveloperWidgets()
     };
 
     auto *console = new ConsoleWidget{this};
+    auto *configuration = new ConfigurationWidget{this};
     auto *autotester = new AutotesterWidget{this};
     auto *basic = new BasicWidget{this};
     auto *clocks = new ClocksWidget{this};
@@ -228,6 +234,7 @@ void CoreWindow::createDeveloperWidgets()
 #ifdef HAS_LIBUSB
     mDevMenu->addAction(usbDevices->dock()->toggleAction());
 #endif
+    mDevMenu->addAction(configuration->dock()->toggleAction());
     mDevMenu->addSeparator();
 
     auto *memoryAction = mDevMenu->addAction(tr("Add Memory View"));
@@ -245,6 +252,8 @@ void CoreWindow::createDeveloperWidgets()
         auto *visualizer = new VisualizerWidget{this};
         visualizer->dock()->show();
     });
+
+    connect(control, &ControlWidget::toggleDebug, this, &CoreWindow::toggleDebug);
 }
 
 void CoreWindow::setKeymap()
@@ -270,7 +279,7 @@ void CoreWindow::importRom()
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setWindowTitle(tr("Import ROM"));
-    dialog.setNameFilter(tr("ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)"));
+    dialog.setNameFilter(tr("ROM Image (*.rom *.ROM);;All Files (*.*)"));
 
     if (dialog.exec())
     {
@@ -298,9 +307,9 @@ void CoreWindow::exportRom()
     }
 }
 
-void CoreWindow::resetEmu()
+void CoreWindow::reloadRom()
 {
-    //mCalcOverlay->setVisible(mCore.command({"load", "rom", Settings::textOption(Settings::RomFile)}));
+    mCalcOverlay->setVisible(true);
 }
 
 void CoreWindow::showPreferences()
@@ -410,19 +419,38 @@ bool CoreWindow::restoreLayout()
     return json.isEmpty();
 }
 
-void CoreWindow::softCmd()
+void CoreWindow::enableDebug()
 {
     for (auto &dockedWidget : mDockedWidgets)
     {
-        //dockedWidget.loadFromCore(mCore);
+        dockedWidget.loadFromCore();
         dockedWidget.enableDebugWidgets(true);
     }
+
+    mDebug = true;
+}
+
+void CoreWindow::disableDebug()
+{
     for (auto &dockedWidget : mDockedWidgets)
     {
         dockedWidget.enableDebugWidgets(false);
-        //dockedWidget.storeToCore(mCore);
+        dockedWidget.storeToCore();
     }
-    //mCore.wake();
+
+    mDebug = false;
+}
+
+void CoreWindow::toggleDebug()
+{
+    if (mDebug)
+    {
+        disableDebug();
+    }
+    else
+    {
+        enableDebug();
+    }
 }
 
 void CoreWindow::closeEvent(QCloseEvent *)
