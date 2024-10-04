@@ -165,7 +165,7 @@ static uint8_t cpu_read_in(uint16_t pio) {
 static void cpu_write_out(uint16_t pio, uint8_t value) {
     if (unprivileged_code()) {
         control.protectionStatus |= 2;
-        gui_console_printf("[CEmu] NMI reset cause by an out instruction in unprivileged code.\n");
+        gui_console_err_printf("[CEmu] NMI reset cause by an out instruction in unprivileged code.\n");
         cpu_nmi();
     }
     port_write_byte(pio, value);

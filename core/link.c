@@ -31,7 +31,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
     const size_t argv_size = (1+num) * sizeof(char *);
     char **argv = malloc(argv_size);
     if (!argv) {
-        gui_console_printf("[CEmu] Transfer Error: can't allocate transfer commands... wut\n");
+        gui_console_err_printf("[CEmu] Transfer Error: can't allocate transfer commands... wut\n");
         return LINK_ERR;
     }
 
@@ -42,7 +42,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
         const size_t arg_size = 7 + strlen(files[i]) + 1;
         argv[i+1] = malloc(arg_size);
         if (!argv[i+1]) {
-            gui_console_printf("[CEmu] Transfer Error: can't allocate transfer command... wut\n");
+            gui_console_err_printf("[CEmu] Transfer Error: can't allocate transfer command... wut\n");
             num = i;
             goto alloc_err;
         }
@@ -50,7 +50,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
     }
     err = usb_plug_device(1+num, (const char *const *)argv, progress_handler, progress_context);
     if (err != 0) {
-        gui_console_printf("[CEmu] USB transfer error code %d.\n", err);
+        gui_console_err_printf("[CEmu] USB transfer error code %d.\n", err);
     }
     else {
         gui_console_printf("[CEmu] USB transfer(s) starting...\n");
@@ -128,7 +128,7 @@ int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
 w_err:
     (void)fclose(fd);
     if(remove(file)) {
-        gui_console_printf("[CEmu] Transfer Error: Please contact the developers\n");
+        gui_console_err_printf("[CEmu] Transfer Error: Please contact the developers\n");
     }
     return LINK_ERR;
 }

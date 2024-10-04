@@ -38,6 +38,7 @@ void emu_exit(void);                                      /* exit emulation */
 /* if you want debugging support, don't forget about the debug callbacks as well */
 void gui_console_clear(void);                             /* sent to clear the console */
 void gui_console_printf(const char *format, ...);         /* printf from the core to stdout */
+void gui_console_err_printf(const char *format, ...);     /* printf from the core to stderr */
 
 /* called at reset or state load, indicates hardware info and allows specifying a revision on reset
  * params:
