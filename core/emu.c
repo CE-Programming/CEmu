@@ -70,14 +70,14 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         gui_console_printf("[CEmu] Loading Emulator Image...\n");
 
         if (!file) {
-            gui_console_err_printf("[CEmu] Image file nonexistent.\n");
+            gui_console_printf("[CEmu] Image file nonexistent.\n");
             goto rerr;
         }
 
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
 
         if (version != IMAGE_VERSION) {
-            gui_console_err_printf("[CEmu] Error in versioning.\n");
+            gui_console_printf("[CEmu] Error in versioning.\n");
             goto rerr;
         }
 
@@ -85,7 +85,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         asic_init();
 
         if (!asic_restore(file)) {
-            gui_console_err_printf("[CEmu] Error reading image.\n");
+            gui_console_printf("[CEmu] Error reading image.\n");
             goto rerr;
         }
 
@@ -109,14 +109,14 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         file = fopen_utf8(path, "rb");
 
         if (!file) {
-            gui_console_err_printf("[CEmu] ROM file nonexistent.\n");
+            gui_console_printf("[CEmu] ROM file nonexistent.\n");
             goto rerr;
         }
 
         if (fseek(file, 0L, SEEK_END) < 0) goto rerr;
         size = (size_t)ftell(file);
         if (size > SIZE_FLASH) {
-            gui_console_err_printf("[CEmu] Invalid ROM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH);
+            gui_console_printf("[CEmu] Invalid ROM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH);
             goto rerr;
         }
         rewind(file);
@@ -125,7 +125,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         asic_init();
 
         if (fread(mem.flash.block, size, 1, file) != 1) {
-            gui_console_err_printf("[CEmu] Error reading ROM image\n");
+            gui_console_printf("[CEmu] Error reading ROM image\n");
             goto rerr;
         }
 
@@ -189,7 +189,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             set_device_type(device_type);
         } else {
             set_device_type(TI84PCE);
-            gui_console_err_printf("[CEmu] Could not determine device device_type.\n");
+            gui_console_printf("[CEmu] Could not determine device device_type.\n");
             state = EMU_STATE_NOT_A_CE;
         }
 
@@ -198,7 +198,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         size_t size;
 
         if (mem.ram.block == NULL) {
-            gui_console_err_printf("[CEmu] Emulator inactive, cannot load RAM file.\n");
+            gui_console_printf("[CEmu] Emulator inactive, cannot load RAM file.\n");
             goto rerr;
         }
 
@@ -207,19 +207,19 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 
         file = fopen_utf8(path, "rb");
         if (!file) {
-            gui_console_err_printf("[CEmu] RAM file nonexistent.\n");
+            gui_console_printf("[CEmu] RAM file nonexistent.\n");
             goto rerr;
         }
         if (fseek(file, 0L, SEEK_END) < 0) goto rerr;
         size = (size_t)ftell(file);
         if (size > SIZE_RAM) {
-            gui_console_err_printf("[CEmu] Invalid RAM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_RAM);
+            gui_console_printf("[CEmu] Invalid RAM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_RAM);
             goto rerr;
         }
         rewind(file);
 
         if (fread(mem.ram.block, 1, size, file) != size) {
-            gui_console_err_printf("[CEmu] Error reading RAM image.\n", (unsigned int)size, SIZE_RAM);
+            gui_console_printf("[CEmu] Error reading RAM image.\n", (unsigned int)size, SIZE_RAM);
             goto rerr;
         }
 

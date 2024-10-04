@@ -597,7 +597,7 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
         } else if (index == 0x010) {
             write8(lcd.upbase, bit_offset, value);
             if (lcd.upbase & 7) {
-                gui_console_err_printf("[CEmu] Warning: Aligning LCD panel\n");
+                gui_console_printf("[CEmu] Warning: Aligning LCD panel\n");
             }
             lcd.upbase &= ~7U;
             lcd_update();

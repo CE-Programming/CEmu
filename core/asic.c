@@ -110,7 +110,7 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, bool* python) {
         }
     }
     else {
-        gui_console_err_printf("[CEmu] Could not determine boot code version.\n");
+        gui_console_printf("[CEmu] Could not determine boot code version.\n");
     }
     gui_console_printf("[CEmu] Default ASIC revision is Rev %c.\n", "AIM"[(int)default_rev - 1]);
 

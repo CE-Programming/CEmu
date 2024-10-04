@@ -736,13 +736,13 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
     if (addr == control.stackLimit) {
         control.protectionStatus |= 1;
-        gui_console_err_printf("[CEmu] NMI reset caused by writing to the stack limit at address %#06x. Hint: Probably a stack overflow (aka too much recursion).\n", addr);
+        gui_console_printf("[CEmu] NMI reset caused by writing to the stack limit at address %#06x. Hint: Probably a stack overflow (aka too much recursion).\n", addr);
         cpu_nmi();
     } /* writes to stack limit succeed */
 
     if (addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code()) {
         control.protectionStatus |= 2;
-        gui_console_err_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, addr);
+        gui_console_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, addr);
         cpu_nmi();
     } else { /* writes to protected memory are ignored */
         switch((addr >> 20) & 0xF) {
@@ -751,7 +751,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
             case 0x4: case 0x5: case 0x6: case 0x7:
                 if (unprivileged_code()) {
                     control.protectionStatus |= 2;
-                    gui_console_err_printf("[CEmu] NMI reset caused by writing to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
+                    gui_console_printf("[CEmu] NMI reset caused by writing to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
                     cpu_nmi();
                 } else {
                     mem_write_flash(addr, value);
@@ -796,7 +796,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                         debug.bufferErr[debug.bufErrPos] = (char)value;
                         debug.bufErrPos = (debug.bufErrPos + 1) % SIZEOF_DBG_BUFFER;
                         if (!value) {
-                            gui_console_err_printf("%s", debug.bufferErr);
+                            gui_console_printf("%s", debug.bufferErr);
                             debug.bufErrPos = 0;
                         }
                         break;

@@ -70,7 +70,7 @@ void gui_console_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
-void gui_console_err_printf(const char *fmt, ...) {
+void gui_console_printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);

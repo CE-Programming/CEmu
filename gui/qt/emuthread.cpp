@@ -33,13 +33,6 @@ void gui_console_printf(const char *format, ...) {
     va_end(args);
 }
 
-void gui_console_err_printf(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    emu->writeConsole(EmuThread::ConsoleErr, format, args);
-    va_end(args);
-}
-
 void gui_debug_open(int reason, uint32_t data) {
     emu->debugOpen(reason, data);
 }

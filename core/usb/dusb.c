@@ -496,7 +496,7 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
         return DUSB_VAR_NEXT_STATE;
     }
 invalid:
-    gui_console_err_printf("[CEmu] Transfer warning: file parsing failed\n");
+    gui_console_printf("[CEmu] Transfer warning: file parsing failed\n");
     return DUSB_NEXT_COMMAND_STATE;
 }
 
@@ -1031,7 +1031,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 if (context->command->vartype == CALC_VAR_TYPE_FLASH_APP || context->start == context->command->file_length - 2) {
                     state = DUSB_NEXT_COMMAND_STATE;
                 } else if (!dusb_detect_var(context)) {
-                    gui_console_err_printf("[CEmu] Transfer warning: variable parsing failed\n");
+                    gui_console_printf("[CEmu] Transfer warning: variable parsing failed\n");
                     state = DUSB_NEXT_COMMAND_STATE;
                 } else {
                     gui_console_printf("[CEmu] Transferring variable: %.*s\n", context->command->varname_utf8_length, context->command->varname_utf8);
@@ -1039,7 +1039,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 }
                 continue;
             case DUSB_INVALID_STATE:
-                gui_console_err_printf("[CEmu] USB transfer failed, stopping activity\n");
+                gui_console_printf("[CEmu] USB transfer failed, stopping activity\n");
                 event->type = USB_DESTROY_EVENT;
                 break;
         }
