@@ -408,6 +408,7 @@ void KeypadWidget::mouseEvent(QMouseEvent *event) {
         return;
     }
     switch (event->type()) {
+        case QEvent::MouseButtonDblClick:
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
             mouseUpdate(event->localPos());
@@ -513,6 +514,7 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
 
 bool KeypadWidget::event(QEvent *event) {
     switch (event->type()) {
+        case QEvent::MouseButtonDblClick:
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
         case QEvent::MouseButtonRelease:
