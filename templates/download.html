@@ -13,37 +13,15 @@
         <div class="divider"></div>
         <div class="row">
             <h3>Download Stable Version</h3>
-            <p>This is your best bet if you want to get up and running quickly without any issues. If you want the cutting edge, click the above tab for a development build.</p>
+            <p>This is your best bet if you want to get up and running quickly without any issues. If you want the cutting edge, click the section below for a development build.</p>
             <a href="https://github.com/CE-Programming/CEmu/releases/latest" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download For All Platforms</a>
         </div>
         <div class="divider"></div>
         <div class="row">
             <h3>Download Development Builds</h3>
             <p>Note that these are automated "bleeding-edge" versions - they are probably stable enough, but may break at any time! Recommended only if you want to try new features, and don't mind occasional bugs.</p>
-            <p>For now, this is the version that has TI-Basic "debugging", "USB transfers" (i.e. being able to transfers files such as OSes and apps), etc.</p>
             <a href="https://github.com/CE-Programming/CEmu/releases/tag/nightly" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download For All Platforms</a>
         </div>
     </div>
 </div>
 {% endblock content %}
-
-{% block scripts %}
-<script type="text/javascript">
-    $.ajaxPrefilter( function (options) {
-      if (options.crossDomain && jQuery.support.cors) {
-        var http = (window.location.protocol === 'http:' ? 'http:' : 'https:');
-        options.url = http + '//cors-anywhere.herokuapp.com/' + options.url;
-        //options.url = "http://cors.corsproxy.io/url=" + options.url;
-      }
-    });
-    $(document).ready(function(){
-        // the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
-        $('.modal').modal();
-    });
-</script>
-<script src="js/artifactory-hunter.js"></script>
-<script src="js/cemu-dl.js"></script>
-<script type="text/javascript">
-    CEmuDownloader.init();
-</script>
-{% endblock scripts %}
