@@ -1150,7 +1150,7 @@ void MainWindow::showEvent(QShowEvent *e) {
 DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) {
     QWidget *child = childAt(pos);
     if (QTabBar *tabBar = findSelfOrParent<QTabBar *>(child)) {
-        child = childAt({pos.x(), tabBar->mapTo(this, QPoint{}).y() - 1});
+        child = childAt((const QPoint&){pos.x(), tabBar->mapTo(this, QPoint{}).y() - 1});
     }
     return findSelfOrParent<DockWidget *>(child);
 }
