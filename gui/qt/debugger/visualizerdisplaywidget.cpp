@@ -96,6 +96,7 @@ void VisualizerDisplayWidget::setRefreshRate(int rate) {
     connect(m_refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
     m_refreshTimer->stop();
     m_refreshTimer->setInterval(1000 / rate);
+    m_refreshTimer->setTimerType(Qt::PreciseTimer);
     m_refreshTimer->start();
     m_refresh = rate;
 }
