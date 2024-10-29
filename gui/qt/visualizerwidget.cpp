@@ -117,7 +117,7 @@ void VisualizerWidget::showConfig() {
     QCheckBox *gridChk = new QCheckBox(tr("Grid"));
     QPushButton *submitBtn = new QPushButton(tr("Submit"));
 
-    fpsSpin->setRange(0, 120);
+    fpsSpin->setRange(1, 1000);
     fpsSpin->setValue(m_fps);
 
     scaleSpin->setRange(0, 5000);
@@ -268,7 +268,7 @@ void VisualizerWidget::stringToView() {
         if (fps_reg.match(str).hasMatch()) {
             str.chop(3);
             m_fps = str.toInt();
-            if (m_fps < 1 || m_fps > 120) { m_fps = 30; }
+            if (m_fps < 1 || m_fps > 1000) { m_fps = 30; }
         }
     }
 
