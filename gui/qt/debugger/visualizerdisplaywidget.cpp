@@ -15,6 +15,7 @@ VisualizerDisplayWidget::VisualizerDisplayWidget(QWidget *parent) : QWidget{pare
 
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &VisualizerDisplayWidget::customContextMenuRequested, this, &VisualizerDisplayWidget::contextMenu);
+    connect(m_refreshTimer, &QTimer::timeout, this, &VisualizerDisplayWidget::draw);
 
     m_image = new QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB32);
 }
@@ -93,7 +94,6 @@ void VisualizerDisplayWidget::setRefreshRate(int rate) {
     if (!rate) {
         return;
     }
-    connect(m_refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
     m_refreshTimer->stop();
     m_refreshTimer->setInterval(1000 / rate);
     m_refreshTimer->setTimerType(Qt::PreciseTimer);
