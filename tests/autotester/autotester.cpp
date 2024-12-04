@@ -51,6 +51,8 @@ namespace autotester
 /* The global config variable */
 config_t config;
 
+std::string oldCWD;
+
 bool debugMode = true;
 bool ignoreROMfield = false;
 bool configLoaded = false;

@@ -17,6 +17,7 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   #include <direct.h>
   #define chdir _chdir
+  #define getcwd _getcwd
 #else
   #include <unistd.h>
 #endif
@@ -83,6 +84,12 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    char* oldCWD = getcwd(nullptr, 0);
+    if (oldCWD != nullptr && oldCWD[0] != '\0')
+    {
+        autotester::oldCWD = std::string{oldCWD} + '/';
+    }
+
     // Go to the json file's dir to allow relative paths from there
     if (chdir(jsonPath.substr(0, jsonPath.find_last_of("/\\")).c_str())) {
         std::cerr << "[Error] Couldn't change directory path" << std::endl;
@@ -134,6 +141,11 @@ int main(int argc, char* argv[])
     }
 
 cleanExit:
+    if (oldCWD)
+    {
+        chdir(oldCWD);
+        free(oldCWD);
+    }
     cemucore::emu_exit();
     cemucore::asic_free();
 

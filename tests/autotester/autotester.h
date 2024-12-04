@@ -51,6 +51,8 @@ namespace autotester
         std::unordered_map<std::string, hash_params_t> hashes;
     };
 
+    extern std::string oldCWD;
+
     /*
      * Constants usable in the "start" and "size" parameters of the JSON config for the hash params
      * See http://wikiti.brandonw.net/index.php?title=Category:84PCE:RAM:By_Address
