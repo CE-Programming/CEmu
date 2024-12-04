@@ -6,6 +6,7 @@ RM = rm -f
 # If you want core debug support, add -DDEBUG_SUPPORT
 # If you want the emulator to run on a different thread than the gui, add -DMULTITHREAD
 CFLAGS = -Wall -Wextra -fPIC -O3 -std=gnu11 -static
+CFLAGS += -Iarm/samd21a/include -Iarm/CMSIS/Core/Include
 
 # Add debugging support, with zdis disassembler
 #CFLAGS += -DDEBUG_SUPPORT
@@ -19,6 +20,7 @@ CFLAGS = -Wall -Wextra -fPIC -O3 -std=gnu11 -static
 rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
 
 OBJS = $(patsubst %.c,%.o,$(filter-out arm/%,$(call rwildcard,,*.c)))
+OBJS += arm/tinycthread.o arm/arm.o arm/armcpu.o arm/armmem.o arm/spscqueue.o arm/sync.o
 
 STATICLIB = libcemucore.a
 
