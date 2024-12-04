@@ -73,6 +73,50 @@ namespace autotester
         { "cursorImage",    0xE30800 },  { "cursorImage_size",     1024 }
     };
 
+    static const char* varExtensions[] = {
+        "8xn",  // 00
+        "8xl",
+        "8xm",
+        "8xy",
+        "8xs",
+        "8xp",
+        "8xp",
+        "8ci",
+        "8xd",  // 08
+        "",
+        "",
+        "8xw",  // 0B
+        "8xc",
+        "8xl",  // 0D
+        "",
+        "8xw",  // 0F
+        "8xz",  // 10
+        "8xt",  // 11
+        "",
+        "",
+        "",
+        "8xv",  // 15
+        "",
+        "8cg",  // 17
+        "8xn",  // 18
+        "",
+        "8ca",  // 1A
+        "8xc",
+        "8xn",
+        "8xc",
+        "8xc",
+        "8xc",
+        "8xn",
+        "8xn",  // 21
+        "",
+        "8pu",  // 23
+        "8ek",  // 24
+        "",
+        "",
+        "",
+        "",
+    };
+
     void sendCSC(uint8_t csc);
     void sendKey(uint16_t key);
     void sendLetterKeyPress(char letter);

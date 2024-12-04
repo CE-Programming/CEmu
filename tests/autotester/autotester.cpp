@@ -312,6 +312,47 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not released." << std::endl;
             };
         }
+    },
+    {
+        "saveVar", [](const std::string& wanted_var_name) {
+            using namespace cemucore;
+
+            bool found = false;
+            calc_var_t var;
+            const char* readableName = nullptr;
+
+            vat_search_init(&var);
+            while (vat_search_next(&var))
+            {
+                if (var.named || var.size > 2)
+                {
+                    if (calc_var_is_list(&var))
+                    {
+                        // Remove any linked formula before generating filename
+                        var.name[var.namelen - 1] = 0;
+                    }
+                    readableName = calc_var_name_to_utf8(var.name, var.namelen, var.named);
+                    if (readableName == wanted_var_name)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                std::cerr << "Could not save var, it wasn't found!" << std::endl;
+                return;
+            }
+
+            const std::string filename = oldCWD + readableName + std::string(".") + varExtensions[var.type];
+            if (emu_receive_variable(filename.c_str(), &var, 1) != LINK_GOOD) {
+                std::cerr << "saveVar error, see console for information. File: " << filename << std::endl;
+            } else {
+                std::cout << "saveVar completed successfully. File: " << filename << std::endl;
+            }
+        }
     }
 };
 
