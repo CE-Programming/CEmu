@@ -13,21 +13,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12, macos-13, macos-14]
+        qtvershort: [5_intel, 6_intel, 6_arm]
         config: [Release]
         include:
-          - os: macos-12
+          - qtvershort: "5_intel"
             arch: x64
             qtver: Qt5
-            qtvershort: "5_intel"
-          - os: macos-13
+            os: macos-13
+          - qtvershort: "6_intel"
             arch: x64
             qtver: Qt6
-            qtvershort: "6_intel"
-          - os: macos-14
+            os: macos-13
+          - qtvershort: "6_arm"
             arch: arm64
             qtver: Qt6
-            qtvershort: "6_arm"
+            os: macos-14
 
     steps:
     - name: Checkout Git Repo
