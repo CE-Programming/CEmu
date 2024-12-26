@@ -166,7 +166,13 @@
     },
     {
       "name": "Mac-x64-Qt5",
-      "inherits": [ "Mac-x64-Qt6", "Qt5" ]
+      "inherits": [ "Mac-x64-Qt6", "Qt5" ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-osx-minver"
+        }
+      }
     },
     {
       "name": "Mac-arm64-Qt5",
