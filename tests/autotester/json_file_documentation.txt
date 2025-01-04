@@ -26,11 +26,12 @@ Structure of the JSON object for the test config files:
         key|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
         hold|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
         release|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
+        saveVar|varName (with varName the name of the variable to save/export to your computer)
         sendCSC|keyName[|keyName...] (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
 
-"hashes" (array of objects)
-    each object's key corresponds to the name of the hash (params).
-    each object has the following properties:
+"hashes" (object (of objects))
+    each key corresponds to the name of the hash (params).
+    each value is an object that has the following properties:
         - "description" (string)
             Just to explain what this hash is for
         - "start" (string of number in decimal or hexadecimal if prefixed by 0x)
