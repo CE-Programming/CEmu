@@ -2394,7 +2394,7 @@ void MainWindow::osUpdate() {
     vat_search_init(&var);
     while (vat_search_next(&var)) {
         QTableWidgetItem *varAddr = new QTableWidgetItem(int2hex(var.address, 6));
-        QTableWidgetItem *varVatAddr = new QTableWidgetItem(int2hex(var.vat, 6));
+        QTableWidgetItem *varVatAddr = new QTableWidgetItem(int2hex(var.originalVat, 6));
         QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size, 4));
         QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name, var.namelen, var.named)));
         QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));

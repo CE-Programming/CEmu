@@ -289,7 +289,7 @@ static uint8_t calc_tokenized_var_version(const calc_var_t *var) {
 
 void vat_search_init(calc_var_t *var) {
     memset(var, 0, sizeof *var);
-    var->vat = 0xD3FFFF;
+    var->originalVat = var->vat = 0xD3FFFF;
 }
 
 bool vat_search_next(calc_var_t *var) {
@@ -302,6 +302,7 @@ bool vat_search_next(calc_var_t *var) {
     if (!var->vat || var->vat < userMem || var->vat <= OPBase || var->vat > symTable) {
         return false; /* some sanity check failed */
     }
+    var->originalVat = var->vat;
     var->type1    = mem_peek_byte(var->vat--);
     var->type     = (calc_var_type_t)(var->type1 & 0x3F);
     var->type2    = mem_peek_byte(var->vat--);
