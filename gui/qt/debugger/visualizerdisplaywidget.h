@@ -12,7 +12,7 @@ public:
     explicit VisualizerDisplayWidget(QWidget *p = Q_NULLPTR);
     ~VisualizerDisplayWidget();
     void setRefreshRate(int rate);
-    void setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e);
+    void setConfig(uint32_t bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e);
 
 protected:
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
@@ -34,7 +34,7 @@ private:
     bool m_grid;
     uint32_t m_upbase;
     uint32_t m_control;
-    float m_bppstep;
+    uint32_t m_bppstep;
     uint32_t *m_data;
     uint32_t *m_data_end;
 };

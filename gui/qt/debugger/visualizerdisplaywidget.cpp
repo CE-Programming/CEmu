@@ -101,7 +101,7 @@ void VisualizerDisplayWidget::setRefreshRate(int rate) {
     m_refresh = rate;
 }
 
-void VisualizerDisplayWidget::setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e) {
+void VisualizerDisplayWidget::setConfig(uint32_t bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e) {
     m_bppstep = bppstep;
     m_width = w;
     m_height = h;
@@ -125,8 +125,12 @@ void VisualizerDisplayWidget::contextMenu(const QPoint& posa) {
     uint32_t x = static_cast<uint32_t>(point.x());
     uint32_t y = static_cast<uint32_t>(point.y());
 
-    QString addr = int2hex(m_upbase + (static_cast<uint32_t>(std::floor((static_cast<float>(x)) / m_bppstep))) +
-                           (static_cast<unsigned int>(m_width) * y), 6);
+    uint32_t offset = (static_cast<unsigned int>(m_width) * y + x) * m_bppstep / 8;
+    if (m_control & 0x200) {
+        // reverse order within 32-bit word for BEBO mode
+        offset ^= (-m_bppstep / 8) & 3;
+    }
+    QString addr = int2hex(m_upbase + offset, 6);
 
     coordStr += QString::number(x) + QStringLiteral("x") + QString::number(y);
     copyStr += QStringLiteral(" '") + addr + QStringLiteral("'");
