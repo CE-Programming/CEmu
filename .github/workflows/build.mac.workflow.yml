@@ -109,7 +109,7 @@ jobs:
         xcrun stapler staple "CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg"
 
     - name: Upload dmg as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
           name: CEmu-nightly_mac_qt${{matrix.qtvershort}}
           path: CEmu-nightly_mac_qt${{matrix.qtvershort}}.dmg

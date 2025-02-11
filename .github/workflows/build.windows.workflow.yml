@@ -59,7 +59,7 @@ jobs:
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} ${{ matrix.qtver }} EXE
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: CEmu_win${{ matrix.arch_suffix }}_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu.exe

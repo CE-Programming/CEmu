@@ -62,7 +62,7 @@ jobs:
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload binary as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: CEmu_linux_${{ matrix.qtver }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
