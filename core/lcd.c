@@ -54,6 +54,39 @@ static inline uint32_t lcd_rgb888out(uint32_t rgb888) {
     return lcd_argb8888out(UINT32_C(0xFF000000) | (rgb888 & 0xF8FCF8));
 }
 
+static inline void lcd_intrpt_check(void) {
+    intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+}
+
+static inline void lcd_crsr_update(void) {
+    if (lcd.compare != LCD_FRONT_PORCH) {
+        return;
+    }
+    lcd_crsr_state_t *crsrRegs = &lcd.crsrRegs[lcd.crsrConfig >> 1 & 1];
+    uint32_t crsrSize = ((lcd.crsrConfig & 1) + 1) * 32;
+    uint32_t crsrClipX = crsrRegs->crsrClip & 0xFF;
+    uint32_t crsrClipY = crsrRegs->crsrClip >> 8;
+    uint32_t crsrRow = crsrRegs->crsrXY >> 16;
+    uint32_t crsrRowUnclipped = crsrRow - crsrClipY;
+    /* This value is treated as a signed 12-bit value for the cursor interrupt check */
+    crsrRowUnclipped = (int32_t)(crsrRowUnclipped << 20) >> 20;
+    uint32_t crsrRowOffset = lcd.curRow - crsrRowUnclipped;
+    if (likely((int32_t)crsrRowOffset >= (int32_t)crsrSize)) {
+        if (!likely(lcd.crsrIntrptd)) {
+            lcd.crsrIntrptd = true;
+            lcd.ris |= 1 << 0;
+            lcd_intrpt_check();
+        }
+        lcd.curCrsrWidth = 0;
+    } else if (!unlikely(lcd.crsrControl) || likely(lcd.curRow < crsrRow) || crsrClipX >= crsrSize) {
+        lcd.curCrsrWidth = 0;
+    } else {
+        lcd.curCrsrOffset = ((crsrRegs->crsrImage * crsrSize + crsrRowOffset) * crsrSize + crsrClipX) & 0xFFF;
+        lcd.curCrsrCol = crsrRegs->crsrXY & 0xFFFF;
+        lcd.curCrsrWidth = crsrSize - crsrClipX;
+    }
+}
+
 void emu_set_lcd_callback(bool (*callback)(void*), void *data) {
     lcd.gui_callback = callback;
     lcd.gui_callback_data = data;
@@ -187,15 +220,22 @@ static uint32_t lcd_process_pixel(uint32_t ticks, uint16_t bgr565) {
             }
             panel_hsync();
             panel_clock_porch(lcd.HSW + lcd.HBP);
+            lcd_crsr_update();
         }
 
         if (unlikely(sched_active(SCHED_PANEL))) {
             panel_scan_until(sched_ticks_remaining_relative(SCHED_PANEL, SCHED_LCD_DMA, ticks));
         }
-        assert(lcd.curCol < lcd.PPL);
+        assert(lcd.curCol < lcd.CPL);
+        uint32_t crsrColOffset = lcd.curCol - lcd.curCrsrCol;
+        if (unlikely(crsrColOffset < lcd.curCrsrWidth)) {
+            uint32_t crsrOffset = lcd.curCrsrOffset + crsrColOffset;
+            uint8_t crsrPixel = lcd.crsrImageBytes[crsrOffset >> 2] >> ((~crsrOffset & 3) * 2) & 3;
+            bgr565 = (crsrPixel & 2 ? bgr565 : 0) ^ lcd.crsrPalette[crsrPixel];
+        }
         panel.clock_pixel(bgr565);
 
-        if (unlikely(++lcd.curCol >= lcd.PPL)) {
+        if (unlikely(++lcd.curCol >= lcd.CPL)) {
             panel_clock_porch(lcd.HFP);
             lcd.curCol = 0;
             lcd.curRow++;
@@ -301,6 +341,7 @@ static void lcd_event(enum sched_item_id id) {
     enum lcd_comp compare = lcd.control >> 12 & 3;
     switch (lcd.compare) {
         case LCD_FRONT_PORCH:
+            lcd.ris |= !lcd.crsrIntrptd << 0;
             if (lcd.VFP) {
                 if (compare == LCD_FRONT_PORCH) {
                     lcd.ris |= 1 << 3;
@@ -348,6 +389,8 @@ static void lcd_event(enum sched_item_id id) {
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
                         lcd.HSW) * lcd.PCD + 1;
             lcd.prefill = true;
+            lcd.crsrIntrptd = false;
+            lcd.crsrRegs[1] = lcd.crsrRegs[0];
             if (lcd.useDma) {
                 lcd.pos = 0;
                 lcd.curRow = lcd.curCol = 0;
@@ -385,7 +428,7 @@ static void lcd_event(enum sched_item_id id) {
             lcd.compare = LCD_FRONT_PORCH;
             break;
     }
-    intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+    lcd_intrpt_check();
     sched_repeat(id, duration);
 }
 
@@ -418,6 +461,7 @@ static void lcd_init_events(void) {
 
 void lcd_reset(void) {
     memset(&lcd, 0, offsetof(lcd_state_t, useDma));
+    lcd.crsrPalette[3] = 0xFFFF;
     lcd_update();
     lcd_init_events();
     gui_console_printf("[CEmu] LCD reset.\n");
@@ -432,9 +476,9 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
         if (index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }
         if (index < 0x018 && index >= 0x014) { return read8(lcd.lpbase, bit_offset); }
         if (index < 0x01C && index >= 0x018) { return read8(lcd.control, bit_offset); }
-        if (index < 0x020 && index >= 0x01C) { return read8(lcd.imsc, bit_offset); }
-        if (index < 0x024 && index >= 0x020) { return read8(lcd.ris, bit_offset); }
-        if (index < 0x028 && index >= 0x024) { return read8(lcd.imsc & lcd.ris, bit_offset); }
+        if (index == 0x01C) { return lcd.imsc & ~1; }
+        if (index == 0x020) { return lcd.ris & ~1; }
+        if (index == 0x024) { return lcd.imsc & lcd.ris & ~1; }
         if (index < 0x030 && index >= 0x02C) {
             if (!peek) {
                 sched_process_pending_dma(0);
@@ -453,15 +497,15 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
         if (!peek) {
             cpu.cycles--;
         }
-        if (index == 0xC00) { return read8(lcd.crsrControl, bit_offset); }
-        if (index == 0xC04) { return read8(lcd.crsrConfig, bit_offset); }
+        if (index == 0xC00) { return lcd.crsrControl | (lcd.crsrRegs[0].crsrImage << 4); }
+        if (index == 0xC04) { return lcd.crsrConfig; }
         if (index < 0xC0C && index >= 0xC08) { return read8(lcd.crsrPalette0, bit_offset); }
         if (index < 0xC10 && index >= 0xC0C) { return read8(lcd.crsrPalette1, bit_offset); }
-        if (index < 0xC14 && index >= 0xC10) { return read8(lcd.crsrXY, bit_offset); }
-        if (index < 0xC16 && index >= 0xC14) { return read8(lcd.crsrClip, bit_offset); }
-        if (index == 0xC20) { return read8(lcd.crsrImsc, bit_offset); }
-        if (index == 0xC28) { return read8(lcd.crsrRis, bit_offset); }
-        if (index == 0xC2C) { return read8(lcd.crsrRis & lcd.crsrImsc, bit_offset); }
+        if (index < 0xC14 && index >= 0xC10) { return read8(lcd.crsrRegs[0].crsrXY, bit_offset); }
+        if (index < 0xC16 && index >= 0xC14) { return read8(lcd.crsrRegs[0].crsrClip, bit_offset); }
+        if (index == 0xC20) { return lcd.imsc & 1; }
+        if (index == 0xC28) { return lcd.ris & 1; }
+        if (index == 0xC2C) { return lcd.ris & lcd.imsc & 1; }
     } else if (index >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
@@ -620,12 +664,16 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
                 }
             }
         } else if (index == 0x01C) {
-            write8(lcd.imsc, bit_offset, value);
-            lcd.imsc &= 0x1E;
-            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+            if (likely(bit_offset == 0)) {
+                lcd.imsc &= ~0x1E;
+                lcd.imsc |= value & 0x1E;
+                lcd_intrpt_check();
+            }
         } else if (index == 0x028) {
-            lcd.ris &= ~(value << bit_offset);
-            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+            if (likely(bit_offset == 0)) {
+                lcd.ris &= ~(value & 0x1E);
+                lcd_intrpt_check();
+            }
         }
         lcd_update();
     } else if (index < 0x400) {
@@ -643,40 +691,58 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
         }
     } else if (index < 0xC00) {
         if (index >= 0x800) {
+            if (!poke && unlikely(lcd.crsrControl)) {
+                sched_process_pending_dma(0);
+            }
             lcd.crsrImageBytes[pio - 0x800] = value;
         }
     } else if (index < 0xE00) {
-        if (index == 0xC00) {
-            write8(lcd.crsrControl, bit_offset, value);
-        }
-        if (index == 0xC04) {
-            write8(lcd.crsrConfig, bit_offset, value);
-            lcd.crsrConfig &= 0xF;
-        }
-        if (index == 0xC08) {
-            write8(lcd.crsrPalette0, bit_offset, value);
-        }
-        if (index == 0xC0C) {
-            write8(lcd.crsrPalette1, bit_offset, value);
-        }
-        if (index == 0xC10) {
-            write8(lcd.crsrXY, bit_offset, value);
-            lcd.crsrXY &= (0xFFF | (0xFFF << 16));
-        }
-        if (index == 0xC14) {
-            write8(lcd.crsrClip, bit_offset, value);
-            lcd.crsrClip &= (0x3F | (0x3F << 8));
-        }
-        if (index == 0xC20) {
-            write8(lcd.crsrImsc, bit_offset, value);
-            lcd.crsrImsc &= 0xF;
-        }
-        if (index == 0xC24) {
-            lcd.crsrRis &= ~(value << bit_offset);
-            lcd.crsrRis &= 0xF;
-        }
         if (!poke) {
             lcd_write_crsr_delay();
+            if (index < 0xC18) {
+                sched_process_pending_dma(0);
+            }
+        }
+        if (index == 0xC00) {
+            if (likely(bit_offset == 0)) {
+                lcd.crsrControl = value & 1;
+                lcd.crsrRegs[0].crsrImage = value >> 4 & 3;
+                lcd_crsr_update();
+            }
+        } else if (index == 0xC04) {
+            if (likely(bit_offset == 0)) {
+                lcd.crsrConfig = value & 3;
+                lcd_crsr_update();
+            }
+        } else if (index == 0xC08) {
+            if (likely(bit_offset < 24)) {
+                write8(lcd.crsrPalette0, bit_offset, value);
+                lcd.crsrPalette[0] = c888(lcd.crsrPalette0);
+            }
+        } else if (index == 0xC0C) {
+            if (likely(bit_offset < 24)) {
+                write8(lcd.crsrPalette1, bit_offset, value);
+                lcd.crsrPalette[1] = c888(lcd.crsrPalette1);
+            }
+        } else if (index == 0xC10) {
+            write8(lcd.crsrRegs[0].crsrXY, bit_offset, value);
+            lcd.crsrRegs[0].crsrXY &= (0xFFF | (0xFFF << 16));
+            lcd_crsr_update();
+        } else if (index == 0xC14) {
+            write8(lcd.crsrRegs[0].crsrClip, bit_offset, value);
+            lcd.crsrRegs[0].crsrClip &= (0x3F | (0x3F << 8));
+            lcd_crsr_update();
+        } else if (index == 0xC20) {
+            if (likely(bit_offset == 0)) {
+                lcd.imsc &= ~1;
+                lcd.imsc |= value & 1;
+                lcd_intrpt_check();
+            }
+        } else if (index == 0xC24) {
+            if (likely(bit_offset == 0)) {
+                lcd.ris &= ~(value & 1);
+                lcd_intrpt_check();
+            }
         }
     }
 }

@@ -29,19 +29,19 @@ void emu_set_keypad_ghosting(int enable) {
     keypad_atomics.ghosting = enable;
 }
 
-static inline void keypad_intrpt_check() {
+static inline void keypad_intrpt_check(void) {
     intrpt_set(INT_KEYPAD, keypad.status & keypad.enable);
 }
 
-static inline uint8_t keypad_row_limit() {
+static inline uint8_t keypad_row_limit(void) {
     return keypad.rows >= KEYPAD_MAX_ROWS ? KEYPAD_MAX_ROWS : keypad.rows;
 }
 
-static inline uint8_t keypad_actual_row_limit() {
+static inline uint8_t keypad_actual_row_limit(void) {
     return keypad.rows >= KEYPAD_ACTUAL_ROWS ? KEYPAD_ACTUAL_ROWS : keypad.rows;
 }
 
-static inline uint16_t keypad_data_mask() {
+static inline uint16_t keypad_data_mask(void) {
     uint8_t colLimit = keypad.cols >= KEYPAD_ACTUAL_COLS ? KEYPAD_ACTUAL_COLS : keypad.cols;
     return (1 << colLimit) - 1;
 }

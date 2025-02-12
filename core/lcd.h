@@ -26,12 +26,20 @@ enum lcd_comp {
     LCD_LNBU
 };
 
+typedef struct lcd_crsr_state {
+    uint32_t crsrXY;               /* Cursor XY position register */
+    uint32_t crsrClip;             /* Cursor clip position register */
+    uint32_t crsrImage;            /* Cursor image index */
+} lcd_crsr_state_t;
+
 typedef struct lcd_state {
     uint32_t timing[4];
 
-    uint32_t control;             /* Control register */
-    uint32_t imsc;                /* Interrupt mask set/clear register */
-    uint32_t ris;
+    uint32_t control;              /* Control register */
+    uint8_t imsc;                  /* Interrupt mask set/clear register, plus cursor interrupt bit */
+    uint8_t ris;                   /* Interrupt raw status register, plus cursor interrupt bit */
+    uint8_t crsrControl;           /* Cursor control register */
+    uint8_t crsrConfig;            /* Cursor configuration register */
 
     uint32_t upbase;               /* Upper panel frame base address register */
     uint32_t lpbase;               /* Lower panel frame base address register */
@@ -51,23 +59,19 @@ typedef struct lcd_state {
         uint32_t crsrImageWords[0x100]; /* For alignment */
         uint8_t  crsrImageBytes[0x400];
     };
-    uint32_t crsrControl;          /* Cursor control register */
-    uint32_t crsrConfig;           /* Cursor configuration register */
+
     uint32_t crsrPalette0;         /* Cursor palette registers */
     uint32_t crsrPalette1;
-    uint32_t crsrXY;               /* Cursor XY position register */
-    uint32_t crsrClip;             /* Cursor clip position register */
-    uint32_t crsrImsc;             /* Cursor interrupt mask set/clear register */
-    uint32_t crsrIcr;              /* Cursor interrupt clear register */
-    uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
+    lcd_crsr_state_t crsrRegs[2];  /* Async and frame sync cursor registers */
 
     /* Internal */
-    bool prefill;
+    bool prefill, crsrIntrptd;
     uint8_t pos;
-    uint32_t curCol, curRow, fifo[64];
+    uint32_t curCol, curRow, curCrsrCol, curCrsrWidth, curCrsrOffset, fifo[64];
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
+    uint16_t crsrPalette[4];       /* Palette stored as RGB565 or BGR565, and transparency/inversion masks */
     uint16_t palette[0x100];       /* Palette stored as RGB565 in native endianness */
 
     /* Everything above here goes into the state */
