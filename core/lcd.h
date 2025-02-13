@@ -71,8 +71,8 @@ typedef struct lcd_state {
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
-    uint16_t crsrPalette[4];       /* Palette stored as RGB565 or BGR565, and transparency/inversion masks */
-    uint16_t palette[0x100];       /* Palette stored as RGB565 in native endianness */
+    uint16_t crsrPalette[4];       /* Cursor palette stored as BGR565, plus transparency/inversion masks */
+    uint16_t palettes[2][0x100];   /* Palette stored as BGR565 and RGB565 in native endianness */
 
     /* Everything above here goes into the state */
     uint32_t *data;                /* Pointer to start of data to start extracting from */

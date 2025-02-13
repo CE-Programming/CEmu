@@ -131,6 +131,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
     if (!dat) { goto draw_black; }
 
     if (mode < 4) {
+        const uint16_t *palette = lcd.palettes[bgr & 1];
         uint_fast8_t bpp = 1u << mode;
         uint32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ^ (CEMU_BYTE_ORDER == CEMU_BIG_ENDIAN) ? 0 : 24;
@@ -140,12 +141,8 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
             uint_fast8_t bitpos = 32;
             word = *dat++;
             do {
-                color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                color |= (uint32_t)lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask] << 16;
-                color = lcd_bgr565swap(color, bgr);
+                color = palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                 *out++ = lcd_rgb565out(color);
-                if (out == out_end) break;
-                *out++ = lcd_rgb565out(color >> 16);
             } while (bitpos && out != out_end);
         } while (dat < dat_end);
 
@@ -309,6 +306,7 @@ static uint32_t lcd_words(uint8_t words) {
             }
 
             default: {
+                const uint16_t *palette = lcd.palettes[bgr & 1];
                 uint_fast8_t bpp = 1 << lcd.LCDBPP;
                 uint_fast8_t mask = (1 << bpp) - 1;
                 uint_fast8_t bi = (lcd.BEBO ^ (CEMU_BYTE_ORDER == CEMU_BIG_ENDIAN) ? 0 : 24) ^ (lcd.BEPO ? 0 : 8 - bpp);
@@ -316,11 +314,8 @@ static uint32_t lcd_words(uint8_t words) {
                     uint_fast8_t bitpos = 32;
                     uint32_t word = *dat++;
                     do {
-                        uint32_t pixel = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                        pixel |= (uint32_t)lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask] << 16;
-                        pixel = lcd_bgr565swap(pixel, bgr);
+                        uint16_t pixel = palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                         ticks = lcd_process_pixel(ticks, pixel);
-                        ticks = lcd_process_pixel(ticks, pixel >> 16);
                     } while (bitpos);
                 } while (--words);
                 break;
@@ -687,7 +682,9 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
             /* Convert to RGB565 in native endianness */
             paletteIndex >>= 1;
             uint16_t color = lcd.paletteBytes[paletteIndex * 2] | (lcd.paletteBytes[paletteIndex * 2 + 1] << 8);
-            lcd.palette[paletteIndex] = color + (color & 0xFFE0) + (color >> 10 & 0x0020);
+            uint16_t bgr565 = color + (color & 0xFFE0) + (color >> 10 & 0x0020);
+            lcd.palettes[0][paletteIndex] = bgr565;
+            lcd.palettes[1][paletteIndex] = lcd_bgr565swap(bgr565, 0x1F);
         }
     } else if (index < 0xC00) {
         if (index >= 0x800) {
