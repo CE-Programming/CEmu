@@ -87,6 +87,57 @@ static inline void lcd_crsr_update(void) {
     }
 }
 
+static inline uint8_t lcd_crsr_pixel(uint32_t crsrOffset) {
+    return lcd.crsrImageBytes[crsrOffset >> 2] >> ((~crsrOffset & 3) * 2) & 3;
+}
+
+static void lcd_drawcrsr(void *output, uint32_t rowWidth, lcd_crsr_state_t *crsrRegs, bool crsrIsLarge, uint32_t size) {
+    uint32_t crsrSize = (crsrIsLarge + 1) * 32;
+    uint32_t crsrClipX = crsrRegs->crsrClip & 0xFF;
+    uint32_t crsrClipY = crsrRegs->crsrClip >> 8;
+    if ((crsrClipX | crsrClipY) >= crsrSize) {
+        return;
+    }
+    uint32_t crsrCol = crsrRegs->crsrXY & 0xFFFF;
+    if (crsrCol >= rowWidth) {
+        return;
+    }
+    uint32_t crsrWidth = crsrSize - crsrClipX;
+    if (crsrWidth > rowWidth - crsrCol) {
+        crsrWidth = rowWidth - crsrCol;
+    }
+    uint32_t crsrHeight = crsrSize - crsrClipY;
+    uint32_t crsrRow = crsrRegs->crsrXY >> 16;
+    uint32_t crsrRowOffset = ((crsrRegs->crsrImage * crsrSize + crsrClipY) * crsrSize + crsrClipX) & 0xFFF;
+    uint32_t *out = output;
+    uint32_t outRowOffset = crsrRow * rowWidth + crsrCol;
+    uint32_t crsrPalette[4] = {
+        lcd_rgb888out(lcd_bgr888swap(lcd.crsrPalette0, 0xFF)),
+        lcd_rgb888out(lcd_bgr888swap(lcd.crsrPalette1, 0xFF)),
+        0x000000,
+        0xFFFFFF
+    };
+    do {
+        if (outRowOffset >= size) {
+            return;
+        }
+        uint32_t i = crsrWidth;
+        if (i > size - outRowOffset) {
+            i = size - outRowOffset;
+        }
+        uint32_t crsrOffset = crsrRowOffset;
+        uint32_t *outPtr = out + outRowOffset;
+        do {
+            uint8_t pixel = lcd_crsr_pixel(crsrOffset);
+            *outPtr = (pixel & 2 ? *outPtr : 0) ^ crsrPalette[pixel];
+            crsrOffset++;
+            outPtr++;
+        } while (--i);
+        crsrRowOffset += crsrSize;
+        outRowOffset += rowWidth;
+    } while (--crsrHeight);
+}
+
 void emu_set_lcd_callback(bool (*callback)(void*), void *data) {
     lcd.gui_callback = callback;
     lcd.gui_callback_data = data;
@@ -106,6 +157,9 @@ void emu_lcd_drawframe(void *output) {
         memcpy(output, panel.display, sizeof(panel.display));
     } else if (lcd.control & 1 << 11) {
         emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE);
+        if (unlikely(lcd.crsrControl)) {
+            lcd_drawcrsr(output, lcd.CPL, &lcd.crsrRegs[1], lcd.crsrConfig & 1, LCD_SIZE);
+        }
     }
 }
 
@@ -226,8 +280,7 @@ static uint32_t lcd_process_pixel(uint32_t ticks, uint16_t bgr565) {
         assert(lcd.curCol < lcd.CPL);
         uint32_t crsrColOffset = lcd.curCol - lcd.curCrsrCol;
         if (unlikely(crsrColOffset < lcd.curCrsrWidth)) {
-            uint32_t crsrOffset = lcd.curCrsrOffset + crsrColOffset;
-            uint8_t crsrPixel = lcd.crsrImageBytes[crsrOffset >> 2] >> ((~crsrOffset & 3) * 2) & 3;
+            uint8_t crsrPixel = lcd_crsr_pixel(lcd.curCrsrOffset + crsrColOffset);
             bgr565 = (crsrPixel & 2 ? bgr565 : 0) ^ lcd.crsrPalette[crsrPixel];
         }
         panel.clock_pixel(bgr565);
@@ -490,7 +543,7 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
         if (index >= 0x800) { return lcd.crsrImageBytes[index - 0x800]; }
     } else if (index < 0xE00) {
         if (!peek) {
-            cpu.cycles--;
+            sched_rewind_cpu(1); /* safely handle underflow */
         }
         if (index == 0xC00) { return lcd.crsrControl | (lcd.crsrRegs[0].crsrImage << 4); }
         if (index == 0xC04) { return lcd.crsrConfig; }
