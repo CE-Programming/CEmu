@@ -157,6 +157,20 @@
       }
     },
     {
+      "name": "Linux-x64-Qt5",
+      "inherits": [ "Linux-x64-Qt6", "Qt5" ]
+    },
+    {
+      "name": "Linux-x64-Qt5-Dynamic",
+      "inherits": [ "Linux-x64-Qt5", "linux-only" ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic-apng"
+        }
+      }
+    },
+    {
       "name": "Win-x64-Qt5",
       "inherits": [ "Win-x64-Qt6", "Qt5" ]
     },
@@ -328,6 +342,36 @@
     {
       "name": "Linux-x64-Qt6-Dynamic-Release",
       "configurePreset": "Linux-x64-Qt6-Dynamic",
+      "configuration": "Release"
+    },
+    {
+      "name": "Linux-x64-Qt5-Debug",
+      "configurePreset": "Linux-x64-Qt5",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Linux-x64-Qt5-RelWithDebInfo",
+      "configurePreset": "Linux-x64-Qt5",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Linux-x64-Qt5-Release",
+      "configurePreset": "Linux-x64-Qt5",
+      "configuration": "Release"
+    },
+    {
+      "name": "Linux-x64-Qt5-Dynamic-Debug",
+      "configurePreset": "Linux-x64-Qt5-Dynamic",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Linux-x64-Qt5-Dynamic-RelWithDebInfo",
+      "configurePreset": "Linux-x64-Qt5-Dynamic",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Linux-x64-Qt5-Dynamic-Release",
+      "configurePreset": "Linux-x64-Qt5-Dynamic",
       "configuration": "Release"
     }
   ]
