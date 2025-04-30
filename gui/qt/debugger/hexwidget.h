@@ -58,9 +58,9 @@ private:
     void setSelection(int addr);
     void resetSelection() { m_selectStart = m_selectEnd = -1; }
     bool isSelected() const { return m_selectStart != -1; }
-    void setSelected(char n) { overwrite(m_selectStart * 2, m_selectLen, QByteArray(m_selectLen, n)); }
+    void setSelected(char n) { overwrite(m_selectStart * 2, QByteArray(m_selectLen, n)); }
     void overwrite(int pos, char c);
-    void overwrite(int pos, int len, const QByteArray &ba);
+    void overwrite(int pos, const QByteArray &ba);
     int getPosition(QPoint posa, bool allow = true);
 
     typedef struct {

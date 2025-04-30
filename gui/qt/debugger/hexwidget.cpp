@@ -293,11 +293,12 @@ void HexWidget::overwrite(int addr, char c) {
     m_modified[address] = m_modified[address] + 1;
 }
 
-void HexWidget::overwrite(int addr, int len, const QByteArray &ba) {
+void HexWidget::overwrite(int addr, const QByteArray &ba) {
     int address = addr / 2;
-    stack_entry_t entry{addr, m_data.mid(address, len)};
-    m_stack.push(entry);
-    m_data.replace(address, len, ba);
+    stack_entry_t entry{addr, m_data.mid(address, ba.size())};
+    int len = entry.ba.size();
+    m_stack.push(std::move(entry));
+    m_data.replace(address, len, QByteArray::fromRawData(ba.constData(), len));
     for (int i = address; i < address + len; i++) {
         m_modified[i] = m_modified[i] + 1;
     }
@@ -486,7 +487,7 @@ void HexWidget::keyPressEvent(QKeyEvent *event) {
         if (!m_asciiEdit) {
             ba = QByteArray::fromHex(ba);
         }
-        overwrite(addr, ba.size(), ba);
+        overwrite(addr, ba);
         setCursorOffset(addr + ba.size() * 2);
     } else
     if (event->matches(QKeySequence::Delete)) {
