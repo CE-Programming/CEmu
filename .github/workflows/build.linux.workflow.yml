@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         arch: [x64]
         config: [Release]
         statictype: [ON, OFF]
@@ -40,6 +40,7 @@ jobs:
     - name: Install dependencies
       run: |
         set -e
+        sudo apt update
         sudo apt install -y autoconf automake autoconf-archive '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev libudev-dev libusb-1.0-0-dev
 
     - name: Install latest CMake

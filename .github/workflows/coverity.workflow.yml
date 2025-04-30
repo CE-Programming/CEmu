@@ -7,7 +7,7 @@ on:
 
 jobs:
   coverity:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout Git Repo
       uses: actions/checkout@v3
@@ -18,7 +18,7 @@ jobs:
       run: |
         set -e
         sudo apt-get update
-        sudo apt-get install qt5-default qtbase5-dev libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
+        sudo apt-get install qtbase5-dev qt5-qmake libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
         
     - name: Prepare build
       run: |
