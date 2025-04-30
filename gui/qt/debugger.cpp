@@ -1074,19 +1074,19 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     btnEnable->setCheckable(true);
     btnEnable->setChecked(enabled);
 
+    QTableWidgetItem *itemLabel = new QTableWidgetItem(label);
+    QTableWidgetItem *itemAddr = new QTableWidgetItem(addrStr);
+    QTableWidgetItem *itemBreak = new QTableWidgetItem;
+    QTableWidgetItem *itemRemove = new QTableWidgetItem;
+
     connect(btnRemove, &QToolButton::clicked, this, &MainWindow::breakRemoveSelected);
-    connect(btnEnable, &QToolButton::clicked, [this, btnEnable, row](bool checked) {
-        uint32_t addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_COL)->text()));
+    connect(btnEnable, &QToolButton::clicked, [this, btnEnable, itemAddr](bool checked) {
+        uint32_t addr = static_cast<uint32_t>(hex2int(itemAddr->text()));
         btnEnable->setIcon(checked ? m_iconCheck : m_iconCheckGray);
         debug_watch(addr, DBG_MASK_EXEC, checked);
         disasmUpdate();
         memUpdate();
     });
-
-    QTableWidgetItem *itemLabel = new QTableWidgetItem(label);
-    QTableWidgetItem *itemAddr = new QTableWidgetItem(addrStr);
-    QTableWidgetItem *itemBreak = new QTableWidgetItem;
-    QTableWidgetItem *itemRemove = new QTableWidgetItem;
 
     m_breakpoints->setItem(row, BREAK_NAME_COL, itemLabel);
     m_breakpoints->setItem(row, BREAK_ADDR_COL, itemAddr);
@@ -1463,13 +1463,12 @@ void MainWindow::watchUpdate() {
     }
 }
 
-void MainWindow::watchUpdateRow(int row) {
+void MainWindow::watchUpdateRow(QTableWidgetItem *itemLow, QTableWidgetItem *itemHigh) {
 
     // this is needed in the case of overlapping address spaces
-    if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
-        m_watchpoints->item(row, WATCH_HIGH_COL)->text() != DEBUG_UNSET_ADDR) {
-        uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
-        uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
+    if (itemLow->text() != DEBUG_UNSET_ADDR && itemHigh->text() != DEBUG_UNSET_ADDR) {
+        uint32_t low = static_cast<uint32_t>(hex2int(itemLow->text()));
+        uint32_t high = static_cast<uint32_t>(hex2int(itemHigh->text()));
 
         for (uint32_t addr = low; addr <= high; addr++) {
             debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
@@ -1534,13 +1533,13 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
     btnWrite->setCheckable(true);
     btnWrite->setChecked((mask & DBG_MASK_WRITE) ? true : false);
 
-    connect(btnRead, &QToolButton::clicked, [this, btnRead, row](bool checked) {
+    connect(btnRead, &QToolButton::clicked, [this, btnRead, itemLow, itemHigh](bool checked) {
         btnRead->setIcon(checked ? m_iconCheck : m_iconCheckGray);
-        watchUpdateRow(row);
+        watchUpdateRow(itemLow, itemHigh);
     });
-    connect(btnWrite, &QToolButton::clicked, [this, btnWrite, row](bool checked) {
+    connect(btnWrite, &QToolButton::clicked, [this, btnWrite, itemLow, itemHigh](bool checked) {
         btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray);
-        watchUpdateRow(row);
+        watchUpdateRow(itemLow, itemHigh);
     });
 
     m_watchpoints->setRowCount(row + 1);

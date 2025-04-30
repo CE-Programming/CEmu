@@ -388,7 +388,7 @@ private:
     void watchModified(QTableWidgetItem *item);
     void watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
     void watchUpdate();
-    void watchUpdateRow(int row);
+    void watchUpdateRow(QTableWidgetItem *itemLow, QTableWidgetItem *itemHigh);
     int watchGetMask(int row);
 
     // watchpoint additions
