@@ -1400,8 +1400,8 @@ void usb_reset(void) {
     usb_reset_core();
     usb_reset_aux();
     usb_reset_otg();
-    usb_plug_complete();
     usb_init_events();
+    usb_plug_complete();
 }
 
 static void usb_init_hccr(void) {
