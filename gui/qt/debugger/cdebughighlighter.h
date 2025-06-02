@@ -20,7 +20,7 @@ protected:
 
 private:
     SourcesWidget *m_sources;
-    const static QSet<QString> s_keywords;
+    const static QSet<QStringView> s_keywords;
 };
 
 #endif

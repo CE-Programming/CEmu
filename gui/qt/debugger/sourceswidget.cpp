@@ -412,7 +412,7 @@ SourcesWidget::SourcesWidget(QWidget *parent) : QWidget(parent) {
 SourcesWidget::~SourcesWidget() = default;
 
 void SourcesWidget::selectDebugFile() {
-    QString debugName = QFileDialog::getOpenFileName(this, tr("Open Debug File"), "/home/jacob/Programming/ez80/oiram/bin", tr("Debug File (*.debug)"));
+    QString debugName = QFileDialog::getOpenFileName(this, tr("Open Debug File"), QString(), tr("Debug File (*.debug)"));
     if (debugName.isNull()) {
         return;
     }
@@ -590,7 +590,7 @@ void SourcesWidget::sourceContextMenu(const QPoint &pos) {
     QAction *action = menu.exec(sourceView->mapToGlobal(pos));
 
     const auto &source = m_debugFile->line()
-        .get(sourceView->objectName().midRef(QStringLiteral("sourceView").count()).toInt());
+        .get(sourceView->objectName().mid(QStringLiteral("sourceView").count()).toInt());
     QTextCursor cursor = sourceView->cursorForPosition(pos);
     auto it = source.lines().upper_bound({ cursor.blockNumber() + 1, cursor.columnNumber() });
     if (it == source.lines().begin()) {
@@ -1166,7 +1166,7 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
                 continue;
             }
             if (name.startsWith('*')) {
-                name = name.midRef(1) + "->";
+                name = name.mid(1) + "->";
             } else {
                 name = name + '.';
             }
@@ -1188,7 +1188,7 @@ int SourcesWidget::GlobalModel::commonPrefixLength(const QStringList &paths) {
         if (!prefixLength) {
             return maxPrefixLength;
         }
-        QStringRef prefix = paths.first().leftRef(prefixLength);
+        QStringView prefix = paths.first().left(prefixLength);
         for (int i = 1; i < paths.count(); i++) {
             if (!paths.at(i).startsWith(prefix)) {
                 return maxPrefixLength;

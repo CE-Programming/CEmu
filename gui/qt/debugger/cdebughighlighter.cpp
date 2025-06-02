@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-const QSet<QString> CDebugHighlighter::s_keywords{
+const QSet<QStringView> CDebugHighlighter::s_keywords{
     QStringLiteral("_Align"),
     QStringLiteral("_At"),
     QStringLiteral("auto"),
@@ -151,7 +151,7 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                 [[gnu::fallthrough]];
             case ParseState::PreprocessorInstruction:
                 if (c == ' ' || c == '\t') {
-                    QStringRef instruction = text.midRef(start, i - start);
+                    QStringView instruction = text.mid(start, i - start);
                     if (instruction == QStringLiteral("include")) {
                         state = ParseState::PreprocessorInclude;
                     } else if (instruction == QStringLiteral("if")) {
@@ -198,7 +198,7 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                 if (i == text.length() ||
                     ((c < '0' || c > '9') && (c < 'A' || c > 'Z') &&
                      c != '_' && (c < 'a' || c > 'z'))) {
-                    QStringRef token = text.midRef(start, i - start);
+                    QStringView token = text.mid(start, i - start);
                     if (state == ParseState::NumberLiteral) {
                         if (c == '.' || ((c == '+' || c == '-') && i > start &&
                                          (text[i - 1] == 'E' || text[i - 1] == 'e'))) {
@@ -240,7 +240,7 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                                                        : m_sources->m_errorFormat);
                     } else {
                         setFormat(start, i - start,
-                                  s_keywords.contains(token.toString()) ?
+                                  s_keywords.contains(token) ?
                                   m_sources->m_keywordFormat :
                                   m_sources->m_identifierFormat);
                     }

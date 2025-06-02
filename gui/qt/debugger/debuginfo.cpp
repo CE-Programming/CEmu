@@ -1549,7 +1549,7 @@ std::vector<std::uint32_t> Line::__parse(std::uint8_t address_size, const _Die &
             dir = directories[file._M_directory_index]._M_path;
         }
         auto inserted = _M_paths.insert({ { unit_entry.attr(_At::DW_AT_comp_dir).str(),
-                                            dir, file._M_path }, size() });
+                                            dir, file._M_path }, static_cast<std::uint32_t>(size()) });
         if (inserted.second) {
             _M_files.emplace_back(inserted.first->first, file._M_MD5.data());
         }
