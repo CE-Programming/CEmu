@@ -131,6 +131,9 @@ set(CEmu_Sources
     cemuopts.h
     datawidget.cpp datawidget.h
     debugger.cpp
+    debugger/cdebughighlighter.cpp debugger/cdebughighlighter.h
+    debugger/debuginfo.cpp debugger/debuginfo.h
+    debugger/sourceswidget.cpp debugger/sourceswidget.h
     debugger/disasm.cpp debugger/disasm.h
     debugger/hexwidget.cpp debugger/hexwidget.h
     debugger/visualizerdisplaywidget.cpp debugger/visualizerdisplaywidget.h
