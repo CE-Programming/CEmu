@@ -1505,7 +1505,7 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = DUSB_ATTR_VAR_TYPE_SIZE >> 8 & 0xFF;
                     *buffer++ = DUSB_ATTR_VAR_TYPE_SIZE >> 0 & 0xFF;
                     *buffer++ = 0xF0;
-                    *buffer++ = command->vartype == CALC_VAR_TYPE_FLASH_APP ? 0x0F : 0x07;
+                    *buffer++ = 0x0F; // this technically depends on the OwnerPID, but we only care about the CE here...
                     *buffer++ = 0;
                     *buffer++ = command->vartype;
 
