@@ -2,9 +2,9 @@ name: Build Windows
 
 on:
   push:
-    branches: [ master, feature/github-actions, test/usbwin ]
+    branches: [ master, test-ci ]
   pull_request:
-    branches: [ master, feature/github-actions ]
+    branches: [ master ]
 
 jobs:
   build:
@@ -34,20 +34,20 @@ jobs:
         Remove-Item -Recurse -Force C:/Strawberry
 
     - name: Checkout Git Repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       with:
         submodules: 'recursive'
 
     - name: Install latest CMake
-      uses: lukka/get-cmake@a70f1cfa1857a3eecfe0d34962269e1b1e8be56c # latest as of 2024-08-08
+      uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140 # latest as of 2025-10-04
 
     - name: Restore artifacts, or setup vcpkg (do not install any package)
-      uses: lukka/run-vcpkg@d87e7fac99f22776a4973d7e413921ea254c1fc9 # latest as of 2024-08-08
+      uses: lukka/run-vcpkg@b3dd708d38df5c856fe1c18dc0d59ab771f93921 # latest as of 2025-10-04
       with:
         vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
     - name: Build CEmu ${{ matrix.qtver }} ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
-      uses: lukka/run-cmake@4b1adc1944be8367be9f4e08303ce49918db8e3c # latest as of 2024-08-08
+      uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Win-${{ matrix.arch }}-${{ matrix.qtver }}'
@@ -73,7 +73,7 @@ jobs:
 
     - name: Update nightly release
       if: ${{ matrix.config == 'Release' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
-      uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b # latest as of 2023-01-13
+      uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # latest as of 2025-10-04
       with:
         tag_name: nightly
         prerelease: true
