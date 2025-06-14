@@ -2,7 +2,7 @@ name: Build macOS
 
 on:
   push:
-    branches: [ master, feature/github-actions ]
+    branches: [ master, feature/github-actions, feature/82aep ]
   pull_request:
     branches: [ master, feature/github-actions ]
 

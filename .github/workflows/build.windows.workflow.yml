@@ -2,7 +2,7 @@ name: Build Windows
 
 on:
   push:
-    branches: [ master, feature/github-actions, test/usbwin ]
+    branches: [ master, feature/github-actions, feature/82aep ]
   pull_request:
     branches: [ master, feature/github-actions ]
 
