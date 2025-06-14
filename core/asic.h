@@ -11,7 +11,7 @@ extern "C" {
 
 typedef enum {
     TI84PCE = 0,
-    TI83PCE = 1
+    TI83PCE = 1 /* also in use by the TI-82AEP model */
 } ti_device_t;
 
 typedef enum {
@@ -27,6 +27,7 @@ typedef enum {
 } asic_rev_t;
 
 typedef struct asic_state {
+    ti_model_t model;
     ti_device_t device;
     /* Only updated on reset */
     asic_rev_t revision;
@@ -34,6 +35,7 @@ typedef struct asic_state {
     /* Populated based on revision */
     bool im2;
     bool serFlash;
+    bool hasWorkingSPIReads;
 } asic_state_t;
 
 extern asic_state_t asic;
@@ -44,6 +46,8 @@ void asic_reset(void);
 bool asic_restore(FILE *image);
 bool asic_save(FILE *image);
 void set_cpu_clock(uint32_t new_rate);
+void set_model_type(ti_model_t model);
+ti_model_t get_model_type(void);
 void set_device_type(ti_device_t device);
 ti_device_t get_device_type(void);
 asic_rev_t get_asic_revision(void);

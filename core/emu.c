@@ -18,7 +18,7 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE001A
+#define IMAGE_VERSION 0xCECE001B
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu_set_signal(CPU_SIGNAL_EXIT);
@@ -192,6 +192,10 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
                                    isPython ? "Yes" : "No");
             }
 
+            if ((model_id == TIMODEL_82AEP  && device_type != TI83PCE) ||
+                (model_id == TIMODEL_8384CE && device_type != TI84PCE)) {
+                gui_console_err_printf("[CEmu] Got model<->device discrepency !?\n");
+            }
 
             break;
         }
@@ -199,8 +203,10 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         state = EMU_STATE_VALID;
 
         if (gotType) {
+            set_model_type(model_id);
             set_device_type(device_type);
         } else {
+            set_model_type(TIMODEL_8384CE);
             set_device_type(TI84PCE);
             gui_console_err_printf("[CEmu] Could not determine device device_type.\n");
             state = EMU_STATE_NOT_A_CE;

@@ -40,10 +40,11 @@ namespace cemucore
             }
             va_end(ap);
         }
-        asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, bool* python) {
+        asic_rev_t gui_handle_reset(const boot_ver_t* boot_ver, asic_rev_t loaded_rev, asic_rev_t default_rev, ti_model_t model, bool* python) {
             (void)boot_ver;
             (void)loaded_rev;
             (void)default_rev;
+            (void)model;
             (void)python;
             return ASIC_REV_AUTO;
         }
