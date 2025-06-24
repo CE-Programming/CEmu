@@ -9634,7 +9634,7 @@ QPushButton:pressed {
                  <item row="3" column="0">
                   <widget class="QLabel" name="label_33">
                    <property name="text">
-                    <string>ASIC revision:</string>
+                    <string>ASIC/HW revision:</string>
                    </property>
                   </widget>
                  </item>
@@ -9697,7 +9697,7 @@ QPushButton:pressed {
                    </item>
                    <item>
                     <property name="text">
-                     <string>Rev A</string>
+                     <string>pre-A</string>
                     </property>
                    </item>
                    <item>
