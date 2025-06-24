@@ -282,8 +282,8 @@ void EmuThread::unblock() {
 asic_rev_t EmuThread::handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, emu_device_t device, bool* python) {
     // Build a list of supported revisions
     QList<int> supportedRevs;
-    supportedRevs.reserve(ASIC_REV_M - ASIC_REV_A + 1);
-    for (int rev = ASIC_REV_A; rev <= ASIC_REV_M; rev++) {
+    supportedRevs.reserve(ASIC_REV_M - ASIC_REV_PRE_A + 1);
+    for (int rev = ASIC_REV_PRE_A; rev <= ASIC_REV_M; rev++) {
         if (bootver_check_rev(bootVer, (asic_rev_t)rev, device)) {
             supportedRevs.push_back(rev);
         }

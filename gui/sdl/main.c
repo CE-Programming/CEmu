@@ -279,12 +279,15 @@ int main(int argc, char **argv) {
                 if (strlen(optarg) == 1) {
                     char rev = toupper(optarg[0]);
                     if (rev < 'I') {
-                        asic_rev = ASIC_REV_A;
+                        asic_rev = ASIC_REV_PRE_A;
                     } else if (rev < 'M') {
                         asic_rev = ASIC_REV_I;
                     } else {
                         asic_rev = ASIC_REV_M;
                     }
+                } else if (!strcmp(optarg, "preA") || !strcmp(optarg, "pre-A") ||
+                           !strcmp(optarg, "prea") || !strcmp(optarg, "pre-a")) {
+                    asic_rev = ASIC_REV_PRE_A;
                 }
                 break;
 

@@ -90,7 +90,7 @@ static void plug_devices(void) {
 
 static asic_rev_t report_reset(asic_rev_t loaded_rev, emu_device_t device, bool* python) {
     /* Parse boot code routines to determine version. */
-    asic_rev_t default_rev = ASIC_REV_A;
+    asic_rev_t default_rev = ASIC_REV_PRE_A;
     boot_ver_t boot_ver;
     bool gotVer = bootver_parse(mem.flash.block, &boot_ver);
     if (gotVer) {
@@ -98,7 +98,7 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, emu_device_t device, bool*
             boot_ver.major, boot_ver.minor, boot_ver.revision, boot_ver.build);
 
         /* Determine the newest ASIC revision that is compatible */
-        for (int rev = ASIC_REV_A; rev <= ASIC_REV_M; rev++) {
+        for (int rev = ASIC_REV_PRE_A; rev <= ASIC_REV_M; rev++) {
             if (bootver_check_rev(&boot_ver, (asic_rev_t)rev, device)) {
                 default_rev = rev;
             }
@@ -112,7 +112,9 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, emu_device_t device, bool*
     else {
         gui_console_err_printf("[CEmu] Could not determine boot code version.\n");
     }
-    gui_console_printf("[CEmu] Default ASIC revision is Rev %c.\n", "AIM"[(int)default_rev - 1]);
+
+    const char* revsStr[] = { "pre-A", "rev I", "rev M" };
+    gui_console_printf("[CEmu] Default ASIC revision is %s.\n", revsStr[(int)default_rev - 1]);
 
     loaded_rev = gui_handle_reset((gotVer ? &boot_ver : NULL), loaded_rev, default_rev, device, python);
     return (loaded_rev != ASIC_REV_AUTO) ? loaded_rev : default_rev;

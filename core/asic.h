@@ -18,7 +18,7 @@ typedef enum {
 
 typedef enum {
     ASIC_REV_AUTO = 0, /* Used only with set_asic_revision() */
-    ASIC_REV_A = 1,
+    ASIC_REV_PRE_A = 1,
     ASIC_REV_I = 2,
     ASIC_REV_M = 3
 } asic_rev_t;
