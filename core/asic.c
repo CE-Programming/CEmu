@@ -104,8 +104,8 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, emu_device_t device, bool*
             }
         }
 
-        /* By default, ignore Python Edition in certificate if boot code is too old */
-        if (loaded_rev == ASIC_REV_AUTO && default_rev < ASIC_REV_M) {
+        /* By default, ignore Python Edition in certificate if boot code is too old, unless 82AEP */
+        if (loaded_rev == ASIC_REV_AUTO && default_rev < ASIC_REV_M && device != TI82AEP) {
             *python = false;
         }
     }
@@ -121,9 +121,15 @@ static asic_rev_t report_reset(asic_rev_t loaded_rev, emu_device_t device, bool*
 }
 
 static void set_features() {
-    asic.im2 = (asic.revision < ASIC_REV_I);
-    asic.serFlash = (asic.revision >= ASIC_REV_M);
-    asic.hasWorkingSPIReads = (asic.device == TI82AEP);
+    if (asic.device == TI82AEP) {
+        asic.im2 = false;
+        asic.serFlash = true;
+        asic.hasWorkingSPIReads = true;
+    } else { /* 83/84 CE */
+        asic.im2 = (asic.revision < ASIC_REV_I);
+        asic.serFlash = (asic.revision >= ASIC_REV_M);
+        asic.hasWorkingSPIReads = false;
+    }
 }
 
 void asic_init(void) {

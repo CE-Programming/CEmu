@@ -1,18 +1,18 @@
 #include "bootver.h"
 
-static const boot_ver_t minRevA_CE = {   5,   0,   0,     0 }; /* Rev A */
+static const boot_ver_t minRev0_CE = {   5,   0,   0,     0 }; /* Rev pre-A */
 static const boot_ver_t minRevI_CE = {   5,   0,   0,     0 }; /* Rev I */
 static const boot_ver_t minRevM_CE = {   5,   3,   6,     0 }; /* Rev M */
-static const boot_ver_t minRevM_82 = {   5,   6,   3,     0 }; /* Rev pre-A of 82AEP, but otherwise the same JB-007 ASIC as M on CE */
-static const boot_ver_t maxRevA_CE = {   5,   3,   5, 65535 }; /* Rev A */
+static const boot_ver_t minRev0_82 = {   5,   6,   3,     0 }; /* Rev pre-A of 82AEP, but otherwise the same JB-007 ASIC as M on CE */
+static const boot_ver_t maxRev0_CE = {   5,   3,   5, 65535 }; /* Rev pre-A */
 static const boot_ver_t maxRevI_CE = {   5,   3,   5, 65535 }; /* Rev I */
 static const boot_ver_t maxRev     = { 255, 255, 255, 65535 }; /* Rev M */
 
 /* NULL means unsupported */
-static const boot_ver_t* asic_min_ver_8384CE[] = { &minRevA_CE, &minRevI_CE, &minRevM_CE };
-static const boot_ver_t* asic_max_ver_8384CE[] = { &maxRevA_CE, &maxRevI_CE, &maxRev };
-static const boot_ver_t* asic_min_ver_82AEP[]  = { NULL,        NULL,        &minRevM_82 };
-static const boot_ver_t* asic_max_ver_82AEP[]  = { NULL,        NULL,        &maxRev };
+static const boot_ver_t* asic_min_ver_8384CE[] = { &minRev0_CE, &minRevI_CE, &minRevM_CE };
+static const boot_ver_t* asic_max_ver_8384CE[] = { &maxRev0_CE, &maxRevI_CE, &maxRev };
+static const boot_ver_t* asic_min_ver_82AEP[]  = { &minRev0_82, NULL,        NULL };
+static const boot_ver_t* asic_max_ver_82AEP[]  = { &maxRev,     NULL,        NULL };
 
 static bool parse_entry(const uint8_t* data, uint32_t entry, uint32_t* addr) {
     if (entry + 4 >= SIZE_BOOTCODE) {
