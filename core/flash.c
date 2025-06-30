@@ -135,7 +135,7 @@ static void flash_execute_command(void) {
         case 0x05: // Read Status Register-1
         case 0x35: // Read Status Register-2
         case 0x15: // Read Status Register-3
-            flash.commandStatus[0] |= 1 << 2;
+            flash.commandStatus[0] |= 2 << 1;
             break;
         case 0x32: // Quad Input Page Program
             flash.commandStatus[0] |= 1 << 1;
@@ -154,6 +154,11 @@ static void flash_execute_command(void) {
             break;
     }
     if (!flash.commandLength && flash.commandStatus[0] & 3 << 1) {
+        /* Zero-length reads or writes finish without any byte transfers */
+        flash.commandStatus[0] &= ~(3 << 1);
+        flash_finish_command();
+    } else if (flash.commandStatus[0] & 2 << 1) {
+        /* Reads are considered finished before the byte transfers */
         flash_finish_command();
     }
 }
@@ -193,8 +198,11 @@ static void flash_write_command(uint8_t byte) {
 }
 static void flash_command_byte_transferred(void) {
     if (!--flash.commandLength) {
+        bool write = flash.commandStatus[0] & 1 << 1;
         flash.commandStatus[0] &= ~(3 << 1);
-        flash_finish_command();
+        if (write) {
+            flash_finish_command();
+        }
     }
 }
 
