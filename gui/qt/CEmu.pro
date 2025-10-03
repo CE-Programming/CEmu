@@ -292,6 +292,7 @@ SOURCES += \
     ../../core/bus.c \
     keyhistorywidget.cpp \
     tablewidget.cpp \
+    gotodialog.cpp \
     basicdebugger.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
@@ -390,7 +391,8 @@ HEADERS  += \
     archive/extractor.h \
     ../../core/bus.h \
     keyhistorywidget.h \
-    tablewidget.h
+    tablewidget.h \
+    gotodialog.h
 
 FORMS    += \
     mainwindow.ui \

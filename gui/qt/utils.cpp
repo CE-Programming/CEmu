@@ -59,6 +59,37 @@ QString int2hex(uint32_t a, uint8_t l) {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }
 
+QString resolveAddressOrEquate(const QString &input, bool *ok) {
+    if (ok) {
+        *ok = false;
+    }
+    QString in = input.toUpper().trimmed();
+    if (in.isEmpty()) {
+        return {};
+    }
+
+    if (QString equ = getAddressOfEquate(in.toStdString()); !equ.isEmpty()) {
+        if (ok) { *ok = true; }
+        return equ;
+    }
+
+    QString s = in;
+    if (s.startsWith(QStringLiteral("0X"))) {
+        s = s.mid(2);
+    }
+    if (s.isEmpty() || s.length() > 6) {
+        return {};
+    }
+    std::string ss = s.toStdString();
+    if (ss.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+        return {};
+    }
+
+    const auto value = static_cast<uint32_t>(hex2int(in));
+    if (ok) { *ok = true; }
+    return int2hex(value, 6);
+}
+
 std::string calc_var_content_string(const calc_var_t &var) {
     decltype(&tivars::TypeHandlers::TH_TempEqu::makeStringFromData) func;
     // We need to special case some specific temp-equ variables...

@@ -638,6 +638,35 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setDebugIgnoreBreakpoints(m_config->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(m_config->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
     setAllowAnyRev(m_config->value(SETTING_DEBUGGER_ALLOW_ANY_REV, false).toBool());
+
+    // disassembly goto history
+    {
+        const QStringList list = m_config->value(SETTING_DEBUGGER_DISASM_GOTO_HISTORY).toStringList();
+        m_disasmGotoHistory.clear();
+        m_disasmGotoHistory.reserve(list.size());
+        for (const QString &s : list) {
+            QString t = s.toUpper().trimmed();
+            if (!t.isEmpty()) {
+                m_disasmGotoHistory.push_back(t);
+                if (m_disasmGotoHistory.size() >= 50) { break; }
+            }
+        }
+    }
+
+    // memory editors goto history
+    {
+        const QStringList list = m_config->value(SETTING_DEBUGGER_MEM_GOTO_HISTORY).toStringList();
+        m_memGotoHistory.clear();
+        m_memGotoHistory.reserve(list.size());
+        for (const QString &s : list) {
+            QString t = s.toUpper().trimmed();
+            if (!t.isEmpty()) {
+                m_memGotoHistory.push_back(t);
+                if (m_memGotoHistory.size() >= 50) { break; }
+            }
+        }
+    }
+
     setPythonEdition(qvariant_cast<Qt::CheckState>(m_config->value(SETTING_PYTHON_EDITION, Qt::PartiallyChecked)));
     setNormalOs(m_config->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
     setDebugLcdDma(!m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());

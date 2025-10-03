@@ -33,6 +33,8 @@
 #endif
 
 const QString MainWindow::SETTING_DEBUGGER_TEXT_SIZE        = QStringLiteral("Debugger/text_size");
+const QString MainWindow::SETTING_DEBUGGER_DISASM_GOTO_HISTORY = QStringLiteral("Debugger/disasm_goto_history");
+const QString MainWindow::SETTING_DEBUGGER_MEM_GOTO_HISTORY    = QStringLiteral("Debugger/mem_goto_history");
 const QString MainWindow::SETTING_DEBUGGER_RESTORE_ON_OPEN  = QStringLiteral("Debugger/restore_on_open");
 const QString MainWindow::SETTING_DEBUGGER_SAVE_ON_CLOSE    = QStringLiteral("Debugger/save_on_close");
 const QString MainWindow::SETTING_DEBUGGER_RESET_OPENS      = QStringLiteral("Debugger/open_on_reset");
@@ -1280,6 +1282,22 @@ void MainWindow::saveSettings() {
         m_config->setValue(SETTING_WINDOW_KEYHISTORY_DOCKS, m_docksKeyHistory);
         m_config->setValue(SETTING_WINDOW_KEYHISTORY_CONFIG, QVariant::fromValue(m_docksKeyHistorySize));
 
+        // Disassembly Goto history
+        {
+            QStringList list;
+            list.reserve(static_cast<int>(m_disasmGotoHistory.size()));
+            for (const QString &s : m_disasmGotoHistory) { list.append(s); }
+            m_config->setValue(SETTING_DEBUGGER_DISASM_GOTO_HISTORY, list);
+        }
+
+        // Memory editors Goto history
+        {
+            QStringList list;
+            list.reserve(static_cast<int>(m_memGotoHistory.size()));
+            for (const QString &s : m_memGotoHistory) { list.append(s); }
+            m_config->setValue(SETTING_DEBUGGER_MEM_GOTO_HISTORY, list);
+        }
+
         saveDebug();
         stateSaveInfo();
         recentSaveInfo();
@@ -1368,4 +1386,3 @@ void MainWindow::keymapExport() {
 bool MainWindow::isFirstRun() {
     return !m_config->value(SETTING_FIRST_RUN, false).toBool();
 }
-

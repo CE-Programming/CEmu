@@ -22,17 +22,24 @@
 #include "../../core/realclock.h"
 #include "../../core/sha256.h"
 #include "../../core/schedule.h"
+#include "gotodialog.h"
 
 #include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QScrollBar>
 #include <QtNetwork/QNetworkReply>
 #include <QtGui/QClipboard>
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
+#include <algorithm>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -1968,16 +1975,26 @@ void MainWindow::disasmUpdateAddr(int base, bool pane) {
 // ------------------------------------------------
 
 void MainWindow::gotoPressed() {
-    bool accept;
-
     if (m_gotoAddr.isEmpty()) {
         m_gotoAddr = m_disasm->getSelectedAddr();
     }
 
-    QString address = getAddressString(m_gotoAddr, &accept);
+    GotoDialog dlg(m_gotoAddr, m_disasmGotoHistory, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        QString typed = dlg.text().toUpper().trimmed();
+        bool ok = false;
+        QString resolved = resolveAddressOrEquate(typed, &ok);
+        if (ok) {
+            m_gotoAddr = typed;
+            disasmUpdateAddr(static_cast<int>(hex2int(resolved)), false);
 
-    if (accept) {
-        disasmUpdateAddr(hex2int(m_gotoAddr = address), false);
+            auto &hist = m_disasmGotoHistory;
+            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
+            hist.insert(hist.begin(), typed);
+            if (hist.size() > 50) { hist.resize(50); }
+        } else {
+            QMessageBox::warning(this, MSG_WARNING, tr("Error when reading input string"));
+        }
     }
 }
 

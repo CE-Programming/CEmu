@@ -42,6 +42,9 @@ QString sendingROM(QDragEnterEvent *e, bool *value);
 // integer to hex strings and vice versa
 int hex2int(const QString &str);
 QString int2hex(uint32_t a, uint8_t l);
+
+QString resolveAddressOrEquate(const QString &input, bool *ok);
+
 void guiDelay(int ms);
 
 bool isProcRunning(pid_t procID);

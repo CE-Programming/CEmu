@@ -33,6 +33,7 @@
 #include <QtCore/QStandardPaths>
 
 #include <functional>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 class QButtonGroup;
@@ -727,6 +728,10 @@ private:
     QString m_RamGotoAddr;
     QString m_memGotoAddr;
 
+    std::vector<QString> m_disasmGotoHistory;
+
+    std::vector<QString> m_memGotoHistory;
+
     QString m_pathConfig;
     QMenu *m_menuDocks;
     QMenu *m_menuDebug;
@@ -781,6 +786,8 @@ private:
 
     // Settings definitions
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
+    static const QString SETTING_DEBUGGER_DISASM_GOTO_HISTORY;
+    static const QString SETTING_DEBUGGER_MEM_GOTO_HISTORY;
     static const QString SETTING_DEBUGGER_DISASM_SPACE;
     static const QString SETTING_DEBUGGER_DISASM_TAB;
     static const QString SETTING_DEBUGGER_RESTORE_ON_OPEN;

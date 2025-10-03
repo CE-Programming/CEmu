@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "searchwidget.h"
+#include "gotodialog.h"
 #include "dockwidget.h"
 #include "utils.h"
 #include "../../core/schedule.h"
@@ -12,6 +13,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
+#include <algorithm>
 #include <QtWidgets/QScrollBar>
 
 #ifdef _MSC_VER
@@ -105,24 +107,43 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
 }
 
 void MainWindow::flashGotoPressed() {
-    bool accept = false;
-    QString addrStr = getAddressString(m_flashGotoAddr, &accept);
+    if (GotoDialog dlg(m_flashGotoAddr, m_memGotoHistory, this); dlg.exec() == QDialog::Accepted) {
+        const QString typed = dlg.text().toUpper().trimmed();
+        bool ok = false;
+        const QString resolved = resolveAddressOrEquate(typed, &ok);
+        if (ok) {
+            m_flashGotoAddr = typed;
+            ui->flashEdit->setFocus();
+            ui->flashEdit->setOffset(hex2int(resolved));
 
-    if (accept) {
-        m_flashGotoAddr = addrStr;
-        ui->flashEdit->setFocus();
-        ui->flashEdit->setOffset(hex2int(addrStr));
+            auto &hist = m_memGotoHistory;
+            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
+            hist.insert(hist.begin(), typed);
+            if (hist.size() > 50) { hist.resize(50); }
+        } else {
+            QMessageBox::warning(this, MSG_WARNING, tr("Error when reading input string"));
+        }
     }
 }
 
 void MainWindow::ramGotoPressed() {
-    bool accept = false;
-    QString addrStr = getAddressString(m_RamGotoAddr, &accept);
+    GotoDialog dlg(m_RamGotoAddr, m_memGotoHistory, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        const QString typed = dlg.text().toUpper().trimmed();
+        bool ok = false;
+        const QString resolved = resolveAddressOrEquate(typed, &ok);
+        if (ok) {
+            m_RamGotoAddr = typed;
+            ui->ramEdit->setFocus();
+            ui->ramEdit->setOffset(hex2int(resolved) - 0xD00000);
 
-    if (accept) {
-        m_RamGotoAddr = addrStr;
-        ui->ramEdit->setFocus();
-        ui->ramEdit->setOffset(hex2int(addrStr) - 0xD00000);
+            auto &hist = m_memGotoHistory;
+            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
+            hist.insert(hist.begin(), typed);
+            if (hist.size() > 50) { hist.resize(50); }
+        } else {
+            QMessageBox::warning(this, MSG_WARNING, tr("Error when reading input string"));
+        }
     }
 }
 
@@ -194,11 +215,22 @@ void MainWindow::memGotoEdit(HexWidget *edit) {
         return;
     }
 
-    bool accept = false;
-    QString address = getAddressString(m_memGotoAddr, &accept);
-
-    if (accept) {
-        memGoto(edit, static_cast<uint32_t>(hex2int(m_memGotoAddr = address)));
+    GotoDialog dlg(m_memGotoAddr, m_memGotoHistory, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        QString typed = dlg.text().toUpper().trimmed();
+        bool ok = false;
+        QString resolved = resolveAddressOrEquate(typed, &ok);
+        if (ok) {
+            m_memGotoAddr = typed;
+            memGoto(edit, static_cast<uint32_t>(hex2int(resolved)));
+            // MRU update
+            auto &hist = m_memGotoHistory;
+            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
+            hist.insert(hist.begin(), typed);
+            if (hist.size() > 50) { hist.resize(50); }
+        } else {
+            QMessageBox::warning(this, MSG_WARNING, tr("Error when reading input string"));
+        }
     }
 }
 
