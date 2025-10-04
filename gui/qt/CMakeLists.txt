@@ -155,6 +155,7 @@ set(CEmu_Sources
     debugger/hexwidget.cpp debugger/hexwidget.h
     debugger/visualizerdisplaywidget.cpp debugger/visualizerdisplaywidget.h
     dockwidget.cpp dockwidget.h
+    gotodialog.cpp gotodialog.h
     emuthread.cpp emuthread.h
     ipc.cpp ipc.h
     keyhistorywidget.cpp keyhistorywidget.h
