@@ -3,6 +3,33 @@
 #include "mainwindow.h"
 
 #include <QtWidgets/QApplication>
+#include <QStringView>
+#include <QLatin1StringView>
+
+#include <algorithm>
+#include <array>
+
+
+using namespace Qt::StringLiterals;
+
+namespace {
+    inline constexpr std::array controlFlowMnemonics {
+        "CALL"_L1, "DJNZ"_L1, "JP"_L1, "JR"_L1, "RET"_L1, "RETI"_L1, "RETN"_L1, "RST"_L1
+    };
+
+    inline constexpr std::array noTargetMnemonics {
+        "RET"_L1, "RETI"_L1, "RETN"_L1
+    };
+
+    inline constexpr std::array reservedTokens {
+        "A"_L1, "B"_L1, "C"_L1, "D"_L1, "E"_L1, "H"_L1, "L"_L1, "I"_L1, "R"_L1,
+        "AF"_L1, "BC"_L1, "DE"_L1, "HL"_L1, "SP"_L1,
+        "IX"_L1, "IY"_L1, "IXH"_L1, "IXL"_L1,
+        "IYH"_L1, "IYL"_L1, "MB"_L1,
+        "NZ"_L1, "Z"_L1, "NC"_L1, "C"_L1,
+        "PO"_L1, "PE"_L1, "P"_L1, "M"_L1
+    };
+}
 
 DataWidget::DataWidget(QWidget *parent) : QPlainTextEdit{parent} {
     moveable = false;
@@ -143,6 +170,9 @@ AsmHighlighter::AsmHighlighter(QTextDocument *parent) : QSyntaxHighlighter(paren
 
     mnemonicFormat.setForeground(QColor(darkMode ? "darkorange" : "darkblue"));
 
+    controlFlowFormat.setForeground(QColor("crimson"));
+    controlFlowTargetFormat.setForeground(QColor("#dc795d"));
+
     symbolFormat.setFontWeight(disasm.bold_sym ? QFont::DemiBold : QFont::Normal);
     rule.pattern = QRegularExpression("\\b\\w+\\b");
     rule.format = symbolFormat;
@@ -187,6 +217,18 @@ void AsmHighlighter::highlightBlock(const QString &text) {
         setFormat(match.capturedStart(4), match.capturedLength(4), breakPFormat);
         setFormat(match.capturedStart(5), match.capturedLength(5), bytesFormat);
         setFormat(match.capturedStart(6), match.capturedLength(6), mnemonicFormat);
+
+        const QString fullMnemonic = match.captured(6);
+        const QString primary = fullMnemonic.section('.', 0, 0).toUpper();
+        const QStringView pv{primary};
+
+        const bool isControlFlow = std::any_of(controlFlowMnemonics.begin(), controlFlowMnemonics.end(),
+                        [&](const QLatin1StringView tok){ return pv == tok; });
+
+        if (isControlFlow) {
+            setFormat(match.capturedStart(6), match.capturedLength(6), controlFlowFormat);
+        }
+
         foreach(const HighlightingRule &rule, highlightingRules) {
             QRegularExpressionMatchIterator iter = rule.pattern.globalMatch(text, match.capturedEnd());
             while (iter.hasNext()) {
@@ -194,6 +236,48 @@ void AsmHighlighter::highlightBlock(const QString &text) {
                 if (innerMatch.hasMatch()) {
                     setFormat(innerMatch.capturedStart(), innerMatch.capturedLength(), rule.format);
                 }
+            }
+        }
+
+        if (!isControlFlow) {
+            return;
+        }
+
+        if (std::any_of(noTargetMnemonics.begin(), noTargetMnemonics.end(),
+                        [&](const QLatin1StringView tok){ return pv == tok; })) {
+            return;
+        }
+
+        const int operandStart = match.capturedEnd();
+        const QString operands = text.mid(operandStart);
+
+        // hex address patterns allowing optional +/ - after '$' for relative forms like $+5
+        const QRegularExpression hexTargetRe(QStringLiteral("\\$[+\\-]?[0-9A-Fa-f]+\\b"));
+        QRegularExpressionMatchIterator hIt = hexTargetRe.globalMatch(operands);
+        while (hIt.hasNext()) {
+            const auto m2 = hIt.next();
+            if (m2.hasMatch()) {
+                const int s = operandStart + m2.capturedStart();
+                const int l = m2.capturedLength();
+                setFormat(s, l, controlFlowTargetFormat);
+            }
+        }
+
+        // equate/label tokens (exclude registers and condition codes)
+        const QRegularExpression labelRe(QStringLiteral("\\b[._A-Za-z][._A-Za-z0-9]*\\b"));
+
+        QRegularExpressionMatchIterator lIt = labelRe.globalMatch(operands);
+        while (lIt.hasNext()) {
+            const auto m3 = lIt.next();
+            if (m3.hasMatch()) {
+                const QString tok = m3.captured().toUpper();
+                if (std::any_of(reservedTokens.begin(), reservedTokens.end(),
+                                [&](const QLatin1StringView t){ return tok == t; })) {
+                    continue;
+                }
+                const int start = operandStart + m3.capturedStart();
+                const int len = m3.capturedLength();
+                setFormat(start, len, controlFlowTargetFormat);
             }
         }
     }

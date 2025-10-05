@@ -6,6 +6,7 @@
 #include <QtGui/QTextCharFormat>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QObject>
+#include <QtCore/QStringList>
 
 QT_BEGIN_NAMESPACE
     class QPaintEvent;
@@ -39,6 +40,8 @@ private:
     QTextCharFormat breakPFormat;
     QTextCharFormat bytesFormat;
     QTextCharFormat mnemonicFormat;
+    QTextCharFormat controlFlowFormat;
+    QTextCharFormat controlFlowTargetFormat;
     QTextCharFormat hexFormat;
     QTextCharFormat decimalFormat;
     QTextCharFormat parenFormat;
