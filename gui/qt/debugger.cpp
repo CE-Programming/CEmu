@@ -1981,7 +1981,7 @@ void MainWindow::gotoPressed() {
 
     GotoDialog dlg(m_gotoAddr, m_disasmGotoHistory, this);
     if (dlg.exec() == QDialog::Accepted) {
-        QString typed = dlg.text().toUpper().trimmed();
+        QString typed = dlg.text().trimmed();
         bool ok = false;
         QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {

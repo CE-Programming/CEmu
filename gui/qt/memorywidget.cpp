@@ -108,7 +108,7 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
 
 void MainWindow::flashGotoPressed() {
     if (GotoDialog dlg(m_flashGotoAddr, m_memGotoHistory, this); dlg.exec() == QDialog::Accepted) {
-        const QString typed = dlg.text().toUpper().trimmed();
+        const QString typed = dlg.text().trimmed();
         bool ok = false;
         const QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
@@ -129,7 +129,7 @@ void MainWindow::flashGotoPressed() {
 void MainWindow::ramGotoPressed() {
     GotoDialog dlg(m_RamGotoAddr, m_memGotoHistory, this);
     if (dlg.exec() == QDialog::Accepted) {
-        const QString typed = dlg.text().toUpper().trimmed();
+        const QString typed = dlg.text().trimmed();
         bool ok = false;
         const QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
@@ -217,7 +217,7 @@ void MainWindow::memGotoEdit(HexWidget *edit) {
 
     GotoDialog dlg(m_memGotoAddr, m_memGotoHistory, this);
     if (dlg.exec() == QDialog::Accepted) {
-        QString typed = dlg.text().toUpper().trimmed();
+        QString typed = dlg.text().trimmed();
         bool ok = false;
         QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {

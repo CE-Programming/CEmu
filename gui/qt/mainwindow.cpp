@@ -645,7 +645,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         m_disasmGotoHistory.clear();
         m_disasmGotoHistory.reserve(list.size());
         for (const QString &s : list) {
-            QString t = s.toUpper().trimmed();
+            QString t = s.trimmed();
             if (!t.isEmpty()) {
                 m_disasmGotoHistory.push_back(t);
                 if (m_disasmGotoHistory.size() >= 50) { break; }
@@ -659,7 +659,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         m_memGotoHistory.clear();
         m_memGotoHistory.reserve(list.size());
         for (const QString &s : list) {
-            QString t = s.toUpper().trimmed();
+            QString t = s.trimmed();
             if (!t.isEmpty()) {
                 m_memGotoHistory.push_back(t);
                 if (m_memGotoHistory.size() >= 50) { break; }
