@@ -42,15 +42,6 @@
       }
     },
     {
-      "name": "ninja-vcpkg-x86",
-      "hidden": true,
-      "inherits": "ninja-vcpkg",
-      "architecture": {
-        "strategy": "external",
-        "value": "x86"
-      }
-    },
-    {
       "name": "ninja-vcpkg-arm64",
       "hidden": true,
       "inherits": "ninja-vcpkg",
@@ -93,16 +84,6 @@
         "VCPKG_TARGET_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-static"
-        }
-      }
-    },
-    {
-      "name": "Win-x86",
-      "inherits": [ "ninja-vcpkg-x86", "win-only" ],
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x86-windows-static"
         }
       }
     },
@@ -161,21 +142,6 @@
     {
       "name": "Win-x64-Release",
       "configurePreset": "Win-x64",
-      "configuration": "Release"
-    },
-    {
-      "name": "Win-x86-Debug",
-      "configurePreset": "Win-x86",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Win-x86-RelWithDebInfo",
-      "configurePreset": "Win-x86",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Win-x86-Release",
-      "configurePreset": "Win-x86",
       "configuration": "Release"
     },
     {

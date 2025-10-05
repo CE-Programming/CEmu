@@ -14,18 +14,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, x86]
+        arch: [x64]
         config: [Release]
-        exclude:
-          - arch: x86
-            qtver: Qt6
         include:
           - arch: x64
             arch_name: 64-bit
             arch_suffix: "64"
-          - arch: x86
-            arch_name: 32-bit
-            arch_suffix: "32"
     steps:
     - name: Remove Perl Strawberry installation
       # Removes conflicting headers from include paths
