@@ -1986,7 +1986,7 @@ void MainWindow::gotoPressed() {
         QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
             m_gotoAddr = typed;
-            disasmUpdateAddr(static_cast<int>(hex2int(resolved)), false);
+            disasmUpdateAddr(hex2int(resolved), false);
 
             auto &hist = m_disasmGotoHistory;
             hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());

@@ -68,9 +68,10 @@ QString resolveAddressOrEquate(const QString &input, bool *ok) {
         return {};
     }
 
-    if (QString equ = getAddressOfEquate(in.toStdString()); !equ.isEmpty()) {
+    QString addr = getAddressOfEquate(in.toStdString());
+    if (!addr.isEmpty()) {
         if (ok) { *ok = true; }
-        return equ;
+        return addr;
     }
 
     QString s = in;
@@ -80,8 +81,7 @@ QString resolveAddressOrEquate(const QString &input, bool *ok) {
     if (s.isEmpty() || s.length() > 6) {
         return {};
     }
-    std::string ss = s.toStdString();
-    if (ss.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if (s.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return {};
     }
 

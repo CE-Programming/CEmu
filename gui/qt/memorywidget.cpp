@@ -117,7 +117,7 @@ void MainWindow::flashGotoPressed() {
             ui->flashEdit->setOffset(hex2int(resolved));
 
             auto &hist = m_memGotoHistory;
-            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
+            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
             hist.insert(hist.begin(), typed);
             if (hist.size() > 50) { hist.resize(50); }
         } else {
@@ -138,7 +138,7 @@ void MainWindow::ramGotoPressed() {
             ui->ramEdit->setOffset(hex2int(resolved) - 0xD00000);
 
             auto &hist = m_memGotoHistory;
-            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
+            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
             hist.insert(hist.begin(), typed);
             if (hist.size() > 50) { hist.resize(50); }
         } else {
