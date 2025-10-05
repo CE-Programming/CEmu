@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (C) 2019-2020 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
+** Copyright (C) 2024 Klarälvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
 ** All rights reserved.
 **
 ** This file is part of the KD MacTouchBar library.
@@ -35,20 +35,39 @@
 
 #import <AppKit/AppKit.h>
 
+#if QT_VERSION < 0x060000
+#define associatedObjects associatedWidgets
+#endif
+
 QT_BEGIN_NAMESPACE
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-NSImage *qt_mac_create_nsimage(const QIcon &icon, int defaultSize = 0);
-#else
-//  defined in gui/painting/qcoregraphics.mm
-@interface NSImage (QtExtras)
-+ (instancetype)imageFromQIcon:(const QIcon &)icon;
-@end
-static NSImage *qt_mac_create_nsimage(const QIcon &icon)
+static NSImage *create_nsimage(const QIcon &icon)
 {
-    return [NSImage imageFromQIcon:icon];
+    const  auto sizes = icon.availableSizes();
+    if (icon.isNull() || sizes.isEmpty())
+        return nil;
+
+    auto nsImage = [[[NSImage alloc] initWithSize:NSZeroSize] autorelease];
+
+    for (const auto& size : sizes) {
+        const QImage qimage = icon.pixmap(size).toImage();
+        CGImageRef cgImage = qimage.toCGImage();
+        if (!cgImage)
+            continue;
+
+        const auto deviceIndependentSize = qimage.size() / qimage.devicePixelRatio();
+        auto *imageRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
+        imageRep.size = deviceIndependentSize.toCGSize();
+        [nsImage addRepresentation:[imageRep autorelease]];
+    }
+
+    if (!nsImage.representations.count)
+        return nil;
+
+    [nsImage setTemplate:icon.isMask()];
+
+    return nsImage;
 }
-#endif
 
 static QString identifierForAction(QObject *action)
 {
@@ -60,7 +79,7 @@ static QString identifierForAction(QObject *action)
 
 static QString removeMnemonics(const QString &original)
 {
-    QString returnText(original.size(), '\0');
+    QString returnText(original.size(), u'\0');
     int finalDest = 0;
     int currPos = 0;
     int l = original.length();
@@ -106,7 +125,7 @@ public:
     void sendDataChanged()
     {
         QActionEvent e(QEvent::ActionChanged, this);
-        for (auto w : associatedWidgets())
+        for (auto w : associatedObjects())
             QApplication::sendEvent(w, &e);
     }
 };
@@ -149,7 +168,7 @@ public:
     void sendDataChanged()
     {
         QActionEvent e(QEvent::ActionChanged, this);
-        for (auto w : associatedWidgets())
+        for (auto w : associatedObjects())
             QApplication::sendEvent(w, &e);
     }
 
@@ -194,6 +213,7 @@ public:
         setAttribute(Qt::WA_QuitOnClose, false);
         ensurePolished();
         setVisible(true);
+        widget->setVisible(true);
         QPixmap pm(1, 1);
         render(&pm, QPoint(), QRegion(),
                widget->autoFillBackground()
@@ -276,24 +296,24 @@ public:
     touchTarget = widget->childAt(point);
     if (touchTarget == nullptr)
         touchTarget = widget;
-    QMouseEvent e(QEvent::MouseButtonPress, touchTarget->mapFrom(widget, point), Qt::LeftButton,
-                  Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent e(QEvent::MouseButtonPress, touchTarget->mapFrom(widget, point), point,
+		  Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     qApp->sendEvent(touchTarget, &e);
 }
 - (void)touchesMovedWithEvent:(NSEvent *)event
 {
     NSTouch *touch = [[event touchesMatchingPhase:NSTouchPhaseMoved inView:self] anyObject];
     const QPoint point = QPointF::fromCGPoint([touch locationInView:self]).toPoint();
-    QMouseEvent e(QEvent::MouseButtonPress, touchTarget->mapFrom(widget, point), Qt::LeftButton,
-                  Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent e(QEvent::MouseButtonPress, touchTarget->mapFrom(widget, point), point,
+		  Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     qApp->sendEvent(touchTarget, &e);
 }
 - (void)touchesEndedWithEvent:(NSEvent *)event
 {
     NSTouch *touch = [[event touchesMatchingPhase:NSTouchPhaseEnded inView:self] anyObject];
     const QPoint point = QPointF::fromCGPoint([touch locationInView:self]).toPoint();
-    QMouseEvent e(QEvent::MouseButtonRelease, touchTarget->mapFrom(widget, point), Qt::LeftButton,
-                  Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent e(QEvent::MouseButtonRelease, touchTarget->mapFrom(widget, point), point,
+                  Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     qApp->sendEvent(touchTarget, &e);
 }
 
@@ -480,7 +500,7 @@ public:
         button.highlighted = !button.bordered;
         button.state = action->isChecked();
         button.hidden = !action->isVisible();
-        button.image = qt_mac_create_nsimage(action->icon());
+        button.image = create_nsimage(action->icon());
         button.title = removeMnemonics(action->text()).toNSString();
         switch (qMacTouchBar->touchButtonStyle())
         {
@@ -500,13 +520,13 @@ public:
             item.popoverTouchBar.delegate = delegate;
             // Add ordered items array
             NSMutableArray *array = [[NSMutableArray alloc] init];
-            for (auto menuAction : action->menu()->actions()) {
-                if (menuAction->isVisible()) {
-                    [self addItem:menuAction];
-                    if (menuAction->isSeparator() && menuAction->text().isEmpty())
+            for (auto action : action->menu()->actions()) {
+                if (action->isVisible()) {
+                    [self addItem:action];
+                    if (action->isSeparator() && action->text().isEmpty())
                         [array addObject:NSTouchBarItemIdentifierFixedSpaceLarge];
                     else
-                        [array addObject:identifierForAction(menuAction).toNSString()];
+                        [array addObject:identifierForAction(action).toNSString()];
                 }
             }
             item.popoverTouchBar.defaultItemIdentifiers = array;

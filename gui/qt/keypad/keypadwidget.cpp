@@ -191,7 +191,7 @@ void KeypadWidget::setType(emu_device_t device_type, unsigned int color_scheme) 
 #define Label(str)          QStringLiteral(str)
 #endif
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
     bool isMac = true;
 #else
     bool isMac = false;
@@ -418,7 +418,7 @@ void KeypadWidget::mouseEvent(QMouseEvent *event) {
         case QEvent::MouseButtonDblClick:
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
-            mouseUpdate(event->localPos());
+            mouseUpdate(event->position());
             break;
         case QEvent::MouseButtonRelease:
             mouseEnd(mHoldingEnabled && event->button() == Qt::RightButton);
@@ -438,24 +438,20 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                         continue;
                     }
                     QRectF ellipse;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
                     ellipse.setSize(point.ellipseDiameters());
-#endif
-                    ellipse.moveCenter(point.pos());
+                    ellipse.moveCenter(point.position());
                     ellipse = mInverseTransform.mapRect(ellipse);
                     if (ellipse.isEmpty()) {
                         ellipse += {4, 4, 4, 4};
                     }
                     QPainterPath area;
                     area.addEllipse(ellipse);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
                     if (point.rotation() != 0.0) {
                         area = area * QTransform::fromTranslate(ellipse.center().x(),
                                                                 ellipse.center().y()).
                             rotate(point.rotation()).
                             translate(-ellipse.center().x(), -ellipse.center().y());
                     }
-#endif
                     if ((point.state() & (Qt::TouchPointMoved | Qt::TouchPointPressed)) && key->isUnder(area)) {
                         if (!mTouched.contains(key->keycode())) {
                             mTouched.insert(key->keycode());
@@ -499,13 +495,8 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
     switch (event->type()) {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
-#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
-            if (event->device()->capabilities().testFlag(QTouchDevice::Position)) {
-                touchUpdate(event->touchPoints());
-#else
             if (event->device()->capabilities().testFlag(QInputDevice::Capability::Position)) {
                 touchUpdate(event->points());
-#endif
             } else {
                 event->ignore();
             }

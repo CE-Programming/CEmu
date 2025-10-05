@@ -113,13 +113,7 @@ bool InterCom::ipcSetup(const QString &id, const QString &pid) {
 create_id:
         if (m_file.open(QIODevice::WriteOnly)) {
             QTextStream stream(&m_file);
-            stream << pid <<
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-              Qt::endl;
-#else
-              endl;
-#endif
-
+            stream << pid << Qt::endl;
             serverSetup(pid);
             serverListen();
         }

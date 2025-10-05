@@ -10,7 +10,7 @@ void TableWidget::dropEvent(QDropEvent *e) {
         return;
     }
 
-    int newrow = indexAt(e->pos()).row();
+    int newrow = indexAt(e->position().toPoint()).row();
     if (newrow < 0) {
         newrow = rowCount();
     }

@@ -29,9 +29,8 @@
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
 #include <QtGui/QScreen>
-#include <QShortcut> /* Different module in Qt5 vs Qt6 */
+#include <QtGui/QShortcut>
 #include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QScrollBar>
@@ -41,7 +40,7 @@
 #include <iostream>
 #include <cmath>
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
 # include "os/mac/kdmactouchbar.h"
 #endif
 
@@ -65,21 +64,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     }
 
     // setting metatypes
-#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
-    qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
-    qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
-#else
     qRegisterMetaType<QList<int>>("QList<int>");
     qRegisterMetaType<QList<bool>>("QList<bool>");
-#endif
 
     ui->setupUi(this);
 
-#if (QT_VERSION < QT_VERSION_CHECK(6, 1, 0))
-    m_styleForMode[0] = m_styleForMode[1] = QApplication::style()->objectName();
-#else
     m_styleForMode[0] = m_styleForMode[1] = QApplication::style()->name();
-#endif
     darkModeSwitch(isSystemInDarkMode());
 
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
@@ -89,7 +79,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         return;
     }
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
     KDMacTouchBar *touchBar = new KDMacTouchBar(this);
 #endif
 
@@ -204,7 +194,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
     connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
     {
         QAction *action = new QAction(ui->actionReportBug->icon(), tr("Run/Stop"));
         touchBar->addAction(action);
@@ -329,7 +319,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
     connect(ui->buttonReloadROM, &QPushButton::clicked, [this]{ emuLoad(EMU_DATA_ROM); });
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
     touchBar->addSeparator();
     {
         QAction *resetAction = new QAction(ui->actionResetCalculator->icon(), tr("Reset"));
@@ -602,7 +592,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     installToggleConsole();
 #endif
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
     ui->actionHideMenuBar->setVisible(false);
 #endif
 
@@ -1190,7 +1180,6 @@ bool MainWindow::redistributeDocks(
         [[maybe_unused]] Qt::CursorShape cursorShape,
         [[maybe_unused]] int (QSize::*dimension)() const,
         [[maybe_unused]] Qt::Orientation orientation) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     if (cursor().shape() == cursorShape) {
         if (DockWidget *before = redistributeFindDock(pos - offset)) {
             if (DockWidget *after = redistributeFindDock(pos + offset)) {
@@ -1202,7 +1191,6 @@ bool MainWindow::redistributeDocks(
             }
         }
     }
-#endif
     return false;
 }
 
@@ -2046,8 +2034,8 @@ void MainWindow::showAbout() {
 
     QAbstractButton *buttonCopyVersion = aboutBox->addButton(tr("Copy version"), QMessageBox::ActionRole);
     // Needed to prevent the button from closing the dialog
-    buttonCopyVersion->disconnect();
-    connect(buttonCopyVersion, &QAbstractButton::clicked, this, [this, buttonCopyVersion](){ QApplication::clipboard()->setText("CEmu " CEMU_VERSION " (git: " CEMU_GIT_SHA ")", QClipboard::Clipboard); buttonCopyVersion->setEnabled(false); buttonCopyVersion->setText(tr("Version copied!")); });
+    (void)buttonCopyVersion->disconnect();
+    connect(buttonCopyVersion, &QAbstractButton::clicked, this, [buttonCopyVersion](){ QApplication::clipboard()->setText("CEmu " CEMU_VERSION " (git: " CEMU_GIT_SHA ")", QClipboard::Clipboard); buttonCopyVersion->setEnabled(false); buttonCopyVersion->setText(tr("Version copied!")); });
 
     QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();

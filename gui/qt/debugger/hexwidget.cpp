@@ -198,11 +198,7 @@ void HexWidget::adjust() {
     m_size = m_data.size();
     m_maxOffset = m_size - 1;
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('D'));
-#else
-    m_charWidth = fontMetrics().width(QLatin1Char('D'));
-#endif
     m_charHeight = fontMetrics().height();
     m_cursorHeight = m_charHeight / 7;
     m_margin = m_charHeight / 5;

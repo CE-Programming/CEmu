@@ -632,11 +632,7 @@ void MainWindow::setUIDocks() {
 void MainWindow::setUIDockEditMode(bool mode) {
     if (mode) {
         if (m_config->value(SETTING_WINDOW_GROUP_DRAG).toBool()) {
-            setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks
-#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
-                | QMainWindow::GroupedDragging
-#endif
-            );
+            setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks | QMainWindow::GroupedDragging);
         } else {
             setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
         }

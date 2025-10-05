@@ -23,11 +23,11 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QFileDialog>
-#include <QShortcut> /* Different module in Qt5 vs Qt6 */
 #include <QtCore/QSettings>
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtCore/QPointer>
+#include <QtGui/QShortcut>
 #include <QtGui/QTextCursor>
 #include <QtCore/QTranslator>
 #include <QtCore/QStandardPaths>

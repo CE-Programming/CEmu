@@ -99,7 +99,7 @@ void LCDWidget::dropEvent(QDropEvent *e) {
         emit sendROM(m_dragRom);
     } else {
         m_transferDrag = false;
-        sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
+        sendingHandler->dropOccured(e, (e->position().x() < width() / 2.) ? LINK_ARCH : LINK_RAM);
     }
 }
 
@@ -108,12 +108,12 @@ void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
 
     if (!m_isSendingRom) {
         m_transferDrag = sendingHandler->dragOccured(e);
-        m_side = (e->pos().x() < width() / 2) ? LcdLeft : LcdRight;
+        m_side = (e->position().x() < width() / 2.) ? LcdLeft : LcdRight;
     }
 }
 
 void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
-    m_side = (e->pos().x() < width() / 2) ? LcdLeft : LcdRight;
+    m_side = (e->position().x() < width() / 2.) ? LcdLeft : LcdRight;
 }
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {

@@ -60,16 +60,6 @@
       }
     },
     {
-      "name": "Qt5",
-      "hidden": true,
-      "cacheVariables": {
-        "USE_QT5": {
-          "type": "BOOL",
-          "value": "ON"
-        }
-      }
-    },
-    {
       "name": "win-only",
       "hidden": true,
       "condition": {
@@ -97,7 +87,7 @@
       }
     },
     {
-      "name": "Win-x64-Qt6",
+      "name": "Win-x64",
       "inherits": [ "ninja-vcpkg-x64", "win-only" ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
@@ -107,7 +97,7 @@
       }
     },
     {
-      "name": "Win-x86-Qt6",
+      "name": "Win-x86",
       "inherits": [ "ninja-vcpkg-x86", "win-only" ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
@@ -117,7 +107,7 @@
       }
     },
     {
-      "name": "Mac-x64-Qt6",
+      "name": "Mac-x64",
       "inherits": [ "ninja-vcpkg-x64", "mac-only" ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
@@ -127,7 +117,7 @@
       }
     },
     {
-      "name": "Mac-arm64-Qt6",
+      "name": "Mac-arm64",
       "inherits": [ "ninja-vcpkg-arm64", "mac-only" ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
@@ -137,7 +127,7 @@
       }
     },
     {
-      "name": "Linux-x64-Qt6",
+      "name": "Linux-x64",
       "inherits": [ "ninja-vcpkg-x64", "linux-only" ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
@@ -147,7 +137,7 @@
       }
     },
     {
-      "name": "Linux-x64-Qt6-Dynamic",
+      "name": "Linux-x64-Dynamic",
       "inherits": [ "ninja-vcpkg-x64", "linux-only" ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
@@ -155,223 +145,97 @@
           "value": "x64-linux-dynamic-apng"
         }
       }
-    },
-    {
-      "name": "Linux-x64-Qt5",
-      "inherits": [ "Linux-x64-Qt6", "Qt5" ]
-    },
-    {
-      "name": "Linux-x64-Qt5-Dynamic",
-      "inherits": [ "Linux-x64-Qt5", "linux-only" ],
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-linux-dynamic-apng"
-        }
-      }
-    },
-    {
-      "name": "Win-x64-Qt5",
-      "inherits": [ "Win-x64-Qt6", "Qt5" ]
-    },
-    {
-      "name": "Win-x86-Qt5",
-      "inherits": [ "Win-x86-Qt6", "Qt5" ]
-    },
-    {
-      "name": "Mac-x64-Qt5",
-      "inherits": [ "Mac-x64-Qt6", "Qt5" ],
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-osx-minver"
-        }
-      }
-    },
-    {
-      "name": "Mac-arm64-Qt5",
-      "inherits": [ "Mac-arm64-Qt6", "Qt5" ]
     }
   ],
   "buildPresets": [
     {
-      "name": "Win-x64-Qt6-Debug",
-      "configurePreset": "Win-x64-Qt6",
+      "name": "Win-x64-Debug",
+      "configurePreset": "Win-x64",
       "configuration": "Debug"
     },
     {
-      "name": "Win-x64-Qt6-RelWithDebInfo",
-      "configurePreset": "Win-x64-Qt6",
+      "name": "Win-x64-RelWithDebInfo",
+      "configurePreset": "Win-x64",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "Win-x64-Qt6-Release",
-      "configurePreset": "Win-x64-Qt6",
+      "name": "Win-x64-Release",
+      "configurePreset": "Win-x64",
       "configuration": "Release"
     },
     {
-      "name": "Win-x64-Qt5-Debug",
-      "configurePreset": "Win-x64-Qt5",
+      "name": "Win-x86-Debug",
+      "configurePreset": "Win-x86",
       "configuration": "Debug"
     },
     {
-      "name": "Win-x64-Qt5-RelWithDebInfo",
-      "configurePreset": "Win-x64-Qt5",
+      "name": "Win-x86-RelWithDebInfo",
+      "configurePreset": "Win-x86",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "Win-x64-Qt5-Release",
-      "configurePreset": "Win-x64-Qt5",
+      "name": "Win-x86-Release",
+      "configurePreset": "Win-x86",
       "configuration": "Release"
     },
     {
-      "name": "Win-x86-Qt6-Debug",
-      "configurePreset": "Win-x86-Qt6",
+      "name": "Mac-x64-Debug",
+      "configurePreset": "Mac-x64",
       "configuration": "Debug"
     },
     {
-      "name": "Win-x86-Qt6-RelWithDebInfo",
-      "configurePreset": "Win-x86-Qt6",
+      "name": "Mac-x64-RelWithDebInfo",
+      "configurePreset": "Mac-x64",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "Win-x86-Qt6-Release",
-      "configurePreset": "Win-x86-Qt6",
+      "name": "Mac-x64-Release",
+      "configurePreset": "Mac-x64",
       "configuration": "Release"
     },
     {
-      "name": "Win-x86-Qt5-Debug",
-      "configurePreset": "Win-x86-Qt5",
+      "name": "Mac-arm64-Debug",
+      "configurePreset": "Mac-arm64",
       "configuration": "Debug"
     },
     {
-      "name": "Win-x86-Qt5-RelWithDebInfo",
-      "configurePreset": "Win-x86-Qt5",
+      "name": "Mac-arm64-RelWithDebInfo",
+      "configurePreset": "Mac-arm64",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "Win-x86-Qt5-Release",
-      "configurePreset": "Win-x86-Qt5",
+      "name": "Mac-arm64-Release",
+      "configurePreset": "Mac-arm64",
       "configuration": "Release"
     },
     {
-      "name": "Mac-x64-Qt6-Debug",
-      "configurePreset": "Mac-x64-Qt6",
+      "name": "Linux-x64-Debug",
+      "configurePreset": "Linux-x64",
       "configuration": "Debug"
     },
     {
-      "name": "Mac-x64-Qt6-RelWithDebInfo",
-      "configurePreset": "Mac-x64-Qt6",
+      "name": "Linux-x64-RelWithDebInfo",
+      "configurePreset": "Linux-x64",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "Mac-x64-Qt6-Release",
-      "configurePreset": "Mac-x64-Qt6",
+      "name": "Linux-x64-Release",
+      "configurePreset": "Linux-x64",
       "configuration": "Release"
     },
     {
-      "name": "Mac-x64-Qt5-Debug",
-      "configurePreset": "Mac-x64-Qt5",
+      "name": "Linux-x64-Dynamic-Debug",
+      "configurePreset": "Linux-x64-Dynamic",
       "configuration": "Debug"
     },
     {
-      "name": "Mac-x64-Qt5-RelWithDebInfo",
-      "configurePreset": "Mac-x64-Qt5",
+      "name": "Linux-x64-Dynamic-RelWithDebInfo",
+      "configurePreset": "Linux-x64-Dynamic",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "Mac-x64-Qt5-Release",
-      "configurePreset": "Mac-x64-Qt5",
-      "configuration": "Release"
-    },
-    {
-      "name": "Mac-arm64-Qt6-Debug",
-      "configurePreset": "Mac-arm64-Qt6",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Mac-arm64-Qt6-RelWithDebInfo",
-      "configurePreset": "Mac-arm64-Qt6",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Mac-arm64-Qt6-Release",
-      "configurePreset": "Mac-arm64-Qt6",
-      "configuration": "Release"
-    },
-    {
-      "name": "Mac-arm64-Qt5-Debug",
-      "configurePreset": "Mac-arm64-Qt5",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Mac-arm64-Qt5-RelWithDebInfo",
-      "configurePreset": "Mac-arm64-Qt5",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Mac-arm64-Qt5-Release",
-      "configurePreset": "Mac-arm64-Qt5",
-      "configuration": "Release"
-    },
-    {
-      "name": "Linux-x64-Qt6-Debug",
-      "configurePreset": "Linux-x64-Qt6",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Linux-x64-Qt6-RelWithDebInfo",
-      "configurePreset": "Linux-x64-Qt6",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Linux-x64-Qt6-Release",
-      "configurePreset": "Linux-x64-Qt6",
-      "configuration": "Release"
-    },
-    {
-      "name": "Linux-x64-Qt6-Dynamic-Debug",
-      "configurePreset": "Linux-x64-Qt6-Dynamic",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Linux-x64-Qt6-Dynamic-RelWithDebInfo",
-      "configurePreset": "Linux-x64-Qt6-Dynamic",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Linux-x64-Qt6-Dynamic-Release",
-      "configurePreset": "Linux-x64-Qt6-Dynamic",
-      "configuration": "Release"
-    },
-    {
-      "name": "Linux-x64-Qt5-Debug",
-      "configurePreset": "Linux-x64-Qt5",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Linux-x64-Qt5-RelWithDebInfo",
-      "configurePreset": "Linux-x64-Qt5",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Linux-x64-Qt5-Release",
-      "configurePreset": "Linux-x64-Qt5",
-      "configuration": "Release"
-    },
-    {
-      "name": "Linux-x64-Qt5-Dynamic-Debug",
-      "configurePreset": "Linux-x64-Qt5-Dynamic",
-      "configuration": "Debug"
-    },
-    {
-      "name": "Linux-x64-Qt5-Dynamic-RelWithDebInfo",
-      "configurePreset": "Linux-x64-Qt5-Dynamic",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "Linux-x64-Qt5-Dynamic-Release",
-      "configurePreset": "Linux-x64-Qt5-Dynamic",
+      "name": "Linux-x64-Dynamic-Release",
+      "configurePreset": "Linux-x64-Dynamic",
       "configuration": "Release"
     }
   ]

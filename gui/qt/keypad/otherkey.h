@@ -7,7 +7,7 @@ class OtherKey : public RectKey {
 public:
     OtherKey(KeyConfig &config, QString secondText, int right)
         : OtherKey{config, 13,
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
     QStringLiteral("  ^ "),
 #else
     QStringLiteral("^"),

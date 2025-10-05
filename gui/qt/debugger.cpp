@@ -1846,13 +1846,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             return;
         }
         while (in.readLineInto(&line) && !line.isEmpty()) {
-            QStringList split = line.split('=',
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
-                Qt::SkipEmptyParts
-#else
-                QString::SkipEmptyParts
-#endif
-            );
+            QStringList split = line.split('=', Qt::SkipEmptyParts);
             equatesAddEquate(split.at(0).simplified(), hex2int(split.at(1).simplified()));
         }
     } else {
@@ -2026,7 +2020,7 @@ HexWidget *MainWindow::gotoMemAddrNoRaise(uint32_t address) {
     }
     if (memWidget == Q_NULLPTR) {
         for (HexWidget *edit : ui->debugMemoryWidget->findChildren<HexWidget*>()) {
-            uint32_t offset = address - edit->getBase();
+            const int offset = static_cast<int>(address - edit->getBase());
             if (offset < edit->getSize()) {
                 edit->setOffset(offset);
                 memWidget = edit;
@@ -2211,7 +2205,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         if (name == QStringLiteral("rregView"))
             t = QStringLiteral("r:\t") + val;
 
-        QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPos(), t, widget, widget->rect());
+        QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPosition().toPoint(), t, widget, widget->rect());
     }
     return QMainWindow::eventFilter(obj, e);
 }

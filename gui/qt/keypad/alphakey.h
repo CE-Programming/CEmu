@@ -8,7 +8,7 @@ public:
     AlphaKey(KeyConfig &config, QString secondText)
         : RectKey{config, {18, 49, 18, 9}, {18, 58, 18, 12}, {15, 5},
                   config.alphaColor, config.alphaKeyTextColor,
-              #ifdef Q_OS_MACX
+              #ifdef Q_OS_MACOS
                   QStringLiteral(" alpha"),
               #else
                   QStringLiteral("alpha"),

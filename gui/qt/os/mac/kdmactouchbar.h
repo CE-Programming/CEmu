@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (C) 2019-2020 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
+** Copyright (C) 2019 Klarälvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
 ** All rights reserved.
 **
 ** This file is part of the KD MacTouchBar library.
@@ -23,7 +23,6 @@
 
 #include "kdmactouchbar_global.h"
 
-#include <QAction>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE

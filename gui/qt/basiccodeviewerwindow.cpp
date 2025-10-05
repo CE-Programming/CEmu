@@ -53,12 +53,7 @@ int BasicEditor::lineNumberAreaWidth()
         ++digits;
     }
 
-    int singlespace;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-    singlespace = fontMetrics().horizontalAdvance(QLatin1Char('9'));
-#else
-    singlespace = fontMetrics().width(QLatin1Char('9'));
-#endif
+    int singlespace = fontMetrics().horizontalAdvance(QLatin1Char('9'));
 
     int space = 3 + singlespace * digits;
 

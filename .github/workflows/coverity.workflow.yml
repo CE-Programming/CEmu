@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout Git Repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       with:
         submodules: 'recursive'
 
-    - name: Install Linux dependencies (Ubuntu 18.04+)
+    - name: Install Linux dependencies (Ubuntu 22.04+)
       run: |
         set -e
         sudo apt-get update
-        sudo apt-get install qtbase5-dev qt5-qmake libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
+        sudo apt-get install qt6-base-dev qmake6 libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
         
     - name: Prepare build
       run: |

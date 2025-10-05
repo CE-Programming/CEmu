@@ -1,19 +1,8 @@
 cmake_minimum_required(VERSION 3.21.1)
 
-option(USE_QT5 "Build with Qt5 instead of Qt6" OFF)
-
-if(USE_QT5)
-    list(APPEND VCPKG_MANIFEST_FEATURES "qt5")
-    if(APPLE)
-        set(ENV{MACOSX_DEPLOYMENT_TARGET} "10.13")
-        set(ENV{VCPKG_KEEP_ENV_VARS} "MACOSX_DEPLOYMENT_TARGET")
-    endif()
-else()
-    list(APPEND VCPKG_MANIFEST_FEATURES "qt6")
-    if(APPLE)
-        set(ENV{MACOSX_DEPLOYMENT_TARGET} "11.0")
-        set(ENV{VCPKG_KEEP_ENV_VARS} "MACOSX_DEPLOYMENT_TARGET")
-    endif()
+if(APPLE)
+    set(ENV{MACOSX_DEPLOYMENT_TARGET} "11.0")
+    set(ENV{VCPKG_KEEP_ENV_VARS} "MACOSX_DEPLOYMENT_TARGET")
 endif()
 
 option(DEPS_RELEASE_ONLY "Build only release versions of vcpkg dependencies" OFF)
@@ -72,12 +61,8 @@ endif()
 
 include(GNUInstallDirs)
 
-if(USE_QT5)
-    find_package(Qt5 REQUIRED COMPONENTS Core DBus Gui Network Widgets)
-else()
-    find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-    find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
-endif()
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
 
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOMOC ON)
@@ -201,11 +186,7 @@ set(CEmu_Sources
     ${CEmu_Resources}
 )
 
-if(USE_QT5)
-    add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
-else()
-    qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
-endif()
+qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
 
 # TODO better, see https://stackoverflow.com/a/21028226/378298
 execute_process(

@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: "Build: ${{ matrix.os }} - ${{ matrix.qtver }}"
+    name: "Build: ${{ matrix.os }} - ${{ matrix.archvariant }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -19,11 +19,11 @@ jobs:
         statictype: [ON, OFF]
         include:
           - statictype: ON
-            qtver: Qt6
+            archvariant: "x64"
             host_triplet: release
             release_suffix: static
           - statictype: OFF
-            qtver: Qt6-Dynamic
+            archvariant: "x64-Dynamic"
             host_triplet: dynamic-apng-release
             release_suffix: shared
 
@@ -51,13 +51,13 @@ jobs:
       with:
         vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
-    - name: Build CEmu ${{ matrix.qtver }} ${{ matrix.config }} on Linux ${{ matrix.arch }}
+    - name: Build CEmu ${{ matrix.archvariant }} ${{ matrix.config }} on Linux ${{ matrix.arch }}
       uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}'
+        configurePreset: 'Linux-${{ matrix.archvariant }}'
         configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0']"
-        buildPreset: 'Linux-${{ matrix.arch }}-${{ matrix.qtver }}-${{ matrix.config }}'
+        buildPreset: 'Linux-${{ matrix.archvariant }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-linux-${{ matrix.host_triplet }}
         VCPKG_FORCE_SYSTEM_BINARIES: 1
@@ -65,12 +65,12 @@ jobs:
     - name: Upload binary as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: CEmu_linux_${{ matrix.qtver }}_master
-        path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu
+        name: CEmu_linux_${{ matrix.archvariant }}_master
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.archvariant }}/${{ matrix.config }}/CEmu
 
     - name: Prepare binary for release upload
       run: |
-        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.arch }}-${{ matrix.qtver }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}
+        mv ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.archvariant }}/${{ matrix.config }}/CEmu ${{ github.workspace }}/CEmu-nightly_linux64_${{ matrix.release_suffix }}
 
     - name: Update nightly release
       if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
@@ -80,4 +80,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ${{ github.workspace }}/CEmu-nightly_linux64_qt6_${{ matrix.release_suffix }}
+          ${{ github.workspace }}/CEmu-nightly_linux64_${{ matrix.release_suffix }}

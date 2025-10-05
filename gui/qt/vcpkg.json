@@ -1,6 +1,6 @@
 {
   "name": "cemu",
-  "version-string": "2.0-dev",
+  "version-string": "3.0-dev",
   "homepage": "https://ce-programming.github.io/CEmu/",
   "description": "Developer-oriented emulator of the eZ80-based TI-84 Plus CE / TI-83 Premium CE calculators.",
   "dependencies": [
@@ -14,35 +14,19 @@
     {
       "name": "libpng",
       "features": [ "apng" ]
+    },
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [ "dbus", "gui", "network", "widgets", "png" ]
+    },
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [ "fontconfig", "xcb" ],
+      "platform": "linux"
     }
   ],
-  "features": {
-    "qt5": {
-      "description": "Build with Qt5",
-      "dependencies": [
-        {
-          "name": "qt5-base",
-          "default-features": false
-        }
-      ]
-    },
-    "qt6": {
-      "description": "Build with Qt6",
-      "dependencies": [
-        {
-          "name": "qtbase",
-          "default-features": false,
-          "features": [ "dbus", "gui", "network", "widgets", "png" ]
-        },
-        {
-          "name": "qtbase",
-          "default-features": false,
-          "features": [ "fontconfig", "xcb" ],
-          "platform": "linux"
-        }
-      ]
-    }
-  },
   "builtin-baseline": "a62ce77d56ee07513b4b67de1ec2daeaebfae51a",
   "overrides": [
     {

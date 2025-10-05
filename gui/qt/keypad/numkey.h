@@ -13,7 +13,7 @@ class NumKey : public RectKey {
 public:
     NumKey(KeyConfig &config, int right)
         : NumKey{config,
-             #ifdef Q_OS_MACX
+             #ifdef Q_OS_MACOS
                  QStringLiteral(" ."),
              #else
                  QStringLiteral("."),
