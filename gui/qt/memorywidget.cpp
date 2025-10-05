@@ -117,7 +117,7 @@ void MainWindow::flashGotoPressed() {
             ui->flashEdit->setOffset(hex2int(resolved));
 
             auto &hist = m_memGotoHistory;
-            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
+            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
             hist.insert(hist.begin(), typed);
             if (hist.size() > 50) { hist.resize(50); }
         } else {
@@ -138,7 +138,7 @@ void MainWindow::ramGotoPressed() {
             ui->ramEdit->setOffset(hex2int(resolved) - 0xD00000);
 
             auto &hist = m_memGotoHistory;
-            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
+            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
             hist.insert(hist.begin(), typed);
             if (hist.size() > 50) { hist.resize(50); }
         } else {
@@ -225,7 +225,7 @@ void MainWindow::memGotoEdit(HexWidget *edit) {
             memGoto(edit, static_cast<uint32_t>(hex2int(resolved)));
             // MRU update
             auto &hist = m_memGotoHistory;
-            hist.erase(std::remove_if(hist.begin(), hist.end(), [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; }), hist.end());
+            std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
             hist.insert(hist.begin(), typed);
             if (hist.size() > 50) { hist.resize(50); }
         } else {
