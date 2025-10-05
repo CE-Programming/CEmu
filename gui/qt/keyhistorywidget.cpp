@@ -36,7 +36,7 @@ KeyHistoryWidget::KeyHistoryWidget(QWidget *parent, int size) : QWidget{parent} 
 
 KeyHistoryWidget::~KeyHistoryWidget() = default;
 
-void KeyHistoryWidget::add(const QString &entry) {
+void KeyHistoryWidget::add(const QString &entry) const {
     m_view->moveCursor(QTextCursor::End);
     m_view->insertPlainText(entry + (m_chkBoxVertical->isChecked() ? "\n" : ""));
     m_view->moveCursor(QTextCursor::End);
@@ -51,6 +51,6 @@ void KeyHistoryWidget::setFontSize(int size) {
     emit fontSizeChanged();
 }
 
-int KeyHistoryWidget::getFontSize() {
+int KeyHistoryWidget::getFontSize() const {
     return m_size->value();
 }

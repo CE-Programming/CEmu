@@ -137,7 +137,7 @@ bool isSystemInDarkMode() {
 
 QString getAddressOfEquate(const std::string &in) {
     QString value;
-    map_value_t::const_iterator item = disasm.reverse.find(in);
+    const auto item = disasm.reverse.find(in);
     if (item != disasm.reverse.end()) {
         value = int2hex(item->second, 6);
     } else {

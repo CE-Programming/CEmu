@@ -115,7 +115,7 @@ void VisualizerDisplayWidget::setConfig(uint32_t bppstep, int w, int h, uint32_t
     m_image = new QImage(w, h, QImage::Format_RGB32);
 }
 
-void VisualizerDisplayWidget::contextMenu(const QPoint& posa) {
+void VisualizerDisplayWidget::contextMenu(const QPoint& posa) const {
     QString copyStr = tr("Copy Address");
     QString coordStr = tr("Coordinate: ");
 

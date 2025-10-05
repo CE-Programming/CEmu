@@ -59,8 +59,8 @@ public:
     void addHighlight(const QColor &lightModeColor, const QColor &darkModeColor);
     void highlightCurrentLine();
     void cursorState(bool movable);
-    bool labelCheck();
-    QString getSelectedAddr();
+    bool labelCheck() const;
+    QString getSelectedAddr() const;
 
 signals:
     void gotoDisasmAddress(uint32_t address);

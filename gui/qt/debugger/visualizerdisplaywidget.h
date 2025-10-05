@@ -20,7 +20,7 @@ protected:
 
 private slots:
     void draw();
-    void contextMenu(const QPoint &posa);
+    void contextMenu(const QPoint &posa) const;
 
 private:
     QTimer *m_refreshTimer;

@@ -11,9 +11,6 @@ disasm_state_t disasm;
 static char tmpbuf[20];
 
 static std::string strW(uint32_t data) {
-    std::pair<map_t::iterator, map_t::iterator> range;
-    map_t::iterator sit;
-    std::string ret;
     bool high = data > 511;
     if (disasm.il) {
         snprintf(tmpbuf, sizeof(tmpbuf), "$%06X", data);
@@ -21,6 +18,9 @@ static std::string strW(uint32_t data) {
         snprintf(tmpbuf, sizeof(tmpbuf), "$%04X", data);
     }
     if (high) {
+        std::pair<map_t::iterator, map_t::iterator> range;
+        map_t::iterator sit;
+        std::string ret;
         range = disasm.map.equal_range(data);
         for (sit = range.first; sit != range.second; ++sit) {
             ret += sit->second;
@@ -45,15 +45,14 @@ static std::string strW(uint32_t data) {
             }
         }
     }
-    return std::string(tmpbuf);
+    return {tmpbuf};
 }
 
 static std::string strA(uint32_t data) {
-    std::pair<map_t::iterator, map_t::iterator> range;
     map_t::iterator sit;
     std::string ret;
-    bool high = data > 511;
-    range = disasm.map.equal_range(data);
+    const bool high = data > 511;
+    std::pair<map_t::iterator, map_t::iterator> range = disasm.map.equal_range(data);
     for (sit = range.first; sit != range.second; ++sit) {
         if (high || sit->second[0] == '_') {
             if (!ret.empty()) {
@@ -85,7 +84,7 @@ static std::string strA(uint32_t data) {
         }
         snprintf(tmpbuf, sizeof(tmpbuf), "$%04X", data);
     }
-    return std::string(tmpbuf);
+    return {tmpbuf};
 }
 
 static int disasmFetch([[maybe_unused]] struct zdis_ctx *ctx, uint32_t addr) {

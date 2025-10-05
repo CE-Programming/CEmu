@@ -40,7 +40,7 @@ void DataWidget::updateAllHighlights() {
     connect(this, &DataWidget::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
 }
 
-QString DataWidget::getSelectedAddr() {
+QString DataWidget::getSelectedAddr() const {
     if (!isEnabled()) {
         return QStringLiteral("000000");
     }
@@ -51,7 +51,7 @@ QString DataWidget::getSelectedAddr() {
     return c.selectedText();
 }
 
-bool DataWidget::labelCheck() {
+bool DataWidget::labelCheck() const {
     if (!isEnabled()) {
         return false;
     }

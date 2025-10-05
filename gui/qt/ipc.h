@@ -21,9 +21,9 @@ public:
 
     void serverSetup(const QString &name);
     void clientSetup(const QString &name);
-    void serverListen();
+    void serverListen() const;
     void idClose();
-    void send(const QByteArray &pkt);
+    void send(const QByteArray &pkt) const;
 
     QString getServerName();
     QString getClientName();

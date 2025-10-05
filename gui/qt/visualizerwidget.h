@@ -16,8 +16,8 @@ class VisualizerWidget : public QWidget {
 public:
     explicit VisualizerWidget(QWidget *parent = Q_NULLPTR, const QString &config = QString());
     ~VisualizerWidget();
-    QString getConfig();
-    void translate();
+    QString getConfig() const;
+    void translate() const;
     void forceUpdate();
 
 signals:

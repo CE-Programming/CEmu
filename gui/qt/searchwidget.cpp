@@ -25,15 +25,15 @@ SearchWidget::~SearchWidget() {
     delete ui;
 }
 
-int SearchWidget::getType() {
+int SearchWidget::getType() const {
     return m_searchType;
 }
 
-int SearchWidget::getMode() {
+int SearchWidget::getMode() const {
     return m_searchMode;
 }
 
-QString SearchWidget::getSearchString() {
+QString SearchWidget::getSearchString() const {
     return ui->searchEdit->text();
 }
 

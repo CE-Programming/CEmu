@@ -81,9 +81,9 @@ public:
     explicit MainWindow(CEmuOpts &opts, QWidget *p = nullptr);
     ~MainWindow() override;
     void setup();
-    bool isInitialized();
-    bool isReload();
-    bool isResetAll();
+    bool isInitialized() const;
+    bool isReload() const;
+    bool isResetAll() const;
 
 signals:
     void setLcdFrameskip(int value);
@@ -94,7 +94,7 @@ signals:
     void usbUnplug();
 
 private slots:
-    void usbUnplugged();
+    void usbUnplugged() const;
     void usbConnectMsd(QVariant userData);
 #ifdef LIBUSB_SUPPORT
     void usbConnectPhysical(QVariant userData);
@@ -232,7 +232,7 @@ private:
     void sendEmuLetterKey(char letter);
 
     // console
-    void console(const QString &str, int type = EmuThread::ConsoleNorm);
+    void console(const QString &str, int type = EmuThread::ConsoleNorm) const;
     void console(int type, const char *str, int size = -1);
     void consoleStr();
     void consoleClear();
@@ -267,9 +267,9 @@ private:
     void stateEdit();
     void stateSave();
     void stateLoad();
-    void stateSaveInfo();
+    void stateSaveInfo() const;
     void stateLoadInfo();
-    int stateGet(QObject *obj, int col);
+    int stateGet(QObject *obj, int col) const;
 
     // save / restore states
     void stateToFile();
@@ -285,7 +285,7 @@ private:
     // screenshots
     void screenshot();
     void screenshotSave(const QString &filter, const QString &suffix, const QString &temp);
-    void setFrameskip(int value);
+    void setFrameskip(int value) const;
     void setOptimizeRecord(bool state);
     void setSnapshotPath();
 #ifdef PNG_WRITE_APNG_SUPPORTED
@@ -296,15 +296,15 @@ private:
 
     // debugger
     void debugPopulate();
-    void debugGuiState(bool state);
+    void debugGuiState(bool state) const;
     void debugForce();
     void debugInit();
     void debugRaise();
-    void debugSync();
+    void debugSync() const;
     void debugToggle();
     void debugExecute(uint32_t addr, uint8_t cmd);
     void debugCommand(int reason, uint32_t data);
-    void debugZeroCycles();
+    void debugZeroCycles() const;
 
     // ti-basic debugging
     void debugBasic(bool enable);
@@ -317,12 +317,12 @@ private:
     void debugBasicStepInternal(bool next);
     void debugBasicClearCache();
     void debugBasicClearEdits();
-    void debugBasicClearHighlights();
-    QString debugBasicGetPrgmName();
+    void debugBasicClearHighlights() const;
+    static QString debugBasicGetPrgmName();
     debug_basic_status_t debugBasicUpdate(bool force);
     debug_basic_status_t debugBasicPrgmLookup(bool allowSwitch, int *idx);
     void debugBasicCreateTokenMap(int idx, const QByteArray &data);
-    void debugBasicGuiState(bool state);
+    void debugBasicGuiState(bool state) const;
     void debugBasicContextMenu(const QPoint &pos);
     void debugBasicToggleHighlight(bool enabled);
     void debugBasicToggleShowFetch(bool enabled);
@@ -330,8 +330,8 @@ private:
     void debugBasicToggleLiveExecution(bool enabled);
 
     // battery
-    void batterySetCharging(bool state);
-    void batterySet(int value);
+    static void batterySetCharging(bool state);
+    void batterySet(int value) const;
 
     // disassembly
     void disasmUpdateAddr(int base, bool pane);
@@ -345,7 +345,7 @@ private:
     void stackScroll(int value);
 
     // cpu state
-    bool adlState(int state);
+    bool adlState(int state) const;
 
     // stepping
     void debugStep(int mode);
@@ -356,16 +356,16 @@ private:
 
     // os view
     void osUpdate();
-    void opModified(QTableWidgetItem *item);
-    void fpModified(QTableWidgetItem *item);
+    void opModified(QTableWidgetItem *item) const;
+    void fpModified(QTableWidgetItem *item) const;
 
     // goto
     void gotoPressed();
     void gotoDisasmAddr(uint32_t addr);
-    QAction *gotoDisasmAction(QMenu *menu);
+    QAction *gotoDisasmAction(QMenu *menu) const;
     void gotoMemAddr(uint32_t addr);
     HexWidget *gotoMemAddrNoRaise(uint32_t addr);
-    QAction *gotoMemAction(QMenu *menu, bool vat = false);
+    QAction *gotoMemAction(QMenu *menu, bool vat = false) const;
 
     void handleCtrlClickText(QPlainTextEdit *edit);
     void handleCtrlClickLine(QLineEdit *edit);
@@ -373,7 +373,7 @@ private:
     // breakpoints
     void breakModified(QTableWidgetItem *item);
     void breakSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
-    int breakGetMask(int row);
+    int breakGetMask(int row) const;
 
     // breakpoint additions
     bool breakAdd(const QString &label, uint32_t address, bool enabled, bool toggle, bool unset);
@@ -390,7 +390,7 @@ private:
     void watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
     void watchUpdate();
     void watchUpdateRow(QTableWidgetItem *itemLow, QTableWidgetItem *itemHigh);
-    int watchGetMask(int row);
+    int watchGetMask(int row) const;
 
     // watchpoint additions
     bool watchAdd(const QString &label, uint32_t low, uint32_t high, int mask, bool toggle, bool unset);
@@ -408,8 +408,8 @@ private:
     // ports
     void portModified(QTableWidgetItem *item);
     void portSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
-    void portPopulate(int row);
-    int portGetMask(int row);
+    void portPopulate(int row) const;
+    int portGetMask(int row) const;
 
     // port additions
     bool portAdd(uint16_t port, int mask, bool unset);
@@ -417,16 +417,16 @@ private:
 
     // port removal
     void portRemoveSelected();
-    void portRemoveRow(int row);
+    void portRemoveRow(int row) const;
 
     // labels
-    QString watchNextLabel();
-    QString breakNextLabel();
+    QString watchNextLabel() const;
+    QString breakNextLabel() const;
     void updateLabels();
 
     // debug files
     void debugImportFile(const QString &file);
-    void debugExportFile(const QString &file);
+    void debugExportFile(const QString &file) const;
     QString debugGetFile(bool save);
 
     // bootable images
@@ -435,11 +435,11 @@ private:
     void bootImageExport();
 
     // equates
-    void setDebugAutoEquates(bool enable);
+    void setDebugAutoEquates(bool enable) const;
     void equatesAddDialog();
     void equatesAddFile(const QString &file);
     void equatesAddEquate(const QString &name, uint32_t addr);
-    bool equatesAddEquateInternal(const QString &name, uint32_t addr);
+    static bool equatesAddEquateInternal(const QString &name, uint32_t addr);
     void equatesClear();
     void equatesRefresh();
     QString getAddressString(const QString &string, bool *ok);
@@ -450,10 +450,10 @@ private:
     void keymapCustomSelected();
     void keypadChanged();
     void setKeymap(const QString &value);
-    void setKeypadColor(unsigned int color);
-    void setKeypadGhosting(bool enabled);
-    void setKeypadHolding(bool enabled);
-    void setCalcSkinTopFromType(bool python);
+    void setKeypadColor(unsigned int color) const;
+    void setKeypadGhosting(bool enabled) const;
+    void setKeypadHolding(bool enabled) const;
+    void setCalcSkinTopFromType(bool python) const;
 
     // settings
     void setRom(const QString &path);
@@ -464,29 +464,29 @@ private:
     void setSkinToggle(bool state);
     void setGuiSkip(int value);
     void setLcdScale(int value);
-    void setLcdUpscale(int value);
-    void setLcdFullscreen(int value);
-    void setLcdDma(bool state);
-    void setLcdGamma(bool state);
+    void setLcdUpscale(int value) const;
+    void setLcdFullscreen(int value) const;
+    void setLcdDma(bool state) const;
+    void setLcdGamma(bool state) const;
     void setLcdResponse(bool state);
     void setDebugLcdDma(bool state);
     void setTop(bool state);
     void setDockGroupDrag(bool state);
-    void setMenuBarState(bool state);
-    void setStatusBarState(bool state);
+    void setMenuBarState(bool state) const;
+    void setStatusBarState(bool state) const;
     void setUIBoundaries(bool state);
     void setAsicValidRevisions();
     void setAsicRevision(int index);
     void setAllowAnyRev(bool state);
     void setPythonEdition(int state);
     void setNormalOs(bool state);
-    void setRecentSave(bool state);
+    void setRecentSave(bool state) const;
     void setPortable(bool state);
-    void setAutoSave(bool state);
+    void setAutoSave(bool state) const;
     void setAutoUpdates(int value);
     void saveSettings();
-    void saveDebug();
-    void setFont(int size);
+    void saveDebug() const;
+    void setFont(int size) const;
     void setUIDocks();
     void setUIDockEditMode(bool mode);
     void setUIEditMode(bool mode);
@@ -505,7 +505,7 @@ private:
 
     // debug settings
     void setDebugPath();
-    void setDebugAutoSave(bool state);
+    void setDebugAutoSave(bool state) const;
     void setDebugDisasmDataCol(bool state);
     void setDebugDisasmAddrCol(bool state);
     void setDebugDisasmSpace(bool state);
@@ -513,26 +513,26 @@ private:
     void setDebugDisasmImplict(bool state);
     void setDebugDisasmUppercase(bool state);
     void setDebugDisasmBoldSymbols(bool state);
-    void setDebugIgnoreBreakpoints(bool state);
-    void setDebugResetTrigger(bool state);
-    void setDebugSoftCommands(bool state);
+    void setDebugIgnoreBreakpoints(bool state) const;
+    void setDebugResetTrigger(bool state) const;
+    void setDebugSoftCommands(bool state) const;
 
     // linking
     QStringList varDialog(QFileDialog::AcceptMode mode, const QString &filter, const QString &suffix);
     void varReceive(std::function<void(bool)> recvAction);
-    void varUpdate();
+    void varUpdate() const;
     void varShow();
     void varPressed(const QModelIndex &index);
     void varLaunch(const calc_var_t *prgm);
     void varSelect();
     void varSaveSelected();
     void varSaveSelectedFiles();
-    void varResend();
+    static void varResend();
     void varToggle();
 
     // recent
-    void recentLoadInfo();
-    void recentSaveInfo();
+    void recentLoadInfo() const;
+    void recentSaveInfo() const;
 
     // autotester
     int autotesterOpen(const QString &jsonPath);
@@ -558,34 +558,34 @@ private:
     void keymapExport();
 
     // memory
-    void flashUpdate();
+    void flashUpdate() const;
     void flashGotoPressed();
     void flashSyncPressed();
-    void ramUpdate();
+    void ramUpdate() const;
     void ramGotoPressed();
     void ramSyncPressed();
     void memUpdate();
     void setMemDocks();
     void setVisualizerDocks();
     void setKeyHistoryDocks();
-    void memLoadState();
+    void memLoadState() const;
     void memSync(HexWidget *edit);
-    void memUpdateEdit(HexWidget *edit, bool force = false);
+    static void memUpdateEdit(HexWidget *edit, bool force = false);
     void memGotoEdit(HexWidget *edit);
     void memGoto(HexWidget *edit, uint32_t addr);
     void memSearchEdit(HexWidget *edit);
     void memSyncEdit(HexWidget *edit);
-    void memAsciiToggle(HexWidget *edit);
-    void memDocksUpdate();
+    static void memAsciiToggle(HexWidget *edit);
+    void memDocksUpdate() const;
     HexWidget *firstMemWidget();
     void addMemDock(const QString &magic, int bytes, bool ascii);
     void addVisualizerDock(const QString &magic, const QString &config);
     void addKeyHistoryDock(const QString &magic, int size);
 
     // versions
-    void setVersion();
+    void setVersion() const;
     void checkVersion();
-    bool isFirstRun();
+    bool isFirstRun() const;
 
     // options
     void optSend(CEmuOpts &o);
@@ -594,8 +594,8 @@ private:
 
     // lcd
     void lcdUpdate(double emuFps);
-    void lcdAdjust();
-    void lcdCopy();
+    void lcdAdjust() const;
+    void lcdCopy() const;
 
     // resets and loads
     void emuLoad(emu_data_t type);
@@ -614,7 +614,7 @@ private:
     void ipcCli(QDataStream &stream);
 
     // context menus
-    void contextLcd(const QPoint &posa);
+    void contextLcd(const QPoint &posa) const;
     void contextConsole(const QPoint &posa);
     void contextDisasm(const QPoint &posa);
     void contextVars(const QPoint &posa);
@@ -630,15 +630,15 @@ private:
 #endif
 
     // Redistribute Docks
-    DockWidget *redistributeFindDock(const QPoint &pos);
+    DockWidget *redistributeFindDock(const QPoint &pos) const;
     bool redistributeDocks(const QPoint &pos, const QPoint &offset,
                            Qt::CursorShape cursorShape,
                            int (QSize::*dimension)() const,
                            Qt::Orientation orientation);
-    void raiseContainingDock(QWidget *widget);
+    void raiseContainingDock(QWidget *widget) const;
 
     // Semi Exclusive Buttons
-    void semiExclusiveButtonPressed();
+    void semiExclusiveButtonPressed() const;
 
     // Members
     Ui::MainWindow *ui = nullptr;

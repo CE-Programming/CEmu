@@ -1176,7 +1176,7 @@ void MainWindow::showEvent(QShowEvent *e) {
     e->accept();
 }
 
-DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) {
+DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) const {
     QWidget *child = childAt(pos);
     if (QTabBar *tabBar = findSelfOrParent<QTabBar *>(child)) {
         child = childAt(QPoint({pos.x(), tabBar->mapTo(this, QPoint{}).y() - 1}));
@@ -1206,7 +1206,7 @@ bool MainWindow::redistributeDocks(
     return false;
 }
 
-void MainWindow::raiseContainingDock(QWidget *widget) {
+void MainWindow::raiseContainingDock(QWidget *widget) const {
     QWidget *dock = findSelfOrParent<QDockWidget*>(widget);
     if (dock != Q_NULLPTR) {
         if (m_uiEditMode) {
@@ -1230,7 +1230,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
 }
 
 
-void MainWindow::semiExclusiveButtonPressed() {
+void MainWindow::semiExclusiveButtonPressed() const {
     auto button = static_cast<QAbstractButton *>(sender());
     auto group = button->group();
     group->setExclusive(group->checkedButton() != button);
@@ -1456,7 +1456,7 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-bool MainWindow::isInitialized() {
+bool MainWindow::isInitialized() const {
     return m_initPassed;
 }
 
@@ -1490,11 +1490,11 @@ void MainWindow::resetGui() {
     close();
 }
 
-bool MainWindow::isReload() {
+bool MainWindow::isReload() const {
     return m_needReload;
 }
 
-bool MainWindow::isResetAll() {
+bool MainWindow::isResetAll() const {
     if (m_needFullReset) {
         QFile(m_config->value(SETTING_IMAGE_PATH).toString()).remove();
         QFile(m_config->value(SETTING_DEBUGGER_IMAGE_PATH).toString()).remove();
@@ -1652,7 +1652,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::console(const QString &str, int type) {
+void MainWindow::console(const QString &str, int type) const {
     if (m_nativeConsole) {
         fputs(str.toStdString().c_str(), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
@@ -1943,7 +1943,7 @@ void MainWindow::screenshot() {
     screenshotSave(tr("PNG images (*.png)"), QStringLiteral("png"), path);
 }
 
-void MainWindow::lcdCopy() {
+void MainWindow::lcdCopy() const {
     QApplication::clipboard()->setImage(ui->lcd->getImage(), QClipboard::Clipboard);
 }
 
@@ -2085,7 +2085,7 @@ void MainWindow::showAbout() {
     aboutBox->show();
 }
 
-void MainWindow::contextLcd(const QPoint &posa) {
+void MainWindow::contextLcd(const QPoint &posa) const {
     QMenu menu;
     QPoint globalPos = ui->lcd->mapToGlobal(posa);
     menu.addMenu(ui->menuFile);
@@ -2211,7 +2211,7 @@ void MainWindow::emuBlocked(int req) {
     }
 }
 
-void MainWindow::varUpdate() {
+void MainWindow::varUpdate() const {
     ui->buttonEnableVarList->setText(guiReceive ? tr("Hide Calculator Variables") : tr("View Calculator Variables"));
     ui->buttonRefreshVarList->setEnabled(guiReceive);
     ui->filterVarList->setEnabled(guiReceive);
@@ -2879,7 +2879,7 @@ void MainWindow::usbCreateDevice(QStringList items, QVariant userData, void (Mai
     ui->usbTable->resizeColumnsToContents();
 }
 
-void MainWindow::usbUnplugged() {
+void MainWindow::usbUnplugged() const {
     if (QAbstractButton *button = m_usbConnectGroup->checkedButton()) {
         m_usbConnectGroup->setExclusive(false);
         button->setChecked(false);
@@ -3235,7 +3235,7 @@ void MainWindow::stateAdd(QString &name, QString &path) {
     ui->slotView->setSortingEnabled(true);
 }
 
-int MainWindow::stateGet(QObject *obj, int col) {
+int MainWindow::stateGet(QObject *obj, int col) const {
     int row;
 
     for (row = 0; row < ui->slotView->rowCount(); row++){

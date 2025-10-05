@@ -125,7 +125,7 @@ Qt::KeyboardModifiers QtKeypadBridge::toModifierValue(QString m) {
     return seq;
 }
 
-bool QtKeypadBridge::keymapExport(const QString &path) {
+bool QtKeypadBridge::keymapExport(const QString &path) const {
     if (!keymap) {
         return false;
     }

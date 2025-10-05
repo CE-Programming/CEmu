@@ -17,8 +17,8 @@ public:
     ~KeyHistoryWidget();
 
 public slots:
-    void add(const QString &entry);
-    int getFontSize();
+    void add(const QString &entry) const;
+    int getFontSize() const;
 
 signals:
     void fontSizeChanged();

@@ -59,7 +59,7 @@ public:
     ArgList(const QStringList &args, bool nullTerminate = true);
 
     const char *const *args();
-    std::size_t size();
+    std::size_t size() const;
 
 private:
     QList<QByteArray> m_storage;
@@ -82,7 +82,7 @@ const char *const *ArgList::args() {
     return m_args.data();
 }
 
-std::size_t ArgList::size() {
+std::size_t ArgList::size() const {
     return m_storage.size();
 }
 

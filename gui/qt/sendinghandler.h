@@ -25,7 +25,7 @@ public:
     ~SendingHandler() = default;
 
     void sendFiles(const QStringList &fileNames, int location);
-    bool dragOccured(QDragEnterEvent *e);
+    static bool dragOccured(QDragEnterEvent *e);
     void dropOccured(QDropEvent *e, int location);
     void resendSelected();
     void addFile(const QString &path, bool select);
@@ -34,7 +34,7 @@ public:
 public slots:
     void linkProgress(int amount, int total);
     void resendPressed();
-    void removeRow();
+    void removeRow() const;
 
 signals:
     void send(const QStringList &names, int location);
@@ -44,7 +44,7 @@ signals:
 
 private:
     void checkDirForEquateFiles(QString &dirPath);
-    QStringList getValidFilesFromArchive(const QString &archivePath);
+    QStringList getValidFilesFromArchive(const QString &archivePath) const;
 
     enum {
         RECENT_REMOVE_COL,

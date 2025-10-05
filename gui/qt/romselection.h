@@ -56,8 +56,8 @@ private slots:
 
 private:
     void parseROMSegments();
-    void nextPage();
-    void prevPage();
+    void nextPage() const;
+    void prevPage() const;
 
     Ui::RomSelection *ui;
 

@@ -11,9 +11,9 @@ class SearchWidget : public QDialog {
 public:
     explicit SearchWidget(const QString&, int, QWidget *p = Q_NULLPTR);
     ~SearchWidget();
-    int getMode();
-    int getType();
-    QString getSearchString();
+    int getMode() const;
+    int getType() const;
+    QString getSearchString() const;
 
     enum {
         Cancel,

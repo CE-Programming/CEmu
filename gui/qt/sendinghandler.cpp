@@ -51,7 +51,7 @@ static bool checkValidFile(const char *path) {
     return false;
 }
 
-QStringList SendingHandler::getValidFilesFromArchive(const QString& archivePath) {
+QStringList SendingHandler::getValidFilesFromArchive(const QString& archivePath) const {
     if (!m_tempDir.isValid()) {
         QMessageBox::critical(Q_NULLPTR, tr("Transfer error"), tr("Could not create the temporary directory to extract the archive.\nFile: ") + archivePath);
         return {};
@@ -128,7 +128,7 @@ void SendingHandler::resendPressed() {
     sendFiles(files, LINK_FILE);
 }
 
-void SendingHandler::removeRow() {
+void SendingHandler::removeRow() const {
     for (int row = 0; row < m_table->rowCount(); row++){
         if (sender() == m_table->cellWidget(row, RECENT_REMOVE_COL)) {
             m_table->removeRow(row);

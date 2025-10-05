@@ -111,13 +111,13 @@ void MainWindow::debugBasicClearEdits() {
     m_basicCodeIndex = 0;
 }
 
-void MainWindow::debugBasicClearHighlights() {
+void MainWindow::debugBasicClearHighlights() const {
     QList<QTextEdit::ExtraSelection> extraSelections;
     ui->basicEdit->setExtraSelections(extraSelections);
     ui->basicTempEdit->setExtraSelections(extraSelections);
 }
 
-void MainWindow::debugBasicGuiState(bool state) {
+void MainWindow::debugBasicGuiState(bool state) const {
     if (state) {
         ui->btnDebugBasicRun->setText(tr("Run"));
         ui->btnDebugBasicRun->setIcon(m_iconRun);

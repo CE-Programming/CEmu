@@ -33,8 +33,8 @@ public:
     int indexPrevOf(const QByteArray &ba);
     int indexPrevNotOf(const QByteArray &ba);
     int indexOf(const QByteArray &ba);
-    const char *data() { return m_data.constData(); }
-    const char *modified() { return m_modified.constData(); }
+    const char *data() const { return m_data.constData(); }
+    const char *modified() const { return m_modified.constData(); }
 
 protected:
     virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;

@@ -86,11 +86,11 @@ void RomSelection::browseForROM() {
     }
 }
 
-void RomSelection::nextPage() {
+void RomSelection::nextPage() const {
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() + 1);
 }
 
-void RomSelection::prevPage() {
+void RomSelection::prevPage() const {
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() - 1);
 }
 

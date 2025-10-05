@@ -21,7 +21,7 @@ void InterCom::idClose() {
     m_file.remove();
 }
 
-void InterCom::serverListen() {
+void InterCom::serverListen() const {
     if (m_serverName.isEmpty()) {
         return;
     }
@@ -46,7 +46,7 @@ QByteArray InterCom::getData() {
     return m_data;
 }
 
-void InterCom::send(const QByteArray &pkt) {
+void InterCom::send(const QByteArray &pkt) const {
     if (m_clientName.isEmpty()) {
         return;
     }

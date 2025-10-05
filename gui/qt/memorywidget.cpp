@@ -40,7 +40,7 @@ QString MainWindow::getAddressString(const QString& string, bool* ok) {
    return int2hex(static_cast<uint32_t>(hex2int(address)), 6);
 }
 
-void MainWindow::flashUpdate() {
+void MainWindow::flashUpdate() const {
     if (!guiEmuValid) {
         return;
     }
@@ -48,7 +48,7 @@ void MainWindow::flashUpdate() {
     ui->flashEdit->setData({reinterpret_cast<const char *>(mem.flash.block), 0x400000});
 }
 
-void MainWindow::ramUpdate() {
+void MainWindow::ramUpdate() const {
     if (!guiEmuValid) {
         return;
     }

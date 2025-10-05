@@ -186,7 +186,7 @@ error:
     }
 }
 
-void MainWindow::debugExportFile(const QString &filename) {
+void MainWindow::debugExportFile(const QString &filename) const {
     if (filename.isEmpty()) {
         return;
     }
@@ -500,7 +500,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
     debugRaise();
 }
 
-void MainWindow::debugSync() {
+void MainWindow::debugSync() const {
     if (!guiDebug) {
         return;
     }
@@ -589,7 +589,7 @@ void MainWindow::debugSync() {
     }
 }
 
-void MainWindow::debugGuiState(bool state) {
+void MainWindow::debugGuiState(bool state) const {
     if (state) {
         ui->buttonRun->setText(tr("Run"));
         ui->buttonRun->setIcon(m_iconRun);
@@ -866,7 +866,7 @@ void MainWindow::debugPopulate() {
 // Clock items
 // ------------------------------------------------
 
-void MainWindow::debugZeroCycles() {
+void MainWindow::debugZeroCycles() const {
     debug.totalCycles = 0;
     debug.dmaCycles = 0;
     debug.flashCacheMisses = 0;
@@ -924,7 +924,7 @@ void MainWindow::breakRemove(uint32_t address) {
     }
 }
 
-int MainWindow::breakGetMask(int row) {
+int MainWindow::breakGetMask(int row) const {
     int mask;
     if (static_cast<QAbstractButton *>(m_breakpoints->cellWidget(row, BREAK_ENABLE_COL))->isChecked()) {
         mask = DBG_MASK_EXEC;
@@ -993,11 +993,11 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
     memUpdate();
 }
 
-QString MainWindow::breakNextLabel() {
+QString MainWindow::breakNextLabel() const {
     return QStringLiteral("Label") + QString::number(m_breakpoints->rowCount());
 }
 
-QString MainWindow::watchNextLabel() {
+QString MainWindow::watchNextLabel() const {
     return QStringLiteral("Label") + QString::number(m_watchpoints->rowCount());
 }
 
@@ -1140,7 +1140,7 @@ void MainWindow::portSetPrev(QTableWidgetItem *current, [[maybe_unused]] QTableW
     }
 }
 
-void MainWindow::portRemoveRow(int row) {
+void MainWindow::portRemoveRow(int row) const {
     uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_COL)->text()));
     debug_ports(port, ~DBG_MASK_NONE, false);
     m_ports->removeRow(row);
@@ -1155,7 +1155,7 @@ void MainWindow::portRemoveSelected() {
     }
 }
 
-void MainWindow::portPopulate(int currRow) {
+void MainWindow::portPopulate(int currRow) const {
     uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(currRow, PORT_ADDR_COL)->text()));
     uint8_t read = static_cast<uint8_t>(port_peek_byte(port));
 
@@ -1242,7 +1242,7 @@ bool MainWindow::portAdd(uint16_t port, int mask, bool unset) {
     return true;
 }
 
-int MainWindow::portGetMask(int row) {
+int MainWindow::portGetMask(int row) const {
     unsigned int mask = 0;
     if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_READ_COL))->isChecked()) {
         mask |= DBG_MASK_PORT_READ;
@@ -1589,7 +1589,7 @@ void MainWindow::memUpdate() {
     memDocksUpdate();
 }
 
-int MainWindow::watchGetMask(int row) {
+int MainWindow::watchGetMask(int row) const {
     int mask = 0;
     if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_COL))->isChecked()) {
         mask |= DBG_MASK_READ;
@@ -1735,7 +1735,7 @@ void MainWindow::batterySetCharging(bool checked) {
     control.batteryCharging = checked;
 }
 
-void MainWindow::batterySet(int value) {
+void MainWindow::batterySet(int value) const {
     control.setBatteryStatus = static_cast<uint8_t>(value);
     ui->sliderBattery->setValue(value);
     ui->labelBattery->setText(QString::number(value * 20) + "%");
@@ -1917,14 +1917,14 @@ void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
 }
 
 bool MainWindow::equatesAddEquateInternal(const QString &name, uint32_t address) {
-    std::pair<map_value_t::iterator, bool> inserted = disasm.reverse.emplace(name.toUpper().toStdString(), address);
-    if (!inserted.second) {
-        uint32_t oldAddress = std::exchange(inserted.first->second, address);
+    auto [mapIter, inserted] = disasm.reverse.emplace(name.toUpper().toStdString(), address);
+    if (!inserted) {
+        const uint32_t oldAddress = std::exchange(mapIter->second, address);
         if (oldAddress == address) {
             return false;
         }
-        std::pair<map_t::iterator, map_t::iterator> range = disasm.map.equal_range(oldAddress);
-        for (map_t::iterator it = range.first; it != range.second; ) {
+        auto [addrIt, nameIt] = disasm.map.equal_range(oldAddress);
+        for (auto it = addrIt; it != nameIt; ) {
             if (name.compare(QString::fromStdString(it->second), Qt::CaseInsensitive) == 0) {
                 it = disasm.map.erase(it);
             } else {
@@ -2004,7 +2004,7 @@ void MainWindow::gotoDisasmAddr(uint32_t address) {
     ui->disasm->setFocus();
 }
 
-QAction *MainWindow::gotoDisasmAction(QMenu *menu) {
+QAction *MainWindow::gotoDisasmAction(QMenu *menu) const {
     QAction *gotoDisasm = menu->addAction(ACTION_GOTO_DISASM_VIEW);
     gotoDisasm->setEnabled(m_uiEditMode || ui->debugDisassemblyWidget->isVisible());
     return gotoDisasm;
@@ -2047,7 +2047,7 @@ HexWidget *MainWindow::gotoMemAddrNoRaise(uint32_t address) {
     return memWidget;
 }
 
-QAction *MainWindow::gotoMemAction(QMenu *menu, bool vat) {
+QAction *MainWindow::gotoMemAction(QMenu *menu, bool vat) const {
     QAction *gotoMem = menu->addAction(vat ? ACTION_GOTO_VAT_MEMORY_VIEW : ACTION_GOTO_MEMORY_VIEW);
     gotoMem->setEnabled(m_uiEditMode || ui->debugMemoryWidget->isVisible() || !m_docksMemory.isEmpty());
     return gotoMem;
@@ -2220,7 +2220,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 // Stack
 // ------------------------------------------------
 
-bool MainWindow::adlState(int state) {
+bool MainWindow::adlState(int state) const {
     bool adl = ui->checkADL->isChecked();
     if (state == Qt::Checked) {
         adl = true;
@@ -2454,7 +2454,7 @@ void MainWindow::osUpdate() {
     connect(ui->fpStack, &QTableWidget::itemChanged, this, &MainWindow::fpModified);
 }
 
-void MainWindow::opModified(QTableWidgetItem *item) {
+void MainWindow::opModified(QTableWidgetItem *item) const {
     if (item == Q_NULLPTR) {
         return;
     }
@@ -2519,7 +2519,7 @@ void MainWindow::opModified(QTableWidgetItem *item) {
     sender()->blockSignals(false);
 }
 
-void MainWindow::fpModified(QTableWidgetItem *item) {
+void MainWindow::fpModified(QTableWidgetItem *item) const {
     if (item == Q_NULLPTR) {
         return;
     }
@@ -2637,7 +2637,7 @@ void MainWindow::contextVat(const QPoint &posa) {
     }
 }
 
-void MainWindow::memDocksUpdate() {
+void MainWindow::memDocksUpdate() const {
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
         if (dock->windowTitle().contains(TXT_MEM_DOCK)) {

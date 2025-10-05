@@ -24,7 +24,7 @@ void KeypadWidget::addKey(Key *key) {
     mKeys[row][col] = key;
 }
 
-unsigned KeypadWidget::getCurrColor() {
+unsigned KeypadWidget::getCurrColor() const {
     return color;
 }
 

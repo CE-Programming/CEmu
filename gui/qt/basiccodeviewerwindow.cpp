@@ -89,7 +89,7 @@ void BasicEditor::resizeEvent(QResizeEvent *e)
     lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
 }
 
-void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
+void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event) const
 {
     QPainter painter(lineNumberArea);
     painter.fillRect(event->rect(), Qt::lightGray);

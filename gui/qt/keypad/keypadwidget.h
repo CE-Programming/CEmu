@@ -36,7 +36,7 @@ public:
 
     void setType(emu_device_t, unsigned int);
     void setHolding(bool);
-    unsigned getCurrColor(void);
+    unsigned getCurrColor(void) const;
 
 signals:
     void keyPressed(const QString& key);

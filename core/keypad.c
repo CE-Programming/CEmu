@@ -88,7 +88,6 @@ static uint8_t keypad_handle_ghosting(uint8_t data, uint8_t queryMask) {
     uint64_t ghostMatrix = data;
     uint8_t peekRows = 0;
     uint8_t ghostData = 0;
-    uint8_t shift = 0;
     for (uint8_t row = 0; row < KEYPAD_ACTUAL_ROWS; row++) {
         if (!(queryMask & (1 << row))) {
             uint8_t peekData = keypad_peek_keymap(row);

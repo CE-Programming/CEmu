@@ -63,7 +63,7 @@ public:
     BasicEditor(QWidget *parent = nullptr);
 
     void updateDarkMode();
-    void lineNumberAreaPaintEvent(QPaintEvent *event);
+    void lineNumberAreaPaintEvent(QPaintEvent *event) const;
     int lineNumberAreaWidth();
     void toggleHighlight();
 

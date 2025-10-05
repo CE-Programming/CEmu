@@ -63,7 +63,7 @@ VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWi
 
 VisualizerWidget::~VisualizerWidget() = default;
 
-void VisualizerWidget::translate() {
+void VisualizerWidget::translate() const {
     m_group->setTitle(tr("Settings"));
     m_btnLcd->setToolTip(tr("Preset Configurations"));
     m_btnRefresh->setToolTip(tr("Apply changes"));
@@ -335,6 +335,6 @@ void VisualizerWidget::viewToString() {
     emit configChanged();
 }
 
-QString VisualizerWidget::getConfig() {
+QString VisualizerWidget::getConfig() const {
     return m_config->text();
 }

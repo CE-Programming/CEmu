@@ -184,7 +184,7 @@ void MainWindow::setPortable(bool state) {
     ui->buttonChangeSavedImagePath->setEnabled(!state);
 }
 
-void MainWindow::setFrameskip(int value) {
+void MainWindow::setFrameskip(int value) const {
     m_config->setValue(SETTING_CAPTURE_FRAMESKIP, value);
     ui->apngSkip->setValue(value);
     ui->apngSkipDisplay->setText(QString::number((ui->guiSkip->value() + 1) * (ui->apngSkip->value() + 1) - 1));
@@ -291,7 +291,7 @@ void MainWindow::bootImageExport() {
     }
 }
 
-void MainWindow::setDebugSoftCommands(bool state) {
+void MainWindow::setDebugSoftCommands(bool state) const {
     ui->checkDisableSoftCommands->blockSignals(true);
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
@@ -372,14 +372,14 @@ void MainWindow::setDebugDisasmTab(bool state) {
     }
 }
 
-void MainWindow::setLcdDma(bool state) {
+void MainWindow::setLcdDma(bool state) const {
     ui->checkDma->setChecked(state);
     ui->checkGamma->setEnabled(state);
     m_config->setValue(SETTING_SCREEN_DMA, state);
     emu_set_lcd_dma(state == false ? 0 : 1);
 }
 
-void MainWindow::setLcdGamma(bool state) {
+void MainWindow::setLcdGamma(bool state) const {
     ui->checkGamma->setChecked(state);
     m_config->setValue(SETTING_SCREEN_GAMMA, state);
     emu_set_lcd_gamma(state == false ? 0 : 1);
@@ -412,7 +412,7 @@ void MainWindow::setFocusSetting(bool state) {
     m_pauseOnFocus = state;
 }
 
-void MainWindow::memLoadState() {
+void MainWindow::memLoadState() const {
     ui->ramBytes->setValue(m_config->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->flashBytes->setValue(m_config->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramAscii->setChecked(m_config->value(SETTING_DEBUGGER_RAM_ASCII, true).toBool());
@@ -421,43 +421,43 @@ void MainWindow::memLoadState() {
     ui->flashEdit->setAsciiArea(ui->flashAscii->isChecked());
 }
 
-void MainWindow::setMenuBarState(bool state) {
+void MainWindow::setMenuBarState(bool state) const {
     ui->menubar->setHidden(state);
     ui->actionHideMenuBar->setChecked(state);
     m_config->setValue(SETTING_WINDOW_MENUBAR, state);
 }
 
-void MainWindow::setStatusBarState(bool state) {
+void MainWindow::setStatusBarState(bool state) const {
     ui->statusBar->setHidden(state);
     ui->actionHideStatusBar->setChecked(state);
     m_config->setValue(SETTING_WINDOW_STATUSBAR, state);
 }
 
-void MainWindow::setDebugIgnoreBreakpoints(bool state) {
+void MainWindow::setDebugIgnoreBreakpoints(bool state) const {
     ui->buttonToggleBreakpoints->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_BREAK_IGNORE, state);
     debug_flag(DBG_IGNORE, state);
 }
 
-void MainWindow::setDebugResetTrigger(bool state) {
+void MainWindow::setDebugResetTrigger(bool state) const {
     ui->checkDebugResetTrigger->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_RESET_OPENS, state);
     debug_flag(DBG_OPEN_ON_RESET, state);
 }
 
-void MainWindow::setAutoSave(bool state) {
+void MainWindow::setAutoSave(bool state) const {
     ui->checkSaveRestore->setChecked(state);
     m_config->setValue(SETTING_RESTORE_ON_OPEN, state);
     m_config->setValue(SETTING_SAVE_ON_CLOSE, state);
 }
 
-void MainWindow::setDebugAutoSave(bool state) {
+void MainWindow::setDebugAutoSave(bool state) const {
     ui->checkSaveLoadDebug->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_SAVE_ON_CLOSE, state);
     m_config->setValue(SETTING_DEBUGGER_RESTORE_ON_OPEN, state);
 }
 
-void MainWindow::setFont(int fontSize) {
+void MainWindow::setFont(int fontSize) const {
     ui->textSize->setValue(fontSize);
     m_config->setValue(SETTING_DEBUGGER_TEXT_SIZE, ui->textSize->value());
 
@@ -495,23 +495,23 @@ void MainWindow::setFont(int fontSize) {
     ui->flashMissesView->setFont(monospace);
 }
 
-void MainWindow::setKeypadColor(unsigned int color) {
+void MainWindow::setKeypadColor(unsigned int color) const {
     ui->keypadWidget->setType(get_device_type(), color);
     m_config->setValue(SETTING_KEYPAD_COLOR, color);
 }
 
-void MainWindow::setKeypadGhosting(bool state) {
+void MainWindow::setKeypadGhosting(bool state) const {
     ui->checkKeypadGhosting->setChecked(state);
     emu_set_keypad_ghosting(state);
     m_config->setValue(SETTING_KEYPAD_GHOSTING, state);
 }
 
-void MainWindow::setKeypadHolding(bool enabled) {
+void MainWindow::setKeypadHolding(bool enabled) const {
     ui->keypadWidget->setHolding(enabled);
     m_config->setValue(SETTING_KEYPAD_HOLDING, enabled);
 }
 
-void MainWindow::setCalcSkinTopFromType(bool python) {
+void MainWindow::setCalcSkinTopFromType(bool python) const {
     QString fileName;
     switch (get_device_type()) {
         case TI82AEP:
@@ -734,7 +734,7 @@ updateCheckErr:
     manager->get(QNetworkRequest(QUrl(QStringLiteral("https://api.github.com/repos/CE-Programming/CEmu/releases/latest"))));
 }
 
-void MainWindow::lcdAdjust() {
+void MainWindow::lcdAdjust() const {
     float scale = ui->scaleLCD->value() / 100.0;
     bool skin = ui->checkSkin->isChecked();
     ui->calcSkinTop->setVisible(skin);
@@ -758,13 +758,13 @@ void MainWindow::setLcdScale(int scale) {
     lcdAdjust();
 }
 
-void MainWindow::setLcdUpscale(int value) {
+void MainWindow::setLcdUpscale(int value) const {
     m_config->setValue(SETTING_SCREEN_UPSCALE, value);
     ui->upscaleLCD->setCurrentIndex(value);
     ui->lcd->setUpscaleMethod(value);
 }
 
-void MainWindow::setLcdFullscreen(int value) {
+void MainWindow::setLcdFullscreen(int value) const {
     m_config->setValue(SETTING_SCREEN_FULLSCREEN, value);
     ui->fullscreenLCD->setCurrentIndex(value);
     ui->lcd->setFullscreenArea(value);
@@ -776,7 +776,7 @@ void MainWindow::setSkinToggle(bool enable) {
     lcdAdjust();
 }
 
-void MainWindow::setDebugAutoEquates(bool enable) {
+void MainWindow::setDebugAutoEquates(bool enable) const {
     m_config->setValue(SETTING_DEBUGGER_AUTO_EQUATES, enable);
     ui->checkAutoEquates->setChecked(enable);
     sendingHandler->setLoadEquates(enable);
@@ -995,7 +995,7 @@ void MainWindow::setTop(bool state) {
     ui->checkAlwaysOnTop->setCheckState(state ? Qt::Checked : Qt::Unchecked);
 }
 
-void MainWindow::stateSaveInfo() {
+void MainWindow::stateSaveInfo() const {
     QStringList slotNames;
     QStringList slotPaths;
 
@@ -1019,7 +1019,7 @@ void MainWindow::stateLoadInfo() {
     }
 }
 
-void MainWindow::setRecentSave(bool state) {
+void MainWindow::setRecentSave(bool state) const {
     ui->checkSaveRecent->setChecked(state);
     m_config->setValue(SETTING_RECENT_SAVE, state);
 }
@@ -1094,7 +1094,7 @@ void MainWindow::setUIBoundaries(bool state) {
     }
 }
 
-void MainWindow::recentSaveInfo() {
+void MainWindow::recentSaveInfo() const {
     QStringList paths;
     QStringList selects;
 
@@ -1109,7 +1109,7 @@ void MainWindow::recentSaveInfo() {
     m_config->setValue(SETTING_RECENT_SELECT, selects);
 }
 
-void MainWindow::recentLoadInfo() {
+void MainWindow::recentLoadInfo() const {
     QStringList paths = m_config->value(SETTING_RECENT_PATHS).toStringList();
     QStringList selects = m_config->value(SETTING_RECENT_SELECT).toStringList();
 
@@ -1209,7 +1209,7 @@ void MainWindow::addKeyHistoryDock(const QString &magic, int size) {
     }
 }
 
-void MainWindow::setVersion() {
+void MainWindow::setVersion() const {
     m_config->setValue(SETTING_VERSION, QStringLiteral(CEMU_VERSION));
 }
 
@@ -1257,7 +1257,7 @@ void MainWindow::checkVersion() {
     }
 }
 
-void MainWindow::saveDebug() {
+void MainWindow::saveDebug() const {
     if (m_config->value(SETTING_DEBUGGER_SAVE_ON_CLOSE, false).toBool()) {
         debugExportFile(m_config->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
     }
@@ -1383,6 +1383,6 @@ void MainWindow::keymapExport() {
     keypadBridge->keymapExport(path);
 }
 
-bool MainWindow::isFirstRun() {
+bool MainWindow::isFirstRun() const {
     return !m_config->value(SETTING_FIRST_RUN, false).toBool();
 }
