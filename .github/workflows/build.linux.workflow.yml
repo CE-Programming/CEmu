@@ -1,15 +1,29 @@
 name: Build Linux
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ master, test-ci ]
   pull_request:
     branches: [ master ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: "Build: ${{ matrix.os }} - ${{ matrix.archvariant }}"
     runs-on: ${{ matrix.os }}
+    env:
+      VCPKG_FEATURE_FLAGS: manifests,binarycaching
+      VCPKG_BINARY_SOURCES: ${{ format('clear;nuget,https://nuget.pkg.github.com/{0}/index.json,{1}', github.repository_owner, github.event_name == 'pull_request' && 'read' || 'readwrite') }}
+      VCPKG_NUGET_REPOSITORY: https://github.com/${{ github.repository }}.git
+      VCPKG_DOWNLOADS: ${{ github.workspace }}/.vcpkg-downloads
+      SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -44,27 +58,63 @@ jobs:
     - name: Install dependencies
       run: |
         set -e
-        sudo apt update
-        sudo apt install -y autoconf automake autoconf-archive '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev libudev-dev libusb-1.0-0-dev
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends autoconf automake autoconf-archive mono-runtime '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev libudev-dev libusb-1.0-0-dev
 
     - name: Install latest CMake
       uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140 # latest as of 2025-10-04
+
+    - name: Ensure vcpkg downloads directory exists
+      run: |
+        mkdir -p "$VCPKG_DOWNLOADS"
+
+    - name: Cache vcpkg downloads
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.VCPKG_DOWNLOADS }}
+        key: ${{ runner.os }}-vcpkg-downloads-${{ hashFiles('gui/qt/vcpkg.json', 'gui/qt/vcpkg-configuration.json') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-downloads-
 
     - name: Restore artifacts, or setup vcpkg (do not install any package)
       uses: lukka/run-vcpkg@b3dd708d38df5c856fe1c18dc0d59ab771f93921 # latest as of 2025-10-04
       with:
         vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
+    - name: Configure vcpkg NuGet source
+      shell: bash
+      run: |
+        set -euo pipefail
+        NUGET_PATH="$(${VCPKG_ROOT}/vcpkg fetch nuget | tail -n 1 | tr -d '\r')"
+        echo "Resolved NuGet at: $NUGET_PATH"
+        if [[ "$NUGET_PATH" == *.exe ]]; then
+          NUGET_CMD=(mono "$NUGET_PATH")
+        else
+          NUGET_CMD=("$NUGET_PATH")
+        fi
+
+        "${NUGET_CMD[@]}" sources remove -Name GitHub -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" || true
+        "${NUGET_CMD[@]}" sources add    -Name GitHub -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+                                         -Username "${{ github.repository_owner }}" \
+                                         -Password "${{ secrets.GITHUB_TOKEN }}" \
+                                         -StorePasswordInClearText
+
+        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          "${NUGET_CMD[@]}" setapikey "${{ secrets.GITHUB_TOKEN }}" -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        fi
+
+    - name: Start sccache
+      uses: mozilla-actions/sccache-action@v0.0.9
+
     - name: Build CEmu ${{ matrix.archvariant }} ${{ matrix.config }} on Linux ${{ matrix.arch }}
       uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Linux-${{ matrix.archvariant }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
         buildPreset: 'Linux-${{ matrix.archvariant }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-linux-${{ matrix.host_triplet }}
-        VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload binary as artifact
       uses: actions/upload-artifact@v4

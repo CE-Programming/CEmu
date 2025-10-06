@@ -1,15 +1,29 @@
 name: Build Windows
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ master, test-ci ]
   pull_request:
     branches: [ master ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: "Build: Windows ${{ matrix.arch }}-${{ matrix.config }}"
     runs-on: windows-latest
+    env:
+      VCPKG_FEATURE_FLAGS: manifests,binarycaching
+      VCPKG_BINARY_SOURCES: ${{ format('clear;nuget,https://nuget.pkg.github.com/{0}/index.json,{1}', github.repository_owner, github.event_name == 'pull_request' && 'read' || 'readwrite') }}
+      VCPKG_NUGET_REPOSITORY: https://github.com/${{ github.repository }}.git
+      VCPKG_DOWNLOADS: ${{ github.workspace }}\.vcpkg-downloads
+      SCCACHE_GHA_ENABLED: "true"
 
     strategy:
       fail-fast: false
@@ -34,17 +48,41 @@ jobs:
     - name: Install latest CMake
       uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140 # latest as of 2025-10-04
 
+    - name: Ensure vcpkg downloads directory exists
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path "$env:VCPKG_DOWNLOADS" -Force | Out-Null
+
+    - name: Cache vcpkg downloads
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.VCPKG_DOWNLOADS }}
+        key: ${{ runner.os }}-vcpkg-downloads-${{ hashFiles('gui/qt/vcpkg.json', 'gui/qt/vcpkg-configuration.json') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-downloads-
+
     - name: Restore artifacts, or setup vcpkg (do not install any package)
       uses: lukka/run-vcpkg@b3dd708d38df5c856fe1c18dc0d59ab771f93921 # latest as of 2025-10-04
       with:
         vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
+
+    - name: Configure vcpkg NuGet source
+      shell: pwsh
+      run: |
+        $nugetExe = (& "$env:VCPKG_ROOT\vcpkg.exe" fetch nuget | Select-Object -Last 1)
+        & $nugetExe sources remove -Name GitHub -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" 2>$null
+        & $nugetExe sources add -Name GitHub -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" -Username "${{ github.repository_owner }}" -Password "${{ secrets.GITHUB_TOKEN }}" -StorePasswordInClearText
+        & $nugetExe setapikey "${{ secrets.GITHUB_TOKEN }}" -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+    - name: Start sccache
+      uses: mozilla-actions/sccache-action@v0.0.9
 
     - name: Build CEmu ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
       uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Win-${{ matrix.arch }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0']"
+        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
         buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows

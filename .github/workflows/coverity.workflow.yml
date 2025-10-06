@@ -18,7 +18,7 @@ jobs:
       run: |
         set -e
         sudo apt-get update
-        sudo apt-get install qt6-base-dev qmake6 qtchooser libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
+        sudo apt-get install -y --no-install-recommends qt6-base-dev qmake6 qtchooser libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
 
     - name: set-up qt6
       run: |
