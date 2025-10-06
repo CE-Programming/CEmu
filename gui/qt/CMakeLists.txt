@@ -17,8 +17,19 @@ if(DEPS_RELEASE_ONLY)
     endif()
 endif()
 
+if(APPLE)
+    set(MAYBE_MACOSX_BUNDLE MACOSX_BUNDLE)
+    if(VCPKG_TARGET_TRIPLET MATCHES "^x64")
+        set(CMAKE_OSX_ARCHITECTURES "x86_64")
+        set(VCPKG_TARGET_ARCHITECTURE "x64")
+    else()
+        set(CMAKE_OSX_ARCHITECTURES "arm64")
+        set(VCPKG_TARGET_ARCHITECTURE "arm64")
+    endif()
+endif()
+
 project(CEmu
-        VERSION 2.0
+        VERSION 3.0
         LANGUAGES C CXX)
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
@@ -69,10 +80,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 if(COMMAND qt_standard_project_setup)
     qt_standard_project_setup()
-endif()
-
-if(APPLE)
-    set(MAYBE_MACOSX_BUNDLE MACOSX_BUNDLE)
 endif()
 
 qt_add_resources(CEmu_Resources resources.qrc)

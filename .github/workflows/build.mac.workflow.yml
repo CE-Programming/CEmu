@@ -8,8 +8,8 @@ on:
 
 jobs:
   build:
-    name: "Build: ${{ matrix.os }} ${{ matrix.archname }}"
-    runs-on: ${{ matrix.os }}
+    name: "Build: ${{ matrix.archname }}"
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
@@ -18,10 +18,8 @@ jobs:
         include:
           - archname: "intel"
             arch: x64
-            os: macos-13
           - archname: "arm"
             arch: arm64
-            os: macos-14
 
     steps:
     - name: Checkout Git Repo
@@ -36,7 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         set -e
-        brew install automake autoconf libtool libusb
+        brew install automake autoconf autoconf-archive libtool
 
     - name: Install latest CMake
       uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140 # latest as of 2025-10-04
@@ -54,7 +52,7 @@ jobs:
         configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0']"
         buildPreset: 'Mac-${{ matrix.arch }}-${{ matrix.config }}'
       env:
-        VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-osx-release
+        VCPKG_DEFAULT_HOST_TRIPLET: arm64-osx-release
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Move to temp folder
