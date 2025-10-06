@@ -119,7 +119,12 @@ bool isRunningInDarkMode() {
 }
 
 bool isSystemInDarkMode() {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 5, 0))
     return qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+#else
+    // TODO: handle other OS' way to know if we're running in dark mode
+    return isRunningInDarkMode();
+#endif
 }
 
 
