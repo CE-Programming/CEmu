@@ -29,6 +29,10 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Remove windows-only qt version override in vcpkg.json
+      run: |
+        sed -i '' '/For Windows only/d' ${{ github.workspace }}/gui/qt/vcpkg.json
+
     - name: Install dependencies
       run: |
         set -e

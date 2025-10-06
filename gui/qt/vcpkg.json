@@ -29,9 +29,6 @@
   ],
   "builtin-baseline": "a62ce77d56ee07513b4b67de1ec2daeaebfae51a",
   "overrides": [
-    {
-      "name": "qtbase",
-      "version": "6.6.3"
-    }
+    { "name": "qtbase", "version": "6.6.3", "$comment": "For Windows only due to UI issues later. For non-Windows, edited out in CI" }
   ]
 }
