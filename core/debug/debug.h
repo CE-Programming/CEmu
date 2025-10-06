@@ -27,6 +27,8 @@ enum {
     DBG_WATCHPOINT_WRITE,    /* hit a write watchpoint */
     DBG_PORT_READ,           /* read a monitored port */
     DBG_PORT_WRITE,          /* wrote a monitored port */
+    DBG_REG_READ,            /* read of a watched CPU register */
+    DBG_REG_WRITE,           /* write of a watched CPU register */
     DBG_NMI_TRIGGERED,       /* triggered a non maskable interrupt */
     DBG_WATCHDOG_TIMEOUT,    /* watchdog timer reset */
     DBG_MISC_RESET,          /* miscellaneous reset */
@@ -155,6 +157,9 @@ typedef struct {
 
     uint8_t *addr;
     uint8_t *port;
+
+    uint64_t reg_watch_r; /* bitmask of DBG_MASK_READ for dbg_reg_t ids */
+    uint64_t reg_watch_w; /* bitmask of DBG_MASK_WRITE for dbg_reg_t ids */
     bool basicMode;
     bool basicModeLive;
     bool basicDeferPC;
@@ -183,6 +188,85 @@ enum {
 void debug_step_switch(void);
 void debug_clear_step(void);
 void debug_clear_basic_step(void);
+
+/* register watchpoints */
+/* these ids correspond to logical CPU registers shown in the UI */
+typedef enum {
+    DBG_REG_A = 0,
+    DBG_REG_F,
+    DBG_REG_B,
+    DBG_REG_C,
+    DBG_REG_D,
+    DBG_REG_E,
+    DBG_REG_H,
+    DBG_REG_L,
+    DBG_REG_IXH,
+    DBG_REG_IXL,
+    DBG_REG_IYH,
+    DBG_REG_IYL,
+    DBG_REG_AP,   /* A' */
+    DBG_REG_FP,   /* F' */
+    DBG_REG_BP,   /* B' */
+    DBG_REG_CP,   /* C' */
+    DBG_REG_DP,   /* D' */
+    DBG_REG_EP,   /* E' */
+    DBG_REG_HP,   /* H' */
+    DBG_REG_LP,   /* L' */
+    DBG_REG_AF,   /* 16-bit */
+    DBG_REG_BC,   /* 24-bit */
+    DBG_REG_DE,   /* 24-bit */
+    DBG_REG_HL,   /* 24-bit */
+    DBG_REG_IX,   /* 24-bit */
+    DBG_REG_IY,   /* 24-bit */
+    DBG_REG_AFP,  /* 16-bit */
+    DBG_REG_BCP,  /* 24-bit */
+    DBG_REG_DEP,  /* 24-bit */
+    DBG_REG_HLP,  /* 24-bit */
+    DBG_REG_SPS,  /* 16-bit */
+    DBG_REG_SPL,  /* 24-bit */
+    DBG_REG_PC,   /* 24-bit */
+    DBG_REG_I,    /* 16-bit */
+    DBG_REG_R,    /* 8-bit  */
+    DBG_REG_MBASE,/* 8-bit  */
+    DBG_REG_COUNT
+} dbg_reg_t;
+
+/* enable/disable register watch for a given id and mask (DBG_MASK_READ/WRITE) */
+void debug_reg_watch(unsigned regID, int mask, bool set);
+/* get current mask (DBG_MASK_READ/WRITE) for a register id */
+int  debug_reg_get_mask(unsigned regID);
+/* helpers to be invoked around register accesses */
+void debug_touch_reg_read(unsigned regID);
+void debug_touch_reg_write(unsigned regID, uint32_t oldValue, uint32_t new_value);
+/* normalize a register value to its natural width (8/16/24) */
+uint32_t debug_norm_reg_value(unsigned regID, uint32_t value);
+
+/* trigger helpers to wrap reads/writes
+ * REG_READ returns the single evaluated value of EXPR
+ * REG_WRITE evaluates LVAL once to capture OLD, and again to assign
+ */
+#define REG_READ(ID, EXPR) \
+    (__extension__({ \
+        uint32_t __v = (uint32_t)(EXPR); \
+        debug_touch_reg_read((unsigned)(ID)); \
+        __v; \
+    }))
+
+#define REG_WRITE(ID, LVAL, VAL) \
+    (__extension__({ \
+        uint32_t __old = (uint32_t)(LVAL); \
+        uint32_t __new = (uint32_t)(VAL); \
+        debug_touch_reg_write((unsigned)(ID), __old, __new); \
+        (LVAL) = (__new); \
+    }))
+
+/* map CPU context to register IDs */
+/* eZ80 PREFIX: 0 = HL, 2 = IX, 3 = IY */
+#define DBG_REG_ID_INDEX(PFX)   (( (PFX) == 0 ) ? DBG_REG_HL  : ( (PFX) == 2 ? DBG_REG_IX  : DBG_REG_IY ))
+#define DBG_REG_ID_INDEX_H(PFX) (( (PFX) == 0 ) ? DBG_REG_H   : ( (PFX) == 2 ? DBG_REG_IXH : DBG_REG_IYH ))
+#define DBG_REG_ID_INDEX_L(PFX) (( (PFX) == 0 ) ? DBG_REG_L   : ( (PFX) == 2 ? DBG_REG_IXL : DBG_REG_IYL ))
+
+#define DBG_REG_ID_SP(MODE_L)   ( (MODE_L) ? DBG_REG_SPL : DBG_REG_SPS )
 
 #ifdef __cplusplus
 }
