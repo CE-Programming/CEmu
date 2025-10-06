@@ -18,7 +18,15 @@ jobs:
       run: |
         set -e
         sudo apt-get update
-        sudo apt-get install qt6-base-dev qmake6 libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
+        sudo apt-get install qt6-base-dev qmake6 qtchooser libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
+
+    - name: set-up qt6
+      run: |
+        qtchooser -install qt6 $(which qmake6)
+        sudo mv ~/.config/qtchooser/qt6.conf /usr/share/qtchooser/qt6.conf
+        sudo mkdir -p /usr/lib/$(uname -p)-linux-gnu/qt-default/qtchooser
+        sudo ln -n /usr/share/qtchooser/qt6.conf /usr/lib/$(uname -p)-linux-gnu/qt-default/qtchooser/default.conf
+        echo "QT_SELECT=qt6" >> "$GITHUB_ENV"
         
     - name: Prepare build
       run: |
@@ -26,7 +34,7 @@ jobs:
         cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
         mkdir build
         cd build
-        qmake ../gui/qt 
+        qmake6 ../gui/qt
     
     - uses: vapier/coverity-scan-action@v1
       with:
