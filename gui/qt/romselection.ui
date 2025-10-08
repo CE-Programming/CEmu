@@ -160,7 +160,6 @@
          </property>
          <property name="font">
           <font>
-           <family>Aharoni</family>
            <pointsize>14</pointsize>
            <weight>75</weight>
            <bold>true</bold>

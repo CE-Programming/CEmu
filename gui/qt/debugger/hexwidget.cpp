@@ -7,13 +7,13 @@
 #include <QtWidgets/QScrollBar>
 #include <QtGui/QPainter>
 #include <QtGui/QClipboard>
+#include <QtGui/QFontDatabase>
 
 HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{Q_NULLPTR} {
-#ifdef Q_OS_WIN
-    setFont(QFont(QStringLiteral("Courier"), 10));
-#else
-    setFont(QFont(QStringLiteral("Monospace"), 10));
-#endif
+    QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    monospace.setStyleHint(QFont::Monospace);
+    monospace.setPointSize(10);
+    setFont(monospace);
 
     connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
     connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjust);

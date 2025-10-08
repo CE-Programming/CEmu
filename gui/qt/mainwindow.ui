@@ -1355,7 +1355,6 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>MS Shell Dlg 2</family>
                       <pointsize>9</pointsize>
                      </font>
                     </property>
@@ -1395,7 +1394,6 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>MS Shell Dlg 2</family>
                       <pointsize>9</pointsize>
                      </font>
                     </property>
@@ -1435,7 +1433,6 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>MS Shell Dlg 2</family>
                       <pointsize>9</pointsize>
                      </font>
                     </property>
@@ -1475,7 +1472,6 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>MS Shell Dlg 2</family>
                       <pointsize>9</pointsize>
                      </font>
                     </property>
@@ -2043,7 +2039,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2083,7 +2078,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2123,7 +2117,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2231,7 +2224,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2404,7 +2396,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2444,7 +2435,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2484,7 +2474,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2524,7 +2513,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2564,7 +2552,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2604,7 +2591,6 @@
                    </property>
                    <property name="font">
                     <font>
-                     <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2953,7 +2939,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <family>MS Shell Dlg 2</family>
                    <pointsize>9</pointsize>
                   </font>
                  </property>
@@ -3066,7 +3051,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <family>MS Shell Dlg 2</family>
                    <pointsize>9</pointsize>
                   </font>
                  </property>
@@ -3116,7 +3100,6 @@
                  </property>
                  <property name="font">
                   <font>
-                   <family>MS Shell Dlg 2</family>
                    <pointsize>9</pointsize>
                   </font>
                  </property>
