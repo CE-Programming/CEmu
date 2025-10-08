@@ -706,6 +706,8 @@ private:
     QShortcut *m_shortcutStepOver;
     QShortcut *m_shortcutStepNext;
     QShortcut *m_shortcutStepOut;
+    QShortcut *m_shortcutNavBack;
+    QShortcut *m_shortcutNavForward;
     QShortcut *m_shortcutDebug;
     QShortcut *m_shortcutFullscreen;
     QShortcut *m_shortcutAsm;
@@ -936,6 +938,32 @@ private:
     QTableWidget *m_watchpoints = nullptr;
     QTableWidget *m_ports = nullptr;
     DataWidget *m_disasm = nullptr;
+
+    struct DisasmNavEntry {
+        uint32_t addr;
+        bool pane;
+    };
+
+    QVector<DisasmNavEntry> m_disasmNav;
+    int m_disasmNavIndex = -1;
+    bool m_isApplyingDisasmNav = false;
+    static constexpr int kMaxDisasmHistory = 200;
+
+    [[nodiscard]] uint32_t currentDisasmAddress() const;
+    void navDisasmEnsureSeeded();
+    void navDisasmPush(uint32_t addr, bool pane);
+    void navDisasmReplace(uint32_t addr, bool pane);
+    bool navDisasmBack();
+    bool navDisasmForward();
+    void navDisasmClear();
+
+    struct StepNavCtx {
+        bool active = false;
+        uint32_t seqNext = 0; // sequential next PC at step start
+    } m_stepCtx;
+
+    // suppression to avoid GUI close/reopen flicker when mapping Step Over to Step Next
+    bool m_suppressDebugCloseOnce = false;
 
 #ifdef LIBUSB_SUPPORT
     libusb_context *m_usbContext = nullptr;
