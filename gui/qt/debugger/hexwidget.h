@@ -17,6 +17,7 @@ public:
     void setBytesPerLine(int bytes) { m_bytesPerLine = bytes; adjust(); }
     void setAsciiArea(bool area) { m_asciiArea = area; adjust(); }
     void setCursorOffset(int address, bool selection = true);
+    void setHighlight(int address);
     void setScrollable(bool state) { m_scrollable = state; adjust(); }
     void setFont(const QFont &font) { QAbstractScrollArea::setFont(font); adjust(); }
     void setOffset(int addr);
@@ -52,11 +53,12 @@ private slots:
     void scroll(int value);
 
 private:
+    void setCursorOffset(int offset, bool selection, bool clearHighlight);
     void redo();
     void undo();
     void showCursor();
     void setSelection(int addr);
-    void resetSelection() { m_selectStart = m_selectEnd = -1; }
+    void resetSelection() { m_selectStart = m_selectEnd = -1; m_selectLen = 0; m_selectAnchor = -1; }
     bool isSelected() const { return m_selectStart != -1; }
     void setSelected(char n) { overwrite(m_selectStart * 2, QByteArray(m_selectLen, n)); }
     void overwrite(int pos, char c);
@@ -98,11 +100,13 @@ private:
     int m_selectStart;
     int m_selectEnd;
     int m_selectLen;
+    int m_selectAnchor = -1;
 
     bool m_scrollable = false;          // fetch bytes from memory on scroll
     bool m_asciiArea = true;            // show character representations
     bool m_scrolled = false;            // scrolled while focused
     bool m_asciiEdit = false;           // editing from the ascii side
+    int m_highlightedAddr = -1;         // Address to highlight with a box
 
     QStack<stack_entry_t> m_stack;
 };

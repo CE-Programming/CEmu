@@ -208,6 +208,7 @@ void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
     edit->setBase(static_cast<int>(address));
     edit->setOffset(0);
     memUpdateEdit(edit, true);
+    edit->setHighlight(static_cast<int>(address));
 }
 
 void MainWindow::memGotoEdit(HexWidget *edit) {

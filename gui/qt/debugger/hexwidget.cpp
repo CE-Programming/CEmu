@@ -131,6 +131,19 @@ void HexWidget::setOffset(int offset) {
 }
 
 void HexWidget::setCursorOffset(int offset, bool selection) {
+    setCursorOffset(offset, selection, true);
+}
+
+void HexWidget::setHighlight(const int address) {
+    const int normalized = address < 0 ? -1 : address;
+    if (m_highlightedAddr == normalized) {
+        return;
+    }
+    m_highlightedAddr = normalized;
+    viewport()->update();
+}
+
+void HexWidget::setCursorOffset(int offset, bool selection, bool clearHighlight) {
     if (offset > m_size * 2) {
         offset = m_size * 2;
     }
@@ -139,6 +152,10 @@ void HexWidget::setCursorOffset(int offset, bool selection) {
     }
     if (selection) {
         resetSelection();
+    }
+
+    if (clearHighlight) {
+        m_highlightedAddr = -1;
     }
 
     m_cursorOffset = offset;
@@ -254,18 +271,19 @@ void HexWidget::setSelection(int addr) {
         addr = 0;
     }
 
-    if (m_selectStart == -1) {
-        m_selectStart = addr;
-        m_selectEnd = addr;
-        m_selectLen = 0;
+    if (m_selectAnchor == -1) {
+        m_selectAnchor = addr;
     }
-    if (addr > m_selectStart) {
+
+    if (addr >= m_selectAnchor) {
+        m_selectStart = m_selectAnchor;
         m_selectEnd = addr;
-        m_selectLen = addr - m_selectStart + 1;
     } else {
         m_selectStart = addr;
-        m_selectLen = m_selectEnd - addr + 1;
+        m_selectEnd = m_selectAnchor;
     }
+
+    m_selectLen = (m_selectStart == -1 || m_selectEnd == -1) ? 0 : (m_selectEnd - m_selectStart + 1);
 }
 
 void HexWidget::undo() {
@@ -310,11 +328,26 @@ void HexWidget::paintEvent(QPaintEvent *event) {
     const QColor &cSelected = pal.color(QPalette::Highlight);
     const QColor cModified = QColor(Qt::blue).lighter(160);
     const QColor cBoth = QColor(Qt::green).lighter(160);
+    const bool darkMode = isRunningInDarkMode();
+    const QColor boxBorder = darkMode ? QColor(0xdb, 0xdb, 0xdb) : QColor(0x66, 0x66, 0x66);
+    QColor boxFill = darkMode ? QColor(0x55, 0x55, 0x55) : QColor(0xd0, 0xd0, 0xd0);
+    boxFill.setAlpha(140);
     const int xOffset = horizontalScrollBar()->value();
     const int xAddr = m_addrLoc - xOffset;
 
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(region, cBg);
+
+    const auto drawHighlightBox = [&](const QRect &rect) {
+        if (!rect.isValid() || rect.isNull()) {
+            return;
+        }
+        painter.save();
+        painter.setPen(QPen(boxBorder, 1));
+        painter.setBrush(boxFill);
+        painter.drawRoundedRect(rect.adjusted(0, 0, -1, -1), 2, 2);
+        painter.restore();
+    };
 
     painter.setPen(Qt::gray);
     painter.drawLine(m_dataLine - xOffset, region.top(), m_dataLine - xOffset, height());
@@ -338,6 +371,22 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             uint8_t flags = debug.addr[addr + m_base];
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = !m_modified.isEmpty() && m_modified[addr];
+            const bool highlighted = m_highlightedAddr >= 0 && (m_base + addr) == m_highlightedAddr;
+            const int xDataStart = xData;
+            const int xAsciiStart = xAscii;
+            QRect dataHighlightRect;
+            QRect asciiHighlightRect;
+
+            if (highlighted) {
+                if (!col) {
+                    dataHighlightRect.setRect(xDataStart, y - m_charHeight + m_margin, 2 * m_charWidth + 3, m_charHeight);
+                } else {
+                    dataHighlightRect.setRect(xDataStart - m_charWidth, y - m_charHeight + m_margin, 3 * m_charWidth + 3, m_charHeight);
+                }
+                if (m_asciiArea) {
+                    asciiHighlightRect.setRect(xAsciiStart, y - m_charHeight + m_margin, m_charWidth + 1, m_charHeight);
+                }
+            }
 
             QFont font = painter.font();
             const QFont fontorig = painter.font();
@@ -367,6 +416,10 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                 painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
             }
 
+            if (highlighted) {
+                drawHighlightBox(dataHighlightRect);
+            }
+
             QString hex = int2hex(data, 2);
             if ((flags & DBG_MASK_READ) && (flags & DBG_MASK_WRITE)) {
                 painter.setPen(Qt::darkGreen);
@@ -390,6 +443,9 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                 if (modified || selected) {
                     r.setRect(xAscii, y - m_charHeight + m_margin, m_charWidth, m_charHeight);
                     painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
+                }
+                if (highlighted) {
+                    drawHighlightBox(asciiHighlightRect);
                 }
                 painter.drawText(xAscii, y, QChar(ch));
                 xAscii += m_charWidth;
@@ -421,6 +477,9 @@ void HexWidget::mousePressEvent(QMouseEvent *event) {
     int addr = getPosition(event->pos());
     if (addr >= 0) {
         setCursorOffset(addr, true);
+        m_selectAnchor = addr / 2;
+        m_selectStart = m_selectEnd = -1;
+        m_selectLen = 0;
     }
 }
 
