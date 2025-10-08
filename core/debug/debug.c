@@ -182,6 +182,11 @@ void debug_step(int mode, uint32_t addr) {
             debug.stepOut = debug.stackIndex;
             break;
         case DBG_STEP_NEXT:
+            gui_debug_close();
+            debug.step = true;
+            debug.stepOver = false;
+            debug.tempExec = ~0u;
+            break;
         case DBG_RUN_UNTIL:
             gui_debug_close();
             debug.tempExec = addr;
