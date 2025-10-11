@@ -110,7 +110,7 @@ void debug_open(int reason, uint32_t data) {
         }
     }
 
-    if ((debug_get_flags() & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE)) {
+    if ((debug_get_flags() & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_REG_WRITE)) {
         return;
     }
 
@@ -140,6 +140,135 @@ void debug_open(int reason, uint32_t data) {
     cpu.flashCacheMisses = debug.flashCacheMisses;
     cpu.flashTotalAccesses = debug.flashTotalAccesses;
     cpu.flashDelayCycles = debug.flashDelayCycles;
+}
+
+static bool reg_bit_get(const uint64_t mask, const unsigned id) {
+    return (id < 64) && ((mask >> id) & 1u);
+}
+
+static void reg_bit_set(uint64_t *mask, const unsigned id, const bool set) {
+    if (id >= 64) { return; }
+    if (set) {
+        *mask |= (1ull << id);
+    } else {
+        *mask &= ~(1ull << id);
+    }
+}
+
+#define BIT(x) (1ull << (x))
+static const uint64_t dbg_reg_trigger_mask[DBG_REG_COUNT] = {
+    [DBG_REG_A]   = BIT(DBG_REG_A)  | BIT(DBG_REG_AF),
+    [DBG_REG_F]   = BIT(DBG_REG_F)  | BIT(DBG_REG_AF),
+    [DBG_REG_AF]  = BIT(DBG_REG_AF) | BIT(DBG_REG_A)  | BIT(DBG_REG_F),
+
+    [DBG_REG_B]   = BIT(DBG_REG_B)  | BIT(DBG_REG_BC),
+    [DBG_REG_C]   = BIT(DBG_REG_C)  | BIT(DBG_REG_BC),
+    [DBG_REG_BC]  = BIT(DBG_REG_BC) | BIT(DBG_REG_B)  | BIT(DBG_REG_C),
+
+    [DBG_REG_D]   = BIT(DBG_REG_D)  | BIT(DBG_REG_DE),
+    [DBG_REG_E]   = BIT(DBG_REG_E)  | BIT(DBG_REG_DE),
+    [DBG_REG_DE]  = BIT(DBG_REG_DE) | BIT(DBG_REG_D)  | BIT(DBG_REG_E),
+
+    [DBG_REG_H]   = BIT(DBG_REG_H)  | BIT(DBG_REG_HL),
+    [DBG_REG_L]   = BIT(DBG_REG_L)  | BIT(DBG_REG_HL),
+    [DBG_REG_HL]  = BIT(DBG_REG_HL) | BIT(DBG_REG_H)  | BIT(DBG_REG_L),
+
+    [DBG_REG_IXH] = BIT(DBG_REG_IXH) | BIT(DBG_REG_IX),
+    [DBG_REG_IXL] = BIT(DBG_REG_IXL) | BIT(DBG_REG_IX),
+    [DBG_REG_IX]  = BIT(DBG_REG_IX)  | BIT(DBG_REG_IXH) | BIT(DBG_REG_IXL),
+
+    [DBG_REG_IYH] = BIT(DBG_REG_IYH) | BIT(DBG_REG_IY),
+    [DBG_REG_IYL] = BIT(DBG_REG_IYL) | BIT(DBG_REG_IY),
+    [DBG_REG_IY]  = BIT(DBG_REG_IY)  | BIT(DBG_REG_IYH) | BIT(DBG_REG_IYL),
+
+    [DBG_REG_AP]  = BIT(DBG_REG_AP)  | BIT(DBG_REG_AFP),
+    [DBG_REG_FP]  = BIT(DBG_REG_FP)  | BIT(DBG_REG_AFP),
+    [DBG_REG_AFP] = BIT(DBG_REG_AFP) | BIT(DBG_REG_AP)  | BIT(DBG_REG_FP),
+
+    [DBG_REG_BP]  = BIT(DBG_REG_BP)  | BIT(DBG_REG_BCP),
+    [DBG_REG_CP]  = BIT(DBG_REG_CP)  | BIT(DBG_REG_BCP),
+    [DBG_REG_BCP] = BIT(DBG_REG_BCP) | BIT(DBG_REG_BP)  | BIT(DBG_REG_CP),
+
+    [DBG_REG_DP]  = BIT(DBG_REG_DP)  | BIT(DBG_REG_DEP),
+    [DBG_REG_EP]  = BIT(DBG_REG_EP)  | BIT(DBG_REG_DEP),
+    [DBG_REG_DEP] = BIT(DBG_REG_DEP) | BIT(DBG_REG_DP)  | BIT(DBG_REG_EP),
+
+    [DBG_REG_HP]  = BIT(DBG_REG_HP)  | BIT(DBG_REG_HLP),
+    [DBG_REG_LP]  = BIT(DBG_REG_LP)  | BIT(DBG_REG_HLP),
+    [DBG_REG_HLP] = BIT(DBG_REG_HLP) | BIT(DBG_REG_HP)  | BIT(DBG_REG_LP),
+
+    [DBG_REG_SPS]   = BIT(DBG_REG_SPS),
+    [DBG_REG_SPL]   = BIT(DBG_REG_SPL),
+    [DBG_REG_PC]    = BIT(DBG_REG_PC),
+    [DBG_REG_I]     = BIT(DBG_REG_I),
+    [DBG_REG_R]     = BIT(DBG_REG_R),
+    [DBG_REG_MBASE] = BIT(DBG_REG_MBASE),
+};
+
+uint32_t debug_norm_reg_value(const unsigned regID, const uint32_t value) {
+    switch (regID) {
+        // 8 bit regs
+        case DBG_REG_A: case DBG_REG_F: case DBG_REG_B: case DBG_REG_C:
+        case DBG_REG_D: case DBG_REG_E: case DBG_REG_H: case DBG_REG_L:
+        case DBG_REG_IXH: case DBG_REG_IXL: case DBG_REG_IYH: case DBG_REG_IYL:
+        case DBG_REG_AP: case DBG_REG_FP: case DBG_REG_BP: case DBG_REG_CP:
+        case DBG_REG_DP: case DBG_REG_EP: case DBG_REG_HP: case DBG_REG_LP:
+        case DBG_REG_R: case DBG_REG_MBASE:
+            return value & 0xFFu;
+        // 16 bit regs
+        case DBG_REG_AF: case DBG_REG_AFP: case DBG_REG_SPS: case DBG_REG_I:
+            return value & 0xFFFFu;
+        // 24 bit regs
+        case DBG_REG_BC: case DBG_REG_BCP: case DBG_REG_DE: case DBG_REG_DEP:
+        case DBG_REG_HL: case DBG_REG_HLP: case DBG_REG_IX: case DBG_REG_IY:
+        case DBG_REG_SPL: case DBG_REG_PC:
+            return value & 0xFFFFFFu;
+        default:
+            return value;
+    }
+}
+
+void debug_reg_watch(const unsigned regID, const int mask, const bool set) {
+    if (mask & DBG_MASK_READ) {
+        reg_bit_set(&debug.reg_watch_r, regID, set);
+    }
+
+    if (mask & DBG_MASK_WRITE) {
+        reg_bit_set(&debug.reg_watch_w, regID, set);
+    }
+}
+
+int debug_reg_get_mask(const unsigned regID) {
+    int mask = 0;
+
+    if (reg_bit_get(debug.reg_watch_r, regID)) {
+        mask |= DBG_MASK_READ;
+    }
+
+    if (reg_bit_get(debug.reg_watch_w, regID)) {
+        mask |= DBG_MASK_WRITE;
+    }
+
+    return mask;
+}
+
+void debug_touch_reg_read(const unsigned regID) {
+    if (!(debug.reg_watch_r & dbg_reg_trigger_mask[regID])) { return; }
+    debug_open(DBG_REG_READ, regID);
+}
+
+void debug_touch_reg_write(const unsigned regID, const uint32_t oldValue, const uint32_t new_value) {
+    if (!(debug.reg_watch_w & dbg_reg_trigger_mask[regID])) {
+        return;
+    }
+
+    const uint32_t old_v = debug_norm_reg_value(regID, oldValue);
+    const uint32_t new_v = debug_norm_reg_value(regID, new_value);
+    if (old_v == new_v) {
+        return;
+    }
+
+    debug_open(DBG_REG_WRITE, regID);
 }
 
 void debug_watch(uint32_t addr, int mask, bool set) {
