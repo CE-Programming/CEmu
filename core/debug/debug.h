@@ -1,5 +1,3 @@
-#ifdef DEBUG_SUPPORT
-
 #ifndef DEBUG_H
 #define DEBUG_H
 
@@ -128,6 +126,7 @@ bool debug_get_executing_basic_prgm(char *name);
 #define DBG_BASIC_CMDEXEC_BIT       (1 << 6)
 #define DBG_BASIC_PROGEXECUTING_BIT (1 << 1)
 
+#ifdef DEBUG_SUPPORT
 typedef struct {
     bool mode : 1;
     bool popped : 1;
@@ -188,6 +187,7 @@ enum {
 void debug_step_switch(void);
 void debug_clear_step(void);
 void debug_clear_basic_step(void);
+#endif
 
 /* register watchpoints */
 /* these ids correspond to logical CPU registers shown in the UI */
@@ -231,6 +231,7 @@ typedef enum {
     DBG_REG_COUNT
 } dbg_reg_t;
 
+#ifdef DEBUG_SUPPORT
 /* enable/disable register watch for a given id and mask (DBG_MASK_READ/WRITE) */
 void debug_reg_watch(unsigned regID, int mask, bool set);
 /* get current mask (DBG_MASK_READ/WRITE) for a register id */
@@ -240,7 +241,35 @@ void debug_touch_reg_read(unsigned regID);
 void debug_touch_reg_write(unsigned regID, uint32_t oldValue, uint32_t new_value);
 /* normalize a register value to its natural width (8/16/24) */
 uint32_t debug_norm_reg_value(unsigned regID, uint32_t value);
+#else
+static inline void debug_reg_watch(unsigned regID, int mask, bool set) {
+    (void)regID;
+    (void)mask;
+    (void)set;
+}
 
+static inline int debug_reg_get_mask(unsigned regID) {
+    (void)regID;
+    return 0;
+}
+
+static inline void debug_touch_reg_read(unsigned regID) {
+    (void)regID;
+}
+
+static inline void debug_touch_reg_write(unsigned regID, uint32_t oldValue, uint32_t new_value) {
+    (void)regID;
+    (void)oldValue;
+    (void)new_value;
+}
+
+static inline uint32_t debug_norm_reg_value(unsigned regID, uint32_t value) {
+    (void)regID;
+    return value;
+}
+#endif
+
+#ifdef DEBUG_SUPPORT
 /* direct touch helper for write only sites */
 #define DBG_REG_TOUCH_W(ID, OLD, NEW) \
     do { debug_touch_reg_write((unsigned)(ID), (uint32_t)(OLD), (uint32_t)(NEW)); } while (0)
@@ -263,6 +292,27 @@ uint32_t debug_norm_reg_value(unsigned regID, uint32_t value);
         debug_touch_reg_write((unsigned)(ID), __old, __new); \
         (LVAL) = (__new); \
     }))
+#else
+#define DBG_REG_TOUCH_W(ID, OLD, NEW) \
+    do { \
+        (void)(ID); \
+        (void)(OLD); \
+        (void)(NEW); \
+    } while (0)
+
+#define REG_READ_EX(ID, EXPR) \
+    (__extension__({ \
+        (void)(ID); \
+        (uint32_t)(EXPR); \
+    }))
+
+#define REG_WRITE_EX(ID, LVAL, VAL) \
+    (__extension__({ \
+        (void)(ID); \
+        uint32_t __new = (uint32_t)(VAL); \
+        (LVAL) = (__new); \
+    }))
+#endif
 
 /* map CPU context to register IDs */
 /* eZ80 PREFIX: 0 = HL, 2 = IX, 3 = IY */
@@ -274,8 +324,6 @@ uint32_t debug_norm_reg_value(unsigned regID, uint32_t value);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
 
 #endif
