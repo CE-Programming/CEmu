@@ -40,7 +40,6 @@
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
 #include <algorithm>
-#include <array>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -51,63 +50,6 @@
 
 const QString MainWindow::DEBUG_UNSET_ADDR = QStringLiteral("XXXXXX");
 const QString MainWindow::DEBUG_UNSET_PORT = QStringLiteral("XXXX");
-
-namespace {
-    constexpr uint8_t OP_CALL          = 0xCD;
-    constexpr uint8_t OP_RET           = 0xC9;
-    constexpr uint8_t OP_JP_HL         = 0xE9;
-    constexpr uint8_t OP_PREFIX_ED     = 0xED;
-    constexpr uint8_t OP_PREFIX_DD     = 0xDD;
-    constexpr uint8_t OP_PREFIX_FD     = 0xFD;
-    constexpr uint8_t OP_DJNZ          = 0x10;
-    constexpr uint8_t OP_JR            = 0x18;
-    constexpr uint8_t OP_JR_NZ         = 0x20;
-    constexpr uint8_t OP_JR_Z          = 0x28;
-    constexpr uint8_t OP_JR_NC         = 0x30;
-    constexpr uint8_t OP_JR_C          = 0x38;
-    constexpr uint8_t OP_JP            = 0xC3;
-
-    constexpr uint8_t OP_RETN_ED       = 0x45;
-    constexpr uint8_t OP_RETI_ED       = 0x4D;
-
-    constexpr uint8_t CF_NONE = 0;
-    constexpr uint8_t CF_CALL = 1u << 0;
-    constexpr uint8_t CF_RET  = 1u << 1;
-    constexpr uint8_t CF_JUMP = 1u << 2;
-    constexpr uint8_t CF_RST  = 1u << 3;
-
-    constexpr auto kCtrlLut = []{
-        std::array<uint8_t, 256> lut{};
-        // CALL nn and CALL cc,nn
-        lut[OP_CALL] |= CF_CALL; lut[0xC4] |= CF_CALL; lut[0xCC] |= CF_CALL; lut[0xD4] |= CF_CALL; lut[0xDC] |= CF_CALL;
-        lut[0xE4] |= CF_CALL; lut[0xEC] |= CF_CALL; lut[0xF4] |= CF_CALL; lut[0xFC] |= CF_CALL;
-        // RET
-        lut[OP_RET] |= CF_RET;
-        // JP nn and JP cc, nn
-        lut[OP_JP]  |= CF_JUMP;
-        lut[0xC2] |= CF_JUMP; lut[0xCA] |= CF_JUMP; lut[0xD2] |= CF_JUMP; lut[0xDA] |= CF_JUMP;
-        lut[0xE2] |= CF_JUMP; lut[0xEA] |= CF_JUMP; lut[0xF2] |= CF_JUMP; lut[0xFA] |= CF_JUMP;
-        // JR e and JR cc,e
-        lut[OP_JR] |= CF_JUMP; lut[OP_JR_NZ] |= CF_JUMP; lut[OP_JR_Z] |= CF_JUMP; lut[OP_JR_NC] |= CF_JUMP; lut[OP_JR_C] |= CF_JUMP;
-        // DJNZ
-        lut[OP_DJNZ] |= CF_JUMP;
-        // JP (HL)
-        lut[OP_JP_HL] |= CF_JUMP;
-        // RST t (C7, CF, D7, DF, E7, EF, F7, FF)
-        lut[0xC7] |= CF_RST; lut[0xCF] |= CF_RST; lut[0xD7] |= CF_RST; lut[0xDF] |= CF_RST;
-        lut[0xE7] |= CF_RST; lut[0xEF] |= CF_RST; lut[0xF7] |= CF_RST; lut[0xFF] |= CF_RST;
-        return lut;
-    }();
-
-    bool isCtrlFlowOpcode(uint8_t b0, uint8_t b1) {
-        if (kCtrlLut[b0] != CF_NONE) { return true; }
-        // RETN/RETI
-        if (b0 == OP_PREFIX_ED && (b1 == OP_RETN_ED || b1 == OP_RETI_ED)) { return true; }
-        // JP (IX)/(IY)
-        if ((b0 == OP_PREFIX_DD || b0 == OP_PREFIX_FD) && b1 == OP_JP_HL) { return true; }
-        return false;
-    }
-}
 
 // -----------------------------------------------
 // Debugger Initialization
@@ -153,10 +95,6 @@ void MainWindow::debugInit() {
 // ------------------------------------------------
 
 void MainWindow::debugDisable() {
-    if (m_suppressDebugCloseOnce) {
-        m_suppressDebugCloseOnce = false;
-        return;
-    }
     guiDebug = false;
     debugGuiState(false);
 }
@@ -175,16 +113,6 @@ void MainWindow::debugStep(int mode) {
 
         m_stepCtx.active = true;
         m_stepCtx.seqNext = static_cast<uint32_t>(disasm.next);
-
-        if (mode == DBG_STEP_OVER) {
-            const uint32_t pc0 = cpu.registers.PC;
-            const uint8_t b0 = mem_peek_byte(pc0);
-            const uint8_t b1 = mem_peek_byte(pc0 + 1);
-            if (!isCtrlFlowOpcode(b0, b1)) {
-                mode = DBG_STEP_NEXT;
-                m_suppressDebugCloseOnce = true;
-            }
-        }
         debug_step(mode, static_cast<uint32_t>(disasm.next));
     }
     emu.resume();

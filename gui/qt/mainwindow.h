@@ -962,9 +962,6 @@ private:
         uint32_t seqNext = 0; // sequential next PC at step start
     } m_stepCtx;
 
-    // suppression to avoid GUI close/reopen flicker when mapping Step Over to Step Next
-    bool m_suppressDebugCloseOnce = false;
-
 #ifdef LIBUSB_SUPPORT
     libusb_context *m_usbContext = nullptr;
     libusb_hotplug_callback_handle m_usbHotplugCallbackHandle{};
