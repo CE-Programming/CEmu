@@ -635,6 +635,7 @@ void MainWindow::debugGuiState(bool state) const {
 
     ui->buttonSend->setEnabled(!state);
     ui->buttonResendFiles->setEnabled(!state);
+    ui->buttonClipboardListToL1->setEnabled(!state);
 
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {

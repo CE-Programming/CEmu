@@ -528,6 +528,7 @@ private:
     void varSaveSelected();
     void varSaveSelectedFiles();
     static void varResend();
+    void varClipboardListToL1();
     void varToggle();
 
     // recent
@@ -712,6 +713,7 @@ private:
     QShortcut *m_shortcutFullscreen;
     QShortcut *m_shortcutAsm;
     QShortcut *m_shortcutResend;
+    QShortcut *m_shortcutClipboardListToL1;
 
     QAction *m_actionToggleUI;
     QAction *m_actionAddMemory;
