@@ -8,6 +8,7 @@
 #include "capture/animated-png.h"
 #include "keypad/qtkeypadbridge.h"
 #include "tivars_lib_cpp/src/TIModels.h"
+#include "tivars_lib_cpp/src/TIVarFile.h"
 #include "tivars_lib_cpp/src/TIVarTypes.h"
 #include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
 #include "../../core/emu.h"
@@ -24,6 +25,7 @@
 #include <QtCore/QLocale>
 #include <QtCore/QProcess>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QTemporaryFile>
 #include <QtGui/QFont>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
@@ -264,6 +266,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::varSaveSelected);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::varSaveSelectedFiles);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::varResend);
+    connect(ui->buttonClipboardListToL1, &QPushButton::clicked, this, &MainWindow::varClipboardListToL1);
 
     // autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::autotesterLoad);
@@ -528,14 +531,17 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_shortcutFullscreen = new QShortcut(QKeySequence(Qt::Key_F11), this);
     m_shortcutAsm = new QShortcut(QKeySequence(Qt::Key_Pause), this);
     m_shortcutResend = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_X), this);
+    m_shortcutClipboardListToL1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_L), this);
 
     m_shortcutFullscreen->setAutoRepeat(false);
     m_shortcutDebug->setAutoRepeat(false);
     m_shortcutAsm->setAutoRepeat(false);
     m_shortcutResend->setAutoRepeat(false);
+    m_shortcutClipboardListToL1->setAutoRepeat(false);
 
     connect(m_shortcutFullscreen, &QShortcut::activated, [this]{ setFullscreen(m_fullscreen + 1); });
     connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::varResend);
+    connect(m_shortcutClipboardListToL1, &QShortcut::activated, this, &MainWindow::varClipboardListToL1);
     connect(m_shortcutAsm, &QShortcut::activated, [this]{ sendEmuKey(CE_KEY_ASM); });
     connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debugToggle);
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
@@ -2336,6 +2342,46 @@ void MainWindow::varSaveSelectedFiles() {
 
 void MainWindow::varResend() {
     sendingHandler->resendSelected();
+}
+
+void MainWindow::varClipboardListToL1() {
+    const QString cbStr = qApp->clipboard()->text().replace(" ", "").trimmed();
+    if (cbStr.isEmpty()) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Empty clipboard"));
+        return;
+    }
+
+    QTemporaryFile tempFile{"CEmu_temp_list_XXXXXX.8xl"};
+    if (!tempFile.open()) {
+        QMessageBox::warning(this, MSG_ERROR, tr("Could not create temporary file"));
+        return;
+    }
+
+    ui->buttonClipboardListToL1->setEnabled(false);
+
+    const QString tempFilePath = tempFile.fileName();
+    bool ok = false;
+
+    try
+    {
+        tivars::TIVarFile testRealList = tivars::TIVarFile::createNew("RealList", "\x5D\x00"); // L₁
+        testRealList.setContentFromString(cbStr.toStdString());
+        testRealList.saveVarToFile(tempFilePath.toStdString());
+        ok = true;
+    } catch (const std::exception &e)
+    {
+        QMessageBox::warning(this, MSG_ERROR, tr("Could not convert the clipboard's list: ") + e.what());
+    }
+
+    if (ok)
+    {
+        sendingHandler->sendFiles({ tempFilePath }, LINK_RAM);
+        while (guiSend) {
+            guiDelay(10);
+        }
+    }
+
+    ui->buttonClipboardListToL1->setEnabled(true);
 }
 
 // ------------------------------------------------
