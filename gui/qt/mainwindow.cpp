@@ -97,6 +97,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_breakpoints = ui->breakpoints;
     m_ports = ui->ports;
     m_disasm = ui->disasm;
+    m_disasm->installEventFilter(this);
 
     ui->console->setMaximumBlockCount(1000);
 
@@ -518,6 +519,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_shortcutStepOver = new QShortcut(QKeySequence(Qt::Key_F7), this);
     m_shortcutStepNext = new QShortcut(QKeySequence(Qt::Key_F8), this);
     m_shortcutStepOut = new QShortcut(QKeySequence(Qt::Key_F9), this);
+    m_shortcutNavBack = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_Left), this);
+    m_shortcutNavForward = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_Right), this);
+
+    connect(m_shortcutNavBack, &QShortcut::activated, this, [this]{ navDisasmBack(); });
+    connect(m_shortcutNavForward, &QShortcut::activated, this, [this]{ navDisasmForward(); });
     m_shortcutDebug = new QShortcut(QKeySequence(Qt::Key_F10), this);
     m_shortcutFullscreen = new QShortcut(QKeySequence(Qt::Key_F11), this);
     m_shortcutAsm = new QShortcut(QKeySequence(Qt::Key_Pause), this);
@@ -2695,6 +2701,11 @@ void MainWindow::contextDisasm(const QPoint &posa) {
     uint32_t addr = static_cast<uint32_t>(hex2int(addrStr));
 
     QMenu menu;
+    QAction *backAct = menu.addAction(tr("Back"));
+    QAction *fwdAct = menu.addAction(tr("Forward"));
+    backAct->setEnabled(m_disasmNavIndex > 0);
+    fwdAct->setEnabled(m_disasmNavIndex >= 0 && m_disasmNavIndex + 1 < m_disasmNav.size());
+    menu.addSeparator();
     QAction *runUntil = menu.addAction(ACTION_RUN_UNTIL);
     menu.addSeparator();
     QAction *toggleBreak = menu.addAction(ACTION_TOGGLE_BREAK);
@@ -2706,7 +2717,11 @@ void MainWindow::contextDisasm(const QPoint &posa) {
     QAction *setPc = menu.addAction(tr("Set PC"));
 
     QAction *item = menu.exec(globalPos);
-    if (item == setPc) {
+    if (item == backAct) {
+        navDisasmBack();
+    } else if (item == fwdAct) {
+        navDisasmForward();
+    } else if (item == setPc) {
         ui->pcregView->setText(addrStr);
         debug_set_pc(addr);
         disasmUpdateAddr(static_cast<int>(cpu.registers.PC), true);

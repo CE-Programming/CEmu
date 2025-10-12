@@ -148,6 +148,9 @@ void MainWindow::debugStep(int mode) {
     } else {
         disasm.base = static_cast<int32_t>(cpu.registers.PC);
         disasmGet(true);
+
+        m_stepCtx.active = true;
+        m_stepCtx.seqNext = static_cast<uint32_t>(disasm.next);
         debug_step(mode, static_cast<uint32_t>(disasm.next));
     }
     emu.resume();
@@ -452,6 +455,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
     if (reason == DBG_READY) {
         guiReset = false;
+        navDisasmClear();
         emu.resume();
         return;
     }
@@ -917,6 +921,17 @@ void MainWindow::debugPopulate() {
     osUpdate();
     stackUpdate();
     disasmUpdateAddr(m_prevDisasmAddr = cpu.registers.PC, true);
+    // Track step navigation: append on control-flow (branch taken),
+    // replace on linear advance. Non-step stops do not modify history
+    if (m_stepCtx.active) {
+        bool tookBranch = (static_cast<uint32_t>(cpu.registers.PC) != m_stepCtx.seqNext);
+        if (tookBranch) {
+            navDisasmPush(m_prevDisasmAddr, true);
+        } else {
+            navDisasmReplace(m_prevDisasmAddr, true);
+        }
+        m_stepCtx.active = false;
+    }
 
     memUpdate();
 
@@ -2032,6 +2047,98 @@ void MainWindow::disasmUpdateAddr(int base, bool pane) {
 }
 
 // ------------------------------------------------
+// Disassembly navigation history helpers
+// ------------------------------------------------
+
+uint32_t MainWindow::currentDisasmAddress() const {
+    if (m_prevDisasmAddr) {
+        return m_prevDisasmAddr;
+    }
+    QString sel = m_disasm ? m_disasm->getSelectedAddr() : QString();
+    if (!sel.isEmpty()) {
+        return static_cast<uint32_t>(hex2int(sel));
+    }
+    return cpu.registers.PC;
+}
+
+void MainWindow::navDisasmEnsureSeeded() {
+    if (m_disasmNavIndex == -1) {
+        m_disasmNav.reserve(kMaxDisasmHistory);
+        // seed with the last PC location and current pane mode so that fully backing out returns to the same stop context
+        m_disasmNav.push_back({ currentDisasmAddress(), m_disasmPane });
+        m_disasmNavIndex = 0;
+    }
+}
+
+void MainWindow::navDisasmPush(uint32_t addr, bool pane) {
+    if (m_isApplyingDisasmNav) {
+        disasmUpdateAddr(static_cast<int>(addr), pane);
+        return;
+    }
+    if (m_disasmNavIndex >= 0 && m_disasmNavIndex < m_disasmNav.size()) {
+        const DisasmNavEntry &cur = m_disasmNav[m_disasmNavIndex];
+        if (cur.addr == addr && cur.pane == pane) {
+            disasmUpdateAddr(static_cast<int>(addr), pane);
+            return;
+        }
+    }
+    if (m_disasmNavIndex + 1 < m_disasmNav.size()) {
+        m_disasmNav.resize(m_disasmNavIndex + 1);
+    }
+    if (m_disasmNav.size() >= kMaxDisasmHistory) {
+        m_disasmNav.remove(0);
+        if (m_disasmNavIndex > 0) { --m_disasmNavIndex; }
+    }
+    m_disasmNav.push_back({addr, pane});
+    m_disasmNavIndex = m_disasmNav.size() - 1;
+    m_isApplyingDisasmNav = true;
+    disasmUpdateAddr(static_cast<int>(addr), pane);
+    m_isApplyingDisasmNav = false;
+}
+
+void MainWindow::navDisasmReplace(uint32_t addr, bool pane) {
+    if (m_isApplyingDisasmNav) {
+        return;
+    }
+    navDisasmEnsureSeeded();
+    if (m_disasmNavIndex < 0) {
+        m_disasmNav.push_back({addr, pane});
+        m_disasmNavIndex = m_disasmNav.size() - 1;
+    } else {
+        m_disasmNav[m_disasmNavIndex] = {addr, pane};
+    }
+}
+
+bool MainWindow::navDisasmBack() {
+    if (m_disasmNavIndex > 0) {
+        --m_disasmNavIndex;
+        const auto &e = m_disasmNav[m_disasmNavIndex];
+        m_isApplyingDisasmNav = true;
+        disasmUpdateAddr(static_cast<int>(e.addr), e.pane);
+        m_isApplyingDisasmNav = false;
+        return true;
+    }
+    return false;
+}
+
+bool MainWindow::navDisasmForward() {
+    if (m_disasmNavIndex >= 0 && m_disasmNavIndex + 1 < m_disasmNav.size()) {
+        ++m_disasmNavIndex;
+        const auto &e = m_disasmNav[m_disasmNavIndex];
+        m_isApplyingDisasmNav = true;
+        disasmUpdateAddr(static_cast<int>(e.addr), e.pane);
+        m_isApplyingDisasmNav = false;
+        return true;
+    }
+    return false;
+}
+
+void MainWindow::navDisasmClear() {
+    m_disasmNav.clear();
+    m_disasmNavIndex = -1;
+}
+
+// ------------------------------------------------
 // Misc
 // ------------------------------------------------
 
@@ -2060,7 +2167,8 @@ void MainWindow::gotoPressed() {
 }
 
 void MainWindow::gotoDisasmAddr(uint32_t address) {
-    disasmUpdateAddr(address, false);
+    navDisasmEnsureSeeded();
+    navDisasmPush(address, false);
     raiseContainingDock(ui->disasm);
     ui->disasm->setFocus();
 }
@@ -2243,6 +2351,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
             return true;
         }
     }
+  
+    // Mouse back/forward in Disassembly view
+    if (obj == m_disasm && e->type() == QEvent::MouseButtonPress) {
+        auto *me = static_cast<QMouseEvent*>(e);
+        if (me->button() == Qt::BackButton) {
+            if (navDisasmBack()) { e->accept(); return true; }
+        } else if (me->button() == Qt::ForwardButton) {
+            if (navDisasmForward()) { e->accept(); return true; }
+        }
+    }
+
     if (e->type() == QEvent::MouseButtonPress) {
         QString name = obj->objectName();
 
