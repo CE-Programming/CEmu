@@ -27,6 +27,8 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QTemporaryFile>
 #include <QtGui/QFont>
+#include <QtGui/QPalette>
+#include <QtGui/QColor>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
@@ -37,10 +39,39 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMessageBox>
+#include <QtWidgets/QStyle>
+#include <QtWidgets/QStyleFactory>
 #include <QtNetwork/QNetworkReply>
+#include <QtCore/QSignalBlocker>
+#include <QtCore/QScopedValueRollback>
 #include <fstream>
 #include <iostream>
 #include <cmath>
+
+namespace {
+QPalette createFusionDarkPalette(const QPalette &base) {
+    QPalette palette = base;
+    palette.setColor(QPalette::Window, QColor(53, 53, 53));
+    palette.setColor(QPalette::WindowText, Qt::white);
+    palette.setColor(QPalette::Base, QColor(25, 25, 25));
+    palette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+    palette.setColor(QPalette::ToolTipBase, Qt::white);
+    palette.setColor(QPalette::ToolTipText, Qt::white);
+    palette.setColor(QPalette::Text, Qt::white);
+    palette.setColor(QPalette::Button, QColor(53, 53, 53));
+    palette.setColor(QPalette::ButtonText, Qt::white);
+    palette.setColor(QPalette::BrightText, Qt::red);
+    palette.setColor(QPalette::Link, QColor(42, 130, 218));
+    palette.setColor(QPalette::Highlight, QColor(76, 163, 224));
+    palette.setColor(QPalette::HighlightedText, Qt::black);
+
+    static constexpr QColor disabledColor(127, 127, 127);
+    palette.setColor(QPalette::Disabled, QPalette::Text, disabledColor);
+    palette.setColor(QPalette::Disabled, QPalette::ButtonText, disabledColor);
+    palette.setColor(QPalette::PlaceholderText, disabledColor);
+    return palette;
+}
+}
 
 #ifdef Q_OS_MACOS
 # include "os/mac/kdmactouchbar.h"
@@ -71,8 +102,30 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->setupUi(this);
 
-    m_styleForMode[0] = m_styleForMode[1] = QApplication::style()->name();
-    darkModeSwitch(isSystemInDarkMode());
+    m_styleForMode[0] = QApplication::style()->objectName();
+    if (m_styleForMode[0].isEmpty()) {
+        m_styleForMode[0] = QApplication::style()->name();
+    }
+    if (m_styleForMode[0].isEmpty()) {
+        m_styleForMode[0] = QStringLiteral("fusion");
+    }
+    m_styleForMode[1] = QStringLiteral("fusion");
+
+    if (const QStyle *fusionStyle = QStyleFactory::create(QStringLiteral("Fusion"))) {
+        m_fusionLightPalette = fusionStyle->standardPalette();
+        delete fusionStyle;
+    } else {
+        m_fusionLightPalette = QApplication::style()->standardPalette();
+    }
+    m_fusionDarkPalette = createFusionDarkPalette(m_fusionLightPalette);
+
+    {
+        QSignalBlocker blocker(ui->comboTheme);
+        ui->comboTheme->setCurrentIndex(static_cast<int>(m_themePreference));
+    }
+    connect(ui->comboTheme, &QComboBox::currentIndexChanged, this, &MainWindow::setThemePreference);
+
+    applyThemeFromPreference();
 
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
 
@@ -598,6 +651,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     }
 
     setAutoUpdates(m_config->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
+    setThemePreference(m_config->value(SETTING_UI_THEME, static_cast<int>(ThemePreference::System)).toInt());
     checkVersion();
 
 #ifdef Q_OS_WIN
@@ -1130,14 +1184,40 @@ void MainWindow::translateExtras(int init) {
     }
 }
 
-void MainWindow::darkModeSwitch(bool darkMode) {
-    QApplication::setStyle(m_styleForMode[darkMode]);
-    if (darkMode != isRunningInDarkMode()) {
-        m_styleForMode[darkMode] = QStringLiteral("fusion");
-        QApplication::setStyle(m_styleForMode[darkMode]);
-        darkMode = isRunningInDarkMode();
+static void repolishAfterThemeChanged() {
+    const auto widgets = QApplication::allWidgets();
+    for (QWidget *w : widgets) {
+        if (QStyle *st = w->style()) {
+            st->unpolish(w);
+            st->polish(w);
+        }
+        w->update();
+    }
+}
+
+void MainWindow::applyThemeFromPreference() {
+    switch (m_themePreference) {
+    case ThemePreference::System:
+        QApplication::setStyle(m_styleForMode[0]);
+        QApplication::setPalette(QApplication::style()->standardPalette());
+        break;
+    case ThemePreference::Light:
+        QApplication::setStyle(m_styleForMode[1]);
+        QApplication::setPalette(m_fusionLightPalette);
+        break;
+    case ThemePreference::Dark:
+        QApplication::setStyle(m_styleForMode[1]);
+        QApplication::setPalette(m_fusionDarkPalette);
+        break;
     }
 
+    const bool dark = m_themePreference == ThemePreference::Dark || (m_themePreference == ThemePreference::System && isSystemInDarkMode());
+    darkModeSwitch(dark);
+
+    repolishAfterThemeChanged();
+}
+
+void MainWindow::darkModeSwitch(bool darkMode) {
     m_isInDarkMode = darkMode;
     if (darkMode) {
         m_cBack.setColor(QPalette::Base, QColor(Qt::blue).lighter(180));
@@ -1162,11 +1242,25 @@ void MainWindow::changeEvent(QEvent* event) {
     }
     QMainWindow::changeEvent(event);
     if (eventType == QEvent::ThemeChange) {
-        bool darkMode = isSystemInDarkMode();
-        if (darkMode != m_isInDarkMode) {
-            darkModeSwitch(darkMode);
-        }
+        applyThemeFromPreference();
     }
+}
+
+void MainWindow::setThemePreference(int index) {
+    const auto pref = static_cast<ThemePreference>(index);
+
+    if (ui && ui->comboTheme && ui->comboTheme->currentIndex() != index) {
+        QSignalBlocker blocker(ui->comboTheme);
+        ui->comboTheme->setCurrentIndex(index);
+    }
+
+    m_themePreference = pref;
+
+    if (m_config && opts.useSettings) {
+        m_config->setValue(SETTING_UI_THEME, index);
+    }
+
+    applyThemeFromPreference();
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
@@ -1486,6 +1580,7 @@ void MainWindow::resetGui() {
     m_config->remove(SETTING_WINDOW_STATUSBAR);
     m_config->remove(SETTING_WINDOW_SEPARATOR);
     m_config->remove(SETTING_UI_EDIT_MODE);
+    m_config->remove(SETTING_UI_THEME);
     m_needReload = true;
     close();
 }

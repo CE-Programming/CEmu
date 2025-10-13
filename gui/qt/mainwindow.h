@@ -28,6 +28,7 @@
 #include <QtCore/QTimer>
 #include <QtCore/QPointer>
 #include <QtGui/QShortcut>
+#include <QtGui/QPalette>
 #include <QtGui/QTextCursor>
 #include <QtCore/QTranslator>
 #include <QtCore/QStandardPaths>
@@ -38,6 +39,9 @@
 QT_BEGIN_NAMESPACE
 class QButtonGroup;
 class QLocale;
+class QEvent;
+class QCloseEvent;
+class QObject;
 QT_END_NAMESPACE
 
 #ifdef LIBUSB_SUPPORT
@@ -99,6 +103,7 @@ private slots:
 #ifdef LIBUSB_SUPPORT
     void usbConnectPhysical(QVariant userData);
 #endif
+    void setThemePreference(int index);
 
 protected:
     virtual void changeEvent(QEvent* event) override;
@@ -227,6 +232,12 @@ private:
         FULLSCREEN_LCD
     };
 
+    enum class ThemePreference {
+        System = 0,
+        Light = 1,
+        Dark = 2
+    };
+
     // emu keypresses
     void sendEmuKey(uint16_t key);
     void sendEmuLetterKey(char letter);
@@ -257,6 +268,7 @@ private:
     void translateExtras(int init);
     void translateSwitch(const QLocale &locale);
 
+    void applyThemeFromPreference();
     // dark mode
     void darkModeSwitch(bool darkMode);
 
@@ -763,6 +775,8 @@ private:
     int m_fullscreen = FULLSCREEN_NONE;
     uint32_t m_runUntilAddr;
 
+    ThemePreference m_themePreference = ThemePreference::System;
+
     QPushButton *m_btnCancelTranser;
     QProgressBar *m_progressBar;
     QStringList m_docksMemory;
@@ -785,6 +799,8 @@ private:
     bool m_timerFpsTriggered = false;
 
     QString m_styleForMode[2];
+    QPalette m_fusionLightPalette;
+    QPalette m_fusionDarkPalette;
 
     static const char *m_varExtensions[];
 
@@ -850,6 +866,7 @@ private:
     static const QString SETTING_STATUS_INTERVAL;
     static const QString SETTING_FIRST_RUN;
     static const QString SETTING_UI_EDIT_MODE;
+    static const QString SETTING_UI_THEME;
     static const QString SETTING_PAUSE_FOCUS;
     static const QString SETTING_SAVE_ON_CLOSE;
     static const QString SETTING_RESTORE_ON_OPEN;
