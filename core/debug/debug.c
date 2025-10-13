@@ -253,22 +253,19 @@ int debug_reg_get_mask(const unsigned regID) {
 }
 
 void debug_touch_reg_read(const unsigned regID) {
-    if (!(debug.reg_watch_r & dbg_reg_trigger_mask[regID])) { return; }
-    debug_open(DBG_REG_READ, regID);
+    if (unlikely(debug.reg_watch_r & dbg_reg_trigger_mask[regID])) {
+        debug_open(DBG_REG_READ, regID);
+    }
 }
 
 void debug_touch_reg_write(const unsigned regID, const uint32_t oldValue, const uint32_t new_value) {
-    if (!(debug.reg_watch_w & dbg_reg_trigger_mask[regID])) {
-        return;
+    if (unlikely(debug.reg_watch_w & dbg_reg_trigger_mask[regID])) {
+        const uint32_t old_v = debug_norm_reg_value(regID, oldValue);
+        const uint32_t new_v = debug_norm_reg_value(regID, new_value);
+        if (old_v != new_v) {
+            debug_open(DBG_REG_WRITE, regID);
+        }
     }
-
-    const uint32_t old_v = debug_norm_reg_value(regID, oldValue);
-    const uint32_t new_v = debug_norm_reg_value(regID, new_value);
-    if (old_v == new_v) {
-        return;
-    }
-
-    debug_open(DBG_REG_WRITE, regID);
 }
 
 void debug_watch(uint32_t addr, int mask, bool set) {
@@ -341,24 +338,26 @@ void debug_clear_basic_step(void) {
 void debug_inst_start(void) {
     uint32_t pc = cpu.registers.PC;
     debug.addr[pc] |= DBG_INST_START_MARKER;
-    if (debug.step && !(debug.addr[pc] & DBG_MASK_EXEC) && pc != debug.tempExec) {
-        debug.step = debug.stepOver = false;
-        debug_open(DBG_STEP, cpu.registers.PC);
+    if (unlikely(debug.step)) {
+        if (!(debug.addr[pc] & DBG_MASK_EXEC) && pc != debug.tempExec) {
+            debug.step = debug.stepOver = false;
+            debug_open(DBG_STEP, cpu.registers.PC);
+        }
     }
 }
 
 void debug_inst_fetch(void) {
     uint32_t pc = cpu.registers.PC;
     debug.addr[pc] |= DBG_INST_MARKER;
-    if (debug.addr[pc] & DBG_MASK_EXEC) {
+    if (unlikely(debug.addr[pc] & DBG_MASK_EXEC)) {
         debug_open(DBG_BREAKPOINT, pc);
-    } else if (pc == debug.tempExec) {
+    } else if (unlikely(pc == debug.tempExec)) {
         debug_open(DBG_STEP, pc);
     }
 }
 
 void debug_inst_repeat(void) {
-    if (debug.step) {
+    if (unlikely(debug.step)) {
         if (debug.stepOver) {
             gui_debug_close();
         } else {
