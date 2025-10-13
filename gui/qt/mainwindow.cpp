@@ -25,7 +25,6 @@
 #include <QtCore/QLocale>
 #include <QtCore/QProcess>
 #include <QtCore/QRegularExpression>
-#include <QtCore/QTemporaryFile>
 #include <QtGui/QFont>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
@@ -2345,21 +2344,22 @@ void MainWindow::varResend() {
 }
 
 void MainWindow::varClipboardListToL1() {
-    const QString cbStr = qApp->clipboard()->text().replace(" ", "").trimmed();
+    QString cbStr = qApp->clipboard()->text().replace(" ", "").trimmed();
+    while (cbStr.endsWith(','))
+    {
+        cbStr.chop(1);
+        cbStr = cbStr.trimmed();
+    }
+
     if (cbStr.isEmpty()) {
         QMessageBox::warning(this, MSG_WARNING, tr("Empty clipboard"));
         return;
     }
 
-    QTemporaryFile tempFile{"CEmu_temp_list_XXXXXX.8xl"};
-    if (!tempFile.open()) {
-        QMessageBox::warning(this, MSG_ERROR, tr("Could not create temporary file"));
-        return;
-    }
+    const QString tempFilePath = QDir::tempPath() + QDir::separator() + QStringLiteral("CEmu_temp_listl1.8xl");
 
     ui->buttonClipboardListToL1->setEnabled(false);
 
-    const QString tempFilePath = tempFile.fileName();
     bool ok = false;
 
     try
@@ -2381,6 +2381,7 @@ void MainWindow::varClipboardListToL1() {
         }
     }
 
+    QFile::remove(tempFilePath);
     ui->buttonClipboardListToL1->setEnabled(true);
 }
 
