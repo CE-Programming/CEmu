@@ -26,6 +26,7 @@
 
 #include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
+#include <QtCore/QStringList>
 #include <QtCore/QRegularExpression>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
@@ -41,6 +42,7 @@
 #include <QtGui/QScreen>
 #include <algorithm>
 #include <array>
+#include <ranges>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -222,6 +224,7 @@ error:
 
     disasm.map.clear();
     disasm.reverse.clear();
+    markDisasmGotoCompletionsDirty();
     for (QString &equFile : m_equateFiles) {
         equatesAddFile(equFile);
     }
@@ -1887,6 +1890,7 @@ void MainWindow::updateLabels() {
 void MainWindow::equatesRefresh() {
     disasm.map.clear();
     disasm.reverse.clear();
+    markDisasmGotoCompletionsDirty();
     for (QString &file : m_equateFiles) {
         equatesAddFile(file);
     }
@@ -1984,11 +1988,14 @@ void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
     if (!equatesAddEquateInternal(name, address)) {
         return;
     }
+    markDisasmGotoCompletionsDirty();
     uint8_t *ptr = static_cast<uint8_t *>(phys_mem_ptr(address - 4, 9));
     if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
         uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
         if (phys_mem_ptr(address2, 1)) {
-            equatesAddEquateInternal(QStringLiteral("_") + name, address2);
+            if (equatesAddEquateInternal(QStringLiteral("_") + name, address2)) {
+                markDisasmGotoCompletionsDirty();
+            }
         }
     }
 }
@@ -2148,14 +2155,15 @@ void MainWindow::gotoPressed() {
         m_gotoAddr = m_disasm->getSelectedAddr();
     }
 
-    GotoDialog dlg(m_gotoAddr, m_disasmGotoHistory, this);
+    GotoDialog dlg(m_gotoAddr, m_disasmGotoHistory, disasmGotoCompletions(), this);
     if (dlg.exec() == QDialog::Accepted) {
         QString typed = dlg.text().trimmed();
         bool ok = false;
         QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
             m_gotoAddr = typed;
-            disasmUpdateAddr(hex2int(resolved), false);
+            // changes are routed through here to make sure history is updated for fwd and back
+            gotoDisasmAddr(static_cast<uint32_t>(hex2int(resolved)));
 
             auto &hist = m_disasmGotoHistory;
             std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
@@ -2224,6 +2232,43 @@ QAction *MainWindow::gotoMemAction(QMenu *menu, bool vat) const {
     QAction *gotoMem = menu->addAction(vat ? ACTION_GOTO_VAT_MEMORY_VIEW : ACTION_GOTO_MEMORY_VIEW);
     gotoMem->setEnabled(m_uiEditMode || ui->debugMemoryWidget->isVisible() || !m_docksMemory.isEmpty());
     return gotoMem;
+}
+
+const QStringList &MainWindow::disasmGotoCompletions() {
+    if (!m_disasmGotoCompletionsDirty) {
+        return m_disasmGotoCompletions;
+    }
+
+    m_disasmGotoCompletionsDirty = false;
+
+    QStringList completions;
+    static constexpr std::array kRegisterAliases = {
+        "AF"_L1, "HL"_L1, "DE"_L1, "BC"_L1, "IX"_L1, "IY"_L1,
+        "AF'"_L1, "HL'"_L1, "DE'"_L1, "BC'"_L1, "SPL"_L1, "SPS"_L1, "PC"_L1
+    };
+
+    completions.reserve(static_cast<int>(disasm.reverse.size() + kRegisterAliases.size()));
+
+    for (const auto &name : disasm.reverse | std::views::keys) {
+        completions.append(QString::fromStdString(name));
+    }
+
+    for (const auto alias : kRegisterAliases) {
+        if (!completions.contains(alias)) {
+            completions.append(QString(alias));
+        }
+    }
+
+    std::ranges::sort(completions, [](const QString &lhs, const QString &rhs) {
+        return lhs.localeAwareCompare(rhs) < 0;
+    });
+
+    m_disasmGotoCompletions = std::move(completions);
+    return m_disasmGotoCompletions;
+}
+
+void MainWindow::markDisasmGotoCompletionsDirty() {
+    m_disasmGotoCompletionsDirty = true;
 }
 
 void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
@@ -2352,7 +2397,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
             return true;
         }
     }
-  
+
     // Mouse back/forward in Disassembly view
     if (obj == m_disasm && e->type() == QEvent::MouseButtonPress) {
         auto *me = static_cast<QMouseEvent*>(e);

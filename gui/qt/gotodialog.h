@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QDialog>
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 #include <vector>
 
 QT_BEGIN_NAMESPACE
@@ -14,6 +15,7 @@ class GotoDialog : public QDialog {
 public:
     explicit GotoDialog(const QString &seed,
                         const std::vector<QString> &history,
+                        const QStringList &completions = {},
                         QWidget *parent = nullptr);
 
     [[nodiscard]] QString text() const;
