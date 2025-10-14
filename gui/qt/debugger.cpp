@@ -2247,10 +2247,13 @@ const QStringList &MainWindow::disasmGotoCompletions() {
         "AF'"_L1, "HL'"_L1, "DE'"_L1, "BC'"_L1, "SPL"_L1, "SPS"_L1, "PC"_L1
     };
 
-    completions.reserve(static_cast<int>(disasm.reverse.size() + kRegisterAliases.size()));
+    completions.reserve(static_cast<int>(disasm.map.size() + kRegisterAliases.size()));
 
-    for (const auto &name : disasm.reverse | std::views::keys) {
-        completions.append(QString::fromStdString(name));
+    for (const auto &name : disasm.map | std::views::values) {
+        const auto qname = QString::fromStdString(name);
+        if (!completions.contains(qname, Qt::CaseInsensitive)) {
+            completions.append(qname);
+        }
     }
 
     for (const auto alias : kRegisterAliases) {
