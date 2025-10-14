@@ -1,6 +1,7 @@
 name: Build Linux
 
 permissions:
+  actions: write
   contents: write
   packages: write
 
