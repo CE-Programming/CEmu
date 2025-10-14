@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [ master, test-ci ]
+    branches: [ master, test-ci, feature/source-level-debugging ]
   pull_request:
     branches: [ master ]
 
