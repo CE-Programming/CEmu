@@ -272,7 +272,7 @@ static inline uint32_t debug_norm_reg_value(unsigned regID, uint32_t value) {
 #ifdef DEBUG_SUPPORT
 /* direct touch helper for write only sites */
 #define DBG_REG_TOUCH_W(ID, OLD, NEW) \
-    do { debug_touch_reg_write((unsigned)(ID), (uint32_t)(OLD), (uint32_t)(NEW)); } while (0)
+    do { debug_touch_reg_write((unsigned)(DBG_REG_##ID), (uint32_t)(OLD), (uint32_t)(NEW)); } while (0)
 
 /* trigger helpers to wrap reads/writes
  * REG_READ returns the single evaluated value of EXPR
@@ -281,7 +281,7 @@ static inline uint32_t debug_norm_reg_value(unsigned regID, uint32_t value) {
 #define REG_READ_EX(ID, EXPR) \
     (__extension__({ \
         uint32_t __v = (uint32_t)(EXPR); \
-        debug_touch_reg_read((unsigned)(ID)); \
+        debug_touch_reg_read((unsigned)(DBG_REG_##ID)); \
         __v; \
     }))
 
@@ -289,7 +289,7 @@ static inline uint32_t debug_norm_reg_value(unsigned regID, uint32_t value) {
     (__extension__({ \
         uint32_t __old = (uint32_t)(LVAL); \
         uint32_t __new = (uint32_t)(VAL); \
-        debug_touch_reg_write((unsigned)(ID), __old, __new); \
+        debug_touch_reg_write((unsigned)(DBG_REG_##ID), __old, __new); \
         (LVAL) = (__new); \
     }))
 #else

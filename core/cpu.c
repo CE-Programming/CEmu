@@ -63,7 +63,7 @@ uint32_t cpu_address_mode(uint32_t address, bool mode) {
 }
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
-    REG_WRITE_EX(DBG_REG_PC, cpu.registers.PC, cpu_address_mode(address, mode));
+    REG_WRITE_EX(PC, cpu.registers.PC, cpu_address_mode(address, mode));
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 }
 static uint8_t cpu_fetch_byte(void) {
@@ -96,7 +96,7 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
         cpu_fetch_byte();
         value |= cpu.prefetch << 16;
     }
-    REG_WRITE_EX(DBG_REG_PC, cpu.registers.PC, cpu.registers.PC + 1);
+    REG_WRITE_EX(PC, cpu.registers.PC, cpu.registers.PC + 1);
     return value;
 }
 
@@ -127,7 +127,7 @@ static void cpu_write_word(uint32_t address, uint32_t value) {
 
 static uint8_t cpu_pop_byte_mode(bool mode) {
     uint32_t addr = cpu_address_mode(cpu.registers.stack[mode].hl, mode);
-    REG_WRITE_EX(DBG_REG_ID_SP(mode), cpu.registers.stack[mode].hl, cpu.registers.stack[mode].hl + 1);
+    REG_WRITE_EX(ID_SP(mode), cpu.registers.stack[mode].hl, cpu.registers.stack[mode].hl + 1);
     return mem_read_cpu(addr, false);
 }
 static uint8_t cpu_pop_byte(void) {
@@ -135,7 +135,7 @@ static uint8_t cpu_pop_byte(void) {
 }
 static void cpu_push_byte_mode(uint8_t value, bool mode) {
     uint32_t new_sp = cpu.registers.stack[mode].hl - 1;
-    REG_WRITE_EX(DBG_REG_ID_SP(mode), cpu.registers.stack[mode].hl, new_sp);
+    REG_WRITE_EX(ID_SP(mode), cpu.registers.stack[mode].hl, new_sp);
     mem_write_cpu(cpu_address_mode(new_sp, mode), value);
 }
 static void cpu_push_byte(uint8_t value) {
@@ -176,49 +176,49 @@ static void cpu_write_out(uint16_t pio, uint8_t value) {
 }
 
 static uint32_t cpu_read_sp(void) {
-    return REG_READ_EX(DBG_REG_ID_SP(cpu.L), cpu.registers.stack[cpu.L].hl);
+    return REG_READ_EX(ID_SP(cpu.L), cpu.registers.stack[cpu.L].hl);
 }
 static void cpu_write_sp(uint32_t value) {
-    REG_WRITE_EX(DBG_REG_ID_SP(cpu.L), cpu.registers.stack[cpu.L].hl, value);
+    REG_WRITE_EX(ID_SP(cpu.L), cpu.registers.stack[cpu.L].hl, value);
 }
 
 static uint8_t cpu_read_index_low(void) {
-    return REG_READ_EX(DBG_REG_ID_INDEX_L(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].l);
+    return REG_READ_EX(ID_INDEX_L(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].l);
 }
 static void cpu_write_index_low(uint8_t value) {
-    REG_WRITE_EX(DBG_REG_ID_INDEX_L(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].l, value);
+    REG_WRITE_EX(ID_INDEX_L(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].l, value);
 }
 
 static uint8_t cpu_read_index_high(void) {
-    return REG_READ_EX(DBG_REG_ID_INDEX_H(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].h);
+    return REG_READ_EX(ID_INDEX_H(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].h);
 }
 static void cpu_write_index_high(uint8_t value) {
-    REG_WRITE_EX(DBG_REG_ID_INDEX_H(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].h, value);
+    REG_WRITE_EX(ID_INDEX_H(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].h, value);
 }
 
 static uint32_t cpu_read_index(void) {
-    return REG_READ_EX(DBG_REG_ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hl);
+    return REG_READ_EX(ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hl);
 }
 static void cpu_write_index(uint32_t value) {
-    REG_WRITE_EX(DBG_REG_ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hl, value);
+    REG_WRITE_EX(ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hl, value);
 }
 static void cpu_write_index_partial_mode(uint32_t value) {
     value = cpu_mask_mode(value, cpu.L);
     if (cpu.L) {
-        REG_WRITE_EX(DBG_REG_ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hl, value);
+        REG_WRITE_EX(ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hl, value);
     } else {
         /* Partial mode write still conceptually writes the 16-bit shadow;
            trigger on the full-index ID so masks/overlaps apply uniformly. */
-        DBG_REG_TOUCH_W(DBG_REG_ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hls, value);
+        DBG_REG_TOUCH_W(ID_INDEX(cpu.PREFIX), cpu.registers.index[cpu.PREFIX].hls, value);
         cpu.registers.index[cpu.PREFIX].hls = value;
     }
 }
 
 static uint32_t cpu_read_other_index(void) {
-    return REG_READ_EX(DBG_REG_ID_INDEX(cpu.PREFIX ^ 1), cpu.registers.index[cpu.PREFIX ^ 1].hl);
+    return REG_READ_EX(ID_INDEX(cpu.PREFIX ^ 1), cpu.registers.index[cpu.PREFIX ^ 1].hl);
 }
 static void cpu_write_other_index(uint32_t value) {
-    REG_WRITE_EX(DBG_REG_ID_INDEX(cpu.PREFIX ^ 1), cpu.registers.index[cpu.PREFIX ^ 1].hl, value);
+    REG_WRITE_EX(ID_INDEX(cpu.PREFIX ^ 1), cpu.registers.index[cpu.PREFIX ^ 1].hl, value);
 }
 
 static uint32_t cpu_index_address(void) {
@@ -232,28 +232,28 @@ static uint32_t cpu_index_address(void) {
 static uint8_t cpu_read_reg(int i) {
     uint8_t value;
     switch (i) {
-        case 0: value = REG_READ_EX(DBG_REG_B, cpu.registers.B); break;
-        case 1: value = REG_READ_EX(DBG_REG_C, cpu.registers.C); break;
-        case 2: value = REG_READ_EX(DBG_REG_D, cpu.registers.D); break;
-        case 3: value = REG_READ_EX(DBG_REG_E, cpu.registers.E); break;
+        case 0: value = REG_READ_EX(B, cpu.registers.B); break;
+        case 1: value = REG_READ_EX(C, cpu.registers.C); break;
+        case 2: value = REG_READ_EX(D, cpu.registers.D); break;
+        case 3: value = REG_READ_EX(E, cpu.registers.E); break;
         case 4: value = cpu_read_index_high(); break;
         case 5: value = cpu_read_index_low(); break;
         case 6: value = cpu_read_byte(cpu_index_address()); break;
-        case 7: value = REG_READ_EX(DBG_REG_A, cpu.registers.A); break;
+        case 7: value = REG_READ_EX(A, cpu.registers.A); break;
         default: unreachable();
     }
     return value;
 }
 static void cpu_write_reg(int i, uint8_t value) {
     switch (i) {
-        case 0: REG_WRITE_EX(DBG_REG_B, cpu.registers.B, value); break;
-        case 1: REG_WRITE_EX(DBG_REG_C, cpu.registers.C, value); break;
-        case 2: REG_WRITE_EX(DBG_REG_D, cpu.registers.D, value); break;
-        case 3: REG_WRITE_EX(DBG_REG_E, cpu.registers.E, value); break;
+        case 0: REG_WRITE_EX(B, cpu.registers.B, value); break;
+        case 1: REG_WRITE_EX(C, cpu.registers.C, value); break;
+        case 2: REG_WRITE_EX(D, cpu.registers.D, value); break;
+        case 3: REG_WRITE_EX(E, cpu.registers.E, value); break;
         case 4: cpu_write_index_high(value); break;
         case 5: cpu_write_index_low(value); break;
         case 6: cpu_write_byte(cpu_index_address(), value); break;
-        case 7: REG_WRITE_EX(DBG_REG_A, cpu.registers.A, value); break;
+        case 7: REG_WRITE_EX(A, cpu.registers.A, value); break;
         default: unreachable();
     }
 }
@@ -269,28 +269,28 @@ static void cpu_read_write_reg(int read, int write) {
 static uint8_t cpu_read_reg_prefetched(int i, uint32_t address) {
     uint8_t value;
     switch (i) {
-        case 0: value = REG_READ_EX(DBG_REG_B, cpu.registers.B); break;
-        case 1: value = REG_READ_EX(DBG_REG_C, cpu.registers.C); break;
-        case 2: value = REG_READ_EX(DBG_REG_D, cpu.registers.D); break;
-        case 3: value = REG_READ_EX(DBG_REG_E, cpu.registers.E); break;
+        case 0: value = REG_READ_EX(B, cpu.registers.B); break;
+        case 1: value = REG_READ_EX(C, cpu.registers.C); break;
+        case 2: value = REG_READ_EX(D, cpu.registers.D); break;
+        case 3: value = REG_READ_EX(E, cpu.registers.E); break;
         case 4: value = cpu_read_index_high(); break;
         case 5: value = cpu_read_index_low(); break;
         case 6: value = cpu_read_byte(address); break;
-        case 7: value = REG_READ_EX(DBG_REG_A, cpu.registers.A); break;
+        case 7: value = REG_READ_EX(A, cpu.registers.A); break;
         default: unreachable();
     }
     return value;
 }
 static void cpu_write_reg_prefetched(int i, uint32_t address, uint8_t value) {
     switch (i) {
-        case 0: REG_WRITE_EX(DBG_REG_B, cpu.registers.B, value); break;
-        case 1: REG_WRITE_EX(DBG_REG_C, cpu.registers.C, value); break;
-        case 2: REG_WRITE_EX(DBG_REG_D, cpu.registers.D, value); break;
-        case 3: REG_WRITE_EX(DBG_REG_E, cpu.registers.E, value); break;
+        case 0: REG_WRITE_EX(B, cpu.registers.B, value); break;
+        case 1: REG_WRITE_EX(C, cpu.registers.C, value); break;
+        case 2: REG_WRITE_EX(D, cpu.registers.D, value); break;
+        case 3: REG_WRITE_EX(E, cpu.registers.E, value); break;
         case 4: cpu_write_index_high(value); break;
         case 5: cpu_write_index_low(value); break;
         case 6: cpu_write_byte(address, value); break;
-        case 7: REG_WRITE_EX(DBG_REG_A, cpu.registers.A, value); break;
+        case 7: REG_WRITE_EX(A, cpu.registers.A, value); break;
         default: unreachable();
     }
 }
@@ -298,8 +298,8 @@ static void cpu_write_reg_prefetched(int i, uint32_t address, uint8_t value) {
 static uint32_t cpu_read_rp(int i) {
     uint32_t value;
     switch (i) {
-        case 0: value = REG_READ_EX(DBG_REG_BC, cpu.registers.BC); break;
-        case 1: value = REG_READ_EX(DBG_REG_DE, cpu.registers.DE); break;
+        case 0: value = REG_READ_EX(BC, cpu.registers.BC); break;
+        case 1: value = REG_READ_EX(DE, cpu.registers.DE); break;
         case 2: value = cpu_read_index(); break;
         case 3: value = cpu_read_sp(); break;
         default: unreachable();
@@ -309,8 +309,8 @@ static uint32_t cpu_read_rp(int i) {
 static void cpu_write_rp(int i, uint32_t value) {
     value = cpu_mask_mode(value, cpu.L);
     switch (i) {
-        case 0: REG_WRITE_EX(DBG_REG_BC, cpu.registers.BC, value); break;
-        case 1: REG_WRITE_EX(DBG_REG_DE, cpu.registers.DE, value); break;
+        case 0: REG_WRITE_EX(BC, cpu.registers.BC, value); break;
+        case 1: REG_WRITE_EX(DE, cpu.registers.DE, value); break;
         case 2: cpu_write_index(value); break;
         case 3: cpu_write_sp(value); break;
         default: unreachable();
@@ -319,14 +319,14 @@ static void cpu_write_rp(int i, uint32_t value) {
 
 static uint32_t cpu_read_rp2(int i) {
     if (i == 3) {
-        return REG_READ_EX(DBG_REG_AF, cpu.registers.AF);
+        return REG_READ_EX(AF, cpu.registers.AF);
     } else {
         return cpu_read_rp(i);
     }
 }
 static void cpu_write_rp2(int i, uint32_t value) {
     if (i == 3) {
-        REG_WRITE_EX(DBG_REG_AF, cpu.registers.AF, value);
+        REG_WRITE_EX(AF, cpu.registers.AF, value);
     } else {
         cpu_write_rp(i, value);
     }
@@ -335,9 +335,9 @@ static void cpu_write_rp2(int i, uint32_t value) {
 static uint32_t cpu_read_rp3(int i) {
     uint32_t value;
     switch (i) {
-        case 0: value = REG_READ_EX(DBG_REG_BC, cpu.registers.BC); break;
-        case 1: value = REG_READ_EX(DBG_REG_DE, cpu.registers.DE); break;
-        case 2: value = REG_READ_EX(DBG_REG_HL, cpu.registers.HL); break;
+        case 0: value = REG_READ_EX(BC, cpu.registers.BC); break;
+        case 1: value = REG_READ_EX(DE, cpu.registers.DE); break;
+        case 2: value = REG_READ_EX(HL, cpu.registers.HL); break;
         case 3: value = cpu_read_index(); break;
         default: unreachable();
     }
@@ -346,9 +346,9 @@ static uint32_t cpu_read_rp3(int i) {
 static void cpu_write_rp3(int i, uint32_t value) {
     value = cpu_mask_mode(value, cpu.L);
     switch (i) {
-        case 0: REG_WRITE_EX(DBG_REG_BC, cpu.registers.BC, value); break;
-        case 1: REG_WRITE_EX(DBG_REG_DE, cpu.registers.DE, value); break;
-        case 2: REG_WRITE_EX(DBG_REG_HL, cpu.registers.HL, value); break;
+        case 0: REG_WRITE_EX(BC, cpu.registers.BC, value); break;
+        case 1: REG_WRITE_EX(DE, cpu.registers.DE, value); break;
+        case 2: REG_WRITE_EX(HL, cpu.registers.HL, value); break;
         case 3: cpu_write_index(value); break;
         default: unreachable();
     }
@@ -380,14 +380,14 @@ static void cpu_execute_daa(void) {
         v += 0x60;
     }
     if (r->flags.N) {
-        REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A - v));
-        REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+        REG_WRITE_EX(A, r->A, (uint8_t)(r->A - v));
+        REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
             | cpuflag_undef(r->F) | cpuflag_parity(r->A)
             | cpuflag_subtract(r->flags.N) | cpuflag_c(v >= 0x60)
             | cpuflag_halfcarry_b_sub(old, v, 0));
     } else {
-        REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A + v));
-        REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+        REG_WRITE_EX(A, r->A, (uint8_t)(r->A + v));
+        REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
             | cpuflag_undef(r->F) | cpuflag_parity(r->A)
             | cpuflag_subtract(r->flags.N) | cpuflag_c(v >= 0x60)
             | cpuflag_halfcarry_b_add(old, v, 0));
@@ -397,9 +397,9 @@ static void cpu_execute_daa(void) {
 static uint32_t cpu_dec_bc_partial_mode() {
     uint32_t value = cpu_mask_mode(cpu.registers.BC - 1, cpu.L);
     if (cpu.L) {
-        REG_WRITE_EX(DBG_REG_BC, cpu.registers.BC, value);
+        REG_WRITE_EX(BC, cpu.registers.BC, value);
     } else {
-        DBG_REG_TOUCH_W(DBG_REG_BC, cpu.registers.BCS, value);
+        DBG_REG_TOUCH_W(BC, cpu.registers.BCS, value);
         cpu.registers.BCS = value;
     }
     return value;
@@ -458,7 +458,7 @@ static void cpu_trap_rewind(uint_fast8_t rewind) {
     eZ80registers_t *r = &cpu.registers;
     cpu_prefetch_discard();
     cpu.cycles++;
-    REG_WRITE_EX(DBG_REG_PC, r->PC, cpu_mask_mode(r->PC - rewind, cpu.ADL));
+    REG_WRITE_EX(PC, r->PC, cpu_mask_mode(r->PC - rewind, cpu.ADL));
     cpu_clear_context();
     cpu_interrupt(0x00);
 }
@@ -497,55 +497,55 @@ static void cpu_execute_alu(int i, uint8_t v) {
     switch (i) {
         case 0: /* ADD A, v */
             old = r->A;
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A + v));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A + v));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_overflow_b_add(old, v, r->A)
                 | cpuflag_subtract(0) | cpuflag_carry_b(old + v)
                 | cpuflag_halfcarry_b_add(old, v, 0));
             break;
         case 1: /* ADC A, v */
             old = r->A;
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A + v + r->flags.C));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A + v + r->flags.C));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_overflow_b_add(old, v, r->A)
                 | cpuflag_subtract(0) | cpuflag_carry_b(old + v + r->flags.C)
                 | cpuflag_halfcarry_b_add(old, v, r->flags.C));
             break;
         case 2: /* SUB v */
             old = r->A;
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A - v));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A - v));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_overflow_b_sub(old, v, r->A)
                 | cpuflag_subtract(1) | cpuflag_carry_b(old - v)
                 | cpuflag_halfcarry_b_sub(old, v, 0));
             break;
         case 3: /* SBC v */
             old = r->A;
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A - v - r->flags.C));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A - v - r->flags.C));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_overflow_b_sub(old, v, r->A)
                 | cpuflag_subtract(1) | cpuflag_carry_b(old - v - r->flags.C)
                 | cpuflag_halfcarry_b_sub(old, v, r->flags.C));
             break;
         case 4: /* AND v */
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A & v));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A & v));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_parity(r->A)
                 | FLAG_H);
             break;
         case 5: /* XOR v */
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A ^ v));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A ^ v));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_parity(r->A));
             break;
         case 6: /* OR v */
-            REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->A | v));
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            REG_WRITE_EX(A, r->A, (uint8_t)(r->A | v));
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_parity(r->A));
             break;
         case 7: /* CP v */
             old = r->A - v;
-            REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_b(old) | cpuflag_zero(old)
+            REG_WRITE_EX(F, r->F, cpuflag_sign_b(old) | cpuflag_zero(old)
                 | cpuflag_undef(r->F) | cpuflag_subtract(1)
                 | cpuflag_carry_b(r->A - v)
                 | cpuflag_overflow_b_sub(r->A, v, old)
@@ -599,7 +599,7 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
             unreachable();
     }
     cpu_write_reg_prefetched(z, address, value);
-    REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_c(new_c) | cpuflag_sign_b(value) | cpuflag_parity(value)
+    REG_WRITE_EX(F, r->F, cpuflag_c(new_c) | cpuflag_sign_b(value) | cpuflag_parity(value)
         | cpuflag_undef(r->F) | cpuflag_zero(value));
 }
 
@@ -654,8 +654,8 @@ static void cpu_execute_rot_acc(int y)
             r->flags.N = 0;
             break;
     }
-    DBG_REG_TOUCH_W(DBG_REG_A, __oldA, r->A);
-    DBG_REG_TOUCH_W(DBG_REG_F, __oldF, r->F);
+    DBG_REG_TOUCH_W(A, __oldA, r->A);
+    DBG_REG_TOUCH_W(F, __oldF, r->F);
 }
 
 static void cpu_execute_bli() {
@@ -683,7 +683,7 @@ static void cpu_execute_bli() {
                 }
                 /* LDI, LDD, LDIR, LDDR */
                 cpu_write_byte(r->DE, cpu_read_byte(r->HL));
-                REG_WRITE_EX(DBG_REG_DE, r->DE, cpu_mask_mode(r->DE + delta, cpu.L));
+                REG_WRITE_EX(DE, r->DE, cpu_mask_mode(r->DE + delta, cpu.L));
                 r->flags.H = 0;
                 r->flags.PV = cpu_dec_bc_partial_mode() != 0; /* Do not mask BC */
                 r->flags.N = 0;
@@ -804,7 +804,7 @@ static void cpu_execute_bli() {
                 return;
         }
         /* All block instructions */
-        REG_WRITE_EX(DBG_REG_HL, r->HL, cpu_mask_mode(r->HL + delta, cpu.L));
+        REG_WRITE_EX(HL, r->HL, cpu_mask_mode(r->HL + delta, cpu.L));
         cpu.cycles += internalCycles;
         if (repeat) {
             switch (cpu.context.opcode) {
@@ -977,8 +977,8 @@ void cpu_execute(void) {
                                     break;
                                 case 1:  /* EX af,af' */
                                     w = r->AF;
-                                    REG_WRITE_EX(DBG_REG_AF,  r->AF,  r->_AF);
-                                    REG_WRITE_EX(DBG_REG_AFP, r->_AF, w);
+                                    REG_WRITE_EX(AF,  r->AF,  r->_AF);
+                                    REG_WRITE_EX(AFP, r->_AF, w);
                                     break;
                                 case 2: /* DJNZ d */
                                     s = cpu_fetch_offset();
@@ -1208,14 +1208,14 @@ void cpu_execute(void) {
                                             break;
                                         case 1: /* EXX */
                                             w = r->BC;
-                                            REG_WRITE_EX(DBG_REG_BC,  r->BC,  r->_BC);
-                                            REG_WRITE_EX(DBG_REG_BCP, r->_BC, w);
+                                            REG_WRITE_EX(BC,  r->BC,  r->_BC);
+                                            REG_WRITE_EX(BCP, r->_BC, w);
                                             w = r->DE;
-                                            REG_WRITE_EX(DBG_REG_DE,  r->DE,  r->_DE);
-                                            REG_WRITE_EX(DBG_REG_DEP, r->_DE, w);
+                                            REG_WRITE_EX(DE,  r->DE,  r->_DE);
+                                            REG_WRITE_EX(DEP, r->_DE, w);
                                             w = r->HL;
-                                            REG_WRITE_EX(DBG_REG_HL,  r->HL,  r->_HL);
-                                            REG_WRITE_EX(DBG_REG_HLP, r->_HL, w);
+                                            REG_WRITE_EX(HL,  r->HL,  r->_HL);
+                                            REG_WRITE_EX(HLP, r->_HL, w);
                                             break;
                                         case 2: /* JP (rr) */
                                             cpu_prefetch_discard();
@@ -1296,8 +1296,8 @@ void cpu_execute(void) {
                                     break;
                                 case 5: /* EX DE, HL */
                                     w = cpu_mask_mode(r->DE, cpu.L);
-                                    REG_WRITE_EX(DBG_REG_DE, r->DE, cpu_mask_mode(r->HL, cpu.L));
-                                    REG_WRITE_EX(DBG_REG_HL, r->HL, w);
+                                    REG_WRITE_EX(DE, r->DE, cpu_mask_mode(r->HL, cpu.L));
+                                    REG_WRITE_EX(HL, r->HL, w);
                                     break;
                                 case 6: /* DI */
                                     cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = false;
@@ -1421,15 +1421,15 @@ void cpu_execute(void) {
                                                             op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                                             if (context.q == 0) { /* SBC HL, rp[p] */
                                                                 new_word = old_word - op_word - r->flags.C;
-                                                                REG_WRITE_EX(DBG_REG_HL, r->HL, cpu_mask_mode(new_word, cpu.L));
-                                                                REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
+                                                                REG_WRITE_EX(HL, r->HL, cpu_mask_mode(new_word, cpu.L));
+                                                                REG_WRITE_EX(F, r->F, cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
                                                                     | cpuflag_subtract(1) | cpuflag_carry_w(new_word, cpu.L)
                                                                     | cpuflag_halfcarry_w_sub(old_word, op_word, r->flags.C));
                                                             } else { /* ADC HL, rp[p] */
                                                                 new_word = old_word + op_word + r->flags.C;
-                                                                REG_WRITE_EX(DBG_REG_HL, r->HL, cpu_mask_mode(new_word, cpu.L));
-                                                                REG_WRITE_EX(DBG_REG_F, r->F, cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
+                                                                REG_WRITE_EX(HL, r->HL, cpu_mask_mode(new_word, cpu.L));
+                                                                REG_WRITE_EX(F, r->F, cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
                                                                     | cpuflag_subtract(0) | cpuflag_carry_w(new_word, cpu.L)
                                                                     | cpuflag_halfcarry_w_add(old_word, op_word, r->flags.C));
@@ -1455,7 +1455,7 @@ void cpu_execute(void) {
                                                                         break;
                                                                     case 1:  /* LEA IX, IY + d */
                                                                         cpu.PREFIX = 3;
-                                                                        REG_WRITE_EX(DBG_REG_IX, r->IX, cpu_index_address());
+                                                                        REG_WRITE_EX(IX, r->IX, cpu_index_address());
                                                                         break;
                                                                     case 2:  /* TST A, n */
                                                                         new = r->A & cpu_fetch_byte();
@@ -1489,7 +1489,7 @@ void cpu_execute(void) {
                                                                     break;
                                                                 case 2: /* LEA IY, IX + d */
                                                                     cpu.PREFIX = 2;
-                                                                    REG_WRITE_EX(DBG_REG_IY, r->IY, cpu_index_address());
+                                                                    REG_WRITE_EX(IY, r->IY, cpu_index_address());
                                                                     break;
                                                                 case 3:
                                                                 case 6: /* OPCODETRAP */
@@ -1500,7 +1500,7 @@ void cpu_execute(void) {
                                                                     break;
                                                                 case 5: /* LD MB, A */
                                                                     if (cpu.ADL) {
-                                                                        REG_WRITE_EX(DBG_REG_MBASE, r->MBASE, r->A);
+                                                                        REG_WRITE_EX(MBASE, r->MBASE, r->A);
                                                                     }
                                                                     break;
                                                                 case 7: /* STMIX */
@@ -1522,7 +1522,7 @@ void cpu_execute(void) {
                                                                     cpu_push_word(r->IY + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: /* LD A, MB */
-                                                                    REG_WRITE_EX(DBG_REG_A, r->A, r->MBASE);
+                                                                    REG_WRITE_EX(A, r->A, r->MBASE);
                                                                     break;
                                                                 case 6: /* SLP */
                                                                     cpu.cycles++;
@@ -1536,19 +1536,19 @@ void cpu_execute(void) {
                                                         case 7:
                                                             switch (context.y) {
                                                                 case 0: /* LD I, A */
-                                                                    REG_WRITE_EX(DBG_REG_I, r->I, r->A);
+                                                                    REG_WRITE_EX(I, r->I, r->A);
                                                                     break;
                                                                 case 1: /* LD R, A */
-                                                                    REG_WRITE_EX(DBG_REG_R, r->R, (uint8_t)(r->A << 1 | r->A >> 7));
+                                                                    REG_WRITE_EX(R, r->R, (uint8_t)(r->A << 1 | r->A >> 7));
                                                                     break;
                                                                 case 2: /* LD A, I */
-                                                                    REG_WRITE_EX(DBG_REG_A, r->A, r->I);
+                                                                    REG_WRITE_EX(A, r->A, r->I);
                                                                     r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
                                                                     break;
                                                                 case 3: /* LD A, R */
-                                                                    REG_WRITE_EX(DBG_REG_A, r->A, (uint8_t)(r->R >> 1 | r->R << 7));
+                                                                    REG_WRITE_EX(A, r->A, (uint8_t)(r->R >> 1 | r->R << 7));
                                                                     r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
@@ -1592,14 +1592,14 @@ void cpu_execute(void) {
                                                             break;
                                                     }
                                                 cpu_execute_bli_start:
-                                                    REG_WRITE_EX(DBG_REG_PC, r->PC, cpu_address_mode(r->PC - 2 - cpu.SUFFIX, cpu.ADL));
+                                                    REG_WRITE_EX(PC, r->PC, cpu_address_mode(r->PC - 2 - cpu.SUFFIX, cpu.ADL));
                                                     cpu.context = context;
                                                 cpu_execute_bli_continue:
                                                     cpu_execute_bli();
                                                     if (cpu.inBlock) {
                                                         goto cpu_execute_continue;
                                                     } else {
-                                                        REG_WRITE_EX(DBG_REG_PC, r->PC, cpu_address_mode(r->PC + 2 + cpu.SUFFIX, cpu.ADL));
+                                                        REG_WRITE_EX(PC, r->PC, cpu_address_mode(r->PC + 2 + cpu.SUFFIX, cpu.ADL));
                                                     }
                                                     break;
                                                 case 3:  /* There are only a few of these, so a simple switch for these shouldn't matter too much */
@@ -1610,10 +1610,10 @@ void cpu_execute(void) {
                                                         case 0xCB: /* OTDRX */
                                                             goto cpu_execute_bli_start;
                                                         case 0xC7: /* LD I, HL */
-                                                            REG_WRITE_EX(DBG_REG_I, r->I, r->HL);
+                                                            REG_WRITE_EX(I, r->I, r->HL);
                                                             break;
                                                         case 0xD7: /* LD HL, I */
-                                                            REG_WRITE_EX(DBG_REG_HL, r->HL, cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L));
+                                                            REG_WRITE_EX(HL, r->HL, cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L));
                                                             r->F = cpuflag_undef(r->F);
                                                             break;
                                                         default:   /* OPCODETRAP */
