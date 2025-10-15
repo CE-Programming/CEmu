@@ -147,6 +147,9 @@ void MainWindow::debugEnable() {
 void MainWindow::debugStep(int mode) {
     if (mode == DBG_RUN_UNTIL) {
         debug_step(mode, m_runUntilAddr);
+    } else if (mode == DBG_UNTIL_RET) {
+        // no address needed, cpu checks for returns internally
+        debug_step(mode, 0);
     } else {
         disasm.base = static_cast<int32_t>(cpu.registers.PC);
         disasmGet(true);
@@ -679,6 +682,7 @@ void MainWindow::debugGuiState(bool state) const {
     ui->buttonStepOver->setEnabled(state);
     ui->buttonStepNext->setEnabled(state);
     ui->buttonStepOut->setEnabled(state);
+    ui->buttonUntilRet->setEnabled(state);
     ui->buttonCertID->setEnabled(state);
     ui->groupCPU->setEnabled(state);
     ui->groupFlags->setEnabled(state);
@@ -3001,6 +3005,17 @@ void MainWindow::stepOut() {
 
     debugSync();
     debugStep(DBG_STEP_OUT);
+}
+
+void MainWindow::stepUntilRet() {
+    if (!guiDebug) {
+        return;
+    }
+
+    disconnect(m_shortcutStepUntilRet, &QShortcut::activated, this, &MainWindow::stepUntilRet);
+
+    debugSync();
+    debugStep(DBG_UNTIL_RET);
 }
 
 //------------------------------------------------

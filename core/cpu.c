@@ -55,6 +55,19 @@ static void cpu_inst_start(void) {
 #endif
 }
 
+#ifdef DEBUG_SUPPORT
+static void debug_break_before_ret(const uint32_t len) {
+    if (unlikely(debug.untilRet)) {
+        const uint32_t curSp = cpu_address_mode(cpu.registers.stack[cpu.L].hl, cpu.L);
+        if (curSp >= debug.untilRetBase) {
+            const uint32_t start = cpu_mask_mode(cpu.registers.PC - len, cpu.ADL);
+            cpu.registers.PC = start;
+            debug_open(DBG_STEP, cpu.registers.PC);
+        }
+    }
+}
+#endif
+
 uint32_t cpu_address_mode(uint32_t address, bool mode) {
     if (mode) {
         return address & 0xFFFFFF;
@@ -1185,6 +1198,9 @@ void cpu_execute(void) {
                             cpu.cycles++;
                             if (cpu_read_cc(context.y)) {
                                 r->R += 2;
+#ifdef DEBUG_SUPPORT
+                                debug_break_before_ret(1);
+#endif
                                 cpu_return();
                             }
                             break;
@@ -1204,6 +1220,9 @@ void cpu_execute(void) {
                                     }
                                     switch (context.p) {
                                         case 0: /* RET */
+#ifdef DEBUG_SUPPORT
+                                            debug_break_before_ret(1);
+#endif
                                             cpu_return();
                                             break;
                                         case 1: /* EXX */
@@ -1485,6 +1504,9 @@ void cpu_execute(void) {
                                                                     /* This is actually identical to reti on the z80 */
                                                                 case 1: /* RETI */
                                                                     cpu.IEF1 = cpu.IEF2;
+#ifdef DEBUG_SUPPORT
+                                                                    debug_break_before_ret(2);
+#endif
                                                                     cpu_return();
                                                                     break;
                                                                 case 2: /* LEA IY, IX + d */

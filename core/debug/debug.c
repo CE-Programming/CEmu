@@ -312,6 +312,11 @@ void debug_step(int mode, uint32_t addr) {
             gui_debug_close();
             debug.tempExec = addr;
             break;
+        case DBG_UNTIL_RET:
+            gui_debug_close();
+            debug.untilRet = true;
+            debug.untilRetBase = cpu_address_mode(cpu.registers.stack[cpu.L].hl, cpu.L);
+            break;
         case DBG_BASIC_STEP_IN:
         case DBG_BASIC_STEP_NEXT:
             gui_debug_close();
@@ -328,6 +333,8 @@ void debug_step(int mode, uint32_t addr) {
 void debug_clear_step(void) {
     debug.step = debug.stepOver = false;
     debug.tempExec = debug.stepOut = ~0u;
+    debug.untilRet = false;
+    debug.untilRetBase = 0;
 }
 
 void debug_clear_basic_step(void) {

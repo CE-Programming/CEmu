@@ -145,6 +145,8 @@ typedef struct {
     int64_t flashDelayCycles;
     bool step, stepOver;
     uint32_t tempExec, stepOut;
+    bool untilRet;
+    uint32_t untilRetBase; /* normalized 24bit stack pointer baseline */
 
     uint32_t stackIndex, stackSize;
     debug_stack_entry_t *stack;
@@ -179,6 +181,7 @@ enum {
     DBG_STEP_OVER,
     DBG_STEP_NEXT,
     DBG_RUN_UNTIL,
+    DBG_UNTIL_RET,
     DBG_BASIC_STEP_IN,
     DBG_BASIC_STEP_NEXT,
 };

@@ -354,6 +354,7 @@ private:
     void stepOver();
     void stepNext();
     void stepOut();
+    void stepUntilRet();
 
     // os view
     void osUpdate();
@@ -710,6 +711,7 @@ private:
     QShortcut *m_shortcutStepOver;
     QShortcut *m_shortcutStepNext;
     QShortcut *m_shortcutStepOut;
+    QShortcut *m_shortcutStepUntilRet;
     QShortcut *m_shortcutNavBack;
     QShortcut *m_shortcutNavForward;
     QShortcut *m_shortcutDebug;
