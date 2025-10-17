@@ -23,6 +23,7 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QFileDialog>
+#include <QtCore/QStringList>
 #include <QtCore/QSettings>
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
@@ -378,6 +379,8 @@ private:
     void gotoMemAddr(uint32_t addr);
     HexWidget *gotoMemAddrNoRaise(uint32_t addr);
     QAction *gotoMemAction(QMenu *menu, bool vat = false) const;
+    const QStringList &disasmGotoCompletions();
+    void markDisasmGotoCompletionsDirty();
 
     void handleCtrlClickText(QPlainTextEdit *edit);
     void handleCtrlClickLine(QLineEdit *edit);
@@ -747,6 +750,9 @@ private:
     std::vector<QString> m_disasmGotoHistory;
 
     std::vector<QString> m_memGotoHistory;
+
+    QStringList m_disasmGotoCompletions;
+    bool m_disasmGotoCompletionsDirty = true;
 
     QString m_pathConfig;
     QMenu *m_menuDocks;

@@ -26,6 +26,7 @@
 
 #include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
+#include <QtCore/QStringList>
 #include <QtCore/QRegularExpression>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
@@ -40,6 +41,8 @@
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
 #include <algorithm>
+#include <array>
+#include <ranges>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -48,9 +51,44 @@
     #include <unistd.h>
 #endif
 
+using namespace Qt::StringLiterals;
+
 const QString MainWindow::DEBUG_UNSET_ADDR = QStringLiteral("XXXXXX");
 const QString MainWindow::DEBUG_UNSET_PORT = QStringLiteral("XXXX");
 
+namespace {
+    // Register name lookup for watchpoint UI
+    constexpr std::array<QLatin1String, DBG_REG_COUNT> kRegIdToName = { {
+        // order must match dbg_reg_t
+        "A"_L1, "F"_L1, "B"_L1, "C"_L1, "D"_L1, "E"_L1, "H"_L1, "L"_L1,
+        "IXH"_L1, "IXL"_L1, "IYH"_L1, "IYL"_L1,
+        "A'"_L1, "F'"_L1, "B'"_L1, "C'"_L1, "D'"_L1, "E'"_L1, "H'"_L1, "L'"_L1,
+        "AF"_L1, "BC"_L1, "DE"_L1, "HL"_L1, "IX"_L1, "IY"_L1,
+        "AF'"_L1, "BC'"_L1, "DE'"_L1, "HL'"_L1,
+        "SPS"_L1, "SPL"_L1, "PC"_L1, "I"_L1, "R"_L1, "MBASE"_L1
+    } };
+
+    struct RegObjEntry {
+        QLatin1String name;
+        int id;
+    };
+
+    inline constexpr std::array<RegObjEntry, 13> kRegObjMap = { {
+        {"af"_L1, DBG_REG_AF}, {"hl"_L1, DBG_REG_HL}, {"de"_L1, DBG_REG_DE}, {"bc"_L1, DBG_REG_BC},
+        {"ix"_L1, DBG_REG_IX}, {"iy"_L1, DBG_REG_IY},
+        {"af_"_L1, DBG_REG_AFP}, {"hl_"_L1, DBG_REG_HLP}, {"de_"_L1, DBG_REG_DEP}, {"bc_"_L1, DBG_REG_BCP},
+        {"spl"_L1, DBG_REG_SPL}, {"pc"_L1, DBG_REG_PC}, {"sps"_L1, DBG_REG_SPS},
+    } };
+
+    int regIdFromObjectName(const QString &nameparam) {
+        for (const auto & entry : kRegObjMap) {
+            if (nameparam == entry.name) {
+                return entry.id;
+            }
+        }
+        return -1; // should never happen?
+    }
+}
 // -----------------------------------------------
 // Debugger Initialization
 // -----------------------------------------------
@@ -70,11 +108,13 @@ void MainWindow::debugInit() {
     ui->de_regView->installEventFilter(this);
     ui->rregView->installEventFilter(this);
     ui->hl->installEventFilter(this);
+    ui->af->installEventFilter(this);
     ui->bc->installEventFilter(this);
     ui->de->installEventFilter(this);
     ui->ix->installEventFilter(this);
     ui->iy->installEventFilter(this);
     ui->hl_->installEventFilter(this);
+    ui->af_->installEventFilter(this);
     ui->bc_->installEventFilter(this);
     ui->de_->installEventFilter(this);
     ui->pc->installEventFilter(this);
@@ -184,8 +224,23 @@ error:
 
     disasm.map.clear();
     disasm.reverse.clear();
+    markDisasmGotoCompletionsDirty();
     for (QString &equFile : m_equateFiles) {
         equatesAddFile(equFile);
+    }
+
+    for (unsigned id = 0; id < kRegIdToName.size(); ++id) {
+        const QString keyBase = QStringLiteral("regwatch/") + QString(kRegIdToName[id]);
+        const QString rKey = keyBase + QStringLiteral("/read");
+        const QString wKey = keyBase + QStringLiteral("/write");
+        const QString rVal = info.value(rKey).toString();
+        const QString wVal = info.value(wKey).toString();
+        if (!rVal.isEmpty()) {
+            debug_reg_watch(id, DBG_MASK_READ, rVal == TXT_YES || rVal.compare(QStringLiteral("true"), Qt::CaseInsensitive) == 0);
+        }
+        if (!wVal.isEmpty()) {
+            debug_reg_watch(id, DBG_MASK_WRITE, wVal == TXT_YES || wVal.compare(QStringLiteral("true"), Qt::CaseInsensitive) == 0);
+        }
     }
 }
 
@@ -258,6 +313,14 @@ void MainWindow::debugExportFile(const QString &filename) const {
     info.setValue(QStringLiteral("portmonitor/freeze"), portF);
 
     info.setValue(QStringLiteral("equates/files"), m_equateFiles);
+
+    // Save register watch settings
+    for (unsigned id = 0; id < kRegIdToName.size(); ++id) {
+        const QString keyBase = QStringLiteral("regwatch/") + QString(kRegIdToName[id]);
+        const int mask = debug_reg_get_mask(id);
+        info.setValue(keyBase + QStringLiteral("/read"), (mask & DBG_MASK_READ) ? TXT_YES : TXT_NO);
+        info.setValue(keyBase + QStringLiteral("/write"), (mask & DBG_MASK_WRITE) ? TXT_YES : TXT_NO);
+    }
     info.sync();
 }
 
@@ -463,6 +526,13 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             debugRaise();
             gotoMemAddrNoRaise(static_cast<uint32_t>(hex2int(input)));
             return;
+        case DBG_REG_READ:
+        case DBG_REG_WRITE: {
+            const QString rn = kRegIdToName[data];
+            const QString act = (reason == DBG_REG_READ) ? tr("Read") : tr("Wrote");
+            text = act + tr(" register ") + rn;
+            break;
+        }
         case DBG_PORT_READ:
         case DBG_PORT_WRITE:
             input = int2hex(data, 4);
@@ -1820,6 +1890,7 @@ void MainWindow::updateLabels() {
 void MainWindow::equatesRefresh() {
     disasm.map.clear();
     disasm.reverse.clear();
+    markDisasmGotoCompletionsDirty();
     for (QString &file : m_equateFiles) {
         equatesAddFile(file);
     }
@@ -1917,11 +1988,14 @@ void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
     if (!equatesAddEquateInternal(name, address)) {
         return;
     }
+    markDisasmGotoCompletionsDirty();
     uint8_t *ptr = static_cast<uint8_t *>(phys_mem_ptr(address - 4, 9));
     if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
         uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
         if (phys_mem_ptr(address2, 1)) {
-            equatesAddEquateInternal(QStringLiteral("_") + name, address2);
+            if (equatesAddEquateInternal(QStringLiteral("_") + name, address2)) {
+                markDisasmGotoCompletionsDirty();
+            }
         }
     }
 }
@@ -2081,14 +2155,15 @@ void MainWindow::gotoPressed() {
         m_gotoAddr = m_disasm->getSelectedAddr();
     }
 
-    GotoDialog dlg(m_gotoAddr, m_disasmGotoHistory, this);
+    GotoDialog dlg(m_gotoAddr, m_disasmGotoHistory, disasmGotoCompletions(), this);
     if (dlg.exec() == QDialog::Accepted) {
         QString typed = dlg.text().trimmed();
         bool ok = false;
         QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
             m_gotoAddr = typed;
-            disasmUpdateAddr(hex2int(resolved), false);
+            // changes are routed through here to make sure history is updated for fwd and back
+            gotoDisasmAddr(static_cast<uint32_t>(hex2int(resolved)));
 
             auto &hist = m_disasmGotoHistory;
             std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
@@ -2159,6 +2234,46 @@ QAction *MainWindow::gotoMemAction(QMenu *menu, bool vat) const {
     return gotoMem;
 }
 
+const QStringList &MainWindow::disasmGotoCompletions() {
+    if (!m_disasmGotoCompletionsDirty) {
+        return m_disasmGotoCompletions;
+    }
+
+    m_disasmGotoCompletionsDirty = false;
+
+    QStringList completions;
+    static constexpr std::array kRegisterAliases = {
+        "AF"_L1, "HL"_L1, "DE"_L1, "BC"_L1, "IX"_L1, "IY"_L1,
+        "AF'"_L1, "HL'"_L1, "DE'"_L1, "BC'"_L1, "SPL"_L1, "SPS"_L1, "PC"_L1
+    };
+
+    completions.reserve(static_cast<int>(disasm.map.size() + kRegisterAliases.size()));
+
+    for (const auto &name : disasm.map | std::views::values) {
+        const auto qname = QString::fromStdString(name);
+        if (!completions.contains(qname, Qt::CaseInsensitive)) {
+            completions.append(qname);
+        }
+    }
+
+    for (const auto alias : kRegisterAliases) {
+        if (!completions.contains(alias)) {
+            completions.append(QString(alias));
+        }
+    }
+
+    std::ranges::sort(completions, [](const QString &lhs, const QString &rhs) {
+        return lhs.localeAwareCompare(rhs) < 0;
+    });
+
+    m_disasmGotoCompletions = std::move(completions);
+    return m_disasmGotoCompletions;
+}
+
+void MainWindow::markDisasmGotoCompletionsDirty() {
+    m_disasmGotoCompletionsDirty = true;
+}
+
 void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
     if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier)) {
         bool ok = true;
@@ -2215,9 +2330,75 @@ void MainWindow::handleCtrlClickLine(QLineEdit *edit) {
 // Tooltips
 // ------------------------------------------------
 
+struct ActionRec {
+    QAction *act;
+    unsigned id;
+    int which;
+};
+
 bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
     if (!guiDebug) {
         return QMainWindow::eventFilter(obj, e);
+    }
+
+    // Register watchpoint context menu
+    if (e->type() == QEvent::ContextMenu) {
+        const QString name = obj->objectName();
+        const int regId = regIdFromObjectName(name);
+
+        if (regId >= 0) {
+            const auto *ce = static_cast<QContextMenuEvent*>(e);
+            QMenu menu(this);
+
+            QVector<ActionRec> recs;
+
+            auto addRegMenu = [&](const unsigned id) {
+                const QString regName = kRegIdToName[id];
+                QMenu *grp = menu.addMenu(regName);
+                const int m = debug_reg_get_mask(id);
+
+                QAction *watchReadAction = grp->addAction(tr("Watch reads"));
+                watchReadAction->setCheckable(true);
+                watchReadAction->setChecked(m & DBG_MASK_READ);
+
+                QAction *watchWriteAction = grp->addAction(tr("Watch writes"));
+                watchWriteAction->setCheckable(true);
+                watchWriteAction->setChecked(m & DBG_MASK_WRITE);
+
+                recs.push_back({watchReadAction, id, DBG_MASK_READ});
+                recs.push_back({watchWriteAction, id, DBG_MASK_WRITE});
+            };
+
+            addRegMenu(static_cast<unsigned>(regId));
+
+            switch (regId) {
+                case DBG_REG_AF: addRegMenu(DBG_REG_A); addRegMenu(DBG_REG_F); break;
+                case DBG_REG_AFP: addRegMenu(DBG_REG_AP); addRegMenu(DBG_REG_FP); break;
+                case DBG_REG_BC: addRegMenu(DBG_REG_B); addRegMenu(DBG_REG_C); break;
+                case DBG_REG_BCP: addRegMenu(DBG_REG_BP); addRegMenu(DBG_REG_CP); break;
+                case DBG_REG_DE: addRegMenu(DBG_REG_D); addRegMenu(DBG_REG_E); break;
+                case DBG_REG_DEP: addRegMenu(DBG_REG_DP); addRegMenu(DBG_REG_EP); break;
+                case DBG_REG_HL: addRegMenu(DBG_REG_H); addRegMenu(DBG_REG_L); break;
+                case DBG_REG_HLP: addRegMenu(DBG_REG_HP); addRegMenu(DBG_REG_LP); break;
+                case DBG_REG_IX: addRegMenu(DBG_REG_IXH); addRegMenu(DBG_REG_IXL); break;
+                case DBG_REG_IY: addRegMenu(DBG_REG_IYH); addRegMenu(DBG_REG_IYL); break;
+                default: break;
+            }
+
+            const QAction *sel = menu.exec(ce->globalPos());
+            if (sel) {
+                for (const auto & rec : recs) {
+                    if (rec.act == sel) {
+                        const bool set = rec.act->isChecked();
+                        debug_reg_watch(rec.id, rec.which, set);
+                        break;
+                    }
+                }
+            }
+
+            e->accept();
+            return true;
+        }
     }
 
     // Mouse back/forward in Disassembly view

@@ -1,6 +1,7 @@
 name: Build Linux
 
 permissions:
+  actions: write
   contents: write
   packages: write
 
@@ -50,10 +51,6 @@ jobs:
     - name: workaround for default apt mirror connectivity issues
       run: |
         sudo sed -i 's/azure\.//' /etc/apt/sources.list
-
-    - name: Remove windows-only qt version override in vcpkg.json
-      run: |
-        sed -i '/For Windows only/d' ${{ github.workspace }}/gui/qt/vcpkg.json
 
     - name: Install dependencies
       run: |

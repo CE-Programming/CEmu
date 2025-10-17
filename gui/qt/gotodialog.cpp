@@ -1,13 +1,17 @@
 #include "gotodialog.h"
 
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QCompleter>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QSizePolicy>
+#include <QtWidgets/QLineEdit>
+#include <QtCore/Qt>
 
 GotoDialog::GotoDialog(const QString &seed,
                        const std::vector<QString> &history,
+                       const QStringList &completions,
                        QWidget *parent)
     : QDialog(parent) {
     setWindowTitle(tr("Goto"));
@@ -18,6 +22,19 @@ GotoDialog::GotoDialog(const QString &seed,
 
     m_combo = new QComboBox(this); // NOLINT: Qt parent-ownership handles deletion
     m_combo->setEditable(true);
+    m_combo->setInsertPolicy(QComboBox::NoInsert);
+
+    if (!completions.isEmpty()) {
+        auto *completer = new QCompleter(completions, m_combo); // NOLINT: Qt parent-ownership handles deletion
+        completer->setCaseSensitivity(Qt::CaseInsensitive);
+        completer->setFilterMode(Qt::MatchContains);
+        completer->setCompletionMode(QCompleter::PopupCompletion);
+        if (auto *lineEdit = m_combo->lineEdit()) {
+            lineEdit->setCompleter(completer);
+        } else {
+            m_combo->setCompleter(completer);
+        }
+    }
 
     for (const QString &h : history) {
         m_combo->addItem(h);

@@ -11,6 +11,7 @@
 #include <QtGui/QClipboard>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QStringList>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <algorithm>
@@ -107,7 +108,7 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
 }
 
 void MainWindow::flashGotoPressed() {
-    if (GotoDialog dlg(m_flashGotoAddr, m_memGotoHistory, this); dlg.exec() == QDialog::Accepted) {
+    if (GotoDialog dlg(m_flashGotoAddr, m_memGotoHistory, QStringList(), this); dlg.exec() == QDialog::Accepted) {
         const QString typed = dlg.text().trimmed();
         bool ok = false;
         const QString resolved = resolveAddressOrEquate(typed, &ok);
@@ -127,7 +128,7 @@ void MainWindow::flashGotoPressed() {
 }
 
 void MainWindow::ramGotoPressed() {
-    GotoDialog dlg(m_RamGotoAddr, m_memGotoHistory, this);
+    GotoDialog dlg(m_RamGotoAddr, m_memGotoHistory, QStringList(), this);
     if (dlg.exec() == QDialog::Accepted) {
         const QString typed = dlg.text().trimmed();
         bool ok = false;
@@ -216,7 +217,7 @@ void MainWindow::memGotoEdit(HexWidget *edit) {
         return;
     }
 
-    GotoDialog dlg(m_memGotoAddr, m_memGotoHistory, this);
+    GotoDialog dlg(m_memGotoAddr, m_memGotoHistory, QStringList(), this);
     if (dlg.exec() == QDialog::Accepted) {
         QString typed = dlg.text().trimmed();
         bool ok = false;

@@ -7,6 +7,7 @@
 #include <QtCore/QCommandLineParser>
 #include <QtWidgets/QApplication>
 #include <QtGui/QFontDatabase>
+#include <QtWidgets/QStyleFactory>
 
 int main(int argc, char *argv[]) {
 
@@ -15,6 +16,16 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
     QApplication app(argc, argv);
+
+#if defined(Q_OS_WIN)
+    const QString kDesiredStyle = QStringLiteral("WindowsVista");
+    const auto availableStyles = QStyleFactory::keys();
+    if (availableStyles.contains(kDesiredStyle, Qt::CaseInsensitive)) {
+        QApplication::setStyle(QStyleFactory::create(kDesiredStyle));
+    } else if (availableStyles.contains(QStringLiteral("Fusion"), Qt::CaseInsensitive)) {
+        QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
+    }
+#endif
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
