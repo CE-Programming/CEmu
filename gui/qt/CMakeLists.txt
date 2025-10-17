@@ -73,7 +73,10 @@ endif()
 include(GNUInstallDirs)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS DBus Gui Network Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Gui Network Widgets)
+if(NOT WIN32)
+    find_package(Qt6 COMPONENTS DBus)
+endif()
 
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOMOC ON)
@@ -284,10 +287,12 @@ endif()
 target_link_libraries(CEmu PRIVATE
     Qt::Core
     Qt::Gui
-    Qt::DBus # needed at runtime by QtGui for some reason...?
     Qt::Network
     Qt::Widgets
 )
+if(TARGET Qt::DBus)
+    target_link_libraries(CEmu PRIVATE Qt::DBus)
+endif()
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT lto_supported OUTPUT error)
