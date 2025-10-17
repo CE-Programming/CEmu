@@ -147,6 +147,7 @@ typedef struct {
     uint32_t tempExec, stepOut;
     bool untilRet;
     uint32_t untilRetBase; /* normalized 24bit stack pointer baseline */
+    uint32_t untilRetIndex; /* call-stack index when DBG_UNTIL_RET started */
 
     uint32_t stackIndex, stackSize;
     debug_stack_entry_t *stack;
@@ -190,6 +191,7 @@ enum {
 void debug_step_switch(void);
 void debug_clear_step(void);
 void debug_clear_basic_step(void);
+void debug_until_ret_handle_indirect_jump(uint32_t target, uint32_t currentSp);
 #endif
 
 /* register watchpoints */
