@@ -18,17 +18,24 @@
     {
       "name": "qtbase",
       "default-features": false,
-      "features": [ "dbus", "gui", "network", "widgets", "png" ]
+      "features": [ "gui", "network", "widgets", "png" ],
+      "platform": "windows"
     },
     {
       "name": "qtbase",
       "default-features": false,
-      "features": [ "fontconfig", "xcb" ],
+      "features": [ "gui", "network", "widgets", "png" ],
+      "platform": "osx"
+    },
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [ "gui", "network", "widgets", "png", "dbus", "fontconfig", "xcb" ],
       "platform": "linux"
     }
   ],
   "builtin-baseline": "a62ce77d56ee07513b4b67de1ec2daeaebfae51a",
   "overrides": [
-    { "name": "qtbase", "version": "6.6.3", "$comment": "For Windows only due to UI issues later. For non-Windows, edited out in CI" }
+    { "name": "qtbase", "version": "6.9.1", "$comment": "For Windows only due to UI issues later. For non-Windows, edited out in CI" }
   ]
 }
