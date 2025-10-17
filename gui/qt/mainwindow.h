@@ -804,9 +804,7 @@ private:
     bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
 
-    QString m_styleForMode[2];
-    QPalette m_fusionLightPalette;
-    QPalette m_fusionDarkPalette;
+    
 
     static const char *m_varExtensions[];
 

@@ -39,6 +39,7 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QStyle>
+#include <QtGui/QStyleHints>
 #include <QtWidgets/QStyleFactory>
 #include <QtNetwork/QNetworkReply>
 #include <QtCore/QSignalBlocker>
@@ -46,32 +47,6 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
-
-namespace {
-QPalette createFusionDarkPalette(const QPalette &base) {
-    QPalette palette = base;
-    palette.setColor(QPalette::Window, QColor(53, 53, 53));
-    palette.setColor(QPalette::WindowText, Qt::white);
-    palette.setColor(QPalette::Base, QColor(25, 25, 25));
-    palette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-    palette.setColor(QPalette::ToolTipBase, Qt::white);
-    palette.setColor(QPalette::ToolTipText, Qt::white);
-    palette.setColor(QPalette::Text, Qt::white);
-    palette.setColor(QPalette::Button, QColor(53, 53, 53));
-    palette.setColor(QPalette::ButtonText, Qt::white);
-    palette.setColor(QPalette::BrightText, Qt::red);
-    palette.setColor(QPalette::Link, QColor(42, 130, 218));
-    palette.setColor(QPalette::Highlight, QColor(76, 163, 224));
-    palette.setColor(QPalette::HighlightedText, Qt::black);
-
-    static constexpr QColor disabledColor(127, 127, 127);
-    palette.setColor(QPalette::Disabled, QPalette::Text, disabledColor);
-    palette.setColor(QPalette::Disabled, QPalette::ButtonText, disabledColor);
-    palette.setColor(QPalette::PlaceholderText, disabledColor);
-    return palette;
-}
-}
-
 #ifdef Q_OS_MACOS
 # include "os/mac/kdmactouchbar.h"
 #endif
@@ -87,6 +62,8 @@ Q_DECLARE_METATYPE(emu_data_t)
 # include <unistd.h>
 #endif
 
+using namespace Qt::StringLiterals;
+
 MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
     keypadBridge = new QtKeypadBridge(this); // This must be before setupUi for some reason >.>
 
@@ -100,23 +77,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     qRegisterMetaType<QList<bool>>("QList<bool>");
 
     ui->setupUi(this);
-
-    m_styleForMode[0] = QApplication::style()->objectName();
-    if (m_styleForMode[0].isEmpty()) {
-        m_styleForMode[0] = QApplication::style()->name();
-    }
-    if (m_styleForMode[0].isEmpty()) {
-        m_styleForMode[0] = QStringLiteral("fusion");
-    }
-    m_styleForMode[1] = QStringLiteral("fusion");
-
-    if (const QStyle *fusionStyle = QStyleFactory::create(QStringLiteral("Fusion"))) {
-        m_fusionLightPalette = fusionStyle->standardPalette();
-        delete fusionStyle;
-    } else {
-        m_fusionLightPalette = QApplication::style()->standardPalette();
-    }
-    m_fusionDarkPalette = createFusionDarkPalette(m_fusionLightPalette);
 
     {
         QSignalBlocker blocker(ui->comboTheme);
@@ -1195,24 +1155,46 @@ static void repolishAfterThemeChanged() {
 }
 
 void MainWindow::applyThemeFromPreference() {
+    Qt::ColorScheme scheme = Qt::ColorScheme::Unknown;
+    bool explicitScheme = false;
     switch (m_themePreference) {
     case ThemePreference::System:
-        QApplication::setStyle(m_styleForMode[0]);
-        QApplication::setPalette(QApplication::style()->standardPalette());
+        scheme = Qt::ColorScheme::Unknown;
         break;
     case ThemePreference::Light:
-        QApplication::setStyle(m_styleForMode[1]);
-        QApplication::setPalette(m_fusionLightPalette);
+        scheme = Qt::ColorScheme::Light;
+        explicitScheme = true;
         break;
     case ThemePreference::Dark:
-        QApplication::setStyle(m_styleForMode[1]);
-        QApplication::setPalette(m_fusionDarkPalette);
+        scheme = Qt::ColorScheme::Dark;
+        explicitScheme = true;
         break;
     }
+    qApp->styleHints()->setColorScheme(scheme);
 
-    const bool dark = m_themePreference == ThemePreference::Dark || (m_themePreference == ThemePreference::System && isSystemInDarkMode());
+#if defined(Q_OS_WIN)
+    if (explicitScheme) {
+        if (QStyle *fusion = QStyleFactory::create("Fusion"_L1)) {
+            QApplication::setStyle(fusion);
+        }
+    } else {
+        const auto available = QStyleFactory::keys();
+        if (available.contains("WindowsVista"_L1, Qt::CaseInsensitive)) {
+            if (QStyle *vista = QStyleFactory::create("WindowsVista"_L1)) {
+                QApplication::setStyle(vista);
+            }
+        }
+    }
+#else
+    if (explicitScheme) {
+        if (QStyle *fusion = QStyleFactory::create("Fusion"_L1)) {
+            QApplication::setStyle(fusion);
+        }
+    }
+#endif
+
+    const bool dark = (qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
     darkModeSwitch(dark);
-
     repolishAfterThemeChanged();
 }
 
@@ -1240,8 +1222,12 @@ void MainWindow::changeEvent(QEvent* event) {
         translateSwitch(QLocale::system());
     }
     QMainWindow::changeEvent(event);
-    if (eventType == QEvent::ThemeChange) {
-        applyThemeFromPreference();
+    if (eventType == QEvent::ThemeChange ||
+        eventType == QEvent::ApplicationPaletteChange ||
+        eventType == QEvent::PaletteChange) {
+        const bool dark = (qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+        darkModeSwitch(dark);
+        repolishAfterThemeChanged();
     }
 }
 
