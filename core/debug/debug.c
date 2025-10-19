@@ -339,42 +339,27 @@ void debug_clear_step(void) {
     debug.untilRetIndex = 0;
 }
 
-void debug_until_ret_handle_indirect_jump(uint32_t target, uint32_t currentSp) {
-    /* stop if this JP(rr) is an actual return for a
-    * recorded call frame, where target matches its retAddr and
-    * SP has been restored to that frame's precall stack
-    * value (or frame was detected popped) */
-    uint32_t idx = debug.stackIndex;
-    uint32_t sz = debug.stackSize;
-    debug_stack_entry_t *hit = NULL;
-    uint32_t hit_idx = ~0u;
+void debug_until_ret_handle_indirect_jump(const uint32_t target, const uint32_t currentSp) {
+    const debug_stack_entry_t *e = &debug.stack[debug.untilRetIndex];
 
-    while (sz--) {
-        debug_stack_entry_t *entry = &debug.stack[idx];
-        const uint32_t this_idx = idx;
-        idx = (idx - 1) & DBG_STACK_MASK;
-        if (entry->mode == cpu.L &&
-            /* only consider frames above current SP baseline. target
-             * must also match the frame's retAddr window */
-            entry->stack >= debug.untilRetBase &&
-            (target - entry->retAddr) <= entry->range) {
-            hit = entry;
-            hit_idx = this_idx;
-            break;
-        }
+    if (!(e->mode == cpu.L &&
+          /* only consider frames above current SP baseline */
+          e->stack >= debug.untilRetBase &&
+          /* target must also match the frame's retAddr window */
+          (target - e->retAddr) <= e->range &&
+          /* SP restored to precall value, or frame popped */
+          (currentSp == e->stack || e->popped))) {
+        return;
     }
 
-    /* break if we are returning from the same frame
-     * where DBG_UNTIL_RET started */
-    if (hit && hit_idx == debug.untilRetIndex &&
-        (currentSp == hit->stack || hit->popped)) {
-        const uint32_t len = 1 + (cpu.PREFIX != 0);
-        const uint32_t start = cpu_mask_mode(
-            cpu.registers.PC - (len + (cpu.SUFFIX ? 1u : 0u)),
-            cpu.ADL);
-        cpu.registers.PC = start;
-        debug_open(DBG_STEP, cpu.registers.PC);
-    }
+    const uint32_t len = 1 + (cpu.PREFIX != 0);
+    const uint32_t start = cpu_mask_mode(
+        cpu.registers.PC - (len + (cpu.SUFFIX ? 1u : 0u)),
+        cpu.ADL);
+
+    cpu.registers.PC = start;
+
+    debug_open(DBG_STEP, cpu.registers.PC);
 }
 
 void debug_clear_basic_step(void) {
