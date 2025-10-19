@@ -1143,17 +1143,6 @@ void MainWindow::translateExtras(int init) {
     }
 }
 
-static void repolishAfterThemeChanged() {
-    const auto widgets = QApplication::allWidgets();
-    for (QWidget *w : widgets) {
-        if (QStyle *st = w->style()) {
-            st->unpolish(w);
-            st->polish(w);
-        }
-        w->update();
-    }
-}
-
 void MainWindow::applyThemeFromPreference() {
     Qt::ColorScheme scheme = Qt::ColorScheme::Unknown;
     bool explicitScheme = false;
@@ -1185,6 +1174,8 @@ void MainWindow::applyThemeFromPreference() {
             }
         }
     }
+#elif defined(Q_OS_MACOS)
+    Q_UNUSED(explicitScheme);
 #else
     if (explicitScheme) {
         if (QStyle *fusion = QStyleFactory::create("Fusion"_L1)) {
@@ -1195,7 +1186,6 @@ void MainWindow::applyThemeFromPreference() {
 
     const bool dark = (qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
     darkModeSwitch(dark);
-    repolishAfterThemeChanged();
 }
 
 void MainWindow::darkModeSwitch(bool darkMode) {
@@ -1227,7 +1217,6 @@ void MainWindow::changeEvent(QEvent* event) {
         eventType == QEvent::PaletteChange) {
         const bool dark = (qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
         darkModeSwitch(dark);
-        repolishAfterThemeChanged();
     }
 }
 
