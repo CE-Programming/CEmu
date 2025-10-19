@@ -468,7 +468,6 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         return;
     }
 
-    int row = 0;
     uint32_t addr;
 
     // This means the program is trying to send us a debug command. Let's see what we can do with that information
@@ -487,7 +486,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
             for (int i = 0; i < m_breakpoints->rowCount(); i++) {
                 if (m_breakpoints->item(i, BREAK_ADDR_COL)->text() == input) {
-                    label = m_breakpoints->item(row, BREAK_NAME_COL)->text();
+                    label = m_breakpoints->item(i, BREAK_NAME_COL)->text();
                     valid = true;
                     break;
                 }
@@ -510,7 +509,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
                 uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(i, WATCH_LOW_COL)->text()));
                 uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(i, WATCH_HIGH_COL)->text()));
                 if (addr >= low && addr <= high) {
-                    label = m_watchpoints->item(row, WATCH_NAME_COL)->text();
+                    label = m_watchpoints->item(i, WATCH_NAME_COL)->text();
                     valid = true;
                     break;
                 }
