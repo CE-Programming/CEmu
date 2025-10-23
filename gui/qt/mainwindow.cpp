@@ -26,6 +26,8 @@
 #include <QtCore/QProcess>
 #include <QtCore/QRegularExpression>
 #include <QtGui/QFont>
+#include <QtGui/QPalette>
+#include <QtGui/QColor>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
@@ -36,11 +38,15 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMessageBox>
+#include <QtWidgets/QStyle>
+#include <QtGui/QStyleHints>
+#include <QtWidgets/QStyleFactory>
 #include <QtNetwork/QNetworkReply>
+#include <QtCore/QSignalBlocker>
+#include <QtCore/QScopedValueRollback>
 #include <fstream>
 #include <iostream>
 #include <cmath>
-
 #ifdef Q_OS_MACOS
 # include "os/mac/kdmactouchbar.h"
 #endif
@@ -56,6 +62,8 @@ Q_DECLARE_METATYPE(emu_data_t)
 # include <unistd.h>
 #endif
 
+using namespace Qt::StringLiterals;
+
 MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
     keypadBridge = new QtKeypadBridge(this); // This must be before setupUi for some reason >.>
 
@@ -70,8 +78,13 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->setupUi(this);
 
-    m_styleForMode[0] = m_styleForMode[1] = QApplication::style()->name();
-    darkModeSwitch(isSystemInDarkMode());
+    {
+        QSignalBlocker blocker(ui->comboTheme);
+        ui->comboTheme->setCurrentIndex(static_cast<int>(m_themePreference));
+    }
+    connect(ui->comboTheme, &QComboBox::currentIndexChanged, this, &MainWindow::setThemePreference);
+
+    applyThemeFromPreference();
 
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
 
@@ -597,6 +610,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     }
 
     setAutoUpdates(m_config->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
+    setThemePreference(m_config->value(SETTING_UI_THEME, static_cast<int>(ThemePreference::System)).toInt());
     checkVersion();
 
 #ifdef Q_OS_WIN
@@ -1129,14 +1143,52 @@ void MainWindow::translateExtras(int init) {
     }
 }
 
-void MainWindow::darkModeSwitch(bool darkMode) {
-    QApplication::setStyle(m_styleForMode[darkMode]);
-    if (darkMode != isRunningInDarkMode()) {
-        m_styleForMode[darkMode] = QStringLiteral("fusion");
-        QApplication::setStyle(m_styleForMode[darkMode]);
-        darkMode = isRunningInDarkMode();
+void MainWindow::applyThemeFromPreference() {
+    Qt::ColorScheme scheme = Qt::ColorScheme::Unknown;
+    bool explicitScheme = false;
+    switch (m_themePreference) {
+    case ThemePreference::System:
+        scheme = Qt::ColorScheme::Unknown;
+        break;
+    case ThemePreference::Light:
+        scheme = Qt::ColorScheme::Light;
+        explicitScheme = true;
+        break;
+    case ThemePreference::Dark:
+        scheme = Qt::ColorScheme::Dark;
+        explicitScheme = true;
+        break;
     }
+    qApp->styleHints()->setColorScheme(scheme);
 
+#if defined(Q_OS_WIN)
+    if (explicitScheme) {
+        if (QStyle *fusion = QStyleFactory::create("Fusion"_L1)) {
+            QApplication::setStyle(fusion);
+        }
+    } else {
+        const auto available = QStyleFactory::keys();
+        if (available.contains("WindowsVista"_L1, Qt::CaseInsensitive)) {
+            if (QStyle *vista = QStyleFactory::create("WindowsVista"_L1)) {
+                QApplication::setStyle(vista);
+            }
+        }
+    }
+#elif defined(Q_OS_MACOS)
+    Q_UNUSED(explicitScheme);
+#else
+    if (explicitScheme) {
+        if (QStyle *fusion = QStyleFactory::create("Fusion"_L1)) {
+            QApplication::setStyle(fusion);
+        }
+    }
+#endif
+
+    const bool dark = (qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+    darkModeSwitch(dark);
+}
+
+void MainWindow::darkModeSwitch(bool darkMode) {
     m_isInDarkMode = darkMode;
     if (darkMode) {
         m_cBack.setColor(QPalette::Base, QColor(Qt::blue).lighter(180));
@@ -1160,12 +1212,29 @@ void MainWindow::changeEvent(QEvent* event) {
         translateSwitch(QLocale::system());
     }
     QMainWindow::changeEvent(event);
-    if (eventType == QEvent::ThemeChange) {
-        bool darkMode = isSystemInDarkMode();
-        if (darkMode != m_isInDarkMode) {
-            darkModeSwitch(darkMode);
-        }
+    if (eventType == QEvent::ThemeChange ||
+        eventType == QEvent::ApplicationPaletteChange ||
+        eventType == QEvent::PaletteChange) {
+        const bool dark = (qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+        darkModeSwitch(dark);
     }
+}
+
+void MainWindow::setThemePreference(int index) {
+    const auto pref = static_cast<ThemePreference>(index);
+
+    if (ui && ui->comboTheme && ui->comboTheme->currentIndex() != index) {
+        QSignalBlocker blocker(ui->comboTheme);
+        ui->comboTheme->setCurrentIndex(index);
+    }
+
+    m_themePreference = pref;
+
+    if (m_config && opts.useSettings) {
+        m_config->setValue(SETTING_UI_THEME, index);
+    }
+
+    applyThemeFromPreference();
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
@@ -1485,6 +1554,7 @@ void MainWindow::resetGui() {
     m_config->remove(SETTING_WINDOW_STATUSBAR);
     m_config->remove(SETTING_WINDOW_SEPARATOR);
     m_config->remove(SETTING_UI_EDIT_MODE);
+    m_config->remove(SETTING_UI_THEME);
     m_needReload = true;
     close();
 }

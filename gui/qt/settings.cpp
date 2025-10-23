@@ -94,6 +94,7 @@ const QString MainWindow::SETTING_ROM_PATH                  = QStringLiteral("ro
 const QString MainWindow::SETTING_STATUS_INTERVAL           = QStringLiteral("status_interval");
 const QString MainWindow::SETTING_FIRST_RUN                 = QStringLiteral("first_run");
 const QString MainWindow::SETTING_UI_EDIT_MODE              = QStringLiteral("ui_edit_mode");
+const QString MainWindow::SETTING_UI_THEME                  = QStringLiteral("ui_theme");
 const QString MainWindow::SETTING_PAUSE_FOCUS               = QStringLiteral("pause_on_focus_change");
 const QString MainWindow::SETTING_SAVE_ON_CLOSE             = QStringLiteral("save_on_close");
 const QString MainWindow::SETTING_RESTORE_ON_OPEN           = QStringLiteral("restore_on_open");
@@ -1277,6 +1278,7 @@ void MainWindow::saveSettings() {
         m_config->setValue(SETTING_WINDOW_VISUALIZER_CONFIG, m_docksVisualizerConfig);
         m_config->setValue(SETTING_WINDOW_KEYHISTORY_DOCKS, m_docksKeyHistory);
         m_config->setValue(SETTING_WINDOW_KEYHISTORY_CONFIG, QVariant::fromValue(m_docksKeyHistorySize));
+        m_config->setValue(SETTING_UI_THEME, static_cast<int>(m_themePreference));
 
         // Disassembly Goto history
         {
