@@ -1307,7 +1307,7 @@ int usb_dusb_device(usb_event_t *event) {
                     }
                     break;
                 case DUSB_OS_PING_WAIT_STATE:
-                case DUSB_VAR_PING_WAIT_STATE:
+                case DUSB_VAR_PING_WAIT_STATE: {
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1321,17 +1321,19 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = DUSB_VPKT_PING >> 8 & 0xFF;
                     *buffer++ = DUSB_VPKT_PING >> 0 & 0xFF;
 
+                    const bool is_os = (context->state == DUSB_OS_PING_WAIT_STATE || context->state == DUSB_OS_PING_STATE);
                     *buffer++ = 0;
-                    *buffer++ = context->state == DUSB_OS_PING_STATE ? 2 : 3;
+                    *buffer++ = is_os ? 2 : 3;
                     *buffer++ = 0;
                     *buffer++ = 1;
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
-                    *buffer++ = context->state == DUSB_OS_PING_STATE ? 0x0F : 0x07;
-                    *buffer++ = context->state == DUSB_OS_PING_STATE ? 0xA0 : 0xD0;
+                    *buffer++ = is_os ? 0x0F : 0x07;
+                    *buffer++ = is_os ? 0xA0 : 0xD0;
                     break;
+                }
                 case DUSB_OS_MODE_SET_WAIT_STATE:
                 case DUSB_VAR_MODE_SET_WAIT_STATE:
                     if (buffer[4] == DUSB_RPKT_VIRT_DATA_LAST &&
