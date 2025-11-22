@@ -163,30 +163,52 @@ static void flash_execute_command(void) {
     }
 }
 static uint8_t flash_read_command(bool peek) {
-    (void)peek;
+    uint8_t value = 0;
+    uint8_t addr = flash.commandAddress;
     switch (flash.command[0xF]) {
         case 0x05: // Read Status Register-1
-            return flash.commandStatus[1];
+            value = flash.commandStatus[1];
+            break;
         case 0x35: // Read Status Register-2
-            return flash.commandStatus[2];
+            value = flash.commandStatus[2];
+            break;
         case 0x15: // Read Status Register-3
-            return flash.commandStatus[3];
+            value = flash.commandStatus[3];
+            break;
         case 0xAB: // Release Power-down / Device ID
-            flash.commandAddress = 1;
+            if (!peek) {
+                flash.commandAddress = 1;
+            }
+            addr = 1;
             // fallthrough
         case 0x90: // Read Manufacturer / Device ID
         case 0x92: // Read Manufacturer / Device ID Dual I/O
         case 0x94: // Read Manufacturer / Device ID Quad I/O
-            return 0xEF15 >> (~flash.commandAddress++ & 1) * 8;
-        case 0x4B: // Read Unique ID Number
-            return flash.uniqueID >> (~flash.commandAddress++ & 7) * 8;
-        case 0x9F: // Read JEDEC ID
-            if (flash.commandAddress >= 3) {
-                flash.commandAddress = 0;
+            value = 0xEF15 >> (~addr & 1) * 8;
+            if (!peek) {
+                flash.commandAddress++;
             }
-            return 0xEF4016 >> (2 - flash.commandAddress++) * 8;
+            break;
+        case 0x4B: // Read Unique ID Number
+            value = flash.uniqueID >> (~addr & 7) * 8;
+            if (!peek) {
+                flash.commandAddress++;
+            }
+            break;
+        case 0x9F: // Read JEDEC ID
+            if (addr >= 3) {
+                if (!peek) {
+                    flash.commandAddress = 0;
+                }
+                addr = 0;
+            }
+            value = 0xEF4016 >> (2 - addr) * 8;
+            if (!peek) {
+                flash.commandAddress++;
+            }
+            break;
     }
-    return 0;
+    return value;
 }
 static void flash_write_command(uint8_t byte) {
     switch (flash.command[0xF]) {
