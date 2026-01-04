@@ -30,6 +30,10 @@ namespace cemucore
     extern "C"
     {
         void gui_console_clear() {}
+        void gui_debug_close(void) {}
+        void gui_debug_open(int reason, uint32_t data) {
+            printf("[CEmu debug open] reason=%d, data=0x%X\n", reason, data);
+        }
         void gui_console_printf(const char *format, ...) { (void)format; }
         void gui_console_err_printf(const char *format, ...) {
             static char message[512];
