@@ -295,20 +295,20 @@ static inline uint32_t debug_norm_reg_value(unsigned regID, uint32_t value) {
 #else
 #define DBG_REG_TOUCH_W(ID, OLD, NEW) \
     do { \
-        (void)(ID); \
+        (void)(DBG_REG_##ID); \
         (void)(OLD); \
         (void)(NEW); \
     } while (0)
 
 #define REG_READ_EX(ID, EXPR) \
     (__extension__({ \
-        (void)(ID); \
+        (void)(DBG_REG_##ID); \
         (uint32_t)(EXPR); \
     }))
 
 #define REG_WRITE_EX(ID, LVAL, VAL) \
     (__extension__({ \
-        (void)(ID); \
+        (void)(DBG_REG_##ID); \
         uint32_t __new = (uint32_t)(VAL); \
         (LVAL) = (__new); \
     }))
