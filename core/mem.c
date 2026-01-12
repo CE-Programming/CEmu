@@ -26,18 +26,12 @@ static uint8_t mem_read_flash_serial(uint32_t);
 void mem_init(void) {
     unsigned int i;
 
-    /* Allocate FLASH memory */
-    mem.flash.block = (uint8_t*)malloc(SIZE_FLASH);
-    memset(mem.flash.block, 0xFF, SIZE_FLASH);
-
     for (i = 0; i < NUM_8K_SECTORS; i++) {
-        mem.flash.sector8k[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_8K;
         mem.flash.sector8k[i].ipb = 0;
         mem.flash.sector8k[i].dpb = 1;
     }
 
-    for (i = 0; i < NUM_SECTORS; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_64K;
+    for (i = 0; i < NUM_SECTORS_MAX; i++) {
         mem.flash.sector[i].ipb = 1;
         mem.flash.sector[i].dpb = 1;
     }
@@ -77,7 +71,7 @@ static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t 
     if (*addr < 0xD00000) {
         *addr &= asic.serFlash ? flash.mask : flash.mappedBytes - 1;
         *block = mem.flash.block;
-        *block_size = SIZE_FLASH;
+        *block_size = mem.flash.size;
     } else if (*addr < 0xE00000) {
         *addr &= 0x07FFFF;
         *block = mem.ram.block;
@@ -184,6 +178,11 @@ void mem_dma_write(const void *buf, uint32_t addr, int32_t size) {
     }
 }
 
+static uint32_t flash_num_sectors(void) {
+    uint32_t num_sectors = mem.flash.size / SIZE_FLASH_SECTOR_64K;
+    return num_sectors >= NUM_SECTORS_MAX ? NUM_SECTORS_MAX : num_sectors;
+}
+
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
@@ -208,21 +207,21 @@ static void flash_write(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_erase(uint32_t addr, uint8_t byte) {
-    unsigned int i;
     (void)addr;
     (void)byte;
 
     mem.flash.command = FLASH_CHIP_ERASE;
 
-    for (i = 0; i < NUM_8K_SECTORS; i++) {
+    for (uint32_t i = 0; i < NUM_8K_SECTORS; i++) {
         if ((mem.flash.sector8k[i].ipb & mem.flash.sector8k[i].dpb) == 1) {
-            memset(mem.flash.sector8k[i].ptr, 0xFF, SIZE_FLASH_SECTOR_8K);
+            memset(&mem.flash.block[i * SIZE_FLASH_SECTOR_8K], 0xFF, SIZE_FLASH_SECTOR_8K);
         }
     }
 
-    for (i = 0; i < NUM_SECTORS; i++) {
+    uint32_t num_sectors = flash_num_sectors();
+    for (uint32_t i = 0; i < num_sectors; i++) {
         if ((mem.flash.sector[i].ipb & mem.flash.sector[i].dpb) == 1) {
-            memset(mem.flash.sector[i].ptr, 0xFF, SIZE_FLASH_SECTOR_64K);
+            memset(&mem.flash.block[i * SIZE_FLASH_SECTOR_64K], 0xFF, SIZE_FLASH_SECTOR_64K);
         }
     }
 
@@ -235,15 +234,15 @@ static void flash_erase_sector(uint32_t addr, uint8_t byte) {
 
     mem.flash.command = FLASH_SECTOR_ERASE;
 
-    if (addr < 0x10000) {
+    if (addr < SIZE_FLASH_SECTOR_8K * NUM_8K_SECTORS) {
         selected = addr / SIZE_FLASH_SECTOR_8K;
         if ((mem.flash.sector8k[selected].ipb & mem.flash.sector8k[selected].dpb) == 1) {
-            memset(mem.flash.sector8k[selected].ptr, 0xff, SIZE_FLASH_SECTOR_8K);
+            memset(&mem.flash.block[selected * SIZE_FLASH_SECTOR_8K], 0xFF, SIZE_FLASH_SECTOR_8K);
         }
     } else {
         selected = addr / SIZE_FLASH_SECTOR_64K;
         if ((mem.flash.sector[selected].ipb & mem.flash.sector[selected].dpb) == 1) {
-            memset(mem.flash.sector[selected].ptr, 0xff, SIZE_FLASH_SECTOR_64K);
+            memset(&mem.flash.block[selected * SIZE_FLASH_SECTOR_64K], 0xFF, SIZE_FLASH_SECTOR_64K);
         }
     }
 }
@@ -284,17 +283,17 @@ static void flash_enter_dpb(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_erase_ipb(uint32_t addr, uint8_t byte) {
-    int i;
     (void)addr;
     (void)byte;
 
     if( mem.flash.command == FLASH_IPB_MODE )
     {
-        for (i = 0; i < NUM_8K_SECTORS; i++) {
+        for (uint32_t i = 0; i < NUM_8K_SECTORS; i++) {
             mem.flash.sector8k[i].ipb = 1;
         }
 
-        for (i = 0; i < NUM_SECTORS; i++) {
+        uint32_t num_sectors = flash_num_sectors();
+        for (uint32_t i = 0; i < num_sectors; i++) {
             mem.flash.sector[i].ipb = 1;
         }
 
@@ -485,9 +484,10 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
         }
         cpu.cycles += flash.waitStates;
 
+        addr &= mem.flash.size - 1;
         switch(mem.flash.command) {
             case FLASH_NO_COMMAND:
-                value = mem.flash.block[addr & (SIZE_FLASH - 1)];
+                value = mem.flash.block[addr];
                 break;
             case FLASH_SECTOR_ERASE:
                 value = 0x80;
@@ -502,7 +502,7 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
                 mem.flash.command = FLASH_NO_COMMAND;
                 break;
             case FLASH_READ_SECTOR_PROTECTION:
-                if (addr < 0x10000) {
+                if (addr < SIZE_FLASH_SECTOR_8K * NUM_8K_SECTORS) {
                     selected = addr / SIZE_FLASH_SECTOR_8K;
                     value = !(mem.flash.sector8k[selected].ipb & mem.flash.sector8k[selected].dpb);
                 } else {
@@ -597,6 +597,7 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
     flash_write_t *w;
     flash_write_pattern_t *pattern;
 
+    addr &= mem.flash.size - 1;
     if (mem.flash.command != FLASH_NO_COMMAND) {
         if ((mem.flash.command != FLASH_DEEP_POWER_DOWN && byte == 0xF0) ||
             (mem.flash.command == FLASH_DEEP_POWER_DOWN && byte == 0xAB)) {
@@ -918,36 +919,37 @@ bool mem_save(FILE *image) {
     assert(mem.ram.block);
 
     return fwrite(&mem, sizeof(mem), 1, image) == 1 &&
-           fwrite(mem.flash.block, SIZE_FLASH, 1, image) == 1 &&
+           fwrite(mem.flash.block, mem.flash.size, 1, image) == 1 &&
            fwrite(mem.ram.block, SIZE_RAM, 1, image) == 1;
 }
 
 bool mem_restore(FILE *image) {
-    bool ret = false;
+    bool ret = true;
     unsigned int i;
     uint8_t *tmp_flash_ptr;
     uint8_t *tmp_ram_ptr;
 
-    assert(mem.flash.block);
     assert(mem.ram.block);
-
-    tmp_flash_ptr = mem.flash.block;
     tmp_ram_ptr = mem.ram.block;
 
-    ret |= fread(&mem, sizeof(mem), 1, image) == 1;
+    free(mem.flash.block);
 
-    mem.flash.block = tmp_flash_ptr;
+    ret &= fread(&mem, sizeof(mem), 1, image) == 1;
+
     mem.ram.block = tmp_ram_ptr;
+    mem.flash.block = NULL;
 
-    ret |= fread(mem.flash.block, SIZE_FLASH, 1, image) == 1 &&
-           fread(mem.ram.block, SIZE_RAM, 1, image) == 1;
+    if (mem.flash.size < SIZE_FLASH_MIN || mem.flash.size > SIZE_FLASH_MAX ||
+        (mem.flash.size & (mem.flash.size - 1))) {
+        return false;
+    }
+    mem.flash.block = malloc(mem.flash.size);
+    if (mem.flash.block == NULL) {
+        return false;
+    }
 
-    for (i = 0; i < 8; i++) {
-        mem.flash.sector[i].ptr = &mem.flash.block[i*SIZE_FLASH_SECTOR_8K];
-    }
-    for (i = 0; i < 64; i++) {
-        mem.flash.sector[i].ptr = &mem.flash.block[i*SIZE_FLASH_SECTOR_64K];
-    }
+    ret &= fread(mem.flash.block, mem.flash.size, 1, image) == 1;
+    ret &= fread(mem.ram.block, SIZE_RAM, 1, image) == 1;
 
     mem_read_flash = asic.serFlash ? mem_read_flash_serial : mem_read_flash_parallel;
 

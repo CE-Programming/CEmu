@@ -318,7 +318,7 @@ bool vat_search_next(calc_var_t *var) {
     } else {
         var->namelen = 3;
     }
-    var->archived = var->address > 0xC0000 && var->address < 0x400000;
+    var->archived = var->address > 0xC0000 && var->address < 0xC00000;
     if (var->archived) {
         var->address += 9 + var->named + var->namelen;
     } else if (var->address < 0xD1A881 || var->address >= 0xD40000) {
