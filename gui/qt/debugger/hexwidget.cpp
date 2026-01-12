@@ -70,7 +70,7 @@ void HexWidget::scroll(int value) {
         }
     }
     if (value >= verticalScrollBar()->maximum()) {
-        int addr = m_maxOffset + m_base + 1;
+        int addr = m_base + m_size;
         QByteArray data;
         for (int i = 0; i < m_bytesPerLine && (addr + i) < 0x1000000; i++) {
             data.append(mem_peek_byte(addr + i));
@@ -118,10 +118,10 @@ int HexWidget::indexOf(const QByteArray &ba) {
 
 int HexWidget::indexNotOf(const QByteArray &ba) {
     int res = -1;
-    QByteArray buffer{m_data.mid(m_cursorOffset, m_maxOffset)};
+    QByteArray buffer{m_data.mid(m_cursorOffset / 2)};
     std::size_t found = buffer.toStdString().find_first_not_of(ba.toStdString());
     if (found != std::string::npos) {
-        setOffset(res = static_cast<int>(found));
+        setOffset(res = static_cast<int>(m_cursorOffset / 2 + found));
     }
     return res;
 }
@@ -144,8 +144,8 @@ void HexWidget::setHighlight(const int address) {
 }
 
 void HexWidget::setCursorOffset(int offset, bool selection, bool clearHighlight) {
-    if (offset > m_size * 2) {
-        offset = m_size * 2;
+    if (offset >= m_size * 2) {
+        offset = m_size * 2 - 1;
     }
     if (offset < 0) {
         offset = 0;
@@ -213,7 +213,6 @@ void HexWidget::showCursor() {
 
 void HexWidget::adjust() {
     m_size = m_data.size();
-    m_maxOffset = m_size - 1;
 
     m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('D'));
     m_charHeight = fontMetrics().height();
@@ -234,20 +233,20 @@ void HexWidget::adjust() {
     horizontalScrollBar()->setRange(0, xWidth - viewport()->width());
     horizontalScrollBar()->setPageStep(viewport()->width());
 
-    int rows = m_size / m_bytesPerLine;
+    int rows = (m_size + m_bytesPerLine - 1) / m_bytesPerLine;
     int visibleHeight = viewport()->height() - m_gap;
     if (horizontalScrollBar()->isVisible()) {
         visibleHeight -= horizontalScrollBar()->height();
     }
     m_visibleRows = visibleHeight / m_charHeight;
-    verticalScrollBar()->setRange(0, rows - m_visibleRows);
+    verticalScrollBar()->setRange(0, rows - m_visibleRows - 1);
     verticalScrollBar()->setPageStep(m_visibleRows);
 
     int lines = verticalScrollBar()->value();
     m_lineStart = lines * m_bytesPerLine;
     m_lineEnd = m_lineStart + m_visibleRows * m_bytesPerLine - 1;
     if (m_lineEnd >= m_size) {
-        m_lineEnd = m_maxOffset;
+        m_lineEnd = m_size - 1;
     }
 
     int x, y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
@@ -363,9 +362,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
         if (addr + m_base > 0xffffff) { break; }
         painter.setPen(cText);
         painter.drawText(xAddr, y, int2hex(m_base + lineAddr, 6));
-        for (int col = 0; col < m_bytesPerLine && addr < m_maxOffset; col++) {
-            addr = lineAddr + col;
-
+        for (int col = 0; col < m_bytesPerLine && addr < m_size; col++, addr++) {
             painter.setPen(cText);
             uint8_t data = static_cast<uint8_t>(m_data[addr]);
             uint8_t flags = debug.addr[addr + m_base];

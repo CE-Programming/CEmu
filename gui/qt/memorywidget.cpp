@@ -71,7 +71,7 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
         int base = edit->getBase();
         int addr = off + base;
         int start = addr - 0x1000;
-        int end = addr + 0x1000;
+        int end = addr + 0x1000 - 1;
         off = 0x1000;
 
         if (start < 0) {
@@ -83,7 +83,7 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
         }
         data.resize(end - start + 1);
 
-        for (int j = 0, i = start; i < end; j++, i++) {
+        for (int j = 0, i = start; i <= end; j++, i++) {
             data[j] = static_cast<char>(mem_peek_byte(static_cast<uint32_t>(i)));
         }
 
