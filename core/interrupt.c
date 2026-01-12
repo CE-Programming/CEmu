@@ -123,19 +123,19 @@ eZ80portrange_t init_intrpt(void) {
 }
 
 bool intrpt_save(FILE *image) {
-    bool ret = false;
+    bool ret = true;
     size_t request;
     for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
-        ret |= fwrite(&intrpt[request], sizeof(intrpt[request]), 1, image) == 1;
+        ret &= fwrite(&intrpt[request], sizeof(intrpt[request]), 1, image) == 1;
     }
     return ret;
 }
 
 bool intrpt_restore(FILE *image) {
-    bool ret = false;
+    bool ret = true;
     size_t request;
     for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
-        ret |= fread(&intrpt[request], sizeof(intrpt[request]), 1, image) == 1;
+        ret &= fread(&intrpt[request], sizeof(intrpt[request]), 1, image) == 1;
     }
     return ret;
 }

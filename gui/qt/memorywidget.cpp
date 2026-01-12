@@ -46,7 +46,7 @@ void MainWindow::flashUpdate() const {
         return;
     }
 
-    ui->flashEdit->setData({reinterpret_cast<const char *>(mem.flash.block), 0x400000});
+    ui->flashEdit->setData({reinterpret_cast<const char *>(mem.flash.block), qMin(mem.flash.size, UINT32_C(0xC00000))});
 }
 
 void MainWindow::ramUpdate() const {
@@ -248,7 +248,7 @@ void MainWindow::memSync(HexWidget *edit) {
 
 void MainWindow::flashSyncPressed() {
     if (ui->flashEdit->modifiedCount()) {
-        memcpy(mem.flash.block, ui->flashEdit->data(), 0x400000);
+        memcpy(mem.flash.block, ui->flashEdit->data(), qMin(mem.flash.size, (uint32_t)ui->flashEdit->getSize()));
     }
     memSync(ui->flashEdit);
 }
