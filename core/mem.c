@@ -219,7 +219,7 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
     }
 
     uint32_t num_sectors = flash_num_sectors();
-    for (uint32_t i = 0; i < num_sectors; i++) {
+    for (uint32_t i = 1; i < num_sectors; i++) {
         if ((mem.flash.sector[i].ipb & mem.flash.sector[i].dpb) == 1) {
             memset(&mem.flash.block[i * SIZE_FLASH_SECTOR_64K], 0xFF, SIZE_FLASH_SECTOR_64K);
         }
@@ -293,7 +293,7 @@ static void flash_erase_ipb(uint32_t addr, uint8_t byte) {
         }
 
         uint32_t num_sectors = flash_num_sectors();
-        for (uint32_t i = 0; i < num_sectors; i++) {
+        for (uint32_t i = 1; i < num_sectors; i++) {
             mem.flash.sector[i].ipb = 1;
         }
 
@@ -511,19 +511,40 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
                 }
                 break;
             case FLASH_READ_CFI:
-                if (addr >= 0x20 && addr <= 0x2A) {
-                    static const uint8_t id[7] = { 0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00 };
-                    value = id[(addr - 0x20) / 2];
-                } else if (addr >= 0x36 && addr <= 0x50) {
-                    static const uint8_t id[] = {
+                if (!(addr & 1) && addr >= 0x20 && addr <= 0xA0) {
+                    /* W29GL032CB7S */
+                    static const uint8_t id_4mb[] = {
+                        /* Identification */
+                        0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00, 0x00,
+                        0x00, 0x00, 0x00,
+                        /* System Interface Data */
                         0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08, 0x0E,
-                        0x03, 0x05, 0x03, 0x03, 0x16, 0x02, 0x00, 0x05,
-                        0x00, 0x01, 0x08, 0x00, 0x00, 0x3F, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x50, 0x52, 0x49, 0x31, 0x33, 0x0C,
-                        0x02, 0x01, 0x00, 0x08, 0x00, 0x00, 0x02, 0x95,
-                        0xA5, 0x02, 0x01 };
-                    value = id[(addr - 0x36) / 2];
+                        0x03, 0x05, 0x03, 0x03,
+                        /* Device Geometry */
+                        0x16, 0x02, 0x00, 0x05, 0x00, 0x02, 0x07, 0x00,
+                        0x20, 0x00, 0x3E, 0x00, 0x00, 0x01, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        /* Vendor-Specific */
+                        0x50, 0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
+                        0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5, 0x02,
+                        0x01 };
+                    /* W29GL064CB7S */
+                    static const uint8_t id_8mb[] = {
+                        /* Identification */
+                        0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00, 0x00,
+                        0x00, 0x00, 0x00,
+                        /* System Interface Data */
+                        0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08, 0x0E,
+                        0x03, 0x05, 0x03, 0x03,
+                        /* Device Geometry */
+                        0x17, 0x02, 0x00, 0x05, 0x00, 0x02, 0x07, 0x00,
+                        0x20, 0x00, 0x7E, 0x00, 0x00, 0x01, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        /* Vendor-Specific */
+                        0x50, 0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
+                        0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5, 0x02,
+                        0x01 };
+                    value = (mem.flash.size == SIZE_FLASH_MIN ? id_4mb : id_8mb)[(addr - 0x20) / 2];
                 }
                 break;
             case FLASH_DEEP_POWER_DOWN:
