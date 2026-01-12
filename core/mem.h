@@ -10,10 +10,12 @@ extern "C" {
 #include <stdbool.h>
 
 #define SIZE_RAM              0x65800
-#define SIZE_FLASH            0x400000
+#define SIZE_FLASH_MIN        0x400000
+#define SIZE_FLASH_MAX_PAR    0x800000
+#define SIZE_FLASH_MAX        0x2000000
 #define SIZE_FLASH_SECTOR_8K  0x2000
 #define SIZE_FLASH_SECTOR_64K 0x10000
-#define NUM_SECTORS 64
+#define NUM_SECTORS_MAX (SIZE_FLASH_MAX_PAR / SIZE_FLASH_SECTOR_64K)
 #define NUM_8K_SECTORS 8
 
 enum flash_commands {
@@ -38,15 +40,15 @@ typedef struct {
 typedef struct {
     uint8_t dpb : 1;
     uint8_t ipb : 1;
-    uint8_t *ptr;
 } flash_sector_state_t;
 
 typedef struct {
     uint8_t write;
     uint8_t read;
-    flash_sector_state_t sector8k[8];
-    flash_sector_state_t sector[64];
+    flash_sector_state_t sector8k[NUM_8K_SECTORS];
+    flash_sector_state_t sector[NUM_SECTORS_MAX];
     uint8_t *block;
+    uint32_t size;
 
     /* internal */
     uint8_t command;
