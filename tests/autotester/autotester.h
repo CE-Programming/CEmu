@@ -135,6 +135,7 @@ namespace autotester
     extern config_t config;
 
     extern bool debugMode;
+    extern bool screenshotsMode;
     extern bool ignoreROMfield;
     extern bool configLoaded;
 
@@ -147,4 +148,3 @@ namespace autotester
 }
 
 #endif
-

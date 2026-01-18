@@ -60,21 +60,29 @@ int main(int argc, char* argv[])
     // Used if the coreThread has been started (need to exit properly ; uses gotos)
     int retVal = 0;
 
-    if (argc < 2)
-    {
+    autotester::debugMode = false;
+    autotester::screenshotsMode = false;
+    int argi = 1;
+    while (argi < argc && argv[argi][0] == '-') {
+        if (strcmp(argv[argi], "-d") == 0) {
+            autotester::debugMode = true;
+        } else if (strcmp(argv[argi], "-s") == 0 || strcmp(argv[argi], "--screenshots") == 0) {
+            autotester::screenshotsMode = true;
+        } else {
+            std::cerr << "[Error] Unknown option: " << argv[argi] << std::endl;
+            std::cerr << "Usage: autotester [-d] [-s|--screenshots] <config.json>" << std::endl;
+            return -1;
+        }
+        argi++;
+    }
+
+    if (argi >= argc) {
         std::cerr << "[Error] Needs a path argument, the test config JSON file" << std::endl;
+        std::cerr << "Usage: autotester [-d] [-s|--screenshots] <config.json>" << std::endl;
         return -1;
     }
 
-    if (strcmp(argv[1], "-d") == 0)
-    {
-        autotester::debugMode = true;
-        argv++;
-    } else {
-        autotester::debugMode = false;
-    }
-
-    const std::string jsonPath(argv[1]);
+    const std::string jsonPath(argv[argi]);
     std::string jsonContents;
     std::ifstream ifs(jsonPath);
     if (ifs.good())

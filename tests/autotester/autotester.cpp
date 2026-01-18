@@ -45,6 +45,37 @@ static char* myrealpath(const char* file_name)
 #endif
 }
 
+static void dumpScreenshot(const std::string& description)
+{
+    std::string safe_name = description;
+    for (char& c : safe_name) {
+        if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|') {
+            c = '_';
+        }
+    }
+
+    std::string path = safe_name + ".rgba";
+
+    uint32_t *frame = static_cast<uint32_t*>(malloc(LCD_SIZE * sizeof(uint32_t)));
+    if (!frame) {
+        std::cerr << "\t[Screenshot] Failed to allocate frame buffer" << std::endl;
+        return;
+    }
+
+    cemucore::emu_lcd_drawframe(frame);
+
+    FILE *f = fopen(path.c_str(), "wb");
+    if (f) {
+        fwrite(frame, sizeof(uint32_t), LCD_SIZE, f);
+        fclose(f);
+        std::cout << "\t[Screenshot] Saved " << path << std::endl;
+    } else {
+        std::cerr << "\t[Screenshot] Failed to write " << path << std::endl;
+    }
+
+    free(frame);
+}
+
 namespace autotester
 {
 
@@ -54,6 +85,7 @@ config_t config;
 std::string oldCWD;
 
 bool debugMode = true;
+bool screenshotsMode = false;
 bool ignoreROMfield = false;
 bool configLoaded = false;
 
@@ -217,6 +249,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     ::free(temp_buffer_dup);
                 }
                 hashesTested++;
+                if (screenshotsMode) {
+                    dumpScreenshot(param.description);
+                }
             } else {
                 std::cerr << "\t[Error] hash #" << which_hash << " was not declared in the JSON file. Ignoring." << std::endl;
             }
