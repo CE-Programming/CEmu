@@ -2,9 +2,7 @@ name: Build macOS
 
 on:
   push:
-    branches: [ master, feature/github-actions ]
-  pull_request:
-    branches: [ master, feature/github-actions ]
+    branches: [ ci_old_macos ]
 
 jobs:
   build:
@@ -13,25 +11,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12, macos-13, macos-14]
+        os: [macos-15-intel]
         config: [Release]
         include:
-          - os: macos-12
+          - os: macos-15-intel
             arch: x64
             qtver: Qt5
             qtvershort: "5_intel"
-          - os: macos-13
-            arch: x64
-            qtver: Qt6
-            qtvershort: "6_intel"
-          - os: macos-14
-            arch: arm64
-            qtver: Qt6
-            qtvershort: "6_arm"
 
     steps:
     - name: Checkout Git Repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -109,7 +99,7 @@ jobs:
         xcrun stapler staple "CEmu-v2.0_mac_qt${{matrix.qtvershort}}.dmg"
 
     - name: Upload dmg as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
           name: CEmu-v2.0_mac_qt${{matrix.qtvershort}}
           path: CEmu-v2.0_mac_qt${{matrix.qtvershort}}.dmg
