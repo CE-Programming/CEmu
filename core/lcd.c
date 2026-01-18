@@ -592,7 +592,7 @@ void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height,
     }
 
     if (addr < 0xD00000) {
-        mem_end = mem.flash.block + SIZE_FLASH;
+        mem_end = mem.flash.block + mem.flash.size;
         data_start = mem.flash.block + addr;
     } else if (addr < 0xE00000) {
         mem_end = mem.ram.block + SIZE_RAM;

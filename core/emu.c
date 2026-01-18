@@ -12,13 +12,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE001B
+#define IMAGE_VERSION 0xCECE001C
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu_set_signal(CPU_SIGNAL_EXIT);
@@ -43,7 +44,7 @@ bool emu_save(emu_data_t type, const char *path) {
                 success = fwrite(&version, sizeof version, 1, file) == 1 && asic_save(file);
                 break;
             case EMU_DATA_ROM:
-                success = fwrite(mem.flash.block, 1, SIZE_FLASH, file) == SIZE_FLASH;
+                success = fwrite(mem.flash.block, 1, mem.flash.size, file) == mem.flash.size;
                 break;
             case EMU_DATA_RAM:
                 success = fwrite(mem.ram.block, 1, SIZE_RAM, file) == SIZE_RAM;
@@ -115,14 +116,34 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 
         if (fseek(file, 0L, SEEK_END) < 0) goto rerr;
         size = (size_t)ftell(file);
-        if (size > SIZE_FLASH) {
-            gui_console_err_printf("[CEmu] Invalid ROM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH);
+        if (size > SIZE_FLASH_MAX) {
+            gui_console_err_printf("[CEmu] Invalid ROM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH_MAX);
             goto rerr;
         }
         rewind(file);
 
         asic_free();
         asic_init();
+
+        /* Allocate FLASH memory */
+        if (size < SIZE_FLASH_MIN) {
+            mem.flash.size = SIZE_FLASH_MIN;
+        } else {
+            /* Round up to next power of 2 */
+            uint32_t rounded = size - 1;
+            rounded |= rounded >> 1;
+            rounded |= rounded >> 2;
+            rounded |= rounded >> 4;
+            rounded |= rounded >> 8;
+            rounded |= rounded >> 16;
+            mem.flash.size = rounded + 1;
+        }
+        mem.flash.block = malloc(mem.flash.size);
+        if (mem.flash.block == NULL) {
+            gui_console_err_printf("[CEmu] Error allocating memory for ROM\n");
+            goto rerr;
+        }
+        memset(mem.flash.block, 0xFF, mem.flash.size);
 
         if (fread(mem.flash.block, size, 1, file) != 1) {
             gui_console_err_printf("[CEmu] Error reading ROM image\n");
@@ -134,7 +155,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
             outer = mem.flash.block;
 
             /* Outer 0x800(0) field. */
-            if (cert_field_get(outer + offset, SIZE_FLASH - offset, &field_type, &outer, &outer_field_size)) break;
+            if (cert_field_get(outer + offset, mem.flash.size - offset, &field_type, &outer, &outer_field_size)) break;
             if (field_type != 0x800F) continue;
 
             /* Inner 0x801(0) field: calculator model */
