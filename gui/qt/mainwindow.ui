@@ -532,7 +532,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonStepOut">
+          <widget class="QPushButton" name="buttonStepOut">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -552,8 +552,31 @@
              <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stepout.png</normaloff>:/icons/resources/icons/stepout.png</iconset>
             </property>
-           </widget>
-          </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonUntilRet">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
+           <property name="text">
+            <string>Until RET</string>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/icons/resources/icons/untilret.png</normaloff>:/icons/resources/icons/untilret.png</iconset>
+           </property>
+          </widget>
+         </item>
           <item>
            <widget class="QToolButton" name="buttonToggleBreakpoints">
             <property name="enabled">

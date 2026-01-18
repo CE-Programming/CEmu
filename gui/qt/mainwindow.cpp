@@ -183,6 +183,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOver);
     connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNext);
     connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOut);
+    connect(ui->buttonUntilRet, &QPushButton::clicked, this, &MainWindow::stepUntilRet);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->console, &QWidget::customContextMenuRequested, this, &MainWindow::contextConsole);
     connect(m_disasm, &QWidget::customContextMenuRequested, this, &MainWindow::contextDisasm);
@@ -534,6 +535,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_shortcutStepOver = new QShortcut(QKeySequence(Qt::Key_F7), this);
     m_shortcutStepNext = new QShortcut(QKeySequence(Qt::Key_F8), this);
     m_shortcutStepOut = new QShortcut(QKeySequence(Qt::Key_F9), this);
+    m_shortcutStepUntilRet = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F9), this);
     m_shortcutNavBack = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_Left), this);
     m_shortcutNavForward = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_Right), this);
 
@@ -560,6 +562,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
     connect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
     connect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
+    connect(m_shortcutStepUntilRet, &QShortcut::activated, this, &MainWindow::stepUntilRet);
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);

@@ -55,6 +55,19 @@ static void cpu_inst_start(void) {
 #endif
 }
 
+#ifdef DEBUG_SUPPORT
+static void debug_break_before_ret(const uint32_t len) {
+    if (unlikely(debug.untilRet)) {
+        const uint32_t curSp = cpu_address_mode(cpu.registers.stack[cpu.L].hl, cpu.L);
+        if (curSp >= debug.untilRetBase) {
+            const uint32_t start = cpu_mask_mode(cpu.registers.PC - (len + (cpu.SUFFIX ? 1u : 0u)), cpu.ADL);
+            cpu.registers.PC = start;
+            debug_open(DBG_STEP, cpu.registers.PC);
+        }
+    }
+}
+#endif
+
 uint32_t cpu_address_mode(uint32_t address, bool mode) {
     if (mode) {
         return address & 0xFFFFFF;
@@ -1185,6 +1198,9 @@ void cpu_execute(void) {
                             cpu.cycles++;
                             if (cpu_read_cc(context.y)) {
                                 r->R += 2;
+#ifdef DEBUG_SUPPORT
+                                debug_break_before_ret(1);
+#endif
                                 cpu_return();
                             }
                             break;
@@ -1204,6 +1220,9 @@ void cpu_execute(void) {
                                     }
                                     switch (context.p) {
                                         case 0: /* RET */
+#ifdef DEBUG_SUPPORT
+                                            debug_break_before_ret(1);
+#endif
                                             cpu_return();
                                             break;
                                         case 1: /* EXX */
@@ -1217,10 +1236,21 @@ void cpu_execute(void) {
                                             REG_WRITE_EX(HL,  r->HL,  r->_HL);
                                             REG_WRITE_EX(HLP, r->_HL, w);
                                             break;
-                                        case 2: /* JP (rr) */
+                                        case 2: { /* JP (rr) */
+                                            uint32_t target = cpu_read_index();
                                             cpu_prefetch_discard();
+#ifdef DEBUG_SUPPORT
+                                            if (unlikely(debug.untilRet)) {
+                                                uint32_t curSp = cpu_address_mode(cpu.registers.stack[cpu.L].hl, cpu.L);
+                                                /* if this indirect jp is a logical return for the frame
+                                                 * where DBG_UNTIL_RET started, the hook rewinds PC and opens
+                                                 * the debugger */
+                                                debug_until_ret_handle_indirect_jump(target, curSp);
+                                            }
+#endif
                                             cpu_jump(cpu_read_index(), cpu.L);
                                             break;
+                                        }
                                         case 3: /* LD SP, HL */
                                             cpu_write_sp(cpu_read_index());
                                             break;
@@ -1485,6 +1515,9 @@ void cpu_execute(void) {
                                                                     /* This is actually identical to reti on the z80 */
                                                                 case 1: /* RETI */
                                                                     cpu.IEF1 = cpu.IEF2;
+#ifdef DEBUG_SUPPORT
+                                                                    debug_break_before_ret(2);
+#endif
                                                                     cpu_return();
                                                                     break;
                                                                 case 2: /* LEA IY, IX + d */

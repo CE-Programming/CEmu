@@ -312,6 +312,12 @@ void debug_step(int mode, uint32_t addr) {
             gui_debug_close();
             debug.tempExec = addr;
             break;
+        case DBG_UNTIL_RET:
+            gui_debug_close();
+            debug.untilRet = true;
+            debug.untilRetBase = cpu_address_mode(cpu.registers.stack[cpu.L].hl, cpu.L);
+            debug.untilRetIndex = debug.stackIndex;
+            break;
         case DBG_BASIC_STEP_IN:
         case DBG_BASIC_STEP_NEXT:
             gui_debug_close();
@@ -328,6 +334,32 @@ void debug_step(int mode, uint32_t addr) {
 void debug_clear_step(void) {
     debug.step = debug.stepOver = false;
     debug.tempExec = debug.stepOut = ~0u;
+    debug.untilRet = false;
+    debug.untilRetBase = 0;
+    debug.untilRetIndex = 0;
+}
+
+void debug_until_ret_handle_indirect_jump(const uint32_t target, const uint32_t currentSp) {
+    const debug_stack_entry_t *e = &debug.stack[debug.untilRetIndex];
+
+    if (!(e->mode == cpu.L &&
+          /* only consider frames above current SP baseline */
+          e->stack >= debug.untilRetBase &&
+          /* target must also match the frame's retAddr window */
+          (target - e->retAddr) <= e->range &&
+          /* SP restored to precall value, or frame popped */
+          (currentSp == e->stack || e->popped))) {
+        return;
+    }
+
+    const uint32_t len = 1 + (cpu.PREFIX != 0);
+    const uint32_t start = cpu_mask_mode(
+        cpu.registers.PC - (len + (cpu.SUFFIX ? 1u : 0u)),
+        cpu.ADL);
+
+    cpu.registers.PC = start;
+
+    debug_open(DBG_STEP, cpu.registers.PC);
 }
 
 void debug_clear_basic_step(void) {
