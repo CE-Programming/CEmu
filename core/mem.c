@@ -511,7 +511,8 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
                 }
                 break;
             case FLASH_READ_CFI:
-                if (!(addr & 1) && addr >= 0x20 && addr <= 0xA0) {
+                addr &= 0xFF;
+                if (addr >= 0x20 && addr < 0xB0) {
                     /* W29GL032CB7S */
                     static const uint8_t id_4mb[] = {
                         /* Identification */
@@ -524,10 +525,14 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
                         0x16, 0x02, 0x00, 0x05, 0x00, 0x02, 0x07, 0x00,
                         0x20, 0x00, 0x3E, 0x00, 0x00, 0x01, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        /* Empty gap */
+                        0x00, 0x00, 0x00,
                         /* Vendor-Specific */
                         0x50, 0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
                         0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5, 0x02,
-                        0x01 };
+                        0x01,
+                        /* Undocumented */
+                        0x01, 0x08, 0x0F, 0x09, 0x05, 0x05, 0x00 };
                     /* W29GL064CB7S */
                     static const uint8_t id_8mb[] = {
                         /* Identification */
@@ -540,11 +545,17 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
                         0x17, 0x02, 0x00, 0x05, 0x00, 0x02, 0x07, 0x00,
                         0x20, 0x00, 0x7E, 0x00, 0x00, 0x01, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        /* Empty gap */
+                        0x00, 0x00, 0x00,
                         /* Vendor-Specific */
                         0x50, 0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
                         0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5, 0x02,
-                        0x01 };
+                        0x01,
+                        /* Undocumented (unverified) */
+                        0x01, 0x08, 0x0F, 0x09, 0x05, 0x05, 0x00 };
                     value = (mem.flash.size == SIZE_FLASH_MIN ? id_4mb : id_8mb)[(addr - 0x20) / 2];
+                } else {
+                    value = 0xFF;
                 }
                 break;
             case FLASH_DEEP_POWER_DOWN:
