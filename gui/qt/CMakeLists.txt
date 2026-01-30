@@ -97,6 +97,7 @@ set(CEmu_Sources
     ../../core/control.c ../../core/control.h
     ../../core/cpu.c ../../core/cpu.h
     ../../core/debug/debug.c ../../core/debug/debug.h
+    ../../core/debug/gdbstub.c ../../core/debug/gdbstub.h
     ../../core/debug/zdis/zdis.c ../../core/debug/zdis/zdis.h
     ../../core/defines.h
     ../../core/emu.c ../../core/emu.h

@@ -8,6 +8,7 @@
 #include "defines.h"
 #include "schedule.h"
 #include "debug/debug.h"
+#include "debug/gdbstub.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -264,6 +265,9 @@ void emu_run(uint64_t ticks) {
         if (signals & CPU_SIGNAL_ANY_KEY) {
             keypad_any_check();
         }
+#ifdef DEBUG_SUPPORT
+        gdbstub_poll();
+#endif
         sched_process_pending_events();
         if (signals & CPU_SIGNAL_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");

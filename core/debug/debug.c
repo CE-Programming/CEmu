@@ -1,6 +1,7 @@
 #ifdef DEBUG_SUPPORT
 
 #include "debug.h"
+#include "gdbstub.h"
 #include "../atomics.h"
 #include "../mem.h"
 #include "../emu.h"
@@ -30,10 +31,12 @@ void debug_init(void) {
     debug.bufPos = debug.bufErrPos = 0;
     debug_atomics.open = false;
     debug_disable_basic_mode();
+    gdbstub_init_from_env();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
 void debug_free(void) {
+    gdbstub_shutdown();
     free(debug.stack);
     free(debug.addr);
     free(debug.port);
@@ -128,7 +131,9 @@ void debug_open(int reason, uint32_t data) {
     debug.flashDelayCycles = cpu.flashDelayCycles;
 
     debug_atomics.open = true;
-    gui_debug_open(reason, data);
+    if (!gdbstub_on_debug(reason, data)) {
+        gui_debug_open(reason, data);
+    }
     debug_atomics.open = false;
 
     cpu.next = debug.cpuNext;
