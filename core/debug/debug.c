@@ -1,6 +1,7 @@
 #ifdef DEBUG_SUPPORT
 
 #include "debug.h"
+#include "gdbstub.h"
 #include "../atomics.h"
 #include "../mem.h"
 #include "../emu.h"
@@ -103,10 +104,12 @@ void debug_init(void) {
     basicBreakpointCount = 0;
     debug_atomics.open = false;
     debug_disable_basic_mode();
+    gdbstub_init_from_env();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
 void debug_free(void) {
+    gdbstub_shutdown();
     free(debug.stack);
     free(debug.addr);
     free(debug.port);
@@ -281,7 +284,9 @@ void debug_open(int reason, uint32_t data) {
     debug.flashDelayCycles = cpu.flashDelayCycles;
 
     debug_atomics.open = true;
-    gui_debug_open(reason, data);
+    if (!gdbstub_on_debug(reason, data)) {
+        gui_debug_open(reason, data);
+    }
     debug_atomics.open = false;
 
     cpu.next = debug.cpuNext;
@@ -521,10 +526,19 @@ void debug_clear_basic_step(void) {
 }
 
 void debug_inst_start(void) {
+    const bool gdbWatch = debug.gdbWatch;
+    if (unlikely(gdbWatch)) {
+        gdbstub_handle_watch();
+    }
     uint32_t pc = cpu.registers.PC;
     debug.addr[pc] |= DBG_INST_START_MARKER;
-    if (unlikely(debug.step)) {
-        if (!(debug.addr[pc] & DBG_MASK_EXEC) && pc != debug.tempExec) {
+    /* A step armed at this watchpoint must execute the next instruction first. */
+    if (unlikely(debug.step) && !gdbWatch) {
+        int flags = debug.addr[pc];
+        if (unlikely(flags & DBG_MASK_GDB)) {
+            flags |= gdbstub_watch_mask(pc);
+        }
+        if (!(flags & DBG_MASK_EXEC) && pc != debug.tempExec) {
             debug.step = debug.stepOver = false;
             debug_open(DBG_STEP, cpu.registers.PC);
         }
@@ -533,7 +547,10 @@ void debug_inst_start(void) {
 
 void debug_inst_fetch(void) {
     uint32_t pc = cpu.registers.PC;
-    const uint8_t flags = debug.addr[pc] |= DBG_INST_MARKER;
+    uint8_t flags = debug.addr[pc] |= DBG_INST_MARKER;
+    if (unlikely(flags & DBG_MASK_GDB)) {
+        flags |= gdbstub_watch_mask(pc);
+    }
     if (unlikely(flags & (DBG_MASK_EXEC | DBG_MASK_COUNT))) {
         if (flags & DBG_MASK_COUNT) {
             debug_hit_counter_entry_t *entry = debug_hit_counter_find(pc, false);
@@ -552,6 +569,10 @@ void debug_inst_fetch(void) {
 }
 
 void debug_inst_repeat(void) {
+    if (unlikely(debug.gdbWatch)) {
+        gdbstub_handle_watch();
+        return; /* A newly armed step must execute the next block iteration. */
+    }
     if (unlikely(debug.step)) {
         if (debug.stepOver) {
             gui_debug_close();

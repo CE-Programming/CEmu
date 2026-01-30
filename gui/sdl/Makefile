@@ -9,6 +9,9 @@ CCFLAGS += -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=re
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
 LDLIBS  := -L../../core/ -lcemucore -lSDL2
+ifeq ($(OS),Windows_NT)
+LDLIBS += -lws2_32
+endif
 
 srcfiles := main.c keymap.c
 objects  := $(patsubst %.c, %.o, $(srcfiles))

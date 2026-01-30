@@ -15,7 +15,7 @@ LDLIBS  := -L../../core/ -lcemucore
 CORELIB := ../../core/libcemucore.a
 
 ifeq ($(OS),Windows_NT)
-	LDLIBS += -static-libgcc -static-libstdc++ -static
+	LDLIBS += -static-libgcc -static-libstdc++ -static -lws2_32
 endif
 
 srcfiles := autotester.cpp autotester_cli.cpp headless_cli.cpp

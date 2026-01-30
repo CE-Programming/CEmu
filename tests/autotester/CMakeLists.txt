@@ -16,3 +16,8 @@ add_executable(autotester ${SOURCE_FILES})
 add_executable(cemu-headless
     autotester.cpp
     headless_cli.cpp)
+
+if(WIN32)
+    target_link_libraries(autotester PRIVATE ws2_32)
+    target_link_libraries(cemu-headless PRIVATE ws2_32)
+endif()

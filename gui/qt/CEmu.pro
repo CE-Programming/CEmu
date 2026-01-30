@@ -237,6 +237,7 @@ SOURCES += \
     ../../core/spi.c \
     ../../core/uart.c \
     ../../core/debug/debug.c \
+    ../../core/debug/gdbstub.c \
     ../../core/debug/zdis/zdis.c \
     ipc.cpp \
     main.cpp \
@@ -275,7 +276,7 @@ SOURCES += \
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
-win32: LIBS += -lpsapi
+win32: LIBS += -lpsapi -lws2_32
 
 
 macx: SOURCES += os/mac/kdmactouchbar.mm
@@ -324,6 +325,7 @@ HEADERS  += \
     ../../core/panel.h \
     ../../core/spi.h \
     ../../core/debug/debug.h \
+    ../../core/debug/gdbstub.h \
     ../../core/debug/zdis/zdis.h \
     ipc.h \
     utils.h \

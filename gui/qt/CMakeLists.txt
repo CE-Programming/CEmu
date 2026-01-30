@@ -96,6 +96,7 @@ set(CEmu_Sources
     ../../core/control.c ../../core/control.h
     ../../core/cpu.c ../../core/cpu.h
     ../../core/debug/debug.c ../../core/debug/debug.h
+    ../../core/debug/gdbstub.c ../../core/debug/gdbstub.h
     ../../core/debug/zdis/zdis.c ../../core/debug/zdis/zdis.h
     ../../core/defines.h
     ../../core/emu.c ../../core/emu.h
@@ -325,7 +326,7 @@ if(WIN32)
         win32-console.cpp
         resources/windows/cemu.rc
     )
-    target_link_libraries(CEmu PRIVATE psapi)
+    target_link_libraries(CEmu PRIVATE psapi ws2_32)
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         target_link_libraries(CEmu PRIVATE clang_rt.builtins-x86_64)
     endif()

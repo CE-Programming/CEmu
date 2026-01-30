@@ -6,6 +6,7 @@
 #include "flash.h"
 #include "control.h"
 #include "debug/debug.h"
+#include "debug/gdbstub.h"
 
 #include <assert.h>
 #include <string.h>
@@ -700,7 +701,11 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
                 }
             }
         }
-        if (debug.addr[addr] & DBG_MASK_READ) {
+        if (unlikely(debug.addr[addr] & (DBG_MASK_GDB | DBG_MASK_READ))) {
+            gdbstub_watch_access(addr, false);
+        }
+        /* Data stops sent to GDB must not interrupt a multi-byte access. */
+        if ((debug.addr[addr] & DBG_MASK_READ) && !debug.gdbWatch) {
             debug_open(DBG_WATCHPOINT_READ, addr);
         }
     }
@@ -762,7 +767,11 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
     addr &= 0xFFFFFF;
 
 #ifdef DEBUG_SUPPORT
-    if ((debug.addr[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_MASK_WRITE) {
+    if (unlikely(debug.addr[addr] & (DBG_MASK_GDB | DBG_MASK_WRITE))) {
+        gdbstub_watch_access(addr, true);
+    }
+    if (((debug.addr[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_MASK_WRITE) &&
+        !debug.gdbWatch) {
         debug_open(DBG_WATCHPOINT_WRITE, addr);
     }
 #endif

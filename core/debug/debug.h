@@ -119,6 +119,7 @@ size_t debug_hit_counter_snapshot(debug_hit_counter_snapshot_t *counters, size_t
 #define DBG_INST_START_MARKER (1 << 3)
 #define DBG_INST_MARKER       (1 << 4)
 #define DBG_MASK_COUNT        (1 << 5)   /* core-side execution hit counter */
+#define DBG_MASK_GDB          (1 << 6)   /* address covered by a GDB breakpoint/watchpoint */
 
 #define DBG_HIT_COUNTER_MAX   512
 
@@ -162,6 +163,7 @@ typedef struct {
     uint32_t flashCacheMisses, flashTotalAccesses, flashWaitStates;
     int64_t flashDelayCycles;
     bool step, stepOver;
+    bool gdbWatch; /* pending GDB data watchpoint, reported at the next instruction boundary */
     uint32_t tempExec, stepOut;
     bool untilRet;
     uint32_t untilRetBase; /* normalized 24bit stack pointer baseline */
