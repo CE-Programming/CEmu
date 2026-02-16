@@ -78,15 +78,24 @@ void gui_console_err_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
+asic_rev_t gui_handle_reset(const boot_ver_t *boot_ver, asic_rev_t loaded_rev,
+                            asic_rev_t default_rev, emu_device_t device, bool *python) {
+    (void)boot_ver;
+    (void)loaded_rev;
+    (void)device;
+    (void)python;
+    return default_rev;
+}
+
 FILE *fopen_utf8(const char *filename, const char *mode) {
     return fopen(filename, mode);
 }
 
-void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path) {
+void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char *path) {
     strcpy(file_buf, path);
 }
 
-uint32_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
+uint32_t *EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
     return &(panel.display[0][0]);
 }
 
@@ -107,7 +116,7 @@ void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
     emscripten_cancel_main_loop();
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     int success;
     (void)argc;
     (void)argv;
@@ -132,8 +141,8 @@ int main(int argc, char* argv[]) {
     } else {
         EM_ASM(
             emul_is_inited = false;
-            disableGUI();
-            alert("Error: Couldn't start emulation ; bad ROM?");
+            if (typeof disableGUI === 'function') disableGUI();
+            console.error("Error: Couldn't start emulation; bad ROM?");
         );
         return 1;
     }
