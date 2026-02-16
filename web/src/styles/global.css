@@ -1,0 +1,82 @@
+@font-face {
+  font-family: 'Liberation Sans Narrow';
+  src: url('/fonts/LiberationSansNarrow-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Total height ≈ width × 2.267 + ~40px toolbar.
+     Constrain width so the whole calculator fits in the viewport. */
+  --calc-width: min(380px, 100vw, calc((100vh - 48px) / 2.267));
+  --calc-width: min(380px, 100vw, calc((100dvh - 48px) / 2.267));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  width: 100%;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  height: 100%;
+  width: 100%;
+  font-family: 'Liberation Sans Narrow', 'Arial Narrow', Arial, sans-serif;
+  background: #0d0d0f;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 8px 0;
+}
+
+/* Error screen */
+.error-screen {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-screen h2 {
+  margin-bottom: 0.5rem;
+  color: #ef5350;
+}
+
+.error-screen p {
+  color: #888890;
+}
+
+@media (max-width: 420px) {
+  :root {
+    --calc-width: min(100vw, calc((100vh - 32px) / 2.267));
+    --calc-width: min(100vw, calc((100dvh - 32px) / 2.267));
+  }
+  #root {
+    padding: 4px 0;
+    align-items: flex-start;
+  }
+}

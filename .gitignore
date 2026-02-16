@@ -65,3 +65,22 @@ gui/qt/capture/libpng*
 gui/qt/CEmu.build/
 gui/qt/cmake-build-*/
 gui/qt/out/
+
+# WASM build artifacts (left in core/ by emscripten build)
+core/WebCEmu.js
+core/WebCEmu.wasm
+
+# Web build artifacts
+web/node_modules/
+web/dist/
+web/public/wasm/*.js
+web/public/wasm/*.wasm
+web/public/skin/
+web/public/fonts/
+web/.env.local
+
+# ROM files (copyrighted)
+TI-84_Plus_CE/
+
+# Auto Claude data directory
+.auto-claude/
