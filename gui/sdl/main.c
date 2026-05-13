@@ -26,6 +26,8 @@ static const cemu_sdl_key_t *keymap = cemu_keymap;
 static asic_rev_t asic_rev = ASIC_REV_AUTO;
 static int8_t python_rev = -1;
 
+void gui_debug_open() {}
+void gui_debug_close() {}
 void gui_console_clear() {}
 void gui_console_printf(const char *format, ...) { (void)format; }
 void gui_console_err_printf(const char *format, ...) { (void)format; }
