@@ -353,7 +353,7 @@ message("Binary dir: ${CMAKE_CURRENT_BINARY_DIR}")
 if(COMMAND qt_generate_deploy_app_script)
     qt_generate_deploy_app_script(
         TARGET CEmu
-        FILENAME_VARIABLE deploy_script
+        OUTPUT_SCRIPT deploy_script
         NO_UNSUPPORTED_PLATFORM_ERROR
     )
     install(SCRIPT ${deploy_script})
