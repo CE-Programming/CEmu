@@ -3208,6 +3208,7 @@ void MainWindow::ipcCli(QDataStream &stream) {
            >> o.launchPrgm
            >> o.screenshotFile;
 
+    opts.suppressTestDialog = o.suppressTestDialog;
     optLoadFiles(o);
     optAttemptLoad(o);
     optSend(o);
