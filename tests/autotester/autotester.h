@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 #include "../../core/defines.h"
 
@@ -30,6 +31,19 @@ namespace cemucore
 
 namespace autotester
 {
+    struct key_coord_t {
+        uint8_t y; // row
+        uint8_t x; // col
+    };
+
+    struct key_sequence_handlers_t {
+        std::function<void(uint8_t row, uint8_t col, bool pressed)> keyEvent;
+        std::function<void(unsigned int ms)> delay;
+        std::function<void(const std::string& error)> error;
+        unsigned int default_hold_ms = 80;
+        unsigned int delay_after_step_ms = 50;
+    };
+
     struct hash_params_t {
         std::string description;
         uint32_t start; /* Actually a pointer, for the CE */
@@ -120,6 +134,9 @@ namespace autotester
     void sendCSC(uint8_t csc);
     void sendKey(uint16_t key);
     void sendLetterKeyPress(char letter);
+
+    bool keyCoordForName(const std::string& name, key_coord_t& coord);
+    bool runKeySequence(const std::string& sequence, const key_sequence_handlers_t& handlers);
 
     bool launchCommand(const std::pair<std::string, std::string>& command);
 

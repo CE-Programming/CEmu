@@ -2,42 +2,125 @@ Structure of the JSON object for the test config files:
 -------------------------------------------------------
 
 "rom" (string)
-    Path of the ROM to be loaded for testing
+    Path of the ROM to be loaded for testing.
+    This field may be ignored when the caller forces a ROM path, for example through AUTOTESTER_ROM or the Qt frontend.
 
 "transfer_files" (array of strings)
-    Path(s) of the file(s) to be transferred after emulation has started
+    Path(s) of the file(s) to be transferred after emulation has started.
+    This array is currently required and must not be empty.
 
 "target" (object)
-    Program properties: "name" -> string (ASCII name of the program, @ is theta) ; "isASM" -> boolean.
+    Program properties:
+        - "name" (string): uppercase TI program name.
+          The first character must be A-Z; the remaining characters, up to 7,
+          may be A-Z, 0-9, or the theta character. Theta is internally replaced with @.
+        - "isASM" (boolean): whether to auto-type Asm( before launching the program.
 
-"delay_after_key" (integer, 0<x<10000)
-    The number of ms to wait for after each pressed key
+"delay_after_key" (optional integer, 0 <= value < 10000, default: 0)
+    The number of ms to wait after each key command releases its key.
+    This is also used between key actions inside a keys|... command.
 
-"delay_after_step" (integer, 0<x<10000)
-    The number of ms to wait for after each sequence step
+"delay_after_step" (optional integer, 0 <= value < 10000, default: 80)
+    The number of ms to wait after each top-level sequence command.
 
 "sequence" (array of strings)
     Sequential list of commands.
-    Format: "command|arg", with commands and arguments being:
-        action|x (with x being one of: launch (to launch the target program), reset (to reset the emulation), useClassic (to use CLASSIC and not MathPrint)
-        delay|num (with num being a number of milliseconds to wait for)
-        hash|hashName (the hash param's key (string), as defined later in your JSON)
-        hashWait|hashName (the hash param's key (string), as defined later in your JSON)
-        key|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
-        hold|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
-        release|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
-        saveVar|varName (with varName the name of the variable to save/export to your computer)
-        sendCSC|keyName[|keyName...] (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
+    Each item has the format "command|arg".
+    Command names and arguments are case-sensitive and are not trimmed.
 
-"hashes" (object (of objects))
-    each key corresponds to the name of the hash (params).
-    each value is an object that has the following properties:
+    Supported commands:
+
+        action|launch
+            Clears the home screen, types the target program name, and presses enter.
+            If target.isASM is true, Asm( is entered before the program name.
+
+        action|reset
+            Crashes/resets the emulation and runs for 1000 ms.
+
+        action|useClassic
+            Clears the home screen, selects CLASSIC mode, and presses enter.
+
+        delay|num
+            Runs emulation for num ms.
+
+        hash|hashName
+            Hashes the configured memory region named hashName and compares it with expected_CRCs.
+
+        hashWait|hashName
+            Like hash, but waits up to the hash's timeout value for a matching CRC.
+            If timeout is omitted or negative, 1000 ms is used.
+
+        key|keyName
+            Presses one physical calculator key for 80 ms, releases it, then waits delay_after_key ms.
+
+        keys|step[,step...]
+            Runs a comma-separated physical key sequence using the same key names as key|keyName.
+            No spaces are stripped and command names are exact/case-sensitive.
+            Bad steps are reported as errors and the remaining steps continue.
+            Supported steps:
+                keyName
+                    Presses keyName for 80 ms, releases it, then waits delay_after_key ms.
+                press:keyName
+                    Same as keyName.
+                delay:num
+                    Runs emulation for num ms. delay:0 is accepted.
+                hold:keyName:num
+                    Holds keyName for num ms, releases it, then waits delay_after_key ms.
+                    num must be at least 1.
+                down:keyName
+                    Presses keyName and waits delay_after_key ms.
+                up:keyName
+                    Releases keyName and waits delay_after_key ms.
+
+        hold|keyName
+            Presses one physical calculator key without releasing it.
+
+        release|keyName
+            Releases one physical calculator key.
+
+        saveVar|varName
+            Saves/exports the calculator variable named varName to the original working directory.
+
+        sendCSC|keyName[|keyName...]
+            Sends one or more CSC values through the OS key queue.
+
+    Valid physical key names:
+        graph, trace, zoom, window, wind, y=, yequ, 2nd, mode, del,
+        on, sto, ln, log, ^2, sq, -1, inv, math, alpha,
+        0, 1, 4, 7, comma, sin, apps, xton, xtn,
+        dot, 2, 5, 8, lpar, cos, prgm, stat,
+        (-), neg, 3, 6, 9, rpar, tan, vars,
+        enter, +, add, -, sub, *, mul, /, div, ^, pow, clear, clr,
+        down, left, right, up
+
+    The literal punctuation key names "," "." "(" ")" are also accepted, but
+    note that "," cannot be used directly inside keys|... because comma is the
+    step separator. Use "comma" there instead.
+
+"hashes" (object of objects)
+    Each key is the hash name used by hash|hashName or hashWait|hashName.
+    Each value is an object with the following properties:
+
         - "description" (string)
-            Just to explain what this hash is for
-        - "start" (string of number in decimal or hexadecimal if prefixed by 0x)
-            The pointer/address, or the name of a few common locations: "vram_start", "vram2_start", "ram_start", "textShadow", "cmdShadow", "pixelShadow", "pixelShadow2", "cmdPixelShadow "plotSScreen", "saveSScreen", "UserMem", "CursorImage"
-        - "size" (number (decimal only), or string of number in decimal or hexadecimal if prefixed by 0x)
-            The length of the area that will be hashed. The number itself or string of a few common sizes: "vram_8_size", "vram_16_size", "ram_size"
-        - "expected_CRCs" (array of strings (in hex, without a prefix)): one or several expected/valid CRCs
-        - "timeout" (optional: positive integer): if a hashWait action is used, sets the maximum ms to wait for
+            Human-readable description of what this hash checks.
 
+        - "start" (string)
+            Memory address to hash. Decimal strings and 0x-prefixed hexadecimal strings are accepted.
+            Named constants are also accepted:
+                vram_start, vram2_start, ram_start,
+                textShadow, cmdShadow, pixelShadow, pixelShadow2, cmdPixelShadow,
+                plotSScreen, saveSScreen, userMem, lcdPalette, cursorImage
+
+        - "size" (number or string)
+            Length of the region to hash. Decimal numbers, decimal strings, and 0x-prefixed
+            hexadecimal strings are accepted. Named constants are also accepted:
+                vram_16_size, vram_8_size, ram_size,
+                textShadow_size, cmdShadow_size, pixelShadow_size, pixelShadow2_size,
+                cmdPixelShadow_size, plotSScreen_size, saveSScreen_size,
+                lcdPalette_size, cursorImage_size
+
+        - "expected_CRCs" (array of strings)
+            One or more expected CRCs as hexadecimal strings without a 0x prefix.
+
+        - "timeout" (optional number)
+            Maximum number of ms hashWait should wait for a matching CRC.

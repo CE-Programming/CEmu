@@ -128,6 +128,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "prgm"));
     parser.addOption(launchPrgm);
 
+    QCommandLineOption keySequence(QStringList() << QStringLiteral("keys"),
+                QCoreApplication::translate("main", "Press physical calculator keys from a comma-separated sequence. Use key names or delay:<ms>."),
+                QCoreApplication::translate("main", "sequence"));
+    parser.addOption(keySequence);
+
     QCommandLineOption noSettings(QStringList() << QStringLiteral("no-settings"),
                 QCoreApplication::translate("main", "Do not restore or save settings when running"));
     parser.addOption(noSettings);
@@ -165,6 +170,7 @@ int main(int argc, char *argv[]) {
     opts.romFile            = parser.value(loadRomFile);
     opts.settingsFile       = parser.value(settingsFile);
     opts.launchPrgm         = parser.value(launchPrgm);
+    opts.keySequence        = parser.value(keySequence);
     opts.imageFile          = parser.value(imageFile);
     opts.debugFile          = parser.value(debugFile);
     opts.screenshotFile     = parser.value(screenshotFile);

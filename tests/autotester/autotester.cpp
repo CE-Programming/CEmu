@@ -15,6 +15,8 @@
 #include <functional>
 #include <unordered_map>
 #include <regex>
+#include <cctype>
+#include <limits>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   #include <windows.h>
@@ -96,17 +98,143 @@ unsigned int hashesFailed = 0;
 /* Will be incremented at each `hash` command */
 unsigned int hashesTested = 0;
 
-struct coord2d { uint8_t x; uint8_t y; };
 // Note: we could just store the string in a char*[8][8], then search for it and calculate its row/col at runtime, but meh.
-static const std::unordered_map<std::string, coord2d> valid_keys = {
-    {"graph", {0,1}}, {"trace", {1,1}}, { "zoom", {2,1}}, {"window", {3,1}}, {"y=", {4,1}}, {"2nd", {5,1}}, { "mode", {6,1}}, {  "del", {7,1}},
-    {   "on", {0,2}}, {  "sto", {1,2}}, {   "ln", {2,2}}, {   "log", {3,2}}, {"^2", {4,2}}, { "-1", {5,2}}, { "math", {6,2}}, {"alpha", {7,2}},
-    {    "0", {0,3}}, {    "1", {1,3}}, {    "4", {2,3}}, {     "7", {3,3}}, { ",", {4,3}}, {"sin", {5,3}}, { "apps", {6,3}}, { "xton", {7,3}},
-    {    ".", {0,4}}, {    "2", {1,4}}, {    "5", {2,4}}, {     "8", {3,4}}, { "(", {4,4}}, {"cos", {5,4}}, { "prgm", {6,4}}, { "stat", {7,4}},
-    {  "(-)", {0,5}}, {    "3", {1,5}}, {    "6", {2,5}}, {     "9", {3,5}}, { ")", {4,5}}, {"tan", {5,5}}, { "vars", {6,5}},
-    {"enter", {0,6}}, {    "+", {1,6}}, {    "-", {2,6}}, {     "*", {3,6}}, { "/", {4,6}}, {  "^", {5,6}}, {"clear", {6,6}},
-    { "down", {0,7}}, { "left", {1,7}}, {"right", {2,7}}, {    "up", {3,7}}
+static const std::unordered_map<std::string, key_coord_t> valid_keys = {
+    {"graph", {1,0}}, {"trace", {1,1}}, { "zoom", {1,2}}, {"window", {1,3}}, {  "wind", {1,3}}, {   "y=", {1,4}}, { "yequ", {1,4}}, {  "2nd", {1,5}}, { "mode", {1,6}}, {  "del", {1,7}},
+    {   "on", {2,0}}, {  "sto", {2,1}}, {   "ln", {2,2}}, {   "log", {2,3}}, {   "^2", {2,4}}, {    "sq", {2,4}}, {   "-1", {2,5}}, {  "inv", {2,5}}, { "math", {2,6}}, {"alpha", {2,7}},
+    {    "0", {3,0}}, {    "1", {3,1}}, {    "4", {3,2}}, {     "7", {3,3}}, {    ",", {3,4}}, {"comma", {3,4}}, {  "sin", {3,5}}, { "apps", {3,6}}, {"xton", {3,7}}, {  "xtn", {3,7}},
+    {    ".", {4,0}}, {  "dot", {4,0}}, {    "2", {4,1}}, {     "5", {4,2}}, {    "8", {4,3}}, {     "(", {4,4}}, { "lpar", {4,4}}, {  "cos", {4,5}}, { "prgm", {4,6}}, { "stat", {4,7}},
+    {  "(-)", {5,0}}, {  "neg", {5,0}}, {    "3", {5,1}}, {     "6", {5,2}}, {    "9", {5,3}}, {     ")", {5,4}}, { "rpar", {5,4}}, {  "tan", {5,5}}, { "vars", {5,6}},
+    {"enter", {6,0}}, {    "+", {6,1}}, {  "add", {6,1}}, {     "-", {6,2}}, {  "sub", {6,2}}, {     "*", {6,3}}, {  "mul", {6,3}}, {    "/", {6,4}}, {  "div", {6,4}}, {   "^", {6,5}}, {  "pow", {6,5}}, {"clear", {6,6}}, {  "clr", {6,6}},
+    { "down", {7,0}}, { "left", {7,1}}, {"right", {7,2}}, {    "up", {7,3}}
 };
+
+static bool parseMilliseconds(const std::string& str, bool allowZero, unsigned int& ms)
+{
+    if (str.empty()) {
+        return false;
+    }
+
+    unsigned long value = 0;
+    for (const char c : str) {
+        if (!std::isdigit(static_cast<unsigned char>(c))) {
+            return false;
+        }
+        value = value * 10 + static_cast<unsigned long>(c - '0');
+        if (value > std::numeric_limits<unsigned int>::max()) {
+            return false;
+        }
+    }
+
+    if (!allowZero && value == 0) {
+        return false;
+    }
+
+    ms = static_cast<unsigned int>(value);
+    return true;
+}
+
+static void reportSequenceError(const key_sequence_handlers_t& handlers, const std::string& error)
+{
+    if (handlers.error) {
+        handlers.error(error);
+    }
+}
+
+bool keyCoordForName(const std::string& name, key_coord_t& coord)
+{
+    const auto tmp = valid_keys.find(name);
+    if (tmp == valid_keys.end()) {
+        return false;
+    }
+
+    coord = tmp->second;
+    return true;
+}
+
+bool runKeySequence(const std::string& sequence, const key_sequence_handlers_t& handlers)
+{
+    if (!handlers.keyEvent || !handlers.delay) {
+        reportSequenceError(handlers, "Bad 'keys' sequence handler");
+        return false;
+    }
+
+    bool ok = true;
+    std::stringstream ss(sequence);
+    std::string rawStep;
+    while (std::getline(ss, rawStep, ',')) {
+        const std::string& step = rawStep;
+        if (step.find("delay:") == 0) {
+            const size_t separator = step.find(':');
+            unsigned int delayMs = 0;
+            if (!parseMilliseconds(step.substr(separator + 1), true, delayMs)) {
+                reportSequenceError(handlers, "Bad delay in 'keys' sequence: " + step);
+                ok = false;
+                continue;
+            }
+            handlers.delay(delayMs);
+            continue;
+        }
+
+        if (step.find("hold:") == 0) {
+            const size_t firstSeparator = step.find(':');
+            const size_t secondSeparator = step.find(':', firstSeparator + 1);
+            if (secondSeparator == std::string::npos || step.find(':', secondSeparator + 1) != std::string::npos) {
+                reportSequenceError(handlers, "Bad hold step in 'keys' sequence: " + step);
+                ok = false;
+                continue;
+            }
+
+            unsigned int holdMs = 0;
+            if (!parseMilliseconds(step.substr(secondSeparator + 1), false, holdMs)) {
+                reportSequenceError(handlers, "Bad hold duration in 'keys' sequence: " + step);
+                ok = false;
+                continue;
+            }
+
+            key_coord_t coord{};
+            if (!keyCoordForName(step.substr(firstSeparator + 1, secondSeparator - firstSeparator - 1), coord)) {
+                reportSequenceError(handlers, "Unknown key in 'keys' sequence: " + step);
+                ok = false;
+                continue;
+            }
+
+            handlers.keyEvent(coord.y, coord.x, true);
+            handlers.delay(holdMs);
+            handlers.keyEvent(coord.y, coord.x, false);
+            handlers.delay(handlers.delay_after_step_ms);
+            continue;
+        }
+
+        if (step.find("down:") == 0 || step.find("up:") == 0) {
+            const size_t separator = step.find(':');
+            key_coord_t coord{};
+            if (!keyCoordForName(step.substr(separator + 1), coord)) {
+                reportSequenceError(handlers, "Unknown key in 'keys' sequence: " + step);
+                ok = false;
+                continue;
+            }
+            handlers.keyEvent(coord.y, coord.x, step.find("down:") == 0);
+            handlers.delay(handlers.delay_after_step_ms);
+            continue;
+        }
+
+        const std::string keyName = step.find("press:") == 0 ? step.substr(6) : step;
+        key_coord_t coord{};
+        if (!keyCoordForName(keyName, coord)) {
+            reportSequenceError(handlers, "Unknown key in 'keys' sequence: " + keyName);
+            ok = false;
+            continue;
+        }
+
+        handlers.keyEvent(coord.y, coord.x, true);
+        handlers.delay(handlers.default_hold_ms);
+        handlers.keyEvent(coord.y, coord.x, false);
+        handlers.delay(handlers.delay_after_step_ms);
+    }
+
+    return ok;
+}
 
 void sendCSC(uint8_t csc)
 {
@@ -278,10 +406,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "key", [](const std::string& which_key) {
-            const auto& tmp = valid_keys.find(which_key);
-            if (tmp != valid_keys.end())
+            key_coord_t key_coords{};
+            if (keyCoordForName(which_key, key_coords))
             {
-                const coord2d& key_coords = tmp->second;
                 cemucore::emu_keypad_event(key_coords.y, key_coords.x, true);
                 cemucore::emu_run(80);
                 cemucore::emu_keypad_event(key_coords.y, key_coords.x, false);
@@ -292,6 +419,23 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
             };
+        }
+    },
+    {
+        "keys", [](const std::string& sequence) {
+            key_sequence_handlers_t handlers;
+            handlers.keyEvent = [](uint8_t row, uint8_t col, bool pressed) {
+                cemucore::emu_keypad_event(row, col, pressed);
+            };
+            handlers.delay = [](unsigned int ms) {
+                cemucore::emu_run(ms);
+            };
+            handlers.error = [](const std::string& error) {
+                std::cerr << "\t[Error] " << error << std::endl;
+            };
+            handlers.delay_after_step_ms = config.delay_after_key;
+
+            runKeySequence(sequence, handlers);
         }
     },
     {
@@ -309,10 +453,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             }
             for (const auto& part : parts)
             {
-                const auto& tmp = valid_keys.find(part);
-                if (tmp != valid_keys.end())
+                key_coord_t key_coords{};
+                if (keyCoordForName(part, key_coords))
                 {
-                    const coord2d& key_coords = tmp->second;
                     sendCSC((7-key_coords.y)*8 + key_coords.x + 1);
                     if (config.delay_after_key > 0)
                     {
@@ -326,10 +469,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "hold", [](const std::string& which_key) {
-            const auto& tmp = valid_keys.find(which_key);
-            if (tmp != valid_keys.end())
+            key_coord_t key_coords{};
+            if (keyCoordForName(which_key, key_coords))
             {
-                const coord2d& key_coords = tmp->second;
                 cemucore::emu_keypad_event(key_coords.y, key_coords.x, true);
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not hold." << std::endl;
@@ -338,10 +480,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "release", [](const std::string& which_key) {
-            const auto& tmp = valid_keys.find(which_key);
-            if (tmp != valid_keys.end())
+            key_coord_t key_coords{};
+            if (keyCoordForName(which_key, key_coords))
             {
-                const coord2d& key_coords = tmp->second;
                 cemucore::emu_keypad_event(key_coords.y, key_coords.x, false);
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not released." << std::endl;

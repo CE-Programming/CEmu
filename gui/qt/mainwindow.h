@@ -242,6 +242,7 @@ private:
     // emu keypresses
     void sendEmuKey(uint16_t key);
     void sendEmuLetterKey(char letter);
+    void sendEmuKeySequence(const QString &sequence);
 
     // console
     void console(const QString &str, int type = EmuThread::ConsoleNorm) const;

@@ -16,6 +16,7 @@
 #include "../../core/cpu.h"
 #include "../../core/mem.h"
 #include "../../core/extras.h"
+#include "../../core/keypad.h"
 #include "../../core/link.h"
 #include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
@@ -1413,6 +1414,21 @@ void MainWindow::sendEmuLetterKey(char letter) {
     }
 }
 
+void MainWindow::sendEmuKeySequence(const QString &sequence) {
+    autotester::key_sequence_handlers_t handlers;
+    handlers.keyEvent = [](uint8_t row, uint8_t col, bool pressed) {
+        emu_keypad_event(row, col, pressed);
+    };
+    handlers.delay = [](unsigned int ms) {
+        guiDelay(static_cast<int>(ms));
+    };
+    handlers.error = [](const std::string& error) {
+        std::cerr << "[CEmu] " << error << std::endl;
+    };
+
+    autotester::runKeySequence(sequence.toStdString(), handlers);
+}
+
 void MainWindow::optSend(CEmuOpts &o) {
     int speed = m_config->value(SETTING_EMUSPEED).toInt();
     if (!o.autotesterFile.isEmpty()) {
@@ -1458,6 +1474,10 @@ void MainWindow::optSend(CEmuOpts &o) {
             sendEmuLetterKey(c.toLatin1());
         }
         sendEmuKey(CE_KEY_ENTER);
+    }
+
+    if (!o.keySequence.isEmpty()) {
+        sendEmuKeySequence(o.keySequence);
     }
 }
 
@@ -3182,7 +3202,8 @@ bool MainWindow::ipcSetup() {
            << opts.restoreOnOpen
            << opts.speed
            << opts.launchPrgm
-           << opts.screenshotFile;
+           << opts.screenshotFile
+           << opts.keySequence;
 
     // blocking call
     com.send(byteArray);
@@ -3206,7 +3227,8 @@ void MainWindow::ipcCli(QDataStream &stream) {
            >> o.restoreOnOpen
            >> o.speed
            >> o.launchPrgm
-           >> o.screenshotFile;
+           >> o.screenshotFile
+           >> o.keySequence;
 
     opts.suppressTestDialog = o.suppressTestDialog;
     optLoadFiles(o);
