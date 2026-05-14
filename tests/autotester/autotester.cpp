@@ -121,7 +121,7 @@ static bool parseMilliseconds(const std::string& str, bool allowZero, unsigned i
             return false;
         }
         value = value * 10 + static_cast<unsigned long>(c - '0');
-        if (value > std::numeric_limits<unsigned int>::max()) {
+        if (value > (std::numeric_limits<unsigned int>::max)()) {
             return false;
         }
     }
