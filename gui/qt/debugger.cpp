@@ -27,6 +27,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QStringList>
 #include <QtCore/QRegularExpression>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
@@ -1012,6 +1013,32 @@ void MainWindow::breakRemove(uint32_t address) {
     }
 }
 
+void MainWindow::contextBreakpoint(const QPoint &posa) {
+    QTableWidgetItem *item = m_breakpoints->itemAt(posa);
+    if (item == Q_NULLPTR || item->column() != BREAK_ADDR_COL || item->text() == DEBUG_UNSET_ADDR) {
+        return;
+    }
+
+    bool ok = false;
+    uint32_t address = item->text().toUInt(&ok, 16);
+    if (!ok) {
+        return;
+    }
+
+    QMenu menu;
+    QAction *gotoDisasm = gotoDisasmAction(&menu);
+    QAction *gotoMem = gotoMemAction(&menu);
+
+    QAction *selected = menu.exec(m_breakpoints->viewport()->mapToGlobal(posa));
+    if (selected == gotoDisasm) {
+        debugForce();
+        gotoDisasmAddr(address);
+    } else if (selected == gotoMem) {
+        debugForce();
+        gotoMemAddr(address);
+    }
+}
+
 int MainWindow::breakGetMask(int row) const {
     int mask;
     if (static_cast<QAbstractButton *>(m_breakpoints->cellWidget(row, BREAK_ENABLE_COL))->isChecked()) {
@@ -1490,6 +1517,34 @@ void MainWindow::watchRemove(uint32_t address) {
             watchRemoveRow(row);
             break;
         }
+    }
+}
+
+void MainWindow::contextWatchpoint(const QPoint &posa) {
+    QTableWidgetItem *item = m_watchpoints->itemAt(posa);
+    if (item == Q_NULLPTR ||
+        (item->column() != WATCH_LOW_COL && item->column() != WATCH_HIGH_COL) ||
+        item->text() == DEBUG_UNSET_ADDR) {
+        return;
+    }
+
+    bool ok = false;
+    uint32_t address = item->text().toUInt(&ok, 16);
+    if (!ok) {
+        return;
+    }
+
+    QMenu menu;
+    QAction *gotoDisasm = gotoDisasmAction(&menu);
+    QAction *gotoMem = gotoMemAction(&menu);
+
+    QAction *selected = menu.exec(m_watchpoints->viewport()->mapToGlobal(posa));
+    if (selected == gotoDisasm) {
+        debugForce();
+        gotoDisasmAddr(address);
+    } else if (selected == gotoMem) {
+        debugForce();
+        gotoMemAddr(address);
     }
 }
 

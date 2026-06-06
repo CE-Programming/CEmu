@@ -637,6 +637,8 @@ private:
     void contextLcd(const QPoint &posa) const;
     void contextConsole(const QPoint &posa);
     void contextDisasm(const QPoint &posa);
+    void contextBreakpoint(const QPoint &posa);
+    void contextWatchpoint(const QPoint &posa);
     void contextVars(const QPoint &posa);
     void contextVat(const QPoint &posa);
     void contextOp(const QPoint &posa);

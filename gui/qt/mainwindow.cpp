@@ -204,9 +204,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_breakpoints, &QTableWidget::itemChanged, this, &MainWindow::breakModified);
     connect(m_breakpoints, &QTableWidget::currentItemChanged, this, &MainWindow::breakSetPrev);
     connect(m_breakpoints, &QTableWidget::itemPressed, [this](QTableWidgetItem *item){ breakSetPrev(item, Q_NULLPTR); });
+    connect(m_breakpoints, &QWidget::customContextMenuRequested, this, &MainWindow::contextBreakpoint);
     connect(m_watchpoints, &QTableWidget::itemChanged, this, &MainWindow::watchModified);
     connect(m_watchpoints, &QTableWidget::currentItemChanged, this, &MainWindow::watchSetPrev);
     connect(m_watchpoints, &QTableWidget::itemPressed, [this](QTableWidgetItem *item){ watchSetPrev(item, Q_NULLPTR); });
+    connect(m_watchpoints, &QWidget::customContextMenuRequested, this, &MainWindow::contextWatchpoint);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batterySetCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batterySet);
     connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmSpace);
