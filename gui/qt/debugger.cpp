@@ -1022,6 +1022,27 @@ int MainWindow::breakGetMask(int row) const {
     return mask;
 }
 
+static bool isDefaultDebugLabel(const QString &label) {
+    bool ok = false;
+    if (!label.startsWith(QStringLiteral("Label"))) {
+        return false;
+    }
+    label.mid(5).toInt(&ok);
+    return ok;
+}
+
+static QString symbolLabelForAddress(uint32_t address, const QString &fallback) {
+    QString label;
+    const auto range = disasm.map.equal_range(address);
+    for (auto it = range.first; it != range.second; ++it) {
+        const QString candidate = QString::fromStdString(it->second);
+        if (label.isEmpty() || candidate.compare(label, Qt::CaseInsensitive) < 0) {
+            label = candidate;
+        }
+    }
+    return label.isEmpty() ? fallback : label;
+}
+
 void MainWindow::breakModified(QTableWidgetItem *item) {
     if (item == Q_NULLPTR) {
         return;
@@ -1074,6 +1095,9 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
             debug_watch(hex2int(m_prevBreakAddr), DBG_MASK_EXEC, false);
         }
         item->setText(addrStr);
+        if (isDefaultDebugLabel(m_breakpoints->item(row, BREAK_NAME_COL)->text())) {
+            m_breakpoints->item(row, BREAK_NAME_COL)->setText(symbolLabelForAddress(addr, m_breakpoints->item(row, BREAK_NAME_COL)->text()));
+        }
         debug_watch(addr, mask, true);
         m_breakpoints->blockSignals(false);
     }
@@ -1134,11 +1158,15 @@ void MainWindow::breakAddGui() {
 bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, bool toggle, bool unset) {
     const int row = m_breakpoints->rowCount();
     QString addrStr;
+    QString displayLabel = label;
 
     if (unset) {
         addrStr = DEBUG_UNSET_ADDR;
     } else {
         addrStr = int2hex((addr &= 0xFFFFFF), 6).toUpper();
+        if (isDefaultDebugLabel(displayLabel)) {
+            displayLabel = symbolLabelForAddress(addr, displayLabel);
+        }
     }
 
     // return if address is already set
@@ -1169,7 +1197,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     btnEnable->setCheckable(true);
     btnEnable->setChecked(enabled);
 
-    QTableWidgetItem *itemLabel = new QTableWidgetItem(label);
+    QTableWidgetItem *itemLabel = new QTableWidgetItem(displayLabel);
     QTableWidgetItem *itemAddr = new QTableWidgetItem(addrStr);
     QTableWidgetItem *itemBreak = new QTableWidgetItem;
     QTableWidgetItem *itemRemove = new QTableWidgetItem;
