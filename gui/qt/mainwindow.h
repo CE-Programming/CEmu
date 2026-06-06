@@ -249,6 +249,8 @@ private:
     void console(int type, const char *str, int size = -1);
     void consoleStr();
     void consoleClear();
+    void consoleSearch();
+    void consoleFindNext();
     void consoleModified();
 
     // Other
@@ -682,6 +684,7 @@ private:
 
     QString m_searchStr;
     int m_searchMode = SearchWidget::Hex;
+    QString m_consoleSearchStr;
 
     QDir m_dir;
     QStringList m_equateFiles;

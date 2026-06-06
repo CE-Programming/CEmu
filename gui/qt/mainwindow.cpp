@@ -163,6 +163,20 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
     connect(ui->radioDock, &QRadioButton::clicked, this, &MainWindow::consoleModified);
     connect(ui->radioConsole, &QRadioButton::clicked, this, &MainWindow::consoleModified);
+    auto addConsoleShortcut = [this](const QKeySequence &sequence, void (MainWindow::*slot)()) {
+        auto *shortcut = new QShortcut(sequence, ui->console);
+        shortcut->setContext(Qt::WidgetWithChildrenShortcut);
+        connect(shortcut, &QShortcut::activated, this, slot);
+    };
+    addConsoleShortcut(QKeySequence::Find, &MainWindow::consoleSearch);
+    QList<QKeySequence> consoleFindNextKeys = QKeySequence::keyBindings(QKeySequence::FindNext);
+    const QKeySequence f3(Qt::Key_F3);
+    if (!consoleFindNextKeys.contains(f3)) {
+        consoleFindNextKeys.append(f3);
+    }
+    for (const QKeySequence &sequence : consoleFindNextKeys) {
+        addConsoleShortcut(sequence, &MainWindow::consoleFindNext);
+    }
 
     // debug actions
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debugToggle);
@@ -1875,6 +1889,45 @@ void MainWindow::consoleClear() {
         }
     } else {
         ui->console->clear();
+    }
+}
+
+void MainWindow::consoleSearch() {
+    if (m_nativeConsole || !ui->console->isEnabled()) {
+        return;
+    }
+
+    bool ok = false;
+    const QString selected = ui->console->textCursor().selectedText();
+    const QString initial = selected.isEmpty() ? m_consoleSearchStr : selected;
+    QString search = QInputDialog::getText(this, tr("Find Console Text"),
+                                           tr("Find:"), QLineEdit::Normal,
+                                           initial, &ok);
+    if (!ok || search.isEmpty()) {
+        return;
+    }
+
+    m_consoleSearchStr = search;
+    consoleFindNext();
+}
+
+void MainWindow::consoleFindNext() {
+    if (m_consoleSearchStr.isEmpty()) {
+        return;
+    }
+
+    ui->console->setFocus();
+    if (ui->console->find(m_consoleSearchStr)) {
+        return;
+    }
+
+    const QTextCursor previous = ui->console->textCursor();
+    QTextCursor cursor = previous;
+    cursor.movePosition(QTextCursor::Start);
+    ui->console->setTextCursor(cursor);
+    if (!ui->console->find(m_consoleSearchStr)) {
+        ui->console->setTextCursor(previous);
+        QMessageBox::warning(this, MSG_WARNING, tr("String not found."));
     }
 }
 
