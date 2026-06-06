@@ -1262,9 +1262,11 @@ void MainWindow::saveDebug() const {
 
 void MainWindow::saveSettings() {
     if (opts.useSettings) {
-        m_config->setValue(SETTING_WINDOW_POSITION, pos());
-        m_config->setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
-        m_config->setValue(SETTING_WINDOW_STATE, saveState());
+        if (m_fullscreen == FULLSCREEN_NONE) {
+            m_config->setValue(SETTING_WINDOW_POSITION, pos());
+            m_config->setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
+            m_config->setValue(SETTING_WINDOW_STATE, saveState());
+        }
         m_config->setValue(SETTING_CURRENT_DIR, m_dir.absolutePath());
         m_config->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
         m_config->setValue(SETTING_DEBUGGER_RAM_BYTES, ui->ramBytes->value());
