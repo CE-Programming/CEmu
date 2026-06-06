@@ -230,6 +230,21 @@ static uint32_t min_u32(uint32_t x, uint32_t y) {
     return x < y ? x : y;
 }
 
+static bool dusb_is_custom_list_name_body(const uint8_t *name, uint8_t length) {
+    if (!length || length > 5 || (name[0] >= '0' && name[0] <= '9')) {
+        return false;
+    }
+
+    for (uint8_t i = 0; i < length; i++) {
+        if ((name[i] < 'A' || name[i] > 'Z' + 1) &&
+            (name[i] < '0' || name[i] > '9')) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static bool dusb_convert_varname_to_utf8(dusb_command_t *command) {
     static const uint8_t tiascii_to_utf8[0x100][4] = {
         u8"\x0000", u8"\uF00E", u8"\x0000", u8"\x0000", u8"\x0000", u8"\uF014", u8"\x0000", u8"\uF016",
@@ -290,20 +305,23 @@ static bool dusb_convert_varname_to_utf8(dusb_command_t *command) {
             break;
         case CALC_VAR_TYPE_REAL_LIST:
         case CALC_VAR_TYPE_CPLX_LIST:
-            if (command->varname[0] != 0x5D) {
-                return false;
-            }
-            if (command->varname_length <= 2 && command->varname[1] < 6) {
+            if (command->varname_length >= 1 &&
+                command->varname[0] == 0x5D &&
+                command->varname_length <= 2 && command->varname[1] < 6) {
                 strcpy(tiascii, "L\x81");
                 tiascii[1] += command->varname[1];
-            } else if (command->varname_length == 2 && command->varname[1] == 0x40) {
+            } else if (command->varname_length == 2 &&
+                       command->varname[0] == 0x5D && command->varname[1] == 0x40) {
                 strcpy(tiascii, "IDList");
-            } else if (command->varname_length <= 6 &&
-                       command->varname[1] >= 'A' && command->varname[1] <= 'Z' + 1) {
-                memcpy(tiascii, command->varname + 1, command->varname_length - 1);
-                tiascii[command->varname_length - 1] = '\0';
             } else {
-                return false;
+                const bool has_marker = command->varname_length >= 1 && command->varname[0] == 0x5D;
+                const uint8_t *list_name = command->varname + has_marker;
+                const uint8_t list_name_length = command->varname_length - has_marker;
+                if (!dusb_is_custom_list_name_body(list_name, list_name_length)) {
+                    return false;
+                }
+                memcpy(tiascii, list_name, list_name_length);
+                tiascii[list_name_length] = '\0';
             }
             break;
         case CALC_VAR_TYPE_MATRIX:
