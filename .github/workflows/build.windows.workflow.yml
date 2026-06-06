@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build:
     name: "Build: Windows ${{ matrix.arch }}-${{ matrix.config }}"
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     env:
       VCPKG_FEATURE_FLAGS: manifests,binarycaching
       VCPKG_BINARY_SOURCES: ${{ format('clear;nuget,https://nuget.pkg.github.com/{0}/index.json,{1}', github.repository_owner, github.event_name == 'pull_request' && 'read' || 'readwrite') }}
@@ -29,17 +29,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64]
+        arch: [x64,arm64]
         config: [Release]
         include:
           - arch: x64
-            arch_name: 64-bit
-            arch_suffix: "64"
+            os: windows-latest
+          - arch: arm64
+            os: windows-11-arm
     steps:
     - name: Remove Perl Strawberry installation
       # Removes conflicting headers from include paths
       run: |
-        Remove-Item -Recurse -Force C:/Strawberry
+        Remove-Item -Recurse -Force C:/Strawberry -ErrorAction SilentlyContinue
 
     - name: Checkout Git Repo
       uses: actions/checkout@v5
@@ -78,7 +79,7 @@ jobs:
     - name: Start sccache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Build CEmu ${{ matrix.config }} on Windows ${{ matrix.arch_name }}
+    - name: Build CEmu ${{ matrix.config }} on Windows ${{ matrix.arch }}
       uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
@@ -87,19 +88,19 @@ jobs:
         buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.config }}'
       env:
         VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows
-        VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-release
+        VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-windows-static-release
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
-    - name: Upload ${{ matrix.arch_name }} ${{ matrix.config }} EXE
+    - name: Upload ${{ matrix.arch }} ${{ matrix.config }} EXE
       uses: actions/upload-artifact@v4
       with:
-        name: CEmu_win${{ matrix.arch_suffix }}_master
+        name: CEmu_win-${{ matrix.arch }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe
 
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |
-        $ReleaseName = "CEmu-nightly_win${{ matrix.arch_suffix }}-msvc.exe"
+        $ReleaseName = "CEmu-nightly_win-${{ matrix.arch }}-msvc.exe"
         Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe" -NewName $ReleaseName
         echo "RELEASE_NAME=$ReleaseName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 

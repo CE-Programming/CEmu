@@ -88,6 +88,16 @@
       }
     },
     {
+      "name": "Win-arm64",
+      "inherits": [ "ninja-vcpkg-arm64", "win-only" ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "arm64-windows-static"
+        }
+      }
+    },
+    {
       "name": "Mac-x64",
       "inherits": [ "ninja-vcpkg-x64", "mac-only" ],
       "cacheVariables": {
@@ -142,6 +152,21 @@
     {
       "name": "Win-x64-Release",
       "configurePreset": "Win-x64",
+      "configuration": "Release"
+    },
+    {
+      "name": "Win-arm64-Debug",
+      "configurePreset": "Win-arm64",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Win-arm64-RelWithDebInfo",
+      "configurePreset": "Win-arm64",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Win-arm64-Release",
+      "configurePreset": "Win-arm64",
       "configuration": "Release"
     },
     {
