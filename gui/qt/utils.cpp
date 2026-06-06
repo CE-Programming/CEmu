@@ -3,8 +3,7 @@
 #include "debugger/disasm.h"
 #include "../../core/cpu.h"
 #include "../../core/os/os.h"
-#include "tivars_lib_cpp/src/TIVarType.h"
-#include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
+#include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 
 #include <array>
 #include <tuple>

@@ -4,8 +4,7 @@
 #include "utils.h"
 #include "visualizerwidget.h"
 
-#include "tivars_lib_cpp/src/TIVarType.h"
-#include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
+#include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 
 #include "../../core/mem.h"
 
@@ -492,5 +491,4 @@ void MainWindow::debugBasicToggleLiveExecution(bool enabled) {
         debugBasicReconfigure(true);
     }
 }
-
 

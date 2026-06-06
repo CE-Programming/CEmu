@@ -7,10 +7,7 @@
 #include "basiccodeviewerwindow.h"
 #include "capture/animated-png.h"
 #include "keypad/qtkeypadbridge.h"
-#include "tivars_lib_cpp/src/TIModels.h"
-#include "tivars_lib_cpp/src/TIVarFile.h"
-#include "tivars_lib_cpp/src/TIVarTypes.h"
-#include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
+#include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 #include "../../core/emu.h"
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
@@ -97,11 +94,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 #ifdef Q_OS_MACOS
     KDMacTouchBar *touchBar = new KDMacTouchBar(this);
 #endif
-
-    // init tivars_lib stuff
-    tivars::TIModels::initTIModelsArray();
-    tivars::TIVarTypes::initTIVarTypesArray();
-    tivars::TypeHandlers::TH_Tokenized::initTokens();
 
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&m_speedLabel);

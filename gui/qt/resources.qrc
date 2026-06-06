@@ -85,7 +85,6 @@
         <file>resources/custom_fonts/TICELarge.ttf</file>
     </qresource>
     <qresource prefix="/other">
-        <file>tivars_lib_cpp/programs_tokens.csv</file>
     </qresource>
     <qresource prefix="/i18n">
         <file>i18n/es_ES.qm</file>

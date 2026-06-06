@@ -32,9 +32,8 @@ project(CEmu
         VERSION 3.0
         LANGUAGES C CXX)
 
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c" OR
-   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tivars_lib_cpp/src/TIVarFile.cpp")
-    message(FATAL_ERROR "Some files seem to be missing - you have to run 'git submodule init' and 'git submodule update' first.")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c")
+    message(FATAL_ERROR "zdis is missing - you have to run 'git submodule init' and 'git submodule update' first.")
 endif()
 
 if(WIN32 AND VCPKG_TARGET_TRIPLET MATCHES "-static(-|$)" AND NOT VCPKG_TARGET_TRIPLET MATCHES "-md(-|$)")
@@ -165,31 +164,7 @@ set(CEmu_Sources
     sendinghandler.cpp sendinghandler.h
     settings.cpp
     tablewidget.cpp tablewidget.h
-    tivars_lib_cpp/src/BinaryFile.cpp tivars_lib_cpp/src/BinaryFile.h
-    tivars_lib_cpp/src/CommonTypes.h
-    tivars_lib_cpp/src/TIModel.cpp tivars_lib_cpp/src/TIModel.h
-    tivars_lib_cpp/src/TIModels.cpp tivars_lib_cpp/src/TIModels.h
-    tivars_lib_cpp/src/TIVarFile.cpp tivars_lib_cpp/src/TIVarFile.h
-    tivars_lib_cpp/src/TIVarType.cpp tivars_lib_cpp/src/TIVarType.h
-    tivars_lib_cpp/src/TIVarTypes.cpp tivars_lib_cpp/src/TIVarTypes.h
-    tivars_lib_cpp/src/TypeHandlers/DummyHandler.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_DataAppVar.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_ExactFraction.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_ExactFractionPi.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_ExactPi.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_ExactRadical.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_FP.cpp
-    tivars_lib_cpp/src/TypeHandlers/STH_PythonAppVar.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_GDB.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_GenericAppVar.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_GenericComplex.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_GenericList.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_GenericReal.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_Matrix.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_TempEqu.cpp
-    tivars_lib_cpp/src/TypeHandlers/TH_Tokenized.cpp
-    tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h
-    tivars_lib_cpp/src/tivarslib_utils.cpp tivars_lib_cpp/src/tivarslib_utils.h
+    tivars_lib_cpp/tivars_lib_cpp.cpp tivars_lib_cpp/tivars_lib_cpp.hpp
     utils.cpp utils.h
     vartablemodel.cpp vartablemodel.h
     visualizerwidget.cpp visualizerwidget.h

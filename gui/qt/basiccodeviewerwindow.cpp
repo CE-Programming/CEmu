@@ -3,8 +3,7 @@
 
 #include "utils.h"
 
-#include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
-#include "tivars_lib_cpp/src/tivarslib_utils.h"
+#include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 
 #include "../../core/mem.h"
 
