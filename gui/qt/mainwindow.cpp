@@ -2091,8 +2091,8 @@ void MainWindow::recordAnimated() {
     m_recording = true;
     ui->apngSkip->setEnabled(false);
     ui->actionRecordAnimated->setChecked(true);
-    ui->buttonRecordAnimated->setText(tr("Stop Recording"));
-    ui->actionRecordAnimated->setText(tr("Stop Recording..."));
+    ui->buttonRecordAnimated->setText(tr("Stop and Save..."));
+    ui->actionRecordAnimated->setText(tr("Stop Recording and Save..."));
 }
 
 void MainWindow::recordSave(const QString &filename) {
@@ -2117,7 +2117,7 @@ void MainWindow::recordControlUpdate() {
     ui->buttonRecordAnimated->setEnabled(true);
     ui->actionRecordAnimated->setChecked(false);
     ui->buttonRecordAnimated->setText(tr("Record"));
-    ui->actionRecordAnimated->setText(tr("Record animated PNG..."));
+    ui->actionRecordAnimated->setText(tr("Start Recording Animated PNG"));
     m_msgLabel.clear();
 }
 

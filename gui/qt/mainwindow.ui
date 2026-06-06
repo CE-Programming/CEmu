@@ -10755,10 +10755,10 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/record.png</normaloff>:/icons/resources/icons/record.png</iconset>
    </property>
    <property name="text">
-    <string>Record animated PNG</string>
+    <string>Start Recording Animated PNG</string>
    </property>
    <property name="toolTip">
-    <string>Record animated GIF</string>
+    <string>Start Recording Animated PNG</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+X</string>
