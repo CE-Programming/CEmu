@@ -1331,10 +1331,15 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
         case 0x1C8 >> 2: // DMA Control Register
             write8(usb.regs.dma_ctrl,              bit_offset, value & 0x81FFFF16 >> bit_offset); // W mask (V)
             if (value & DMACTRL_START >> bit_offset) {
+                uint32_t dma_length = DMACTRL_LEN(usb.regs.dma_ctrl);
+                if (dma_length > sizeof(usb.buffer)) {
+                    usb_grp2_int(GISR2_DMAERR);
+                    break;
+                }
                 usb.event.type = USB_TRANSFER_REQUEST_EVENT;
                 usb_transfer_info_t *transfer = &usb.event.info.transfer;
                 transfer->buffer = usb.buffer;
-                transfer->length = DMACTRL_LEN(usb.regs.dma_ctrl);
+                transfer->length = dma_length;
                 transfer->status = USB_TRANSFER_COMPLETED;
                 transfer->address = DEVADDR_ADDR(usb.regs.dev_addr);
                 transfer->direction = usb.regs.dma_ctrl & DMACTRL_MEM2FIFO;
@@ -1369,7 +1374,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                     }
                 }
                 //usb_transfer_info_t debug_transfer = *transfer;
-                mem_dma_read(transfer->buffer, usb.regs.dma_addr, DMACTRL_LEN(usb.regs.dma_ctrl));
+                mem_dma_read(transfer->buffer, usb.regs.dma_addr, dma_length);
                 usb_dispatch_event(NULL);
                 //gui_console_printf("[USB] %c", debug_transfer.direction ? 'R' : 'S');
                 //for (uint32_t i = 0; i != DMACTRL_LEN(usb.regs.dma_ctrl); ++i)
