@@ -274,7 +274,7 @@ static uint8_t uart_read(const uint16_t pio, bool peek) {
                     uart.rfvi++;
                     if (--uart.rfve) {
                         /* Indicate error status from the next FIFO entry */
-                        index = uart.rxstat[uart.rfvi & (UART_FIFO_DEPTH - 1)];
+                        index = uart.rfvi & (UART_FIFO_DEPTH - 1);
                         uart.lsr |= uart.rxstat[index];
                         uart.isr |= (uart.rxstat[index] != 0) << 2;
                     } else {
