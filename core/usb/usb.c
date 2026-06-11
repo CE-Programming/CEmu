@@ -550,7 +550,15 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
             case USB_TRANSFER_RESPONSE_EVENT:
                 if (usb.event.host) {
                     if (!transfer->direction) {
-                        mem_dma_write(transfer->buffer, usb.regs.dma_addr, DMACTRL_LEN(usb.regs.dma_ctrl));
+                        uint32_t dma_length = DMACTRL_LEN(usb.regs.dma_ctrl);
+                        uint32_t write_length = transfer->length < dma_length ? transfer->length : dma_length;
+                        if (write_length) {
+                            if (transfer->buffer) {
+                                mem_dma_write(transfer->buffer, usb.regs.dma_addr, write_length);
+                            } else {
+                                transfer->status = USB_TRANSFER_ERRORED;
+                            }
+                        }
                     }
                     if (transfer->length) {
                         //gui_console_printf("usb_grp2_int(%s);\n", transfer->status == USB_TRANSFER_COMPLETED ? "GISR2_DMAFIN" : "GISR2_DMAERR");
