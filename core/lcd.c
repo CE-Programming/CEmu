@@ -183,6 +183,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
 
     if (!out) { return; }
     if (!dat) { goto draw_black; }
+    if (dat >= dat_end) { goto draw_black; }
 
     if (mode < 4) {
         const uint16_t *palette = lcd.palettes[bgr & 1];
@@ -577,13 +578,13 @@ void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height,
     uint8_t mode = lcd_control >> 1 & 7;
     uint8_t *data_start, *data_end, *mem_end;
     int length = 0;
-    int size;
+    size_t size;
 
     *dat = NULL;
     *dat_end = NULL;
-    size = width * height;
 
-    if (!size) { return; }
+    if (width <= 0 || height <= 0) { return; }
+    size = (size_t)width * (size_t)height;
 
     /* Mask if true lcd */
     if (mask) {
