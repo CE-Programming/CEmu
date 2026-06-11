@@ -183,6 +183,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
 
     if (!out) { return; }
     if (!dat) { goto draw_black; }
+    if (dat >= dat_end) { goto draw_black; }
 
     if (mode < 4) {
         const uint16_t *palette = lcd.palettes[bgr & 1];
@@ -198,7 +199,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
                 color = palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                 *out++ = lcd_rgb565out(color);
             } while (bitpos && out != out_end);
-        } while (dat < dat_end);
+        } while (dat < dat_end && out != out_end);
 
     } else if (mode == 4) {
         uint_fast8_t bi = bebo ? 16 : 0;
@@ -208,7 +209,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
             *out++ = lcd_rgb565out(word);
             if (out == out_end) break;
             *out++ = lcd_rgb565out(word >> 16);
-        } while (dat < dat_end);
+        } while (dat < dat_end && out != out_end);
 
     } else if (mode == 5) {
         bgr = bgr ? 0xFF : 0;
@@ -216,7 +217,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
             word = lcd_next_word(&dat);
             word = lcd_bgr888swap(word, bgr);
             *out++ = lcd_rgb888out(word);
-        } while (dat < dat_end);
+        } while (dat < dat_end && out != out_end);
 
     } else if (mode == 6) {
         uint_fast8_t bi = bebo ? 16 : 0;
@@ -226,7 +227,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
             *out++ = lcd_rgb565out(word);
             if (out == out_end) break;
             *out++ = lcd_rgb565out(word >> 16);
-        } while (dat < dat_end);
+        } while (dat < dat_end && out != out_end);
 
     } else { /* mode == 7 */
         uint_fast8_t bi = bebo ? 16 : 0;
@@ -236,7 +237,7 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t lcd_cont
             *out++ = lcd_rgb565out(word);
             if (out == out_end) break;
             *out++ = lcd_rgb565out(word >> 16);
-        } while (dat < dat_end);
+        } while (dat < dat_end && out != out_end);
     }
 
 draw_black:
@@ -576,14 +577,14 @@ void lcd_update(void) {
 void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t lcd_control, bool mask) {
     uint8_t mode = lcd_control >> 1 & 7;
     uint8_t *data_start, *data_end, *mem_end;
-    int length = 0;
-    int size;
+    size_t length = 0;
+    size_t size;
 
     *dat = NULL;
     *dat_end = NULL;
-    size = width * height;
 
-    if (!size) { return; }
+    if (width <= 0 || height <= 0) { return; }
+    size = (size_t)width * (size_t)height;
 
     /* Mask if true lcd */
     if (mask) {
@@ -619,8 +620,12 @@ void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height,
     }
 
     if (data_start >= mem_end) { return; }
+    if (length > (size_t)(mem_end - data_start)) {
+        length = (size_t)(mem_end - data_start);
+    }
+    length &= ~(size_t)(sizeof(uint32_t) - 1);
+    if (!length) { return; }
     data_end = data_start + length;
-    if (data_end > mem_end) { data_end = mem_end; }
 
     *dat     = (uint32_t*)data_start;
     *dat_end = (uint32_t*)data_end;
