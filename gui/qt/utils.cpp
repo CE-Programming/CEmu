@@ -71,17 +71,23 @@ QString resolveAddressOrEquate(const QString &input, bool *ok) {
     }
 
     QString s = in;
-    if (s.startsWith(QStringLiteral("0X"))) {
-        s = s.mid(2);
+    if (s.startsWith('$')) {
+        s.remove(0, 1);
+    } else if (s.startsWith(QStringLiteral("0X"))) {
+        s.remove(0, 2);
+    } else if (s.endsWith('H')) {
+        s.chop(1);
     }
-    if (s.isEmpty() || s.length() > 6) {
-        return {};
-    }
-    if (s.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if (s.isEmpty() || s.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return {};
     }
 
-    const auto value = static_cast<uint32_t>(hex2int(in));
+    bool valid = false;
+    const uint32_t value = s.toUInt(&valid, 16);
+    if (!valid || value > 0xFFFFFF) {
+        return {};
+    }
+
     if (ok) { *ok = true; }
     return int2hex(value, 6);
 }
