@@ -878,15 +878,16 @@ static void usb_schedule_traverse(usb_traversal_state_t *state) {
     state->fake_recl_head = -1;
     state->fake_iter_cap = 1 << 10;
     usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+    /* Budget one 1 ms frame, or one 125 us microframe at high speed. */
     switch (usb.event.speed) {
         case USB_FULL_SPEED:
-            state->bit_times_remaining = UINT64_C(480) * 1000u * 1000u / 8000u;
+            state->bit_times_remaining = UINT64_C(12) * 1000u * 1000u / 1000u;
             break;
         case USB_LOW_SPEED:
             state->bit_times_remaining = UINT64_C(1500) * 1000u / 1000u;
             break;
         case USB_HIGH_SPEED:
-            state->bit_times_remaining = UINT64_C(12) * 1000u * 1000u / 1000u;
+            state->bit_times_remaining = UINT64_C(480) * 1000u * 1000u / 8000u;
             break;
         case USB_SUPER_SPEED:
             state->bit_times_remaining = UINT64_C(5) * 1000u * 1000u * 1000u / 8000u;
@@ -1103,7 +1104,7 @@ static void usb_event(enum sched_item_id event) {
             }
         }
     }
-    sched_repeat(event, high_speed ? 1 : 8);
+    sched_repeat(event, high_speed ? 1500 : 12000);
 }
 
 static void usb_device_event(enum sched_item_id event) {
