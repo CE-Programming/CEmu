@@ -360,15 +360,18 @@ void EmuThread::doSend() {
     m_backupThrottleForTransfers = m_throttle;
     requestLock.unlock();
     setThrottle(false);
-    emu_send_variables(args.args(), args.size(), sendLoc,
-                       [](void *context, int value, int total) {
-                           EmuThread* emuThread = reinterpret_cast<EmuThread *>(context);
-                           if (value == 1 && total == 1) {
-                               emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
-                           }
-                           emit emuThread->linkProgress(value, total);
-                           return false;
-                       }, this);
+    if (emu_send_variables(args.args(), args.size(), sendLoc,
+                           [](void *context, int value, int total) {
+                               EmuThread* emuThread = reinterpret_cast<EmuThread *>(context);
+                               if (value == 1 && total == 1) {
+                                   emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
+                               }
+                               emit emuThread->linkProgress(value, total);
+                               return false;
+                           }, this) != LINK_GOOD) {
+        setThrottle(m_backupThrottleForTransfers);
+        emit linkProgress(0, 0);
+    }
 }
 
 void EmuThread::doUsbPlugDevice() {
