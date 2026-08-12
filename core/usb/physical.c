@@ -1295,12 +1295,17 @@ int usb_physical_device(usb_event_t *event) {
             }
             break;
         case USB_TRANSFER_REQUEST_EVENT:
+            event->pending = false;
             NODE_FOREACH (device, &context->devices) {
                 if (device->state <= DEVICE_STATE_POWERED ||
                     device->address != transfer->address) {
                     continue;
                 }
+                event->pending = true;
                 error = device_process_transfer(context, device, event);
+                if (error != USB_SUCCESS || event->type == USB_TRANSFER_RESPONSE_EVENT) {
+                    event->pending = false;
+                }
                 break;
             }
             break;

@@ -72,6 +72,7 @@ typedef struct usb_event {
     usb_progress_handler_t *progress_handler;
     void *progress_context, *context;
     bool host : 1;
+    bool pending : 1;
     uint8_t speed : 2; /* usb_speed_t */
     usb_event_type_t type;
     union {

@@ -731,6 +731,8 @@ static void usb_itd_execute(usb_traversal_state_t *state) {
     for (uint8_t iTDTransactionCounter = state->itd.bufs[2].mult;
          iTDTransactionCounter && xact->active && state->bit_times_remaining >= max_bit_times;
          --iTDTransactionCounter) {
+        usb_itd_t itd_before = state->itd;
+        bool dirty_before = state->dirty;
         state->dirty = true;
         uint32_t length = sizeof(usb.buffer);
         if (usb_itd_gather(usb.buffer, &state->itd, xact, &length)) {
@@ -749,7 +751,16 @@ static void usb_itd_execute(usb_traversal_state_t *state) {
         if (!usb.event.info.transfer.direction) {
             state->bit_times_remaining -= max_bit_times;
         }
+        usb.event.pending = false;
         usb_dispatch_event(state);
+        if (usb.event.pending) {
+            state->itd = itd_before;
+            state->dirty = dirty_before;
+            if (usb.event.info.transfer.direction) {
+                state->bit_times_remaining -= max_bit_times;
+            }
+            return;
+        }
     }
 }
 
@@ -761,6 +772,8 @@ static void usb_sitd_execute(usb_traversal_state_t *state) {
     if (state->bit_times_remaining < max_bit_times) {
         return;
     }
+    usb_sitd_t sitd_before = state->sitd;
+    bool dirty_before = state->dirty;
     state->dirty = true;
     uint32_t length = sizeof(usb.buffer);
     if (usb_sitd_gather(usb.buffer, &state->sitd, &length)) {
@@ -779,7 +792,15 @@ static void usb_sitd_execute(usb_traversal_state_t *state) {
     if (!usb.event.info.transfer.direction) {
         state->bit_times_remaining -= max_bit_times;
     }
+    usb.event.pending = false;
     usb_dispatch_event(state);
+    if (usb.event.pending) {
+        state->sitd = sitd_before;
+        state->dirty = dirty_before;
+        if (usb.event.info.transfer.direction) {
+            state->bit_times_remaining -= max_bit_times;
+        }
+    }
 }
 
 static void usb_qh_execute(usb_traversal_state_t *state) {
@@ -806,6 +827,8 @@ static void usb_qh_execute(usb_traversal_state_t *state) {
     for (uint8_t qHTransactionCounter = state->qh.mult;
          qHTransactionCounter && state->qh.overlay.active && state->bit_times_remaining >= max_bit_times;
          --qHTransactionCounter) {
+        usb_qh_t qh_before = state->qh;
+        bool dirty_before = state->dirty;
         // Asynchronous Transfer Pre-condition Criteria
         if (state->qh.nak_rl) {
             if (!state->qh.s_mask && !state->qh.overlay.alt.nak_cnt) {
@@ -836,7 +859,16 @@ static void usb_qh_execute(usb_traversal_state_t *state) {
         if (!usb.event.info.transfer.direction) {
             state->bit_times_remaining -= usb_compute_packet_bit_times(usb.event.info.transfer.length);
         }
+        usb.event.pending = false;
         usb_dispatch_event(state);
+        if (usb.event.pending) {
+            state->qh = qh_before;
+            state->dirty = dirty_before;
+            if (usb.event.info.transfer.direction) {
+                state->bit_times_remaining -= max_bit_times;
+            }
+            return;
+        }
     }
 }
 
