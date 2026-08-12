@@ -23,6 +23,7 @@ struct CEmuOpts {
     QString debugFile;
     QString screenshotFile;
     QString keySequence;
+    QString usbDevice;
     QString idString;
     QString pidString;
     QStringList sendFiles;

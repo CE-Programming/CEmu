@@ -1388,6 +1388,7 @@ void MainWindow::setup() {
 
     translateExtras(TRANSLATE_UPDATE);
 
+    optUsb(opts);
     optSend(opts);
     if (opts.speed != -1) {
         setEmuSpeed(opts.speed);
@@ -1488,6 +1489,20 @@ void MainWindow::optSend(CEmuOpts &o) {
     if (!o.keySequence.isEmpty()) {
         sendEmuKeySequence(o.keySequence);
     }
+}
+
+void MainWindow::optUsb(CEmuOpts &o) {
+    if (o.usbDevice.isEmpty()) {
+        return;
+    }
+    if (!o.usbDevice.compare(QStringLiteral("disconnect"), Qt::CaseInsensitive)) {
+        emu.usbPlugDevice();
+        return;
+    }
+    emu.usbPlugDevice({
+            QStringLiteral("physical"),
+            o.usbDevice,
+        }, &MainWindow::usbUnplugCallback, this);
 }
 
 void MainWindow::optLoadFiles(CEmuOpts &o) {
@@ -3261,7 +3276,8 @@ MainWindow::IpcSetupResult MainWindow::ipcSetup() {
            << opts.speed
            << opts.launchPrgm
            << opts.screenshotFile
-           << opts.keySequence;
+           << opts.keySequence
+           << opts.usbDevice;
 
     // blocking call
     if (!com.send(byteArray)) {
@@ -3290,11 +3306,13 @@ void MainWindow::ipcCli(QDataStream &stream) {
            >> o.speed
            >> o.launchPrgm
            >> o.screenshotFile
-           >> o.keySequence;
+           >> o.keySequence
+           >> o.usbDevice;
 
     opts.suppressTestDialog = o.suppressTestDialog;
     optLoadFiles(o);
     optAttemptLoad(o);
+    optUsb(o);
     optSend(o);
     if (o.speed != -1) {
         setEmuSpeed(o.speed);

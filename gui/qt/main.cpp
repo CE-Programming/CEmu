@@ -137,6 +137,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "sequence"));
     parser.addOption(keySequence);
 
+    QCommandLineOption usbDevice(QStringList() << QStringLiteral("usb"),
+                QCoreApplication::translate("main", "Connect a physical USB device selected by VID:PID or bus#address, or disconnect it."),
+                QCoreApplication::translate("main", "selector|disconnect"));
+    parser.addOption(usbDevice);
+
     QCommandLineOption noSettings(QStringList() << QStringLiteral("no-settings"),
                 QCoreApplication::translate("main", "Do not restore or save settings when running"));
     parser.addOption(noSettings);
@@ -176,6 +181,7 @@ int main(int argc, char *argv[]) {
     opts.settingsFile       = parser.value(settingsFile);
     opts.launchPrgm         = parser.value(launchPrgm);
     opts.keySequence        = parser.value(keySequence);
+    opts.usbDevice          = parser.value(usbDevice);
     opts.imageFile          = parser.value(imageFile);
     opts.debugFile          = parser.value(debugFile);
     opts.screenshotFile     = parser.value(screenshotFile);

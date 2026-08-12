@@ -616,6 +616,7 @@ private:
 
     // options
     void optSend(CEmuOpts &o);
+    void optUsb(CEmuOpts &o);
     void optLoadFiles(CEmuOpts &o);
     void optAttemptLoad(CEmuOpts &o);
 
