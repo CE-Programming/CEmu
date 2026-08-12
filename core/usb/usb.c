@@ -556,6 +556,7 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                             mem_dma_write(transfer->buffer, usb.regs.dma_addr, write_length);
                         }
                     }
+                    usb.regs.dma_ctrl &= ~DMACTRL_START;
                     if (transfer->length) {
                         //gui_console_printf("usb_grp2_int(%s);\n", transfer->status == USB_TRANSFER_COMPLETED ? "GISR2_DMAFIN" : "GISR2_DMAERR");
                         usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
@@ -1186,10 +1187,11 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                 PORTSC_EN_STATUS; // W[0/1]C mask (V or RO or W)
             usb.regs.hcor.portsc[0] |= (uint32_t)value << bit_offset & 0x7F0180; // W mask (RO)
             if ((old ^ usb.regs.hcor.portsc[0]) & PORTSC_RESET) {
-                // TODO: actually powered by gpio.
-                usb.event.type = old & PORTSC_RESET ? USB_RESET_EVENT : USB_POWER_EVENT;
+                // TODO: actually powered by gpio?
+                bool reset_completed = old & PORTSC_RESET;
+                usb.event.type = reset_completed ? USB_RESET_EVENT : USB_POWER_EVENT;
                 usb_dispatch_event(NULL);
-                if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, true)) {
+                if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, reset_completed)) {
                     usb_host_int(USBSTS_PORT_CHANGE);
                 }
                 usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
