@@ -87,6 +87,9 @@ int usb_msd_device(usb_event_t *event) {
             context->address = 0;
             context->configured = false;
             break;
+        case USB_SESSION_START_EVENT:
+        case USB_SESSION_END_EVENT:
+            break;
         case USB_TRANSFER_REQUEST_EVENT:
             event->type = USB_TRANSFER_RESPONSE_EVENT;
             if (transfer->address != context->address ||

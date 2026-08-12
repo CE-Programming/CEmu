@@ -1294,6 +1294,15 @@ int usb_physical_device(usb_event_t *event) {
                 device = NULL;
             }
             break;
+        case USB_SESSION_START_EVENT:
+        case USB_SESSION_END_EVENT:
+            /*
+             * Session/VBUS state belongs to the emulated OTG controller.
+             * A physical libusb device has no additional operation to perform
+             * here; accepting the notification keeps it attached so the
+             * following bus reset and enumeration can reach the device.
+             */
+            break;
         case USB_TRANSFER_REQUEST_EVENT:
             event->pending = false;
             NODE_FOREACH (device, &context->devices) {

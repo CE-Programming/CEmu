@@ -1247,6 +1247,9 @@ int usb_dusb_device(usb_event_t *event) {
             }
             event->context = context;
             break;
+        case USB_SESSION_REQUEST_EVENT:
+            event->type = USB_SESSION_START_EVENT;
+            return USB_SUCCESS;
         case USB_TRANSFER_REQUEST_EVENT:
         case USB_TRANSFER_RESPONSE_EVENT:
             command = context->command;

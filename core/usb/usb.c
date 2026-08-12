@@ -215,14 +215,16 @@ static void usb_plug_a(void) {
     usb_otg_int(OTGISR_IDCHG | OTGISR_RLCHG);
 }
 static void usb_unplug_a(void) {
+    bool port_changed;
     usb.regs.hcor.portsc[0] &= ~PORTSC_J_STATE;
-    if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE, false) ||
-        usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, false)) {
+    port_changed = usb_update_status_change(usb.regs.hcor.portsc, PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE, false);
+    port_changed |= usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, false);
+    if (port_changed) {
         usb_host_int(USBSTS_PORT_CHANGE);
     }
     usb.regs.otgcsr |= OTGCSR_DEV_B | OTGCSR_ROLE_D;
     usb_otg_int(OTGISR_APRM | OTGISR_IDCHG | OTGISR_RLCHG);
-    usb_plug_b();
+    usb_unplug_b();
 }
 
 static void usb_plug(void) {
@@ -502,6 +504,18 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                 break;
             case USB_RESET_EVENT:
                 usb_grp2_int(GISR2_RESET);
+                break;
+            case USB_SESSION_START_EVENT:
+                if (usb.event.host && (usb.regs.otgcsr & OTGCSR_ROLE_D)) {
+                    usb_plug_b();
+                }
+                break;
+            case USB_SESSION_END_EVENT:
+                if (usb.event.host && (usb.regs.otgcsr & OTGCSR_ROLE_D)) {
+                    usb_unplug_b();
+                }
+                break;
+            case USB_SESSION_REQUEST_EVENT:
                 break;
             case USB_TRANSFER_REQUEST_EVENT:
                 if (usb.event.host) {
@@ -1258,10 +1272,36 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.rsvd2[1],              bit_offset, value &       0xFFF >> bit_offset); // W mask (V)
             break;
         case 0x080 >> 2: // OTG Control Status Register
+            old = usb.regs.otgcsr;
             write8(usb.regs.otgcsr,                bit_offset, value &  0x1A00FFF7 >> bit_offset); // W mask (V)
-            if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_J_STATE | PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE,
-                                         (usb.regs.otgcsr & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ)) {
-                usb_host_int(USBSTS_PORT_CHANGE);
+            if (usb.device != usb_disconnected_device && !usb.event.host &&
+                !(usb.regs.otgcsr & OTGCSR_ROLE_D)) {
+                bool bus_requested = (usb.regs.otgcsr & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ;
+                if (bus_requested) {
+                    usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
+                    usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
+                } else {
+                    usb.regs.otgcsr &= ~(OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD);
+                    usb.regs.otgcsr |= OTGCSR_B_SESS_END;
+                }
+                bool port_changed = usb_update_status_change(
+                    usb.regs.hcor.portsc, PORTSC_J_STATE | PORTSC_CONN_STATUS,
+                    PORTSC_CONN_CHANGE, bus_requested);
+                if (!bus_requested) {
+                    port_changed |= usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, false);
+                }
+                if (port_changed) {
+                    usb_host_int(USBSTS_PORT_CHANGE);
+                }
+                if (((old & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ) != bus_requested) {
+                    usb.event.type = bus_requested ? USB_SESSION_START_EVENT : USB_SESSION_END_EVENT;
+                    usb_dispatch_event(NULL);
+                }
+            } else if (usb.device != usb_disconnected_device && usb.event.host &&
+                       (usb.regs.otgcsr & OTGCSR_ROLE_D) && !(old & OTGCSR_B_BUSREQ) &&
+                       (usb.regs.otgcsr & OTGCSR_B_BUSREQ)) {
+                usb.event.type = USB_SESSION_REQUEST_EVENT;
+                usb_dispatch_event(NULL);
             }
             break;
         case 0x084 >> 2: // OTG Interrupt Status Register
