@@ -147,6 +147,15 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                     control.readBatteryStatus = control.setBatteryStatus == BATTERY_DISCHARGED ? 0 : byte & 0x80 ? 0 : 3;
                     break;
             }
+            /*
+             * The comparator inputs remain enabled after the battery-level sequence configures port 7.
+             * TI-OS's USB power check reuses that configuration and only selects the high threshold through
+             * ports 0 and 9, so update the comparator even without another port 7 write.
+             */
+            if (!control.readBatteryStatus && control.setBatteryStatus != BATTERY_DISCHARGED &&
+                (control.ports[7] & 0x90) && (control.ports[0] & 0x80) && (byte & 0xA0) == 0xA0) {
+                control.readBatteryStatus = 1;
+            }
             if ((control.ports[index] & ~byte) >> 2 & 1) {
                 panel_hw_reset();
             }
