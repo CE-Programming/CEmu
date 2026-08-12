@@ -1075,16 +1075,29 @@ static void usb_reset_otg(void) {
 
 int usb_plug_device(int argc, const char *const *argv,
                     usb_progress_handler_t *progress_handler, void *progress_context) {
+    usb_device_t *device;
     //gui_console_printf("usb");
     //for (int i = 0; i < argc; ++i) {
     //    gui_console_printf(" \"%s\"", argv[i]);
     //}
     //gui_console_printf("\n");
+    if (argc < 1) {
+        device = usb_disconnected_device;
+    } else if (!strcasecmp(argv[0], "dusb")) {
+        device = usb_dusb_device;
+    } else if (!strcasecmp(argv[0], "physical")) {
+        device = usb_physical_device;
+    } else if (!strcasecmp(argv[0], "msd")) {
+        device = usb_msd_device;
+    } else {
+        return ENOEXEC;
+    }
     if (!usb.device) {
         usb.device = usb_disconnected_device;
     }
     usb.event.type = USB_DESTROY_EVENT;
     usb.device(&usb.event);
+    usb.device = usb_disconnected_device;
     usb_plug_complete();
     usb.event.progress_handler = progress_handler;
     usb.event.progress_context = progress_context;
@@ -1093,18 +1106,11 @@ int usb_plug_device(int argc, const char *const *argv,
     usb.event.type = USB_INIT_EVENT;
     usb.event.info.init.argc = argc;
     usb.event.info.init.argv = argv;
-    if (argc < 1) {
-        usb.device = usb_disconnected_device;
-    } else if (!strcasecmp(argv[0], "dusb")) {
-        usb.device = usb_dusb_device;
-    } else if (!strcasecmp(argv[0], "physical")) {
-        usb.device = usb_physical_device;
-    } else if (!strcasecmp(argv[0], "msd")) {
-        usb.device = usb_msd_device;
-    } else {
-        return ENOEXEC;
-    }
+    usb.device = device;
     int error = usb_dispatch_event(NULL);
+    if (error) {
+        usb.device = usb_disconnected_device;
+    }
     usb_plug_complete();
     return error;
 }

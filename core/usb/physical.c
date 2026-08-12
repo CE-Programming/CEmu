@@ -127,6 +127,8 @@ struct device {
     endpoint_t endpoints[0x20];
     uint8_t state : 2; /* enum device_state */
     uint8_t address : 7, numPorts : 7;
+    bool disconnected;
+    uint32_t claimedInterfaces, detachedInterfaces;
     hub_t hub;
 };
 
@@ -134,7 +136,7 @@ struct context {
     libusb_context *context;
     node_t pending;
     node_t devices;
-    bool handled : 1;
+    bool handled : 1, hotplug_registered : 1;
     uint16_t throttle : 15;
 };
 
@@ -233,6 +235,12 @@ static void endpoint_init(endpoint_t *endpoint) {
 }
 
 static void device_attach(context_t *context, struct libusb_device *libusb_device) {
+    pending_t *queued;
+    NODE_FOREACH(queued, &context->pending) {
+        if (queued->device == libusb_device) {
+            return;
+        }
+    }
     pending_t *pending = malloc(sizeof(pending_t));
     if (!pending) {
         return;
@@ -245,7 +253,7 @@ static void device_attach(context_t *context, struct libusb_device *libusb_devic
 static int device_init(context_t *context, struct libusb_device *libusb_device) {
     struct libusb_device_descriptor dev_desc;
     int error = errno_from_libusb_error(libusb_get_device_descriptor(libusb_device, &dev_desc));
-    libusb_device_handle *handle;
+    libusb_device_handle *handle = NULL;
     if (error == USB_SUCCESS) {
         error = errno_from_libusb_error(libusb_open(libusb_device, &handle));
     }
@@ -274,6 +282,7 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
     }
     device_t *device = malloc(size);
     if (!device) {
+        libusb_close(handle);
         return ENOMEM;
     }
     node_init(&device->node);
@@ -284,6 +293,9 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
     device->state = DEVICE_STATE_ATTACHED;
     device->address = 0;
     device->numPorts = hub_desc.bNbrPorts;
+    device->disconnected = false;
+    device->claimedInterfaces = 0;
+    device->detachedInterfaces = 0;
     if (device->numPorts) {
         device->hub.statusChange.value = 0;
         for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
@@ -331,48 +343,68 @@ static void endpoint_cleanup(context_t *context, endpoint_t *endpoint) {
     transfer_cleanup(context, &endpoint->transfer);
 }
 
+static int LIBUSB_CALL device_hotplugged(
+        libusb_context *libusb_context, struct libusb_device *libusb_device,
+        libusb_hotplug_event event, void *user_data);
+
+static bool device_register_hotplug(context_t *context) {
+    if (context->hotplug_registered
+        || !libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+        return true;
+    }
+    if (libusb_hotplug_register_callback(
+                context->context,
+                LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
+                LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
+                LIBUSB_HOTPLUG_NO_FLAGS,
+                LIBUSB_HOTPLUG_MATCH_ANY,
+                LIBUSB_HOTPLUG_MATCH_ANY,
+                LIBUSB_HOTPLUG_MATCH_ANY,
+                device_hotplugged, context, NULL) != LIBUSB_SUCCESS) {
+        return false;
+    }
+    context->hotplug_registered = true;
+    return true;
+}
+
 static device_t *device_detach(context_t *context, device_t *device) {
     if (device) {
         for (uint8_t index = 0; index != 0x20; ++index) {
             endpoint_cleanup(context, &device->endpoints[index]);
         }
-        libusb_device_handle *handle = device->handle;
-        if (handle) {
-            struct libusb_device *libusb_device = libusb_get_device(handle),
-                *libusb_parent = libusb_get_parent(libusb_device);
-            device_t *parent;
-            NODE_FOREACH(parent, &context->devices) {
-                if (parent->handle && libusb_get_device(parent->handle) == libusb_parent) {
-                    uint8_t portNum = libusb_get_port_number(libusb_device);
-                    if (0 < portNum && portNum <= parent->numPorts) {
-                        port_t *port = &parent->hub.ports[portNum - 1];
-                        port->device = NULL;
-                        if (port->status.power) {
-                            UPDATE_STATUS_CHANGE(port, connection, false);
-                            port->status.enable = false;
-                        }
-                    }
-                    break;
+        /*
+         * Unlink from the hub port by identity rather than by asking libusb
+         * who our parent is: device_reset() swaps a reacquired hub's handle
+         * for one referring to a new libusb_device, so a stale child's
+         * libusb_get_parent() no longer compares equal to its hub's handle
+         * and the port would keep pointing at the device we are about to
+         * free.
+         */
+        device_t *parent;
+        NODE_FOREACH(parent, &context->devices) {
+            for (uint8_t portIdx = 0; portIdx != parent->numPorts; ++portIdx) {
+                port_t *port = &parent->hub.ports[portIdx];
+                if (port->device != device) {
+                    continue;
+                }
+                port->device = NULL;
+                if (port->status.power) {
+                    UPDATE_STATUS_CHANGE(port, connection, false);
+                    port->status.enable = false;
                 }
             }
-            if (!device->numPorts) {
-                struct libusb_config_descriptor *config_desc;
-                if (libusb_get_active_config_descriptor(libusb_device, &config_desc) == LIBUSB_SUCCESS) {
-                    for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                        gui_console_printf("[USB] Info: Kernel driver was"
-                                           " active on interface %u: %s!\n",
-                                           iface,
-                                           libusb_kernel_driver_active(handle, iface)
-                                           ? "yes" : "no");
-                        libusb_attach_kernel_driver(handle, iface);
-                        libusb_release_interface(handle, iface);
-                        gui_console_printf("[USB] Info: Kernel driver now"
-                                           " active on interface %u: %s!\n",
-                                           iface,
-                                           libusb_kernel_driver_active(handle, iface)
-                                           ? "yes" : "no");
-                    }
-                    libusb_free_config_descriptor(config_desc);
+        }
+        libusb_device_handle *handle = device->handle;
+        if (handle && !device->numPorts) {
+            for (uint8_t iface = 0; iface != 32; ++iface) {
+                uint32_t mask = UINT32_C(1) << iface;
+                if (device->claimedInterfaces & mask) {
+                    libusb_release_interface(handle, iface);
+                    device->claimedInterfaces &= ~mask;
+                }
+                if (device->detachedInterfaces & mask) {
+                    libusb_attach_kernel_driver(handle, iface);
+                    device->detachedInterfaces &= ~mask;
                 }
             }
         }
@@ -385,45 +417,166 @@ static device_t *device_detach(context_t *context, device_t *device) {
     return device;
 }
 
+static void device_detach_children(context_t *context, device_t *device) {
+    for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
+        device_t *child = device->hub.ports[portIdx].device;
+        if (child) {
+            device_detach_children(context, child);
+            device_detach(context, child);
+        }
+    }
+}
+
+static void device_detach_disconnected(context_t *context) {
+    /*
+     * libusb's hotplug callback runs from inside event handling and its
+     * backend may still be using the device handle while delivering
+     * DEVICE_LEFT. Closing it from the callback can therefore recurse into
+     * teardown with partially destroyed backend state. Sweep after event
+     * handling returns instead, children before their parent.
+     */
+    node_t *node = context->devices.prev;
+    while (node != &context->devices) {
+        device_t *device = NODE_ITEM(device_t, node);
+        node = node->prev;
+        if (device->disconnected) {
+            device_detach(context, device);
+        }
+    }
+}
+
+static bool device_port_matches(libusb_device *libusb_device,
+                                uint8_t bus, const uint8_t *ports, int num_ports) {
+    uint8_t device_ports[MAX_PORT_DEPTH];
+    return libusb_get_bus_number(libusb_device) == bus
+        && num_ports > 0
+        && libusb_get_port_numbers(libusb_device, device_ports,
+                                   MAX_PORT_DEPTH) == num_ports
+        && !memcmp(ports, device_ports, num_ports);
+}
+
+static bool device_is_in_subtree(libusb_device *device, libusb_device *root) {
+    while (device && device != root) {
+        device = libusb_get_parent(device);
+    }
+    return device == root;
+}
+
+static void device_discard_pending_in_subtree(context_t *context,
+                                              libusb_device *root) {
+    pending_t *pending;
+    NODE_FOREACH(pending, &context->pending) {
+        if (device_is_in_subtree(pending->device, root)) {
+            libusb_unref_device(pending->device);
+            node_remove(&pending->node);
+            free(pending);
+        }
+    }
+}
+
+static void device_attach_current_descendants(context_t *context,
+                                              libusb_device *root) {
+    libusb_device **devices;
+    if (libusb_get_device_list(context->context, &devices) < 0) {
+        return;
+    }
+    uint8_t root_ports[MAX_PORT_DEPTH];
+    int root_depth = libusb_get_port_numbers(root, root_ports, MAX_PORT_DEPTH);
+    /* Queue parents before children so device_init() can rebuild hub ports. */
+    for (int depth = root_depth + 1; depth <= MAX_PORT_DEPTH; ++depth) {
+        for (libusb_device **device = devices; *device; ++device) {
+            uint8_t device_ports[MAX_PORT_DEPTH];
+            if (libusb_get_port_numbers(*device, device_ports, MAX_PORT_DEPTH) != depth) {
+                continue;
+            }
+            libusb_device *ancestor = *device;
+            while (ancestor && ancestor != root) {
+                ancestor = libusb_get_parent(ancestor);
+            }
+            if (ancestor == root) {
+                device_attach(context, *device);
+            }
+        }
+    }
+    libusb_free_device_list(devices, true);
+}
+
+static bool device_open_error_is_transient(int error) {
+    return error == LIBUSB_ERROR_BUSY
+        || error == LIBUSB_ERROR_NO_DEVICE
+        || error == LIBUSB_ERROR_NOT_FOUND;
+}
+
 static bool device_reset(context_t *context, device_t *device) {
-    switch (libusb_reset_device(device->handle)) {
+    libusb_device *previous_device = libusb_get_device(device->handle);
+    uint8_t bus = libusb_get_bus_number(previous_device);
+    uint8_t ports[MAX_PORT_DEPTH];
+    int num_ports = libusb_get_port_numbers(previous_device, ports, MAX_PORT_DEPTH);
+    int reset_error = libusb_reset_device(device->handle);
+    switch (reset_error) {
         case LIBUSB_SUCCESS:
             return true;
+        case LIBUSB_ERROR_NOT_FOUND:
         case LIBUSB_ERROR_NO_DEVICE:
             break;
         default:
             return false;
     }
-    uint8_t ports[MAX_PORT_DEPTH];
-    uint8_t num_ports = libusb_get_port_numbers(
-            libusb_get_device(device->handle), ports, MAX_PORT_DEPTH);
+    /*
+     * The port path is the only thing tying the replacement to the device
+     * that just went away, so without one the poll below can't match anything
+     */
+    if (num_ports <= 0) {
+        device_detach(context, device);
+        return false;
+    }
     for (int iteration = 0; iteration != 100; ++iteration) {
         libusb_device **devices;
         if (errno_from_libusb_error(
                     libusb_get_device_list(context->context, &devices)) == USB_SUCCESS) {
             libusb_device **enumerate_device;
             for (enumerate_device = devices; *enumerate_device; ++enumerate_device) {
-                uint8_t enumerate_ports[MAX_PORT_DEPTH];
-                if (libusb_get_port_numbers(*enumerate_device,
-                                            enumerate_ports, MAX_PORT_DEPTH) == num_ports
-                    && !memcmp(ports, enumerate_ports, num_ports)) {
+                if (*enumerate_device != previous_device
+                    && device_port_matches(*enumerate_device, bus, ports, num_ports)) {
                     break;
                 }
             }
-            if (*enumerate_device) {
-                libusb_close(device->handle);
-                device->handle = NULL;
-                if (errno_from_libusb_error(
-                            libusb_open(*enumerate_device, &device->handle)) != USB_SUCCESS) {
-                    break;
+            bool found_replacement = *enumerate_device;
+            libusb_device_handle *replacement_handle = NULL;
+            int open_error = found_replacement
+                ? libusb_open(*enumerate_device, &replacement_handle)
+                : LIBUSB_ERROR_NO_DEVICE;
+            if (open_error == LIBUSB_SUCCESS) {
+                libusb_device *replacement_device =
+                    libusb_get_device(replacement_handle);
+                for (uint8_t index = 0; index != 0x20; ++index) {
+                    endpoint_cleanup(context, &device->endpoints[index]);
                 }
+                device_discard_pending_in_subtree(context, previous_device);
+                libusb_close(device->handle);
+                device->handle = replacement_handle;
+                device->disconnected = false;
+                device->claimedInterfaces = 0;
+                device->detachedInterfaces = 0;
+                if (device->numPorts) {
+                    device_detach_children(context, device);
+                }
+                device_discard_pending_in_subtree(context, replacement_device);
+                device_register_hotplug(context);
+                if (device->numPorts) {
+                    device_attach_current_descendants(context, replacement_device);
+                }
+                libusb_free_device_list(devices, true);
                 return true;
             }
             libusb_free_device_list(devices, true);
+            if (found_replacement && !device_open_error_is_transient(open_error)) {
+                break;
+            }
         }
         struct timeval tv = {
-            .tv_sec = 0,
-            .tv_usec = 1000000,
+            .tv_sec = 1,
+            .tv_usec = 0,
         };
         if (errno_from_libusb_error(
                     libusb_handle_events_timeout(context->context, &tv)) != USB_SUCCESS) {
@@ -724,32 +877,36 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                         if (libusb_get_active_config_descriptor(libusb_get_device(handle), &config_desc)
                             == LIBUSB_SUCCESS) {
                             for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                                gui_console_printf("[USB] Info: Kernel driver was"
-                                                   " active on interface %u: %s!\n",
-                                                   iface,
-                                                   libusb_kernel_driver_active(handle, iface)
-                                                   ? "yes" : "no");
-                                libusb_detach_kernel_driver(handle, iface);
-                                libusb_release_interface(handle, iface);
+                                if (iface < 32 &&
+                                    (device->claimedInterfaces & (UINT32_C(1) << iface))) {
+                                    libusb_release_interface(handle, iface);
+                                    device->claimedInterfaces &= ~(UINT32_C(1) << iface);
+                                }
+                                if (iface < 32 &&
+                                    libusb_kernel_driver_active(handle, iface) == 1 &&
+                                    libusb_detach_kernel_driver(handle, iface) == LIBUSB_SUCCESS) {
+                                    device->detachedInterfaces |= UINT32_C(1) << iface;
+                                }
                             }
                             libusb_free_config_descriptor(config_desc);
                             config_desc = NULL;
                         }
-                        if ((*status = transfer_status_from_libusb_error(
-                                     error = libusb_get_config_descriptor_by_value(
-                                             libusb_get_device(handle), index, &config_desc)))
-                            == LIBUSB_TRANSFER_COMPLETED
-                            && (*status = transfer_status_from_libusb_error(
-                                        error = libusb_set_configuration(handle, index)))
-                            == LIBUSB_TRANSFER_COMPLETED) {
+                        error = libusb_get_config_descriptor_by_value(
+                                libusb_get_device(handle), index, &config_desc);
+                        if (error == LIBUSB_SUCCESS) {
+                            error = libusb_get_configuration(handle, &configValueInt);
+                        }
+                        if (error == LIBUSB_SUCCESS && configValueInt != index) {
+                            error = libusb_set_configuration(handle, index);
+                        }
+                        *status = transfer_status_from_libusb_error(error);
+                        if (*status == LIBUSB_TRANSFER_COMPLETED) {
                             device->state = DEVICE_STATE_CONFIGURED;
                             for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
-                                gui_console_printf("[USB] Info: Kernel driver now"
-                                                   " active on interface %u: %s!\n",
-                                                   iface,
-                                                   libusb_kernel_driver_active(handle, iface)
-                                                   ? "yes" : "no");
-                                libusb_claim_interface(handle, iface);
+                                enum libusb_error claim_error = libusb_claim_interface(handle, iface);
+                                if (iface < 32 && claim_error == LIBUSB_SUCCESS) {
+                                    device->claimedInterfaces |= UINT32_C(1) << iface;
+                                }
                             }
                         } else {
                             gui_console_printf("[USB] Error: Set configuration failed: %s!\n",
@@ -1076,6 +1233,7 @@ static int LIBUSB_CALL device_hotplugged(
     }
     device_t *root = NODE_FIRST(device_t, &context->devices), *device;
     if (!root) {
+        context->hotplug_registered = false;
         return true;
     }
     NODE_FOREACH(device, &context->devices) {
@@ -1087,11 +1245,12 @@ static int LIBUSB_CALL device_hotplugged(
         if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
             if (device == root) {
                 NODE_FOREACH (device, &context->devices) {
-                    root = device = device_detach(context, device);
+                    device->disconnected = true;
                 }
+                context->hotplug_registered = false;
                 return true;
             } else {
-                device = device_detach(context, device);
+                device->disconnected = true;
             }
         }
     } else {
@@ -1131,6 +1290,7 @@ int usb_physical_device(usb_event_t *event) {
                 };
                 error = errno_from_libusb_error(
                         libusb_handle_events_timeout(context->context, &tv));
+                device_detach_disconnected(context);
                 event->type = USB_TIMER_EVENT;
                 timer->mode = USB_TIMER_ABSOLUTE_MODE;
                 timer->useconds = 1000;
@@ -1143,7 +1303,7 @@ int usb_physical_device(usb_event_t *event) {
                 context->handled = true;
                 return error;
             }
-            if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG) &&
+            if (!context->hotplug_registered &&
                 !NODE_EMPTY(&context->devices) &&
                 !context->throttle--) {
                 libusb_device **devices;
@@ -1183,22 +1343,13 @@ int usb_physical_device(usb_event_t *event) {
             node_init(&context->pending);
             node_init(&context->devices);
             context->handled = false;
+            context->hotplug_registered = false;
             context->throttle = 1000;
             error = errno_from_libusb_error(libusb_init(&context->context));
             if (error != USB_SUCCESS) {
                 return error;
             }
-            if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-                libusb_hotplug_register_callback(
-                        context->context,
-                        LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
-                        LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
-                        0,
-                        LIBUSB_HOTPLUG_MATCH_ANY,
-                        LIBUSB_HOTPLUG_MATCH_ANY,
-                        LIBUSB_HOTPLUG_MATCH_ANY,
-                        device_hotplugged, context, NULL);
-            }
+            device_register_hotplug(context);
             {
                 int i, end;
                 uint16_t vid, pid;
