@@ -14,6 +14,7 @@ struct CEmuOpts {
     bool forceReloadRom;
     bool useSettings;
     bool reset;
+    bool ipcOnly;
     QString romFile;
     QString autotesterFile;
     QString settingsFile;

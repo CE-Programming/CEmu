@@ -46,20 +46,32 @@ QByteArray InterCom::getData() {
     return m_data;
 }
 
-void InterCom::send(const QByteArray &pkt) const {
+bool InterCom::send(const QByteArray &pkt) const {
     if (m_clientName.isEmpty()) {
-        return;
+        return false;
     }
     m_socket->disconnectFromServer();
     m_socket->connectToServer(m_clientName);
-    if (m_socket->waitForConnected()) {
-        m_socket->write(pkt);
-        if (!m_socket->waitForDisconnected()) {
-            qDebug() << "err: sending packet";
-        }
-    } else {
+    if (!m_socket->waitForConnected()) {
         qDebug() << "err: connection timed out";
+        return false;
     }
+    if (m_socket->write(pkt) != pkt.size()) {
+        qDebug() << "err: writing packet";
+        return false;
+    }
+    while (m_socket->bytesToWrite() && m_socket->waitForBytesWritten()) {
+    }
+    if (m_socket->bytesToWrite()) {
+        qDebug() << "err: writing packet";
+        return false;
+    }
+    if (m_socket->state() != QLocalSocket::UnconnectedState &&
+        !m_socket->waitForDisconnected()) {
+        qDebug() << "err: sending packet";
+        return false;
+    }
+    return true;
 }
 
 void InterCom::clientSetup(const QString &name) {

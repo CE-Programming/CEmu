@@ -114,6 +114,10 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "id"));
     parser.addOption(procID);
 
+    QCommandLineOption ipcOnly(QStringList() << QStringLiteral("ipc-only"),
+                QCoreApplication::translate("main", "Send commands to an existing <id>, and fail instead of creating a new emulator."));
+    parser.addOption(ipcOnly);
+
     QCommandLineOption screenshotFile(QStringList() << QStringLiteral("screenshot"),
                 QCoreApplication::translate("main", "Saves a screenshot to <File> (only usable as a sent command)"),
                 QCoreApplication::translate("main", "screenshot"));
@@ -167,6 +171,7 @@ int main(int argc, char *argv[]) {
     opts.suppressTestDialog = parser.isSet(suppressTestDialog);
     opts.deforceReset       = parser.isSet(deforceReset);
     opts.forceReloadRom     = parser.isSet(forceRomReload);
+    opts.ipcOnly            = parser.isSet(ipcOnly);
     opts.romFile            = parser.value(loadRomFile);
     opts.settingsFile       = parser.value(settingsFile);
     opts.launchPrgm         = parser.value(launchPrgm);
@@ -223,7 +228,14 @@ int main(int argc, char *argv[]) {
     MainWindow EmuWin(opts);
 
     if (!EmuWin.isInitialized()) {
-        return ret;
+        switch (EmuWin.ipcSetupResult()) {
+            case MainWindow::IpcSetupResult::CommandDelivered:
+                return EXIT_SUCCESS;
+            case MainWindow::IpcSetupResult::Error:
+                return EXIT_FAILURE;
+            case MainWindow::IpcSetupResult::LocalServer:
+                return ret;
+        }
     }
 
     if (!EmuWin.isResetAll()) {

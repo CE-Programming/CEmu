@@ -23,7 +23,7 @@ public:
     void clientSetup(const QString &name);
     void serverListen() const;
     void idClose();
-    void send(const QByteArray &pkt) const;
+    bool send(const QByteArray &pkt) const;
 
     QString getServerName();
     QString getClientName();

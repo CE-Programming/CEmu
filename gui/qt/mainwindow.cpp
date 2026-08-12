@@ -86,7 +86,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
 
-    if (!ipcSetup()) {
+    m_ipcSetupResult = ipcSetup();
+    if (m_ipcSetupResult != IpcSetupResult::LocalServer) {
         m_initPassed = false;
         return;
     }
@@ -1557,6 +1558,10 @@ MainWindow::~MainWindow() {
 
 bool MainWindow::isInitialized() const {
     return m_initPassed;
+}
+
+MainWindow::IpcSetupResult MainWindow::ipcSetupResult() const {
+    return m_ipcSetupResult;
 }
 
 void MainWindow::resetCEmu() {
@@ -3223,10 +3228,16 @@ void MainWindow::usbRefresh() {
 // GUI IPC things
 // ------------------------------------------------
 
-bool MainWindow::ipcSetup() {
+MainWindow::IpcSetupResult MainWindow::ipcSetup() {
     // start the main communictions
     if (com.ipcSetup(opts.idString, opts.pidString)) {
-        return true;
+        if (opts.ipcOnly) {
+            com.idClose();
+            fprintf(stderr, "[CEmu] IPC target '%s' is not running.\n",
+                    opts.idString.toUtf8().constData());
+            return IpcSetupResult::Error;
+        }
+        return IpcSetupResult::LocalServer;
     }
 
     // if failure, then send a command to the other process with the command options
@@ -3253,8 +3264,12 @@ bool MainWindow::ipcSetup() {
            << opts.keySequence;
 
     // blocking call
-    com.send(byteArray);
-    return false;
+    if (!com.send(byteArray)) {
+        fprintf(stderr, "[CEmu] Failed to deliver IPC command to '%s'.\n",
+                opts.idString.toUtf8().constData());
+        return IpcSetupResult::Error;
+    }
+    return IpcSetupResult::CommandDelivered;
 }
 
 void MainWindow::ipcCli(QDataStream &stream) {

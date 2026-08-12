@@ -83,10 +83,17 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+    enum class IpcSetupResult {
+        LocalServer,
+        CommandDelivered,
+        Error,
+    };
+
     explicit MainWindow(CEmuOpts &opts, QWidget *p = nullptr);
     ~MainWindow() override;
     void setup();
     bool isInitialized() const;
+    IpcSetupResult ipcSetupResult() const;
     bool isReload() const;
     bool isResetAll() const;
 
@@ -626,7 +633,7 @@ private:
     void pauseEmu(Qt::ApplicationState state);
 
     // process communication
-    bool ipcSetup();
+    IpcSetupResult ipcSetup();
     void ipcSpawn();
     void ipcCloseConnected();
     void ipcReceived();
@@ -776,6 +783,7 @@ private:
     bool m_keepSetup = false;
     bool m_guiAdd = false;
     bool m_initPassed = true;
+    IpcSetupResult m_ipcSetupResult = IpcSetupResult::Error;
     bool m_useSoftCom = false;
     bool m_pauseOnFocus;
     bool m_loadedBootImage = false;
