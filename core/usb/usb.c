@@ -190,15 +190,21 @@ void usb_grp2_int(uint16_t which) {
 //   ...
 //   0 -> 1 OTGCSR_B_SESS_END
 static void usb_plug_b(void) {
+    uint32_t old = usb.regs.otgcsr;
     usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
     usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
-    usb.regs.sof_fnr = 0;
-    usb_grp2_int(GISR2_RESUME);
+    if (old != usb.regs.otgcsr) {
+        usb.regs.sof_fnr = 0;
+        usb_grp2_int(GISR2_RESUME);
+    }
 }
 static void usb_unplug_b(void) {
+    uint32_t old = usb.regs.otgcsr;
     usb.regs.otgcsr &= ~(OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD);
     usb.regs.otgcsr |= OTGCSR_B_SESS_END;
-    usb_otg_int(OTGISR_BSESSEND);
+    if (old != usb.regs.otgcsr) {
+        usb_otg_int(OTGISR_BSESSEND);
+    }
 }
 
 // Plug A:
@@ -209,22 +215,76 @@ static void usb_unplug_b(void) {
 //   OTGCSR_DEV_A -> OTGCSR_DEV_B
 //   OTGCSR_ROLE_H -> OTGCSR_ROLE_D
 static void usb_plug_a(void) {
-    usb_unplug_b();
+    uint32_t old = usb.regs.otgcsr;
+    uint16_t interrupts = 0;
+    if (old & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) {
+        usb_unplug_b();
+    }
     usb.regs.otgcsr &= ~(OTGCSR_DEV_B | OTGCSR_ROLE_D);
-    usb.regs.sof_fnr = 0;
-    usb_otg_int(OTGISR_IDCHG | OTGISR_RLCHG);
+    if (old & OTGCSR_DEV_B) {
+        interrupts |= OTGISR_IDCHG;
+    }
+    if (old & OTGCSR_ROLE_D) {
+        interrupts |= OTGISR_RLCHG;
+    }
+    if (interrupts) {
+        usb.regs.sof_fnr = 0;
+        usb_otg_int(interrupts);
+    }
 }
 static void usb_unplug_a(void) {
+    uint32_t old = usb.regs.otgcsr;
+    uint16_t interrupts = 0;
     bool port_changed;
-    usb.regs.hcor.portsc[0] &= ~PORTSC_J_STATE;
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE);
     port_changed = usb_update_status_change(usb.regs.hcor.portsc, PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE, false);
     port_changed |= usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, false);
     if (port_changed) {
         usb_host_int(USBSTS_PORT_CHANGE);
     }
     usb.regs.otgcsr |= OTGCSR_DEV_B | OTGCSR_ROLE_D;
-    usb_otg_int(OTGISR_APRM | OTGISR_IDCHG | OTGISR_RLCHG);
+    if (!(old & OTGCSR_DEV_B)) {
+        interrupts |= OTGISR_APRM | OTGISR_IDCHG;
+    }
+    if (!(old & OTGCSR_ROLE_D)) {
+        interrupts |= OTGISR_RLCHG;
+    }
+    if (interrupts) {
+        usb_otg_int(interrupts);
+    }
     usb_unplug_b();
+}
+
+static bool usb_a_host_bus_powered(uint32_t otgcsr) {
+    return !(otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) &&
+            (otgcsr & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ;
+}
+
+static void usb_sync_a_host_port(void) {
+    bool bus_powered = usb_a_host_bus_powered(usb.regs.otgcsr);
+    bool port_connected = bus_powered && usb.device != usb_disconnected_device && !usb.event.host;
+    uint32_t line_state = usb.event.speed == USB_LOW_SPEED
+        ? PORTSC_K_STATE : PORTSC_J_STATE;
+
+    if (bus_powered) {
+        usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
+        usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
+    } else {
+        usb.regs.otgcsr &= ~(OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD);
+        usb.regs.otgcsr |= OTGCSR_B_SESS_END;
+    }
+
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE);
+    if (port_connected) {
+        usb.regs.hcor.portsc[0] |= line_state;
+    }
+    bool port_changed = usb_update_status_change(usb.regs.hcor.portsc, PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE, port_connected);
+    if (!port_connected) {
+        port_changed |= usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, false);
+    }
+    if (port_changed) {
+        usb_host_int(USBSTS_PORT_CHANGE);
+    }
 }
 
 static void usb_plug(void) {
@@ -235,7 +295,7 @@ static void usb_plug(void) {
     }
 }
 static void usb_unplug(void) {
-    if (usb.event.host) {
+    if (usb.regs.otgcsr & OTGCSR_DEV_B) {
         usb_unplug_b();
     } else {
         usb_unplug_a();
@@ -245,6 +305,9 @@ static void usb_unplug(void) {
 static void usb_plug_complete(void) {
     if (usb.device != usb_disconnected_device) {
         usb_plug();
+        if (!usb.event.host) {
+            usb_sync_a_host_port();
+        }
         sched_set(SCHED_USB, 1);
     } else {
         usb_unplug();
@@ -276,7 +339,10 @@ static void usb_write_back_qtd(usb_qh_t *qh) {
     qtd.halted = qh->overlay.halted;
     qtd.active = qh->overlay.active;
     qtd.cerr = qh->overlay.cerr;
+    qtd.page = qh->overlay.page;
     qtd.length = qh->overlay.length;
+    qtd.dt = qh->overlay.dt;
+    qtd.bufs[0].off = qh->overlay.bufs[0].off;
     mem_dma_write(&qtd, qh->cur.ptr << 5, sizeof(qtd));
     // TODO: defer these interrupts?
     if (qh->overlay.halted) {
@@ -289,6 +355,15 @@ static void usb_write_back_qtd(usb_qh_t *qh) {
 static void usb_qh_completed(usb_qh_t *qh) {
     qh->overlay.active = false;
     usb_write_back_qtd(qh);
+}
+static void usb_qh_success(usb_qh_t *qh, uint32_t actual_length) {
+    uint32_t packets = (actual_length && qh->max_pkt_size)
+        ? (actual_length + qh->max_pkt_size - 1) / qh->max_pkt_size
+        : 1;
+    if (packets & 1) {
+        qh->overlay.dt = !qh->overlay.dt;
+    }
+    usb_qh_completed(qh);
 }
 static void usb_qh_halted(usb_qh_t *qh) {
     qh->overlay.halted = true;
@@ -641,7 +716,7 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                                         state->qh.overlay.missed = true;
                                         usb_qh_halted(&state->qh);
                                     } else {
-                                        usb_qh_completed(&state->qh);
+                                        usb_qh_success(&state->qh, transfer->length);
                                     }
                                     break;
                                 case USB_TRANSFER_STALLED:
@@ -1095,10 +1170,15 @@ int usb_plug_device(int argc, const char *const *argv,
     if (!usb.device) {
         usb.device = usb_disconnected_device;
     }
-    usb.event.type = USB_DESTROY_EVENT;
-    usb.device(&usb.event);
-    usb.device = usb_disconnected_device;
-    usb_plug_complete();
+    if (usb.device == usb_disconnected_device && device == usb_disconnected_device) {
+        return USB_SUCCESS;
+    }
+    if (usb.device != usb_disconnected_device) {
+        usb.event.type = USB_DESTROY_EVENT;
+        usb.device(&usb.event);
+        usb.device = usb_disconnected_device;
+        usb_plug_complete();
+    }
     usb.event.progress_handler = progress_handler;
     usb.event.progress_context = progress_context;
     usb.event.context = NULL;
@@ -1138,17 +1218,18 @@ static void usb_event(enum sched_item_id event) {
                 if (!frame) {
                     usb_host_int(USBSTS_FRAME_LIST_OVER);
                 }
-                if (usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
-                    mem_dma_read(&state.link, (usb.regs.hcor.periodiclistbase & ~((1 << 12) - 1)) |
-                                 frame << 2, sizeof(state.link));
-                    usb_schedule_traverse(&state);
-                }
-                if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
-                    state.link.term = false;
-                    state.link.type = QTYPE_QH;
-                    state.link.ptr = usb.regs.hcor.asynclistaddr >> 5;
-                    usb_schedule_traverse(&state);
-                    usb.regs.hcor.asynclistaddr = state.link.val;
+                if (usb.regs.hcor.portsc[0] & PORTSC_EN_STATUS) {
+                    if (usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
+                        mem_dma_read(&state.link, (usb.regs.hcor.periodiclistbase & ~((1 << 12) - 1)) |
+                                     frame << 2, sizeof(state.link));
+                        usb_schedule_traverse(&state);
+                    }
+                    if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
+                        state.link.term = false;
+                        state.link.type = QTYPE_QH;
+                        state.link.ptr = usb.regs.hcor.asynclistaddr >> 5;
+                        usb_schedule_traverse(&state);
+                    }
                 }
                 if (usb.regs.hcor.usbcmd & USBCMD_ASYNC_ADV_DRBL) {
                     usb_host_int(USBSTS_ASYNC_ADV);
@@ -1235,8 +1316,10 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x030 >> 2: // PORTSC - Port Status and Control Register
             old = usb.regs.hcor.portsc[0];
-            usb.regs.hcor.portsc[0] &= ~(((uint32_t)value << bit_offset & 0x2E) | (0x7F0100 & 0xFF << bit_offset)) ^
-                PORTSC_EN_STATUS; // W[0/1]C mask (V or RO or W)
+            uint32_t byte_mask = UINT32_C(0xFF) << bit_offset;
+            usb.regs.hcor.portsc[0] &=
+                ~(((uint32_t)value << bit_offset & UINT32_C(0x2E)) |
+                  (UINT32_C(0x7F0100) & byte_mask)) ^ (PORTSC_EN_STATUS & byte_mask); // W[0/1]C mask (V or RO or W)
             usb.regs.hcor.portsc[0] |= (uint32_t)value << bit_offset & 0x7F0180; // W mask (RO)
             if ((old ^ usb.regs.hcor.portsc[0]) & PORTSC_RESET) {
                 // TODO: actually powered by gpio?
@@ -1280,27 +1363,13 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
         case 0x080 >> 2: // OTG Control Status Register
             old = usb.regs.otgcsr;
             write8(usb.regs.otgcsr,                bit_offset, value &  0x1A00FFF7 >> bit_offset); // W mask (V)
-            if (usb.device != usb_disconnected_device && !usb.event.host &&
-                !(usb.regs.otgcsr & OTGCSR_ROLE_D)) {
-                bool bus_requested = (usb.regs.otgcsr & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ;
-                if (bus_requested) {
-                    usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
-                    usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
-                } else {
-                    usb.regs.otgcsr &= ~(OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD);
-                    usb.regs.otgcsr |= OTGCSR_B_SESS_END;
-                }
-                bool port_changed = usb_update_status_change(
-                    usb.regs.hcor.portsc, PORTSC_J_STATE | PORTSC_CONN_STATUS,
-                    PORTSC_CONN_CHANGE, bus_requested);
-                if (!bus_requested) {
-                    port_changed |= usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, false);
-                }
-                if (port_changed) {
-                    usb_host_int(USBSTS_PORT_CHANGE);
-                }
-                if (((old & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ) != bus_requested) {
-                    usb.event.type = bus_requested ? USB_SESSION_START_EVENT : USB_SESSION_END_EVENT;
+            if (!(usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D))) {
+                bool was_bus_powered = usb_a_host_bus_powered(old);
+                usb_sync_a_host_port();
+                bool bus_powered = usb_a_host_bus_powered(usb.regs.otgcsr);
+                if (usb.device != usb_disconnected_device && !usb.event.host &&
+                    was_bus_powered != bus_powered) {
+                    usb.event.type = bus_powered ? USB_SESSION_START_EVENT : USB_SESSION_END_EVENT;
                     usb_dispatch_event(NULL);
                 }
             } else if (usb.device != usb_disconnected_device && usb.event.host &&
@@ -1538,5 +1607,21 @@ bool usb_restore(FILE *image) {
     usb.regs.gimr0                 &= GIMR0_MASK;
     usb.regs.gimr1                 &= GIMR1_MASK;
     usb.regs.gimr2                 &= GIMR2_MASK;
+
+    /*
+     * External USB backends are not part of an emulator image. Keep the
+     * guest-owned controller setup, but return the physical connector and
+     * role to their disconnected defaults and quietly remove line, session,
+     * and port state that depended on the missing backend. A later attachment
+     * will then produce real identity, role, and connection edges.
+     */
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE | PORTSC_RESET | PORTSC_EN_CHANGE |
+                                 PORTSC_EN_STATUS | PORTSC_CONN_CHANGE | PORTSC_CONN_STATUS);
+    usb.regs.hcor.usbsts &= ~USBSTS_PORT_CHANGE;
+    usb.regs.otgcsr &= ~(OTGCSR_SPD_MASK | OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD);
+    usb.regs.otgcsr |= OTGCSR_DEV_B | OTGCSR_ROLE_D | OTGCSR_B_SESS_END;
+    usb.regs.otgisr &= ~(OTGISR_APRM | OTGISR_BPRM | OTGISR_IDCHG | OTGISR_RLCHG | OTGISR_BSESSEND);
+    usb.regs.gisr2 &= ~GISR2_RESUME;
+    usb_update();
     return success;
 }
