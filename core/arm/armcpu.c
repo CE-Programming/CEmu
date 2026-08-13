@@ -1296,8 +1296,7 @@ void arm_cpu_execute(arm_t *arm) {
             }
             break;
     }
-    if (!cpu->pc || cpu->pc >= UINT32_C(0x80000000) ||
-        cpu->pc - 2 == UINT32_C(0x00006A0C)) {
+    if (!cpu->pc || cpu->pc >= UINT32_C(0x80000000)) {
         DEBUG_BREAK;
     }
     if (unlikely(cpu->exc)) {
