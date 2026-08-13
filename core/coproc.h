@@ -16,7 +16,7 @@ typedef struct coproc_state {
 extern "C" {
 #endif
 
-extern coproc_state_t state;
+extern coproc_state_t coproc;
 
 void coproc_reset(void);
 bool coproc_load(const char *path);
