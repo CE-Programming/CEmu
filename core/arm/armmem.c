@@ -790,11 +790,13 @@ uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
         arm_scb_t *scb = &arm->cpu.scb;
         switch (addr - SCB_BASE) {
             case 0x000: // CPUID
-                return 'A' << SCB_CPUID_IMPLEMENTER_Pos |
-                    0 << SCB_CPUID_VARIANT_Pos |
-                    12 << SCB_CPUID_ARCHITECTURE_Pos |
-                    28 << SCB_CPUID_PARTNO_Pos |
-                    6 << SCB_CPUID_REVISION_Pos;
+                // Arm Cortex-M0+ Technical Reference Manual, CPUID Base Register;
+                // Microchip ATSAMD21E18A ATDF, CPUID reset value 0x410CC601.
+                return UINT32_C(0x41) << SCB_CPUID_IMPLEMENTER_Pos |
+                    UINT32_C(0) << SCB_CPUID_VARIANT_Pos |
+                    UINT32_C(0xC) << SCB_CPUID_ARCHITECTURE_Pos |
+                    UINT32_C(0xC60) << SCB_CPUID_PARTNO_Pos |
+                    UINT32_C(1) << SCB_CPUID_REVISION_Pos;
             case 0x004: // ICSR
                 return scb->icsr;
             case 0x008: // VTOR
