@@ -518,7 +518,7 @@ static void arm_cpu_interwork(arm_t *arm, uint32_t addr) {
         uint32_t sp, val;
         assert(!~(addr | 0xF) && cpu->active & UINT64_C(1) << curexc &&
                "Unpredictable exception return");
-        cpu->active &= ~(1 << curexc);
+        cpu->active &= ~(UINT64_C(1) << curexc);
         switch (addr) {
             case -15:
                 assert(cpu->active && "Unpredictable exception return");
@@ -538,6 +538,7 @@ static void arm_cpu_interwork(arm_t *arm, uint32_t addr) {
                 break;
             default:
                 assert(false && "Unpredictable exception return");
+                return;
         }
         cpu->r0 = arm_mem_load_word(arm, sp + 0x00);
         if (cpu->exc) {
