@@ -316,8 +316,8 @@ static uint32_t arm_adcs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
 #elif FLAGS_FROM_OVERFLOW_BUILTINS
     bool carry = cpu->c;
     int32_t res;
-    cpu->v = __builtin_add_overflow(x, y, &res);
-    cpu->v ^= __builtin_add_overflow(res, carry, &res);
+    cpu->v = __builtin_add_overflow((int32_t)x, (int32_t)y, &res);
+    cpu->v ^= __builtin_add_overflow(res, (int32_t)carry, &res);
     cpu->c = __builtin_add_overflow(x, y, &x);
     cpu->c |= __builtin_add_overflow(x, carry, &x);
     return arm_movs(cpu, x);
@@ -346,8 +346,8 @@ static uint32_t arm_sbcs(arm_cpu_t *cpu, uint32_t x, uint32_t y) {
 #elif FLAGS_FROM_OVERFLOW_BUILTINS
     bool borrow = !cpu->c;
     int32_t res;
-    cpu->v = __builtin_sub_overflow(x, y, &res);
-    cpu->v ^= __builtin_sub_overflow(res, borrow, &res);
+    cpu->v = __builtin_sub_overflow((int32_t)x, (int32_t)y, &res);
+    cpu->v ^= __builtin_sub_overflow(res, (int32_t)borrow, &res);
     cpu->c = !__builtin_sub_overflow(x, y, &x);
     cpu->c &= !__builtin_sub_overflow(x, borrow, &x);
     return arm_movs(cpu, x);
