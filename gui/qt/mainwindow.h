@@ -507,6 +507,7 @@ private:
     // settings
     void setRom(const QString &path);
     void setArmRom();
+    void clearArmRom();
     void setImagePath();
     void setCalcId();
     void setFocusSetting(bool state);

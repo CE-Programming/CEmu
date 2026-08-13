@@ -475,17 +475,26 @@ void MainWindow::setCalcSkinTopFromType(bool python) const {
 }
 
 void MainWindow::setArmRom() {
-    m_pathArmRom = QFileDialog::getOpenFileName(this, tr("Set ARM ROM Image"),
-                                                m_dir.absolutePath(),
-                                                tr("ROM files (*.rom);;All files (*.*)"));
-    if (!m_pathArmRom.isEmpty()) {
-        m_dir = QFileInfo(m_pathArmRom).absoluteDir();
-        m_config->setValue(SETTING_ARM_ROM_PATH, m_pathArmRom);
-        ui->pathArmRom->setText(m_pathArmRom);
+    const QString path = QFileDialog::getOpenFileName(this, tr("Set ARM Flash Override"),
+                                                      m_dir.absolutePath(),
+                                                      tr("Flash images (*.bin *.rom);;All files (*.*)"));
+    if (!path.isEmpty()) {
+        m_pathArmRom = path;
+        m_dir = QFileInfo(path).absoluteDir();
+        m_config->setValue(SETTING_ARM_ROM_PATH, path);
+        ui->pathArmRom->setText(path);
+        ui->buttonClearArmRom->setEnabled(true);
         if (guiEmuValid) {
-            coproc_load(m_pathArmRom.toUtf8().constData());
+            coproc_load(path.toUtf8().constData());
         }
     }
+}
+
+void MainWindow::clearArmRom() {
+    m_pathArmRom.clear();
+    m_config->remove(SETTING_ARM_ROM_PATH);
+    ui->pathArmRom->clear();
+    ui->buttonClearArmRom->setEnabled(false);
 }
 
 void MainWindow::setImagePath() {
