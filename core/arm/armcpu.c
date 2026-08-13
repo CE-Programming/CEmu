@@ -936,6 +936,14 @@ void arm_cpu_execute(arm_t *arm) {
             cpu->r[opc >> 8 & 7] = (opc >> 11 & 1 ? cpu->sp : cpu->pc & ~2) + ((opc >> 0 & 0xFF) << 2);
             break;
         case 11: // Miscellaneous 16-bit instructions
+            if ((opc & UINT16_C(0xF500)) == UINT16_C(0xB100)) {
+                // Compare and Branch on Zero / Nonzero.
+                bool nonzero = opc >> 11 & 1;
+                if (!!cpu->r[opc & 7] == nonzero) {
+                    cpu->pc += (opc >> 3 & 0x40) | (opc >> 2 & 0x3E);
+                }
+                break;
+            }
             switch (opc >> 9 & 7) {
                 case 0:
                     switch (opc >> 7 & 3) {
