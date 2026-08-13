@@ -428,6 +428,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkAllowGroupDrag, &QCheckBox::stateChanged, this, &MainWindow::setDockGroupDrag);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->buttonChangeArmRom, &QPushButton::clicked, this, &MainWindow::setArmRom);
+    connect(ui->buttonClearArmRom, &QPushButton::clicked, this, &MainWindow::clearArmRom);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
     connect(ui->upscaleLCD, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setLcdUpscale);
     connect(ui->fullscreenLCD, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setLcdFullscreen);
@@ -729,6 +730,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     m_pathArmRom = m_config->value(SETTING_ARM_ROM_PATH).toString();
     ui->pathArmRom->setText(m_pathArmRom);
+    ui->buttonClearArmRom->setEnabled(!m_pathArmRom.isEmpty());
 
     if (!m_config->contains(SETTING_IMAGE_PATH) || m_portable) {
         QString path = QFileInfo(m_pathConfig).absolutePath() + SETTING_DEFAULT_IMAGE_FILE;
@@ -2010,6 +2012,7 @@ void MainWindow::showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev,
     ui->labelArmRom->setVisible(python);
     ui->pathArmRom->setVisible(python);
     ui->buttonChangeArmRom->setVisible(python);
+    ui->buttonClearArmRom->setVisible(python);
 }
 
 void MainWindow::showEmuSpeed(double emuTime) {
@@ -2877,7 +2880,9 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
                 static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();
             }
         }
-        coproc_load(m_pathArmRom.toUtf8().constData());
+        if (!m_pathArmRom.isEmpty()) {
+            coproc_load(m_pathArmRom.toUtf8().constData());
+        }
         emu.start();
         guiEmuValid = true;
     }
