@@ -13,8 +13,6 @@
 #define PORT_PMUX_COUNT 16
 #define PORT_PINCFG_COUNT 32
 
-#define ARM_SERCOM_SLEEP       4
-
 static uint32_t bitreverse(uint32_t x, uint8_t bits) {
 #if __has_builtin(__builtin_bitreverse32)
     return __builtin_bitreverse32(x) >> (32 - bits);
@@ -590,13 +588,6 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
                                     usart->INTEN.reg << 16;
                             case (SERCOM_USART_INTFLAG_OFFSET |
                                   SERCOM_USART_STATUS_OFFSET) >> 2:
-                                if (usart->SLEEPFLAG != usart->INTFLAG.reg) {
-                                    usart->SLEEPFLAG = usart->INTFLAG.reg;
-                                    usart->SLEEPCOUNT = 0;
-                                } else if (++usart->SLEEPCOUNT == ARM_SERCOM_SLEEP) {
-                                    usart->SLEEPCOUNT = 0;
-                                    sync_sleep(&arm->sync);
-                                }
                                 return usart->INTFLAG.reg |
                                     usart->STATUS.reg << 16;
                             case SERCOM_USART_SYNCBUSY_OFFSET >> 2:
@@ -639,13 +630,6 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
                                     spi->INTEN.reg << 16;
                             case (SERCOM_SPI_INTFLAG_OFFSET |
                                   SERCOM_SPI_STATUS_OFFSET) >> 2:
-                                if (spi->SLEEPFLAG != spi->INTFLAG.reg) {
-                                    spi->SLEEPFLAG = spi->INTFLAG.reg;
-                                    spi->SLEEPCOUNT = 0;
-                                } else if (++spi->SLEEPCOUNT == ARM_SERCOM_SLEEP) {
-                                    spi->SLEEPCOUNT = 0;
-                                    sync_sleep(&arm->sync);
-                                }
                                 return spi->INTFLAG.reg |
                                     spi->STATUS.reg << 16;
                             case SERCOM_SPI_SYNCBUSY_OFFSET >> 2:
