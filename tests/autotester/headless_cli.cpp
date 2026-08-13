@@ -26,6 +26,7 @@ namespace cemucore
 {
     extern "C"
     {
+        #include "../../core/coproc.h"
         #include "../../core/usb/usb.h"
 
         void gui_console_clear() {}
@@ -57,6 +58,7 @@ namespace
 struct options_t {
     std::string rom;
     std::string image;
+    std::string arm_rom;
     uint32_t run_rate = 1000;
 };
 
@@ -185,7 +187,7 @@ bool sendFile(const std::string& path, int location)
 void printUsage(const char *program)
 {
     std::cerr << "Usage: " << program
-              << " (--rom <file> | --image <file>)"
+              << " (--rom <file> | --image <file>) [--arm-rom <file>]"
                  " [--run-rate <ticks-per-second>]\n";
 }
 
@@ -206,6 +208,8 @@ bool parseOptions(int argc, char **argv, options_t& options)
             options.rom = value;
         } else if (arg == "--image") {
             options.image = value;
+        } else if (arg == "--arm-rom") {
+            options.arm_rom = value;
         } else if (arg == "--run-rate") {
             if (!parseUnsigned(value, options.run_rate) || !options.run_rate) {
                 std::cerr << "Invalid run rate: " << value << '\n';
@@ -222,7 +226,8 @@ bool parseOptions(int argc, char **argv, options_t& options)
         return false;
     }
     if ((!options.rom.empty() && !fileExists(options.rom)) ||
-        (!options.image.empty() && !fileExists(options.image))) {
+        (!options.image.empty() && !fileExists(options.image)) ||
+        (!options.arm_rom.empty() && !fileExists(options.arm_rom))) {
         std::cerr << "One or more input files do not exist\n";
         return false;
     }
@@ -428,6 +433,10 @@ int main(int argc, char **argv)
     const std::string& path = options.image.empty() ? options.rom : options.image;
     if (cemucore::emu_load(type, path.c_str()) != cemucore::EMU_STATE_VALID) {
         std::cerr << "Failed to load " << path << '\n';
+        return EXIT_FAILURE;
+    }
+    if (!options.arm_rom.empty() && !cemucore::coproc_load(options.arm_rom.c_str())) {
+        std::cerr << "Failed to load ARM ROM " << options.arm_rom << '\n';
         return EXIT_FAILURE;
     }
     if (!cemucore::emu_set_run_rate(options.run_rate)) {
