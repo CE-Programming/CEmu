@@ -1168,7 +1168,7 @@ void arm_cpu_execute(arm_t *arm) {
                     break;
                 default: // UNDEFINED 32-bit Thumb instruction
                     arm_cpu_tick(arm);
-                    opc = opc << 16 | arm_mem_load_half(arm, cpu->pc - 2);
+                    (void)arm_mem_load_half(arm, cpu->pc - 2);
                     if (unlikely(cpu->exc)) {
                         cpu->exc = false;
                         return;
