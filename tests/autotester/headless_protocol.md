@@ -6,6 +6,12 @@ response on standard output. Core diagnostics are written to standard error.
 
 Start it with either a ROM or a saved CEmu image.
 
+You can also pass the python models' SAMD21 flash image:
+
+```sh
+./cemu-headless --image state.ce --arm-rom samd21-flash.bin
+```
+
 The process prints `CEMU_HEADLESS_READY` when it is ready for commands.
 
 Supported commands:
