@@ -36,7 +36,7 @@ bool spsc_queue_flush(spsc_queue_t *queue) {
     if (unlikely(poke != SPSC_QUEUE_INVALID_ENTRY)) {
         spsc_queue_index_t index = SPSC_QUEUE_MASK_INDEX(queue->enqueue);
         spsc_queue_entry_t invalid = SPSC_QUEUE_INVALID_ENTRY;
-        success = atomic_compare_exchange_weak_explicit(
+        success = atomic_compare_exchange_strong_explicit(
                 &queue->queue[index], &invalid, poke,
                 memory_order_relaxed, memory_order_relaxed);
         if (likely(success)) {
