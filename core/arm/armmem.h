@@ -77,7 +77,6 @@ typedef struct { /* SPI Mode */
                                               /**< \brief Offset: 0x28 (R/W 32) SPI Data */
                                               /**< \brief Offset: 0x30 (R/W  8) SPI Debug Control */
          SERCOM_BUFFER_Type         BUFFER[0x4];
-         uint8_t                    SLEEPFLAG, SLEEPCOUNT;
          bool                       SS;
 } SERCOM_SPI_Type;
 
@@ -95,7 +94,6 @@ typedef struct { /* USART Mode */
                                               /**< \brief Offset: 0x28 (R/W 16) USART Data */
                                               /**< \brief Offset: 0x30 (R/W  8) USART Debug Control */
          SERCOM_BUFFER_Type         BUFFER[0x4];
-         uint8_t                    SLEEPFLAG, SLEEPCOUNT;
 } SERCOM_USART_Type;
 
 static_assert(offsetof(SERCOM_SPI_Type, CTRLA) == offsetof(SERCOM_USART_Type, CTRLA) &&
@@ -104,9 +102,7 @@ static_assert(offsetof(SERCOM_SPI_Type, CTRLA) == offsetof(SERCOM_USART_Type, CT
               offsetof(SERCOM_SPI_Type, INTEN) == offsetof(SERCOM_USART_Type, INTEN) &&
               offsetof(SERCOM_SPI_Type, INTFLAG) == offsetof(SERCOM_USART_Type, INTFLAG) &&
               offsetof(SERCOM_SPI_Type, STATUS) == offsetof(SERCOM_USART_Type, STATUS) &&
-              offsetof(SERCOM_SPI_Type, BUFFER) == offsetof(SERCOM_USART_Type, BUFFER) &&
-              offsetof(SERCOM_SPI_Type, SLEEPFLAG) == offsetof(SERCOM_USART_Type, SLEEPFLAG) &&
-              offsetof(SERCOM_SPI_Type, SLEEPCOUNT) == offsetof(SERCOM_USART_Type, SLEEPCOUNT),
+              offsetof(SERCOM_SPI_Type, BUFFER) == offsetof(SERCOM_USART_Type, BUFFER),
               "SERCOM_SPI_Type and SERCOM_USART_Type are not compatible!");
 
 typedef union {
