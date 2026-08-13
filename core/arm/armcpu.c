@@ -7,6 +7,12 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+static uint32_t sign_extend(uint32_t value, unsigned int bits) {
+    uint32_t sign = UINT32_C(1) << (bits - 1);
+    uint32_t mask = sign * 2 - 1;
+    return ((value & mask) ^ sign) - sign;
+}
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #endif
@@ -1090,72 +1096,72 @@ void arm_cpu_execute(arm_t *arm) {
             switch (opc >> 8 & 0xF) { // Conditional branch, and Supervisor Call
                 case 0: // Branch Equal
                     if (cpu->z) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 1: // Branch Not equal
                     if (!cpu->z) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 2: // Branch Carry set
                     if (cpu->c) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 3: // Branch Carry clear
                     if (!cpu->c) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 4: // Branch Minus, negative
                     if (cpu->n) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 5: // Branch Plus, positive or zero
                     if (!cpu->n) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 6: // Branch Overflow
                     if (cpu->v) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 7: // Branch No overflow
                     if (!cpu->v) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 8: // Branch Unsigned higher
                     if (cpu->c && !cpu->z) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 9: // Branch Unsigned lower or same
                     if (!cpu->c || cpu->z) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 10: // Branch Signed greater than or equal
                     if (cpu->n == cpu->v) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 11: // Branch Signed less than
                     if (cpu->n != cpu->v) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 12: // Branch Signed greater than
                     if (!cpu->z && cpu->n == cpu->v) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 case 13: // Branch Signed less than or equal
                     if (cpu->z || cpu->n != cpu->v) {
-                        cpu->pc += ((int32_t)opc << 24 >> 23) + 2;
+                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
                     }
                     break;
                 default: // Permanently UNDEFINED
@@ -1172,7 +1178,7 @@ void arm_cpu_execute(arm_t *arm) {
         case 14:
             switch (opc >> 11 & 1) {
                 case 0: // Unconditional Branch
-                    cpu->pc += ((int32_t)opc << 21 >> 20) + 2;
+                    cpu->pc += sign_extend(opc, 11) * 2 + 2;
                     break;
                 default: // UNDEFINED 32-bit Thumb instruction
                     arm_cpu_tick(arm);
@@ -1282,11 +1288,12 @@ void arm_cpu_execute(arm_t *arm) {
                         break;
                     case 5: // Branch with Link
                         cpu->lr = cpu->pc - 1;
-                        cpu->pc += ((int32_t)opc << 5 >> 7 & UINT32_C(0xFF000000)) |
-                            (~(opc >> 3 ^ opc << 10) & UINT32_C(0x00800000)) |
-                            (~(opc >> 4 ^ opc << 11) & UINT32_C(0x00400000)) |
-                            (opc >> 4 & UINT32_C(0x003FF000)) |
-                            (opc << 1 & UINT32_C(0x00000FFE));
+                        val = (opc >> 2 & UINT32_C(0x01000000)) |
+                              (~(opc >> 3 ^ opc << 10) & UINT32_C(0x00800000)) |
+                              (~(opc >> 4 ^ opc << 11) & UINT32_C(0x00400000)) |
+                              (opc >> 4 & UINT32_C(0x003FF000)) |
+                              (opc << 1 & UINT32_C(0x00000FFE));
+                        cpu->pc += sign_extend(val, 25);
                         break;
                 }
             } else { // UNDEFINED 32-bit Thumb instruction
