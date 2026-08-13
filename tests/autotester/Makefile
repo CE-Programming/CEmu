@@ -1,4 +1,5 @@
 appname := autotester
+headless_appname := cemu-headless
 
 CXX := g++
 
@@ -11,21 +12,25 @@ CPPFLAGS += -DGLOB_SUPPORT
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
 LDLIBS  := -L../../core/ -lcemucore
+CORELIB := ../../core/libcemucore.a
 
 ifeq ($(OS),Windows_NT)
 	LDLIBS += -static-libgcc -static-libstdc++ -static
 endif
 
-srcfiles := autotester.cpp autotester_cli.cpp
+srcfiles := autotester.cpp autotester_cli.cpp headless_cli.cpp
 objects  := $(patsubst %.cpp, %.o, $(srcfiles))
 
-all: $(appname)
+all: $(appname) $(headless_appname)
 
-$(appname): $(objects)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(appname) $(objects) $(LDLIBS)
+$(appname): autotester.o autotester_cli.o $(CORELIB)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ autotester.o autotester_cli.o $(LDLIBS)
+
+$(headless_appname): autotester.o headless_cli.o $(CORELIB)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ autotester.o headless_cli.o $(LDLIBS)
 
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(objects) $(appname)
+	rm -f $(objects) $(appname) $(headless_appname)
