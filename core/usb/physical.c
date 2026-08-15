@@ -20,6 +20,9 @@
 
 #define MAX_PORT_DEPTH 7
 
+/* USB 2.0 OTG feature selector. */
+#define USB_FEATURE_A_HNP_SUPPORT 4
+
 #ifdef CEMU_USB_TRACE
 #define PHYSICAL_TRACE(...) fprintf(stderr, "[USBPHY] " __VA_ARGS__)
 #else
@@ -626,6 +629,22 @@ static device_reset_result_t device_reset(context_t *context, device_t *device) 
         endpoint_cleanup(context, &device->endpoints[index]);
     }
 #ifdef __APPLE__
+    int active_configuration = 0;
+    if (!device->numPorts &&
+        libusb_get_configuration(device->handle, &active_configuration) ==
+            LIBUSB_SUCCESS &&
+        active_configuration > 0) {
+        /*
+         * Darwin may re-enumerate an already-configured device well after
+         * libusb_reset_device() returns, invalidating the live TI-OS DUSB
+         * session.  Reset the emulated host-controller view while retaining
+         * the physical session which already has the requested configuration.
+         */
+        device->disconnected = false;
+        device->reset_pending = false;
+        PHYSICAL_TRACE("virtualized guest reset for configured Darwin device\n");
+        return DEVICE_RESET_COMPLETED;
+    }
     for (uint8_t interface = 0; interface < 32; ++interface) {
         physical_hid_close(device->hid_interfaces[interface]);
     }
@@ -948,6 +967,23 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
             break;
         case LIBUSB_REQUEST_SET_FEATURE:
             switch (setup->bmRequestType) {
+                case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE:
+                    if (!device->numPorts
+                        && setup->wValue == USB_FEATURE_A_HNP_SUPPORT
+                        && !setup->wIndex && !setup->wLength) {
+                        /*
+                         * The emulated A-device can service this peer only
+                         * through the computer's host controller.  Passing
+                         * A_HNP_SUPPORT downstream promises a physical role
+                         * swap which libusb cannot represent, so acknowledge
+                         * it only in the emulated host-controller view.
+                         */
+                        PHYSICAL_TRACE("accepted A_HNP_SUPPORT without forwarding it to the physical peer\n");
+                        *status = LIBUSB_TRANSFER_COMPLETED;
+                    } else {
+                        return USB_SUCCESS;
+                    }
+                    break;
                 case LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_DEVICE:
                     if (!device->numPorts) {
                         return USB_SUCCESS;
