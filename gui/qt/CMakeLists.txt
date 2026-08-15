@@ -292,11 +292,16 @@ if(APPLE)
     set(app_icon_macos "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/icon.icns")
     set_source_files_properties(${app_icon_macos} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     target_sources(CEmu PUBLIC
+        ../../core/usb/physical_macos.c
         os/mac/kdmactouchbar.h os/mac/kdmactouchbar.mm
         os/mac/kdmactouchbar_global.h
         ${app_icon_macos}
     )
-    target_link_libraries(CEmu PRIVATE "-framework Cocoa")
+    target_link_libraries(CEmu PRIVATE
+        "-framework Cocoa"
+        "-framework CoreFoundation"
+        "-framework IOKit"
+    )
     set_target_properties(CEmu PROPERTIES
         MACOSX_FRAMEWORK_IDENTIFIER "com.adriweb.CEmu"
         MACOSX_BUNDLE_COPYRIGHT "CE-Programming team"

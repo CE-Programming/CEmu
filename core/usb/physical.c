@@ -14,6 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __APPLE__
+#include "physical_macos.h"
+#endif
+
 #define MAX_PORT_DEPTH 7
 
 #ifdef CEMU_USB_TRACE
@@ -64,6 +68,7 @@ struct pending {
 
 enum transfer_state {
     TRANSFER_STATE_SUBMITTED, // must be 0
+    TRANSFER_STATE_HID_PENDING,
     TRANSFER_STATE_COMPLETED,
     TRANSFER_STATE_PENDING,
     TRANSFER_STATE_NONE,
@@ -139,6 +144,10 @@ struct device {
     uint16_t reset_polls_remaining, reset_hotplug_polls_remaining;
     uint8_t reset_ports[MAX_PORT_DEPTH];
     uint32_t claimedInterfaces, detachedInterfaces;
+#ifdef __APPLE__
+    physical_hid_device_t *hid_interfaces[32];
+    physical_hid_device_t *hid_endpoint_devices[32];
+#endif
     hub_t hub;
 };
 
@@ -312,6 +321,11 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
     device->reset_hotplug_polls_remaining = 0;
     device->claimedInterfaces = 0;
     device->detachedInterfaces = 0;
+#ifdef __APPLE__
+    memset(device->hid_interfaces, 0, sizeof(device->hid_interfaces));
+    memset(device->hid_endpoint_devices, 0,
+           sizeof(device->hid_endpoint_devices));
+#endif
     if (device->numPorts) {
         device->hub.statusChange.value = 0;
         for (uint8_t portIdx = 0; portIdx != device->numPorts; ++portIdx) {
@@ -391,6 +405,14 @@ static device_t *device_detach(context_t *context, device_t *device) {
         for (uint8_t index = 0; index != 0x20; ++index) {
             endpoint_cleanup(context, &device->endpoints[index]);
         }
+#ifdef __APPLE__
+        for (uint8_t interface = 0; interface < 32; ++interface) {
+            physical_hid_close(device->hid_interfaces[interface]);
+        }
+        memset(device->hid_interfaces, 0, sizeof(device->hid_interfaces));
+        memset(device->hid_endpoint_devices, 0,
+               sizeof(device->hid_endpoint_devices));
+#endif
         /*
          * Unlink from the hub port by identity rather than by asking libusb
          * who our parent is: device_reset() swaps a reacquired hub's handle
@@ -599,10 +621,18 @@ static device_reset_result_t device_finish_reset(context_t *context,
 
 static device_reset_result_t device_reset(context_t *context, device_t *device) {
     libusb_device *previous_device = libusb_get_device(device->handle);
-    /* A bus reset cancels every pending transfer. */
+    /* A bus reset cancels every transfer, including waits owned by IOHID. */
     for (uint8_t index = 0; index != 0x20; ++index) {
         endpoint_cleanup(context, &device->endpoints[index]);
     }
+#ifdef __APPLE__
+    for (uint8_t interface = 0; interface < 32; ++interface) {
+        physical_hid_close(device->hid_interfaces[interface]);
+    }
+    memset(device->hid_interfaces, 0, sizeof(device->hid_interfaces));
+    memset(device->hid_endpoint_devices, 0,
+           sizeof(device->hid_endpoint_devices));
+#endif
     device->reset_bus = libusb_get_bus_number(previous_device);
     int num_ports = libusb_get_port_numbers(previous_device,
                                             device->reset_ports,
@@ -703,6 +733,124 @@ static void LIBUSB_CALL transfer_completed(struct libusb_transfer *libusb_transf
     transfer_t *transfer = libusb_transfer->user_data;
     transfer->state = TRANSFER_STATE_COMPLETED;
 }
+
+#ifdef __APPLE__
+static bool device_can_bridge_hid_claim(enum libusb_error error) {
+    switch (error) {
+        case LIBUSB_ERROR_ACCESS:
+        case LIBUSB_ERROR_NOT_FOUND:
+        case LIBUSB_ERROR_BUSY:
+        case LIBUSB_ERROR_NOT_SUPPORTED:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool device_open_hid_bridge(device_t *device, uint8_t interface_number) {
+    if (interface_number >= 32) {
+        return false;
+    }
+    if (device->hid_interfaces[interface_number]) {
+        return true;
+    }
+    struct libusb_device_descriptor descriptor;
+    if (libusb_get_device_descriptor(libusb_get_device(device->handle),
+                                     &descriptor) != LIBUSB_SUCCESS) {
+        return false;
+    }
+    physical_hid_open_result_t result = physical_hid_open(
+        descriptor.idVendor, descriptor.idProduct, interface_number,
+        &device->hid_interfaces[interface_number]);
+    switch (result) {
+        case PHYSICAL_HID_OPEN_SUCCESS:
+            gui_console_printf(
+                "[USB] Using the macOS HID bridge for interface %u unavailable to libusb.\n",
+                interface_number);
+            return true;
+        case PHYSICAL_HID_OPEN_PERMISSION_DENIED:
+            gui_console_printf(
+                "[USB] macOS denied HID input access. Enable CEmu in System Settings > Privacy & Security > Input Monitoring, then reconnect the USB device.\n");
+            break;
+        case PHYSICAL_HID_OPEN_AMBIGUOUS:
+            gui_console_printf(
+                "[USB] Multiple matching macOS HID devices were found; the libusb device could not be correlated safely.\n");
+            break;
+        case PHYSICAL_HID_OPEN_NOT_FOUND:
+        case PHYSICAL_HID_OPEN_FAILED:
+            gui_console_printf(
+                "[USB] The HID interface unavailable to libusb could not be opened through macOS HID APIs.\n");
+            break;
+    }
+    return false;
+}
+
+static void device_mark_hid_endpoints(device_t *device,
+                                      const struct libusb_interface *interface) {
+    uint32_t endpoints = 0;
+    for (int alt = 0; alt != interface->num_altsetting; ++alt) {
+        const struct libusb_interface_descriptor *descriptor =
+            &interface->altsetting[alt];
+        if (descriptor->bInterfaceClass != LIBUSB_CLASS_HID) {
+            continue;
+        }
+        for (uint8_t endpoint = 0; endpoint != descriptor->bNumEndpoints;
+             ++endpoint) {
+            const struct libusb_endpoint_descriptor *endpoint_descriptor =
+                &descriptor->endpoint[endpoint];
+            if ((endpoint_descriptor->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK)
+                    != LIBUSB_TRANSFER_TYPE_INTERRUPT
+                || !(endpoint_descriptor->bEndpointAddress & LIBUSB_ENDPOINT_IN)) {
+                continue;
+            }
+            uint8_t number = endpoint_descriptor->bEndpointAddress
+                & LIBUSB_ENDPOINT_ADDRESS_MASK;
+            if (number < 16) {
+                endpoints |= UINT32_C(1) << (number * 2 + 1);
+            }
+        }
+    }
+    uint8_t interface_number = interface->altsetting[0].bInterfaceNumber;
+    if (endpoints && device_open_hid_bridge(device, interface_number)) {
+        for (uint8_t index = 0; index < 32; ++index) {
+            if (endpoints & (UINT32_C(1) << index)) {
+                device->hid_endpoint_devices[index] =
+                    device->hid_interfaces[interface_number];
+            }
+        }
+    }
+}
+
+static bool device_hid_transfer(device_t *device, transfer_t *transfer) {
+    struct libusb_transfer *libusb_transfer = transfer->transfer;
+    uint8_t endpoint = libusb_transfer->endpoint;
+    uint8_t number = endpoint & LIBUSB_ENDPOINT_ADDRESS_MASK;
+    uint8_t index = number * 2 + !!(endpoint & LIBUSB_ENDPOINT_IN);
+    if (index >= 32 || !device->hid_endpoint_devices[index]) {
+        return false;
+    }
+    size_t length = 0;
+    physical_hid_read_result_t result = physical_hid_read(
+        device->hid_endpoint_devices[index], libusb_transfer->buffer,
+        (size_t)libusb_transfer->length, &length);
+    switch (result) {
+        case PHYSICAL_HID_READ_PENDING:
+            transfer->state = TRANSFER_STATE_HID_PENDING;
+            break;
+        case PHYSICAL_HID_READ_COMPLETED:
+            libusb_transfer->status = LIBUSB_TRANSFER_COMPLETED;
+            libusb_transfer->actual_length = (int)length;
+            transfer->state = TRANSFER_STATE_COMPLETED;
+            break;
+        case PHYSICAL_HID_READ_DISCONNECTED:
+            libusb_transfer->status = LIBUSB_TRANSFER_NO_DEVICE;
+            libusb_transfer->actual_length = 0;
+            transfer->state = TRANSFER_STATE_COMPLETED;
+            break;
+    }
+    return true;
+}
+#endif
 
 static void transfer_append(transfer_t *transfer, const void *src, uint32_t length) {
     struct libusb_transfer *libusb_transfer = transfer->transfer;
@@ -1023,6 +1171,12 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                 if (iface < 32 && claim_error == LIBUSB_SUCCESS) {
                                     device->claimedInterfaces |= UINT32_C(1) << iface;
                                 }
+#ifdef __APPLE__
+                                if (device_can_bridge_hid_claim(claim_error)) {
+                                    device_mark_hid_endpoints(
+                                        device, &config_desc->interface[iface]);
+                                }
+#endif
                             }
                         } else {
                             gui_console_printf("[USB] Error: Set configuration failed: %s!\n",
@@ -1218,6 +1372,19 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
     endpoint_t *endpoint = &device->endpoints[index];
     transfer_t *transfer = &endpoint->transfer;
     struct libusb_transfer *libusb_transfer = transfer->transfer;
+    if (transfer->state == TRANSFER_STATE_HID_PENDING) {
+#ifdef __APPLE__
+        if (device_hid_transfer(device, transfer)
+            && transfer->state != TRANSFER_STATE_HID_PENDING) {
+            libusb_transfer = transfer->transfer;
+        } else {
+            return error;
+        }
+#else
+        /* A HID-pending transfer is only produced by the macOS bridge. */
+        transfer->state = TRANSFER_STATE_NONE;
+#endif
+    }
     if (transfer->state == TRANSFER_STATE_SUBMITTED) {
         return error;
     }
@@ -1289,6 +1456,12 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
             PHYSICAL_TRACE("intercept failed error=%d\n", error);
         }
     }
+#ifdef __APPLE__
+    if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE
+        && device_hid_transfer(device, transfer)) {
+        /* Completion is consumed below; a pending read is retried next frame. */
+    } else
+#endif
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
         enum libusb_error submit_error = libusb_submit_transfer(libusb_transfer);
         if (submit_error == LIBUSB_SUCCESS) {

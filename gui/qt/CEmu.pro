@@ -200,7 +200,8 @@ QMAKE_LFLAGS    += $$GLOBAL_FLAGS
 if(macx) {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
     ICON = resources/icons/icon.icns
-    LIBS += -framework Cocoa
+    LIBS += -framework Cocoa -framework CoreFoundation -framework IOKit
+    SOURCES += ../../core/usb/physical_macos.c
 }
 
 SOURCES += \
