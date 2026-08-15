@@ -16,6 +16,12 @@
 
 #define MAX_PORT_DEPTH 7
 
+#ifdef CEMU_USB_TRACE
+#define PHYSICAL_TRACE(...) fprintf(stderr, "[USBPHY] " __VA_ARGS__)
+#else
+#define PHYSICAL_TRACE(...) ((void)0)
+#endif
+
 #define NODE_EMPTY(head) \
     ((head)->next == (head))
 
@@ -127,7 +133,11 @@ struct device {
     endpoint_t endpoints[0x20];
     uint8_t state : 2; /* enum device_state */
     uint8_t address : 7, numPorts : 7;
-    bool disconnected;
+    bool disconnected, reset_pending;
+    uint8_t reset_hotplug_events;
+    uint8_t reset_bus, reset_num_ports;
+    uint16_t reset_polls_remaining, reset_hotplug_polls_remaining;
+    uint8_t reset_ports[MAX_PORT_DEPTH];
     uint32_t claimedInterfaces, detachedInterfaces;
     hub_t hub;
 };
@@ -294,6 +304,12 @@ static int device_init(context_t *context, struct libusb_device *libusb_device) 
     device->address = 0;
     device->numPorts = hub_desc.bNbrPorts;
     device->disconnected = false;
+    device->reset_pending = false;
+    device->reset_hotplug_events = 0;
+    device->reset_bus = 0;
+    device->reset_num_ports = 0;
+    device->reset_polls_remaining = 0;
+    device->reset_hotplug_polls_remaining = 0;
     device->claimedInterfaces = 0;
     device->detachedInterfaces = 0;
     if (device->numPorts) {
@@ -369,6 +385,9 @@ static bool device_register_hotplug(context_t *context) {
 
 static device_t *device_detach(context_t *context, device_t *device) {
     if (device) {
+        PHYSICAL_TRACE("detach state=%u disconnected=%u reset=%u hotplug=%u\n",
+                       device->state, device->disconnected,
+                       device->reset_pending, device->reset_hotplug_events);
         for (uint8_t index = 0; index != 0x20; ++index) {
             endpoint_cleanup(context, &device->endpoints[index]);
         }
@@ -439,8 +458,23 @@ static void device_detach_disconnected(context_t *context) {
     while (node != &context->devices) {
         device_t *device = NODE_ITEM(device_t, node);
         node = node->prev;
-        if (device->disconnected) {
+        if (device->disconnected && !device->reset_pending) {
             device_detach(context, device);
+        }
+    }
+}
+
+static void device_age_reset_hotplug(context_t *context) {
+    device_t *device;
+    NODE_FOREACH(device, &context->devices) {
+        if (device->reset_hotplug_events) {
+            if (device->reset_hotplug_polls_remaining) {
+                --device->reset_hotplug_polls_remaining;
+            } else {
+                PHYSICAL_TRACE("reset hotplug guard expired with %u events\n",
+                               device->reset_hotplug_events);
+                device->reset_hotplug_events = 0;
+            }
         }
     }
 }
@@ -507,84 +541,162 @@ static bool device_open_error_is_transient(int error) {
         || error == LIBUSB_ERROR_NOT_FOUND;
 }
 
-static bool device_reset(context_t *context, device_t *device) {
+typedef enum device_reset_result {
+    DEVICE_RESET_FAILED,
+    DEVICE_RESET_COMPLETED,
+    DEVICE_RESET_PENDING,
+} device_reset_result_t;
+
+static device_reset_result_t device_finish_reset(context_t *context,
+                                                 device_t *device) {
     libusb_device *previous_device = libusb_get_device(device->handle);
-    uint8_t bus = libusb_get_bus_number(previous_device);
-    uint8_t ports[MAX_PORT_DEPTH];
-    int num_ports = libusb_get_port_numbers(previous_device, ports, MAX_PORT_DEPTH);
-    int reset_error = libusb_reset_device(device->handle);
-    switch (reset_error) {
-        case LIBUSB_SUCCESS:
-            return true;
-        case LIBUSB_ERROR_NOT_FOUND:
-        case LIBUSB_ERROR_NO_DEVICE:
+    libusb_device **devices;
+    if (errno_from_libusb_error(
+                libusb_get_device_list(context->context, &devices)) != USB_SUCCESS) {
+        return DEVICE_RESET_PENDING;
+    }
+    libusb_device **enumerate_device;
+    for (enumerate_device = devices; *enumerate_device; ++enumerate_device) {
+        if (device_port_matches(*enumerate_device, device->reset_bus,
+                                device->reset_ports,
+                                device->reset_num_ports)) {
             break;
-        default:
-            return false;
+        }
+    }
+    bool found_replacement = *enumerate_device;
+    libusb_device_handle *replacement_handle = NULL;
+    int open_error = found_replacement
+        ? libusb_open(*enumerate_device, &replacement_handle)
+        : LIBUSB_ERROR_NO_DEVICE;
+    if (open_error == LIBUSB_SUCCESS) {
+        libusb_device *replacement_device = libusb_get_device(replacement_handle);
+        for (uint8_t index = 0; index != 0x20; ++index) {
+            endpoint_cleanup(context, &device->endpoints[index]);
+        }
+        device_discard_pending_in_subtree(context, previous_device);
+        libusb_close(device->handle);
+        device->handle = replacement_handle;
+        device->disconnected = false;
+        device->reset_pending = false;
+        device->claimedInterfaces = 0;
+        device->detachedInterfaces = 0;
+        if (device->numPorts) {
+            device_detach_children(context, device);
+        }
+        device_discard_pending_in_subtree(context, replacement_device);
+        device_register_hotplug(context);
+        if (device->numPorts) {
+            device_attach_current_descendants(context, replacement_device);
+        }
+        libusb_free_device_list(devices, true);
+        return DEVICE_RESET_COMPLETED;
+    }
+    libusb_free_device_list(devices, true);
+    return found_replacement && !device_open_error_is_transient(open_error)
+        ? DEVICE_RESET_FAILED
+        : DEVICE_RESET_PENDING;
+}
+
+static device_reset_result_t device_reset(context_t *context, device_t *device) {
+    libusb_device *previous_device = libusb_get_device(device->handle);
+    /* A bus reset cancels every pending transfer. */
+    for (uint8_t index = 0; index != 0x20; ++index) {
+        endpoint_cleanup(context, &device->endpoints[index]);
+    }
+    device->reset_bus = libusb_get_bus_number(previous_device);
+    int num_ports = libusb_get_port_numbers(previous_device,
+                                            device->reset_ports,
+                                            MAX_PORT_DEPTH);
+    /* Hotplug notifications generated by this reset are delivered later. */
+    uint8_t reset_hotplug_events = device->reset_hotplug_events;
+    if (device->reset_hotplug_events <= UINT8_MAX - 2) {
+        device->reset_hotplug_events += 2;
+    }
+    int reset_error = libusb_reset_device(device->handle);
+    PHYSICAL_TRACE("reset result=%d prior-hotplug=%u expected-hotplug=%u\n",
+                   reset_error, reset_hotplug_events,
+                   device->reset_hotplug_events);
+    if (reset_error == LIBUSB_SUCCESS) {
+        /*
+         * A reset can deliver DEVICE_LEFT/ARRIVED while libusb keeps the
+         * existing device object and handle valid. The hotplug callback marks
+         * the root disconnected and unregisters itself on DEVICE_LEFT, so
+         * reconcile that transient state before the deferred detach sweep.
+         */
+        device->disconnected = false;
+        device->reset_pending = false;
+        device->reset_hotplug_polls_remaining = 1000;
+        device_register_hotplug(context);
+        return DEVICE_RESET_COMPLETED;
+    }
+    device->reset_hotplug_events = reset_hotplug_events;
+    if (reset_error == LIBUSB_ERROR_NOT_FOUND) {
+        /*
+         * A backend may reject a physical reset once an interface is claimed
+         * (Darwin reports this when the handle lacks exclusive device access).
+         * The device is still present and usable, so complete the guest's bus
+         * reset logically instead of waiting for a re-enumeration that did not
+         * occur and eventually unplugging it.
+         */
+        return DEVICE_RESET_COMPLETED;
+    }
+    if (reset_error != LIBUSB_ERROR_NO_DEVICE) {
+        return DEVICE_RESET_FAILED;
     }
     /*
-     * The port path is the only thing tying the replacement to the device
-     * that just went away, so without one the poll below can't match anything
+     * Some platforms re-enumerate a device during reset. Waiting for that
+     * replacement inside this call blocks the emulation thread, so remember
+     * its stable port path and let the normal physical-backend timer finish
+     * reacquiring it.
      */
     if (num_ports <= 0) {
-        device_detach(context, device);
-        return false;
+        return DEVICE_RESET_FAILED;
     }
-    for (int iteration = 0; iteration != 100; ++iteration) {
-        libusb_device **devices;
-        if (errno_from_libusb_error(
-                    libusb_get_device_list(context->context, &devices)) == USB_SUCCESS) {
-            libusb_device **enumerate_device;
-            for (enumerate_device = devices; *enumerate_device; ++enumerate_device) {
-                if (*enumerate_device != previous_device
-                    && device_port_matches(*enumerate_device, bus, ports, num_ports)) {
-                    break;
-                }
-            }
-            bool found_replacement = *enumerate_device;
-            libusb_device_handle *replacement_handle = NULL;
-            int open_error = found_replacement
-                ? libusb_open(*enumerate_device, &replacement_handle)
-                : LIBUSB_ERROR_NO_DEVICE;
-            if (open_error == LIBUSB_SUCCESS) {
-                libusb_device *replacement_device =
-                    libusb_get_device(replacement_handle);
-                for (uint8_t index = 0; index != 0x20; ++index) {
-                    endpoint_cleanup(context, &device->endpoints[index]);
-                }
-                device_discard_pending_in_subtree(context, previous_device);
-                libusb_close(device->handle);
-                device->handle = replacement_handle;
-                device->disconnected = false;
-                device->claimedInterfaces = 0;
-                device->detachedInterfaces = 0;
-                if (device->numPorts) {
-                    device_detach_children(context, device);
-                }
-                device_discard_pending_in_subtree(context, replacement_device);
-                device_register_hotplug(context);
-                if (device->numPorts) {
-                    device_attach_current_descendants(context, replacement_device);
-                }
-                libusb_free_device_list(devices, true);
-                return true;
-            }
-            libusb_free_device_list(devices, true);
-            if (found_replacement && !device_open_error_is_transient(open_error)) {
-                break;
-            }
+    device->reset_num_ports = num_ports;
+    device->reset_polls_remaining = 5000;
+    device->reset_pending = true;
+    device->disconnected = false;
+    device_reset_result_t result = device_finish_reset(context, device);
+    if (result == DEVICE_RESET_FAILED) {
+        device->reset_pending = false;
+    }
+    return result;
+}
+
+static void device_poll_resets(context_t *context) {
+    node_t *node = context->devices.next;
+    while (node != &context->devices) {
+        device_t *device = NODE_ITEM(device_t, node);
+        node = node->next;
+        if (!device->reset_pending) {
+            continue;
         }
-        struct timeval tv = {
-            .tv_sec = 1,
-            .tv_usec = 0,
-        };
-        if (errno_from_libusb_error(
-                    libusb_handle_events_timeout(context->context, &tv)) != USB_SUCCESS) {
-            break;
+        device_reset_result_t result = device_finish_reset(context, device);
+        if (result == DEVICE_RESET_PENDING && device->reset_polls_remaining) {
+            --device->reset_polls_remaining;
+            continue;
+        }
+        if (result == DEVICE_RESET_COMPLETED) {
+            device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
+            device->address = 0;
+            device_t *parent;
+            NODE_FOREACH(parent, &context->devices) {
+                for (uint8_t portIdx = 0; portIdx != parent->numPorts; ++portIdx) {
+                    port_t *port = &parent->hub.ports[portIdx];
+                    if (port->device == device) {
+                        port->status.enable = true;
+                        port->status.low_speed = libusb_get_device_speed(
+                                libusb_get_device(device->handle)) == LIBUSB_SPEED_LOW;
+                        port->status.high_speed = false;
+                        port->change.reset = true;
+                    }
+                }
+            }
+        } else {
+            device->reset_pending = false;
+            device_detach(context, device);
         }
     }
-    device_detach(context, device);
-    return false;
 }
 
 static void LIBUSB_CALL transfer_completed(struct libusb_transfer *libusb_transfer) {
@@ -717,7 +829,9 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                         port->change.enable = true;
                                         break;
                                     }
-                                    if (device_reset(context, port->device)) {
+                                    device_reset_result_t reset_result =
+                                        device_reset(context, port->device);
+                                    if (reset_result == DEVICE_RESET_COMPLETED) {
                                         port->device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
                                         port->device->address = 0;
                                         port->status.enable = true;
@@ -726,7 +840,7 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                                             == LIBUSB_SPEED_LOW;
                                         port->status.high_speed = false;
                                         port->change.reset = true;
-                                    } else {
+                                    } else if (reset_result == DEVICE_RESET_FAILED) {
                                         port->status.enable = false;
                                         port->change.enable = true;
                                     }
@@ -904,6 +1018,8 @@ static int device_intercept_control_setup(context_t *context, device_t *device, 
                             device->state = DEVICE_STATE_CONFIGURED;
                             for (uint8_t iface = 0; iface != config_desc->bNumInterfaces; ++iface) {
                                 enum libusb_error claim_error = libusb_claim_interface(handle, iface);
+                                PHYSICAL_TRACE("claim interface %u: %s\n", iface,
+                                               libusb_error_name(claim_error));
                                 if (iface < 32 && claim_error == LIBUSB_SUCCESS) {
                                     device->claimedInterfaces |= UINT32_C(1) << iface;
                                 }
@@ -1169,11 +1285,28 @@ static int device_process_transfer(context_t *context, device_t *device, usb_eve
     }
     if (error == USB_SUCCESS && transfer->state != TRANSFER_STATE_SUBMITTED) {
         error = device_intercept_transfer(context, device, transfer, info->length);
+        if (error != USB_SUCCESS) {
+            PHYSICAL_TRACE("intercept failed error=%d\n", error);
+        }
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_NONE) {
-        error = errno_from_libusb_error(libusb_submit_transfer(libusb_transfer));
-        if (error == USB_SUCCESS) {
+        enum libusb_error submit_error = libusb_submit_transfer(libusb_transfer);
+        if (submit_error == LIBUSB_SUCCESS) {
             transfer->state = TRANSFER_STATE_SUBMITTED;
+        } else {
+            PHYSICAL_TRACE("submit failed error=%s endpoint=%02x type=%u\n",
+                           libusb_error_name(submit_error),
+                           libusb_transfer->endpoint,
+                           libusb_transfer->type);
+            /* A synchronous submission failure belongs to this USB transfer,
+             * not to the physical backend as a whole. Report it to the guest
+             * just like an asynchronous failed completion so one inaccessible
+             * interface cannot tear down an otherwise usable composite
+             * device. */
+            libusb_transfer->status =
+                transfer_status_from_libusb_error(submit_error);
+            libusb_transfer->actual_length = 0;
+            transfer->state = TRANSFER_STATE_COMPLETED;
         }
     }
     if (error == USB_SUCCESS && transfer->state == TRANSFER_STATE_SUBMITTED) {
@@ -1242,6 +1375,16 @@ static int LIBUSB_CALL device_hotplugged(
         }
     }
     if (device) {
+        PHYSICAL_TRACE("hotplug event=%u root=%u disconnected=%u expected=%u\n",
+                       event, device == root, device->disconnected,
+                       device->reset_hotplug_events);
+        if (device->reset_hotplug_events) {
+            /* Ignore the transient LEFT/ARRIVED pair produced by reset. */
+            --device->reset_hotplug_events;
+            PHYSICAL_TRACE("ignored reset hotplug; remaining=%u\n",
+                           device->reset_hotplug_events);
+            return false;
+        }
         if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
             if (device == root) {
                 NODE_FOREACH (device, &context->devices) {
@@ -1290,6 +1433,8 @@ int usb_physical_device(usb_event_t *event) {
                 };
                 error = errno_from_libusb_error(
                         libusb_handle_events_timeout(context->context, &tv));
+                device_age_reset_hotplug(context);
+                device_poll_resets(context);
                 device_detach_disconnected(context);
                 event->type = USB_TIMER_EVENT;
                 timer->mode = USB_TIMER_ABSOLUTE_MODE;
@@ -1438,9 +1583,12 @@ int usb_physical_device(usb_event_t *event) {
                 device->address = 0;
             } else if (device->state >= DEVICE_STATE_POWERED && type == USB_RESET_EVENT) {
                 device->state = DEVICE_STATE_POWERED;
-                if (device_reset(context, device)) {
+                device_reset_result_t reset_result = device_reset(context, device);
+                if (reset_result == DEVICE_RESET_COMPLETED) {
                     device->state = DEVICE_STATE_DEFAULT_OR_ADDRESS;
                     device->address = 0;
+                } else if (reset_result == DEVICE_RESET_FAILED) {
+                    device->reset_pending = false;
                 }
                 device = NULL;
             }
@@ -1457,6 +1605,10 @@ int usb_physical_device(usb_event_t *event) {
         case USB_TRANSFER_REQUEST_EVENT:
             event->pending = false;
             NODE_FOREACH (device, &context->devices) {
+                if (device->reset_pending && !transfer->address) {
+                    event->pending = true;
+                    break;
+                }
                 if (device->state <= DEVICE_STATE_POWERED ||
                     device->address != transfer->address) {
                     continue;
@@ -1472,6 +1624,7 @@ int usb_physical_device(usb_event_t *event) {
         case USB_TIMER_EVENT:
             break;
         case USB_DESTROY_EVENT:
+            PHYSICAL_TRACE("destroy event\n");
             if (event->progress_handler) {
                 event->progress_handler(event->progress_context, 0, 0);
                 event->progress_handler = NULL;
@@ -1497,6 +1650,9 @@ int usb_physical_device(usb_event_t *event) {
             break;
     }
     context->handled = false;
+    if (error != USB_SUCCESS) {
+        PHYSICAL_TRACE("event type=%u failed with error=%d\n", type, error);
+    }
     return error;
 }
 
