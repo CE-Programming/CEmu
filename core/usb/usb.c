@@ -14,8 +14,15 @@
 #include <string.h>
 
 #define CONTROL_MPS 0x40
+#define PORTSC_SUSPEND (UINT32_C(1) << 7)
 
 usb_state_t usb;
+static uint8_t usb_in_pending;
+static bool usb_role_switch_pending;
+static bool usb_a_role_switch_pending;
+static bool usb_role_restore_pending;
+static bool usb_a_role_restore_pending;
+static bool usb_b_role_restore_pending;
 
 typedef enum usb_qtype {
     QTYPE_ITD, QTYPE_QH, QTYPE_SITD, QTYPE_FSTN
@@ -285,6 +292,80 @@ static void usb_sync_a_host_port(void) {
     if (port_changed) {
         usb_host_int(USBSTS_PORT_CHANGE);
     }
+}
+
+/* HNP changes controller ownership without changing which end of the cable
+ * carries the A/B connector identity. Keep the identity bit stable and only
+ * move the role bit; the guest driver owns controller teardown and
+ * reinitialization after the role-change interrupt. */
+static void usb_hnp_b_to_host(void) {
+    usb.regs.otgcsr |= OTGCSR_DEV_B;
+    usb.regs.otgcsr &= ~OTGCSR_ROLE_D;
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE |
+                                 PORTSC_CONN_STATUS | PORTSC_EN_STATUS);
+    usb_otg_int(OTGISR_RLCHG);
+}
+
+static void usb_hnp_a_to_device(void) {
+    bool port_changed;
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE);
+    port_changed = usb_update_status_change(usb.regs.hcor.portsc,
+                                            PORTSC_CONN_STATUS,
+                                            PORTSC_CONN_CHANGE, false);
+    port_changed |= usb_update_status_change(usb.regs.hcor.portsc,
+                                             PORTSC_EN_STATUS,
+                                             PORTSC_EN_CHANGE, false);
+    if (port_changed) {
+        usb_host_int(USBSTS_PORT_CHANGE);
+    }
+    usb.regs.otgcsr &= ~OTGCSR_DEV_B;
+    usb.regs.otgcsr |= OTGCSR_ROLE_D;
+    usb.regs.hcor.portsc[0] &= ~PORTSC_SUSPEND;
+    usb_otg_int(OTGISR_RLCHG);
+}
+
+static void usb_hnp_b_host_peer_ready(void) {
+    uint32_t line_state = usb.event.speed == USB_LOW_SPEED
+        ? PORTSC_K_STATE : PORTSC_J_STATE;
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE);
+    usb.regs.hcor.portsc[0] |= line_state;
+    if (usb_update_status_change(usb.regs.hcor.portsc,
+                                 PORTSC_CONN_STATUS,
+                                 PORTSC_CONN_CHANGE, true)) {
+        usb_host_int(USBSTS_PORT_CHANGE);
+    }
+}
+
+static void usb_hnp_b_to_device(void) {
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE);
+    usb.regs.hcor.portsc[0] &= ~(PORTSC_CONN_STATUS | PORTSC_CONN_CHANGE |
+                                 PORTSC_EN_STATUS | PORTSC_EN_CHANGE |
+                                 PORTSC_SUSPEND);
+    usb.regs.hcor.usbcmd &= ~USBCMD_RUN;
+    usb.regs.hcor.usbsts &= ~UINT32_C(0x3F);
+    usb.regs.hcor.usbsts |= USBSTS_HCHALTED;
+    usb.regs.otgcsr |= OTGCSR_DEV_B | OTGCSR_ROLE_D;
+    usb_update();
+    usb_otg_int(OTGISR_RLCHG);
+}
+
+static void usb_hnp_a_to_host(void) {
+    /* A resumes ownership of the same live OTG session. Driving VBUS again
+     * is part of returning to A-host; retaining A_BUSDROP makes the freshly
+     * restored port disconnect on the next status synchronization. */
+    usb.regs.otgcsr &= ~(OTGCSR_DEV_B | OTGCSR_ROLE_D | OTGCSR_A_BUSDROP);
+    usb.regs.otgcsr |= OTGCSR_A_BUSREQ;
+    usb_sync_a_host_port();
+    usb_otg_int(OTGISR_RLCHG);
+}
+
+static void usb_reset_peer_state(void) {
+    usb_in_pending = 0;
+    usb_role_switch_pending = false;
+    usb_a_role_switch_pending = false;
+    usb_role_restore_pending = false;
+    usb_a_role_restore_pending = false;
+    usb_b_role_restore_pending = false;
 }
 
 static void usb_plug(void) {
@@ -565,6 +646,7 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
     usb_transfer_info_t *transfer = &usb.event.info.transfer;
     usb_timer_info_t *timer = &usb.event.info.timer;
     do {
+        usb.event.deferred = false;
         error = usb.device(&usb.event);
         if (error) {
             usb.event.type = USB_DESTROY_EVENT;
@@ -583,6 +665,10 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
             case USB_SESSION_START_EVENT:
                 if (usb.event.host && (usb.regs.otgcsr & OTGCSR_ROLE_D)) {
                     usb_plug_b();
+                    if (usb.event.supports_hnp &&
+                        (usb.regs.otgcsr & OTGCSR_B_BUSREQ)) {
+                        usb_otg_int(OTGISR_BSRP);
+                    }
                 }
                 break;
             case USB_SESSION_END_EVENT:
@@ -591,6 +677,64 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                 }
                 break;
             case USB_SESSION_REQUEST_EVENT:
+                if (usb.event.supports_hnp && !usb.event.host &&
+                    !(usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D))) {
+                    usb_otg_int(OTGISR_ASRP);
+                }
+                break;
+            case USB_HNP_EVENT:
+                if (usb.event.supports_hnp && usb.event.host &&
+                    (usb.regs.otgcsr & OTGCSR_ROLE_D)) {
+                    if (!(usb.regs.otgcsr & OTGCSR_DEV_B)) {
+                        usb_a_role_restore_pending = true;
+                    }
+                    usb_grp2_int(GISR2_SUSPEND);
+                    if (usb.regs.otgcsr & OTGCSR_B_BUSREQ) {
+                        usb.event.type = USB_ROLE_SWITCH_EVENT;
+                        continue;
+                    }
+                }
+                break;
+            case USB_ROLE_SWITCH_EVENT:
+                if (usb.event.supports_hnp && !usb.event.host &&
+                    !(usb.regs.otgcsr & OTGCSR_ROLE_D)) {
+                    bool port_changed;
+                    usb.regs.hcor.portsc[0] &= ~(PORTSC_J_STATE | PORTSC_K_STATE);
+                    port_changed = usb_update_status_change(
+                        usb.regs.hcor.portsc, PORTSC_CONN_STATUS,
+                        PORTSC_CONN_CHANGE, false);
+                    port_changed |= usb_update_status_change(
+                        usb.regs.hcor.portsc, PORTSC_EN_STATUS,
+                        PORTSC_EN_CHANGE, false);
+                    if (port_changed) {
+                        usb_host_int(USBSTS_PORT_CHANGE);
+                    }
+                    usb_a_role_switch_pending = true;
+                }
+                break;
+            case USB_ROLE_SWITCH_READY_EVENT:
+                if (usb.event.supports_hnp && !usb.event.host &&
+                    (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) ==
+                        (OTGCSR_DEV_B | OTGCSR_ROLE_D)) {
+                    usb_hnp_b_to_host();
+                    usb_hnp_b_host_peer_ready();
+                }
+                break;
+            case USB_ROLE_RESTORE_REQUEST_EVENT:
+                break;
+            case USB_ROLE_RESTORE_EVENT:
+                if (usb.event.supports_hnp && !usb.event.host &&
+                    (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) ==
+                        OTGCSR_DEV_B) {
+                    usb_b_role_restore_pending = true;
+                }
+                break;
+            case USB_ROLE_RESTORE_READY_EVENT:
+                if (usb.event.supports_hnp && usb.event.host &&
+                    (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) ==
+                        OTGCSR_ROLE_D) {
+                    usb_hnp_a_to_host();
+                }
                 break;
             case USB_TRANSFER_REQUEST_EVENT:
                 if (usb.event.host) {
@@ -638,17 +782,48 @@ static int usb_dispatch_event(usb_traversal_state_t *state) {
                 break;
             case USB_TRANSFER_RESPONSE_EVENT:
                 if (usb.event.host) {
-                    if (!transfer->direction) {
+                    if (usb.event.deferred && !transfer->direction) {
                         uint32_t dma_length = DMACTRL_LEN(usb.regs.dma_ctrl);
                         uint32_t write_length = transfer->length < dma_length ? transfer->length : dma_length;
                         if (write_length) {
                             mem_dma_write(transfer->buffer, usb.regs.dma_addr, write_length);
                         }
-                    }
-                    usb.regs.dma_ctrl &= ~DMACTRL_START;
-                    if (transfer->length) {
-                        //gui_console_printf("usb_grp2_int(%s);\n", transfer->status == USB_TRANSFER_COMPLETED ? "GISR2_DMAFIN" : "GISR2_DMAERR");
-                        usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED ? GISR2_DMAFIN : GISR2_DMAERR);
+                        usb.regs.dma_ctrl &= ~DMACTRL_START;
+                        if (transfer->endpoint && transfer->endpoint <= 8) {
+                            uint8_t fifo = EPMAP_GET_OUT(
+                                usb.regs.epmap[transfer->endpoint - 1]);
+                            if (!(usb_in_pending & 1U << fifo)) {
+                                usb.regs.cxfifo |= CXFIFO_FIFOE(fifo);
+                                usb_grp1_int(GISR1_IN_FIFO(fifo));
+                            }
+                            usb.regs.fifocsr[fifo] &= FIFOCSR_RESET;
+                        }
+                        if (transfer->length) {
+                            usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED
+                                ? GISR2_DMAFIN : GISR2_DMAERR);
+                        }
+                    } else if (usb.event.deferred && transfer->endpoint &&
+                               transfer->endpoint <= 8) {
+                        uint8_t fifo = EPMAP_GET_IN(
+                            usb.regs.epmap[transfer->endpoint - 1]);
+                        usb_in_pending &= ~(1U << fifo);
+                        usb.regs.cxfifo |= CXFIFO_FIFOE(fifo);
+                        usb_grp1_int(GISR1_IN_FIFO(fifo));
+                    } else {
+                        if (!transfer->direction) {
+                            uint32_t dma_length = DMACTRL_LEN(usb.regs.dma_ctrl);
+                            uint32_t write_length = transfer->length < dma_length
+                                ? transfer->length : dma_length;
+                            if (write_length) {
+                                mem_dma_write(transfer->buffer, usb.regs.dma_addr,
+                                              write_length);
+                            }
+                        }
+                        usb.regs.dma_ctrl &= ~DMACTRL_START;
+                        if (transfer->length) {
+                            usb_grp2_int(transfer->status == USB_TRANSFER_COMPLETED
+                                ? GISR2_DMAFIN : GISR2_DMAERR);
+                        }
                     }
                 } else if (state) {
                     usb_itd_xact_t *xact = &state->itd.xacts[usb.regs.hcor.frindex & 7];
@@ -1073,6 +1248,9 @@ static void usb_schedule_traverse(usb_traversal_state_t *state) {
                 if (state->dirty) {
                     mem_dma_write(&state->qh, state->link.ptr << 5, sizeof(state->qh));
                 }
+                if (usb.event.deferred && usb.event.pending) {
+                    return;
+                }
                 state->link = state->qh.horiz;
                 break;
             case QTYPE_SITD:
@@ -1139,6 +1317,7 @@ static void usb_reset_otg(void) {
     usb.regs.fifocfg                    = 0;
     clear(usb.regs.fifocsr);
     usb.regs.dma_fifo                   = 0;
+    usb_reset_peer_state();
     clear(usb.regs.rsvd8);
     usb.regs.dma_ctrl                   = 0;
     clear(usb.ep0_data);
@@ -1182,6 +1361,8 @@ int usb_plug_device(int argc, const char *const *argv,
     usb.event.progress_handler = progress_handler;
     usb.event.progress_context = progress_context;
     usb.event.context = NULL;
+    usb.event.deferred = false;
+    usb.event.supports_hnp = false;
     usb.event.speed = USB_FULL_SPEED;
     usb.event.type = USB_INIT_EVENT;
     usb.event.info.init.argc = argc;
@@ -1197,6 +1378,11 @@ int usb_plug_device(int argc, const char *const *argv,
 
 static void usb_event(enum sched_item_id event) {
     bool high_speed = false;
+    if (usb_a_role_switch_pending) {
+        usb_a_role_switch_pending = false;
+        usb_hnp_a_to_device();
+        usb_role_switch_pending = true;
+    }
     if (usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
         if (usb.regs.otgcsr & OTGCSR_ROLE_D) {
             high_speed = usb.regs.dev_ctrl & DEVCTRL_HS;
@@ -1238,6 +1424,11 @@ static void usb_event(enum sched_item_id event) {
             }
         }
     }
+    if (usb_b_role_restore_pending) {
+        usb_b_role_restore_pending = false;
+        usb_hnp_b_to_device();
+        usb_role_restore_pending = true;
+    }
     sched_repeat(event, high_speed ? 1500 : 12000);
 }
 
@@ -1249,7 +1440,7 @@ static void usb_device_event(enum sched_item_id event) {
 
 uint8_t usb_status(void) {
     return (usb.regs.otgcsr & (OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD) ? 0x80 : 0) |
-        (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D) ? 0x40 : 0);
+        (usb.regs.otgcsr & OTGCSR_DEV_B ? 0x40 : 0);
 }
 
 static uint8_t usb_ep0_idx_update(void) {
@@ -1350,6 +1541,14 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                         break;
                 }
             }
+            if (usb.event.supports_hnp && !(old & PORTSC_SUSPEND) &&
+                (usb.regs.hcor.portsc[0] & PORTSC_SUSPEND) &&
+                (usb.regs.otgcsr & OTGCSR_A_HNP) &&
+                !(usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) &&
+                usb.device != usb_disconnected_device && !usb.event.host) {
+                usb.event.type = USB_HNP_EVENT;
+                usb_dispatch_event(NULL);
+            }
             break;
         case 0x040 >> 2: // Miscellaneous Register
             write8(usb.regs.miscr,                 bit_offset, value &       0xFFF >> bit_offset); // W mask (V)
@@ -1380,7 +1579,21 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             }
             break;
         case 0x084 >> 2: // OTG Interrupt Status Register
-            usb.regs.otgisr &= ~((uint32_t)value << bit_offset & OTGISR_MASK);                     // WC mask (V)
+            {
+                uint32_t cleared = (uint32_t)value << bit_offset & OTGISR_MASK;
+                usb.regs.otgisr &= ~cleared;                                                       // WC mask (V)
+                if (usb.event.supports_hnp && usb_role_switch_pending &&
+                    (cleared & OTGISR_RLCHG) &&
+                    (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) ==
+                        OTGCSR_ROLE_D) {
+                    /* A's guest has acknowledged that it is now the device.
+                     * TI-OS does not necessarily rewrite PHYTMSR when it was
+                     * already clear. */
+                    usb_role_switch_pending = false;
+                    usb.event.type = USB_ROLE_SWITCH_READY_EVENT;
+                    usb_dispatch_event(NULL);
+                }
+            }
             break;
         case 0x088 >> 2: // OTG Interrupt Enable Register
             write8(usb.regs.otgier,                bit_offset, value & OTGISR_MASK >> bit_offset); // W mask (V)
@@ -1405,6 +1618,27 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x114 >> 2: // PHY Test Mode Selector Register
             write8(usb.regs.phy_tmsr,              bit_offset, value &        0x1F >> bit_offset); // W mask (V)
+            if (usb.event.supports_hnp && usb_a_role_restore_pending &&
+                (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) ==
+                    OTGCSR_ROLE_D &&
+                (usb.regs.phy_tmsr & PHYTMSR_UNPLUG)) {
+                usb_a_role_restore_pending = false;
+                usb.event.type = USB_ROLE_RESTORE_REQUEST_EVENT;
+                usb_dispatch_event(NULL);
+            } else if (usb.event.supports_hnp && usb_role_restore_pending &&
+                (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D)) ==
+                    (OTGCSR_DEV_B | OTGCSR_ROLE_D) &&
+                !(usb.regs.phy_tmsr & PHYTMSR_UNPLUG)) {
+                usb_role_restore_pending = false;
+                usb.event.type = USB_ROLE_RESTORE_READY_EVENT;
+                usb_dispatch_event(NULL);
+            } else if (usb.event.supports_hnp && usb_role_switch_pending &&
+                (usb.regs.otgcsr & OTGCSR_ROLE_D) &&
+                !(usb.regs.phy_tmsr & PHYTMSR_UNPLUG)) {
+                usb_role_switch_pending = false;
+                usb.event.type = USB_ROLE_SWITCH_READY_EVENT;
+                usb_dispatch_event(NULL);
+            }
             break;
         case 0x118 >> 2: // unknown
             write8(usb.regs.rsvd5[0],              bit_offset, value &        0x3F >> bit_offset); // W mask (V)
@@ -1436,7 +1670,13 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.gimr0,                 bit_offset, value & GIMR0_MASK >> bit_offset); // W mask (V)
             break;
         case 0x138 >> 2: // Group Interrupt Mask Register 1
+            old = usb.regs.gimr1;
             write8(usb.regs.gimr1,                 bit_offset, value & GIMR1_MASK >> bit_offset); // W mask (V)
+            if (usb.event.host && usb.event.deferred &&
+                (old & ~usb.regs.gimr1 & 0xFF)) {
+                usb.event.type = USB_TIMER_EVENT;
+                usb_dispatch_event(NULL);
+            }
             break;
         case 0x13C >> 2: // Group Interrupt Mask Register 2
             write8(usb.regs.gimr2,                 bit_offset, value & GIMR2_MASK >> bit_offset); // W mask (V)
@@ -1515,9 +1755,17 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                             transfer->max_pkt_size =
                                 EP_MAXPS((transfer->direction ? usb.regs.iep
                                                               : usb.regs.oep)[transfer->endpoint - 1]);
-                            usb.regs.cxfifo |= CXFIFO_FIFOE(fifo);
-                            usb.regs.gisr1 &= ~GISR1_RX_FIFO(fifo);
-                            usb_grp1_int(GISR1_IN_FIFO(fifo));
+                            if (usb.event.deferred && transfer->direction) {
+                                usb_in_pending |= 1U << fifo;
+                                usb.regs.cxfifo &= ~CXFIFO_FIFOE(fifo);
+                                usb.regs.gisr1 &= ~GISR1_IN_FIFO(fifo);
+                            } else if (usb.event.deferred) {
+                                usb.regs.gisr1 &= ~GISR1_RX_FIFO(fifo);
+                            } else {
+                                usb.regs.cxfifo |= CXFIFO_FIFOE(fifo);
+                                usb.regs.gisr1 &= ~GISR1_RX_FIFO(fifo);
+                                usb_grp1_int(GISR1_IN_FIFO(fifo));
+                            }
                             usb.regs.fifocsr[fifo] &= FIFOCSR_RESET;
                             break;
                         }
@@ -1529,6 +1777,10 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                 }
                 //usb_transfer_info_t debug_transfer = *transfer;
                 mem_dma_read(transfer->buffer, usb.regs.dma_addr, dma_length);
+                if (usb.event.deferred && transfer->direction) {
+                    usb.regs.dma_ctrl &= ~DMACTRL_START;
+                    usb_grp2_int(GISR2_DMAFIN);
+                }
                 usb_dispatch_event(NULL);
                 //gui_console_printf("[USB] %c", debug_transfer.direction ? 'R' : 'S');
                 //for (uint32_t i = 0; i != DMACTRL_LEN(usb.regs.dma_ctrl); ++i)
@@ -1595,6 +1847,10 @@ bool usb_restore(FILE *image) {
     void *context = usb.event.context;
     bool success = fread(&usb, offsetof(usb_state_t, device), 1, image) == 1;
     usb.event.context = context;
+    usb.event.deferred = false;
+    usb.event.supports_hnp = false;
+    usb.event.pending = false;
+    usb_reset_peer_state();
     usb_init_hccr(); // hccr is read only
     // these bits are raz
     usb.regs.hcor.periodiclistbase &= 0xFFFFF000;

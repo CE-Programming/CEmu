@@ -15,6 +15,12 @@ typedef enum usb_event_type {
     USB_SESSION_START_EVENT,
     USB_SESSION_END_EVENT,
     USB_SESSION_REQUEST_EVENT,
+    USB_HNP_EVENT,
+    USB_ROLE_SWITCH_EVENT,
+    USB_ROLE_SWITCH_READY_EVENT,
+    USB_ROLE_RESTORE_REQUEST_EVENT,
+    USB_ROLE_RESTORE_EVENT,
+    USB_ROLE_RESTORE_READY_EVENT,
     USB_TRANSFER_REQUEST_EVENT,
     USB_TRANSFER_RESPONSE_EVENT,
     USB_TIMER_EVENT,
@@ -75,6 +81,10 @@ typedef struct usb_event {
     usb_progress_handler_t *progress_handler;
     void *progress_context, *context;
     bool host : 1;
+    /* Set by an asynchronous peer backend for the current dispatch only. */
+    bool deferred : 1;
+    /* Set during initialization by backends which coordinate OTG HNP. */
+    bool supports_hnp : 1;
     bool pending : 1;
     uint8_t speed : 2; /* usb_speed_t */
     usb_event_type_t type;
