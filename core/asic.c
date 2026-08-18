@@ -190,7 +190,7 @@ void set_cpu_clock(uint32_t new_rate) {
    sched_set_clock(CLOCK_CPU, new_rate);
 }
 
-bool asic_restore(FILE *image) {
+bool asic_restore(FILE *image, bool hasCoprocState) {
     if (fread(&asic, offsetof(asic_state_t, im2), 1, image) != 1) {
         return false;
     }
@@ -213,12 +213,18 @@ bool asic_restore(FILE *image) {
      && panel_restore(image)
      && spi_restore(image)
      && uart_restore(image)
-     && sched_restore(image)
-     && fgetc(image) == EOF)
+     && sched_restore(image))
     {
         bool python = asic.python;
         (void)report_reset(asic.revision, asic.device, &python);
-        return true;
+        if (hasCoprocState) {
+            return coproc_restore(image) && fgetc(image) == EOF;
+        }
+        /* Legacy images do not contain coprocessor state. Start the bundled
+         * free bootloader so the installed Python App can populate its flash. */
+        coproc_free();
+        coproc_reset();
+        return fgetc(image) == EOF;
     }
     return false;
 }
@@ -243,5 +249,6 @@ bool asic_save(FILE *image) {
            && panel_save(image)
            && spi_save(image)
            && uart_save(image)
-           && sched_save(image);
+           && sched_save(image)
+           && coproc_save(image);
 }
