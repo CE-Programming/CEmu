@@ -16,6 +16,8 @@ struct arm {
     arm_mem_t mem;
     spsc_queue_t usart[2];
     thrd_t thrd;
+    uint64_t cycles;
+    uint64_t cycle_limit;
     bool debug;
 };
 

@@ -20,6 +20,9 @@ extern coproc_state_t coproc;
 
 void coproc_reset(void);
 void coproc_free(void);
+void coproc_advance(void);
+void coproc_pause(void);
+void coproc_resume(void);
 bool coproc_load(const char *path);
 bool coproc_restore(FILE *image);
 bool coproc_save(FILE *image);
