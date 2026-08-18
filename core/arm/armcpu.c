@@ -446,10 +446,10 @@ static int16_t arm_revsh(uint32_t x) {
            (x << 8 & UINT32_C(0x0000FF00));
 }
 
-static void arm_cpu_tick(arm_t *arm) {
-    ++arm->cycles;
+static void arm_cpu_tick(arm_t *arm, uint8_t cycles) {
+    arm->cycles += cycles;
     arm_systick_t *systick = &arm->cpu.systick;
-    if (likely(systick->ctrl & SysTick_CTRL_ENABLE_Msk)) {
+    while (cycles-- && likely(systick->ctrl & SysTick_CTRL_ENABLE_Msk)) {
         if (unlikely(!systick->val)) {
             systick->val = systick->load;
         } else if (unlikely(!--systick->val)) {
@@ -458,6 +458,19 @@ static void arm_cpu_tick(arm_t *arm) {
                 arm->cpu.scb.icsr |= SCB_ICSR_PENDSTSET_Msk;
             }
         }
+    }
+}
+
+static void arm_cpu_tick_load_store(arm_t *arm, uint32_t addr) {
+    /*
+     * ARM DDI 0484C, section 3.3, Table 3-1 specifies two cycles for
+     * loads/stores through AHB or SCS and one through the optional
+     * single-cycle I/O port. The SAM D21/DA1 data sheet, section 11.1.1,
+     * documents that its 0x60000000-0x600001FF IOBUS is that port.
+     * The instruction's first cycle has already been charged here.
+     */
+    if (addr - (uint32_t)PORT_IOBUS >= UINT32_C(0x200)) {
+        arm_cpu_tick(arm, 1);
     }
 }
 
@@ -490,7 +503,7 @@ bool arm_cpu_exception(arm_t *arm, arm_exception_number_t exc) {
         return false;
     }
 
-    arm_cpu_tick(arm);
+    arm_cpu_tick(arm, 1);
     cpu->exc = true;
     sp -= 0x20;
     sp &= ~7;
@@ -672,9 +685,17 @@ static void arm_cpu_interwork(arm_t *arm, uint32_t addr) {
     }
 }
 
+/*
+ * Baseline instruction timing follows ARM DDI 0484C, section 3.3,
+ * Table 3-1 (zero wait states). The SAM D21/DA1 data sheet, section 11.1.1,
+ * selects the fast one-cycle multiplier and the single-cycle I/O port.
+ * NVM fetch wait states, system-bus stalls, and implementation-dependent
+ * exception/debug timing are outside these instruction counts.
+ */
 void arm_cpu_execute(arm_t *arm) {
     arm_cpu_t *cpu = &arm->cpu;
     uint32_t icsr = cpu->scb.icsr, pc = cpu->pc - 2, opc, val;
+    bool taken;
     if (arm->debug && pc >= UINT32_C(0x80000000)) {
         DEBUG_BREAK;
     }
@@ -724,11 +745,11 @@ void arm_cpu_execute(arm_t *arm) {
             (arm->cpu.scb.scr & SCB_SCR_SLEEPDEEP_Msk)) {
             sync_sleep(&arm->sync);
         } else {
-            arm_cpu_tick(arm);
+            arm_cpu_tick(arm, 1);
         }
         return;
     }
-    arm_cpu_tick(arm);
+    arm_cpu_tick(arm, 1);
     opc = arm_mem_load_half(arm, pc);
     if (unlikely(cpu->exc)) {
         cpu->exc = false;
@@ -854,6 +875,7 @@ void arm_cpu_execute(arm_t *arm) {
                             i = (opc >> 4 & 8) | (opc >> 0 & 7);
                             cpu->r[i] += cpu->r[opc >> 3 & 0xF];
                             if (unlikely(i == 15)) {
+                                arm_cpu_tick(arm, 1);
                                 cpu->pc = (cpu->pc | 1) + 1;
                             }
                             break;
@@ -864,10 +886,12 @@ void arm_cpu_execute(arm_t *arm) {
                             i = (opc >> 4 & 8) | (opc >> 0 & 7);
                             cpu->r[i] = cpu->r[opc >> 3 & 0xF];
                             if (unlikely(i == 15)) {
+                                arm_cpu_tick(arm, 1);
                                 cpu->pc = (cpu->pc | 1) + 1;
                             }
                             break;
                         case 3: // Branch (with Link) and Exchange
+                            arm_cpu_tick(arm, 1);
                             val = cpu->r[opc >> 3 & 0xF];
                             if (unlikely(opc >> 7 & 1)) { // Branch with Link and Exchange
                                 cpu->lr = cpu->pc - 1;
@@ -879,64 +903,76 @@ void arm_cpu_execute(arm_t *arm) {
                     }
                     break;
                 default: // Load from Literal Pool
-                    cpu->r[opc >> 8 & 7] = arm_mem_load_word(arm, ((cpu->pc >> 2) + (opc & 0xFF)) << 2);
+                    val = ((cpu->pc >> 2) + (opc & 0xFF)) << 2;
+                    arm_cpu_tick_load_store(arm, val);
+                    cpu->r[opc >> 8 & 7] = arm_mem_load_word(arm, val);
                     break;
             }
             break;
         case 5:
+            val = cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7];
+            arm_cpu_tick_load_store(arm, val);
             switch (opc >> 9 & 7) {
                 case 0: // Store Register
-                    arm_mem_store_word(arm, cpu->r[opc >> 0 & 7], cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    arm_mem_store_word(arm, cpu->r[opc >> 0 & 7], val);
                     break;
                 case 1: // Store Register Halfword
-                    arm_mem_store_half(arm, cpu->r[opc >> 0 & 7], cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    arm_mem_store_half(arm, cpu->r[opc >> 0 & 7], val);
                     break;
                 case 2: // Store Register Byte
-                    arm_mem_store_byte(arm, cpu->r[opc >> 0 & 7], cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    arm_mem_store_byte(arm, cpu->r[opc >> 0 & 7], val);
                     break;
                 case 3: // Load Register Signed Byte
-                    cpu->r[opc >> 0 & 7] = (int8_t)arm_mem_load_byte(arm, cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    cpu->r[opc >> 0 & 7] = (int8_t)arm_mem_load_byte(arm, val);
                     break;
                 case 4: // Load Register
-                    cpu->r[opc >> 0 & 7] = arm_mem_load_word(arm, cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    cpu->r[opc >> 0 & 7] = arm_mem_load_word(arm, val);
                     break;
                 case 5: // Load Register Halfword
-                    cpu->r[opc >> 0 & 7] = arm_mem_load_half(arm, cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    cpu->r[opc >> 0 & 7] = arm_mem_load_half(arm, val);
                     break;
                 case 6: // Load Register Byte
-                    cpu->r[opc >> 0 & 7] = arm_mem_load_byte(arm, cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    cpu->r[opc >> 0 & 7] = arm_mem_load_byte(arm, val);
                     break;
                 case 7: // Load Register Signed Halfword
-                    cpu->r[opc >> 0 & 7] = (int16_t)arm_mem_load_half(arm, cpu->r[opc >> 3 & 7] + cpu->r[opc >> 6 & 7]);
+                    cpu->r[opc >> 0 & 7] = (int16_t)arm_mem_load_half(arm, val);
                     break;
             }
             break;
         case 6:
+            val = cpu->r[opc >> 3 & 7] + ((opc >> 6 & 0x1F) << 2);
+            arm_cpu_tick_load_store(arm, val);
             if (opc >> 11 & 1) { // Load Register
-                cpu->r[opc >> 0 & 7] = arm_mem_load_word(arm, cpu->r[opc >> 3 & 7] + ((opc >> 6 & 0x1F) << 2));
+                cpu->r[opc >> 0 & 7] = arm_mem_load_word(arm, val);
             } else { // Store Register
-                arm_mem_store_word(arm, cpu->r[opc >> 0 & 7], cpu->r[opc >> 3 & 7] + ((opc >> 6 & 0x1F) << 2));
+                arm_mem_store_word(arm, cpu->r[opc >> 0 & 7], val);
             }
             break;
         case 7:
+            val = cpu->r[opc >> 3 & 7] + (opc >> 6 & 0x1F);
+            arm_cpu_tick_load_store(arm, val);
             if (opc >> 11 & 1) { // Load Register Byte
-                cpu->r[opc >> 0 & 7] = arm_mem_load_byte(arm, cpu->r[opc >> 3 & 7] + (opc >> 6 & 0x1F));
+                cpu->r[opc >> 0 & 7] = arm_mem_load_byte(arm, val);
             } else { // Store Register Byte
-                arm_mem_store_byte(arm, cpu->r[opc >> 0 & 7], cpu->r[opc >> 3 & 7] + (opc >> 6 & 0x1F));
+                arm_mem_store_byte(arm, cpu->r[opc >> 0 & 7], val);
             }
             break;
         case 8:
+            val = cpu->r[opc >> 3 & 7] + ((opc >> 6 & 0x1F) << 1);
+            arm_cpu_tick_load_store(arm, val);
             if (opc >> 11 & 1) { // Load Register Halfword
-                cpu->r[opc >> 0 & 7] = arm_mem_load_half(arm, cpu->r[opc >> 3 & 7] + ((opc >> 6 & 0x1F) << 1));
+                cpu->r[opc >> 0 & 7] = arm_mem_load_half(arm, val);
             } else { // Store Register Halfword
-                arm_mem_store_half(arm, cpu->r[opc >> 0 & 7], cpu->r[opc >> 3 & 7] + ((opc >> 6 & 0x1F) << 1));
+                arm_mem_store_half(arm, cpu->r[opc >> 0 & 7], val);
             }
             break;
         case 9:
+            val = cpu->sp + ((opc >> 0 & 0xFF) << 2);
+            arm_cpu_tick_load_store(arm, val);
             if (opc >> 11 & 1) { // Load Register SP relative
-                cpu->r[opc >> 8 & 7] = arm_mem_load_word(arm, cpu->sp + ((opc >> 0 & 0xFF) << 2));
+                cpu->r[opc >> 8 & 7] = arm_mem_load_word(arm, val);
             } else { // Store Register SP relative
-                arm_mem_store_word(arm, cpu->r[opc >> 8 & 7], cpu->sp + ((opc >> 0 & 0xFF) << 2));
+                arm_mem_store_word(arm, cpu->r[opc >> 8 & 7], val);
             }
             break;
         case 10: // Add SP/PC relative
@@ -971,6 +1007,7 @@ void arm_cpu_execute(arm_t *arm) {
                     }
                     break;
                 case 2: // Push Multiple Registers
+                    arm_cpu_tick(arm, bitcount9(opc));
                     val = cpu->sp -= (bitcount9(opc) << 2);
                     int i;
                     for (i = 0; i < 8; i++) {
@@ -1008,6 +1045,7 @@ void arm_cpu_execute(arm_t *arm) {
                     }
                     break;
                 case 6: // Pop Multiple Registers
+                    arm_cpu_tick(arm, bitcount9(opc) + (opc >> 8 & 1 ? 2 : 0));
                     for (i = 0; i < 8; i++) {
                         if (opc >> i & 1) {
                             cpu->r[i] = arm_mem_load_word(arm, cpu->sp);
@@ -1037,8 +1075,10 @@ void arm_cpu_execute(arm_t *arm) {
                                         case 1: // Yield hint
                                             break;
                                         case 2: // Wait for Event hint
+                                            arm_cpu_tick(arm, 1);
                                             break;
                                         case 3: // Wait for Interrupt hint
+                                            arm_cpu_tick(arm, 1);
                                             cpu->wfi = true;
                                             break;
                                         case 4: // Send Event hint
@@ -1052,6 +1092,7 @@ void arm_cpu_execute(arm_t *arm) {
             }
             break;
         case 12:
+            arm_cpu_tick(arm, bitcount9(opc & UINT16_C(0xFF)));
             switch (opc >> 11 & 1) {
                 case 0: // Store multiple registers
                     val = cpu->r[opc >> 8 & 7];
@@ -1086,76 +1127,49 @@ void arm_cpu_execute(arm_t *arm) {
             }
             break;
         case 13:
+            taken = false;
             switch (opc >> 8 & 0xF) { // Conditional branch, and Supervisor Call
                 case 0: // Branch Equal
-                    if (cpu->z) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->z;
                     break;
                 case 1: // Branch Not equal
-                    if (!cpu->z) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = !cpu->z;
                     break;
                 case 2: // Branch Carry set
-                    if (cpu->c) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->c;
                     break;
                 case 3: // Branch Carry clear
-                    if (!cpu->c) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = !cpu->c;
                     break;
                 case 4: // Branch Minus, negative
-                    if (cpu->n) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->n;
                     break;
                 case 5: // Branch Plus, positive or zero
-                    if (!cpu->n) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = !cpu->n;
                     break;
                 case 6: // Branch Overflow
-                    if (cpu->v) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->v;
                     break;
                 case 7: // Branch No overflow
-                    if (!cpu->v) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = !cpu->v;
                     break;
                 case 8: // Branch Unsigned higher
-                    if (cpu->c && !cpu->z) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->c && !cpu->z;
                     break;
                 case 9: // Branch Unsigned lower or same
-                    if (!cpu->c || cpu->z) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = !cpu->c || cpu->z;
                     break;
                 case 10: // Branch Signed greater than or equal
-                    if (cpu->n == cpu->v) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->n == cpu->v;
                     break;
                 case 11: // Branch Signed less than
-                    if (cpu->n != cpu->v) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->n != cpu->v;
                     break;
                 case 12: // Branch Signed greater than
-                    if (!cpu->z && cpu->n == cpu->v) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = !cpu->z && cpu->n == cpu->v;
                     break;
                 case 13: // Branch Signed less than or equal
-                    if (cpu->z || cpu->n != cpu->v) {
-                        cpu->pc += sign_extend(opc, 8) * 2 + 2;
-                    }
+                    taken = cpu->z || cpu->n != cpu->v;
                     break;
                 default: // Permanently UNDEFINED
                     arm_cpu_exception(arm, ARM_Exception_HardFault);
@@ -1167,14 +1181,19 @@ void arm_cpu_execute(arm_t *arm) {
                     cpu->svc_pending = true;
                     return;
             }
+            if (taken) {
+                arm_cpu_tick(arm, 1);
+                cpu->pc += sign_extend(opc, 8) * 2 + 2;
+            }
             break;
         case 14:
             switch (opc >> 11 & 1) {
                 case 0: // Unconditional Branch
+                    arm_cpu_tick(arm, 1);
                     cpu->pc += sign_extend(opc, 11) * 2 + 2;
                     break;
                 default: // UNDEFINED 32-bit Thumb instruction
-                    arm_cpu_tick(arm);
+                    arm_cpu_tick(arm, 1);
                     (void)arm_mem_load_half(arm, cpu->pc - 2);
                     if (unlikely(cpu->exc)) {
                         cpu->exc = false;
@@ -1187,7 +1206,7 @@ void arm_cpu_execute(arm_t *arm) {
             }
             break;
         case 15: // 32-bit Thumb instruction.
-            arm_cpu_tick(arm);
+            arm_cpu_tick(arm, 1);
             opc = opc << 16 | arm_mem_load_half(arm, cpu->pc - 2);
             if (unlikely(cpu->exc)) {
                 cpu->exc = false;
@@ -1200,6 +1219,7 @@ void arm_cpu_execute(arm_t *arm) {
                         switch (opc >> 20 & 0x7F) {
                             case 0x38:
                             case 0x39: // Move to Special Register
+                                arm_cpu_tick(arm, 1);
                                 val = cpu->r[opc >> 16 & 0xF];
                                 switch (opc >> 0 & 0xFF) {
                                     case 0x00:
@@ -1230,6 +1250,7 @@ void arm_cpu_execute(arm_t *arm) {
                                 }
                                 break;
                             case 0x3B: // Miscellaneous control instructions
+                                arm_cpu_tick(arm, 1);
                                 switch (opc >> 4 & 0xF) {
                                     case 4: // Data Synchronization Barrier
                                         break;
@@ -1241,6 +1262,7 @@ void arm_cpu_execute(arm_t *arm) {
                                 break;
                             case 0x3E:
                             case 0x3F: // Move from Special Register
+                                arm_cpu_tick(arm, 1);
                                 val = 0;
                                 switch (opc >> 0 & 0xFF) {
                                     case 0x00:
@@ -1280,6 +1302,7 @@ void arm_cpu_execute(arm_t *arm) {
                         }
                         break;
                     case 5: // Branch with Link
+                        arm_cpu_tick(arm, 1);
                         cpu->lr = cpu->pc - 1;
                         val = (opc >> 2 & UINT32_C(0x01000000)) |
                               (~(opc >> 3 ^ opc << 10) & UINT32_C(0x00800000)) |
