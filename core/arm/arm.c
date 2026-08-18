@@ -125,6 +125,57 @@ bool arm_load(arm_t *arm, const char *path) {
     return success;
 }
 
+bool arm_save_flash(arm_t *arm, FILE *image) {
+    bool success;
+    sync_enter(&arm->sync);
+    success = fwrite(arm->mem.nvm, 1, FLASH_SIZE, image) == FLASH_SIZE;
+    sync_leave(&arm->sync);
+    return success;
+}
+
+bool arm_save_state(arm_t *arm, FILE *image) {
+    bool success;
+    sync_enter(&arm->sync);
+    success = fwrite(&arm->cpu, sizeof(arm->cpu), 1, image) == 1 &&
+              fwrite(arm->mem.ram, 1, HMCRAMC0_SIZE, image) == HMCRAMC0_SIZE &&
+              fwrite(arm->mem.pb, sizeof(arm->mem.pb), 1, image) == 1 &&
+              fwrite(arm->mem.aux, sizeof(arm->mem.aux), 1, image) == 1 &&
+              fwrite(&arm->mem.pm, sizeof(arm->mem.pm), 1, image) == 1 &&
+              fwrite(&arm->mem.gclk, sizeof(arm->mem.gclk), 1, image) == 1 &&
+              fwrite(&arm->mem.nvmctrl, sizeof(arm->mem.nvmctrl), 1, image) == 1 &&
+              fwrite(arm->mem.sercom, sizeof(arm->mem.sercom), 1, image) == 1;
+    sync_leave(&arm->sync);
+    return success;
+}
+
+bool arm_restore_flash(arm_t *arm, FILE *image) {
+    bool success;
+    sync_enter(&arm->sync);
+    success = fread(arm->mem.nvm, 1, FLASH_SIZE, image) == FLASH_SIZE;
+    sync_leave(&arm->sync);
+    return success;
+}
+
+bool arm_restore_state(arm_t *arm, FILE *image) {
+    bool success;
+    sync_enter(&arm->sync);
+    success = fread(&arm->cpu, sizeof(arm->cpu), 1, image) == 1 &&
+              fread(arm->mem.ram, 1, HMCRAMC0_SIZE, image) == HMCRAMC0_SIZE &&
+              fread(arm->mem.pb, sizeof(arm->mem.pb), 1, image) == 1 &&
+              fread(arm->mem.aux, sizeof(arm->mem.aux), 1, image) == 1 &&
+              fread(&arm->mem.pm, sizeof(arm->mem.pm), 1, image) == 1 &&
+              fread(&arm->mem.gclk, sizeof(arm->mem.gclk), 1, image) == 1 &&
+              fread(&arm->mem.nvmctrl, sizeof(arm->mem.nvmctrl), 1, image) == 1 &&
+              fread(arm->mem.sercom, sizeof(arm->mem.sercom), 1, image) == 1;
+    if (success) {
+        spsc_queue_clear(&arm->usart[0]);
+        spsc_queue_clear(&arm->usart[1]);
+        sync_wake(&arm->sync);
+    }
+    sync_leave(&arm->sync);
+    return success;
+}
+
 void arm_spi_sel(arm_t *arm, bool low) {
     sync_enter(&arm->sync);
     bool power_down_pending = arm->cpu.pm &&

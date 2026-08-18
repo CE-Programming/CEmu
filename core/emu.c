@@ -18,7 +18,8 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE001B
+#define IMAGE_VERSION        UINT32_C(0xCECE001C)
+#define IMAGE_VERSION_LEGACY UINT32_C(0xCECE001B)
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu_set_signal(CPU_SIGNAL_EXIT);
@@ -76,7 +77,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
 
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
 
-        if (version != IMAGE_VERSION) {
+        if (version != IMAGE_VERSION && version != IMAGE_VERSION_LEGACY) {
             gui_console_err_printf("[CEmu] Error in versioning.\n");
             goto rerr;
         }
@@ -84,7 +85,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         asic_free();
         asic_init();
 
-        if (!asic_restore(file)) {
+        if (!asic_restore(file, version == IMAGE_VERSION)) {
             gui_console_err_printf("[CEmu] Error reading image.\n");
             goto rerr;
         }

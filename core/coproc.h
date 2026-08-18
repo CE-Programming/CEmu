@@ -21,6 +21,8 @@ extern coproc_state_t coproc;
 void coproc_reset(void);
 void coproc_free(void);
 bool coproc_load(const char *path);
+bool coproc_restore(FILE *image);
+bool coproc_save(FILE *image);
 void coproc_uart_transmit(const uart_transfer_t *transfer);
 bool coproc_uart_receive(uart_transfer_t *transfer);
 void coproc_spi_select(bool low);

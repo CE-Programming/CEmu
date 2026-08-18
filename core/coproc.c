@@ -9,6 +9,8 @@
 
 coproc_state_t coproc;
 
+static const uint8_t coproc_image_magic[] = { 'C', 'A', 'R', 'M' };
+
 void coproc_free(void) {
     arm_destroy(coproc.arm);
     memset(&coproc, 0, sizeof(coproc));
@@ -37,6 +39,45 @@ bool coproc_load(const char *path) {
     } else {
         return false;
     }
+}
+
+bool coproc_save(FILE *image) {
+    const uint8_t present = coproc.arm != NULL;
+    return fwrite(coproc_image_magic, sizeof(coproc_image_magic), 1, image) == 1 &&
+           fwrite(&present, sizeof(present), 1, image) == 1 &&
+           (!present || (arm_save_flash(coproc.arm, image) &&
+                         arm_save_state(coproc.arm, image)));
+}
+
+bool coproc_restore(FILE *image) {
+    uint8_t magic[sizeof(coproc_image_magic)];
+    uint8_t present;
+    if (fread(magic, sizeof(magic), 1, image) != 1 ||
+        memcmp(magic, coproc_image_magic, sizeof(magic)) != 0 ||
+        fread(&present, sizeof(present), 1, image) != 1 || present > 1) {
+        return false;
+    }
+    if (!present) {
+        if (asic.python) {
+            return false;
+        }
+        coproc_free();
+        return true;
+    }
+    if (!asic.python) {
+        return false;
+    }
+    arm_t *restored = arm_create();
+    if (!restored) {
+        return false;
+    }
+    if (!arm_restore_flash(restored, image) || !arm_restore_state(restored, image)) {
+        arm_destroy(restored);
+        return false;
+    }
+    coproc_free();
+    coproc.arm = restored;
+    return true;
 }
 
 void coproc_uart_transmit(const uart_transfer_t *transfer) {
