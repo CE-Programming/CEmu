@@ -2,6 +2,7 @@
 
 #include "../../core/bootver.h"
 #include "../../core/control.h"
+#include "../../core/coproc.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
 #include "../../core/extras.h"
@@ -232,7 +233,9 @@ void EmuThread::throttleWait() {
         throttle = m_throttle;
         if (!speed && throttle) {
             emit sendSpeed(0);
+            coproc_pause();
             m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0 || !m_throttle; });
+            coproc_resume();
             speed = m_speed;
             throttle = m_throttle;
             m_lastTime = std::chrono::steady_clock::now();
@@ -269,8 +272,10 @@ void EmuThread::throttleWait() {
 
 void EmuThread::block(int status) {
     std::unique_lock<std::mutex> lock(m_mutex);
+    coproc_pause();
     emit blocked(status);
     m_cv.wait(lock);
+    coproc_resume();
 }
 
 void EmuThread::unblock() {
