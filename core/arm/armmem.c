@@ -145,7 +145,12 @@ void arm_mem_spi_sel(arm_t *arm, uint8_t pin, bool low) {
     if ((spi->SS = low)) {
         spi->INTFLAG.bit.SSL = true;
     } else  {
+        /* SAM D21/DA1 data sheet DS40001882H, sections 27.6.2.6.2 and 27.6.3.2:
+         * deasserting SS completes the slave transaction. The transmit shift
+         * register becomes empty while retaining its last data value. */
         spi->INTFLAG.bit.TXC = true;
+        spi->BUFFER[1].bit.VLD = false;
+        spi->INTFLAG.bit.DRE = !spi->BUFFER[0].bit.VLD;
     }
     arm_mem_sercom_update_pending(arm, pin);
 }
@@ -160,6 +165,15 @@ uint8_t arm_mem_spi_peek(arm_t *arm, uint8_t pin, uint32_t *res) {
         *res = 0;
         return 1;
     }
+    SERCOM_BUFFER_Type *shift = &spi->BUFFER[1];
+    SERCOM_BUFFER_Type *buffer = &spi->BUFFER[0];
+    if (!shift->bit.VLD && buffer->bit.VLD) {
+        shift->reg = buffer->reg;
+        buffer->reg = 0;
+    }
+    shift->bit.VLD = true;
+    spi->INTFLAG.bit.DRE = !buffer->bit.VLD;
+    arm_mem_sercom_update_pending(arm, pin);
     uint8_t bits = 8 | (spi->CTRLB.bit.CHSIZE & 1);
     *res = spi->BUFFER[1].bit.DATA;
     if (unlikely(spi->CTRLA.bit.DORD)) {
@@ -181,7 +195,11 @@ void arm_mem_spi_xfer(arm_t *arm, uint8_t pin, uint32_t val) {
         uint8_t bits = 8 | (spi->CTRLB.bit.CHSIZE & 1);
         val = bitreverse(val, bits);
     }
-    spi->BUFFER[1].bit.DATA = val;
+    /* SAM D21/DA1 data sheet DS40001882H, sections 27.6.2.6.2 and 27.6.3.2:
+     * transmit and receive buffering are separate. If DATA is not refilled in
+     * time, the shared shift register transmits the character received in the
+     * preceding frame. */
+    SERCOM_BUFFER_Type received = { .bit.DATA = val };
     if (spi->BUFFER[3].bit.VLD) {
         if (spi->CTRLA.bit.IBON) {
             spi->INTFLAG.bit.ERROR = true;
@@ -199,23 +217,27 @@ void arm_mem_spi_xfer(arm_t *arm, uint8_t pin, uint32_t val) {
             arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
         }
         spi->BUFFER[3].reg = spi->BUFFER[2].reg;
-        spi->BUFFER[2].reg = spi->BUFFER[1].reg;
+        spi->BUFFER[2].reg = received.reg;
         spi->BUFFER[2].bit.VLD = true;
     }
-    spi->INTFLAG.bit.DRE = true;
-    if (likely(spi->INTEN.bit.DRE)) {
-        arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
+    SERCOM_BUFFER_Type *shift = &spi->BUFFER[1];
+    SERCOM_BUFFER_Type *buffer = &spi->BUFFER[0];
+    if (buffer->bit.VLD) {
+        shift->reg = buffer->reg;
+        buffer->reg = 0;
+    } else {
+        shift->bit.DATA = received.bit.DATA;
+        shift->bit.VLD = false;
     }
-    if (likely(spi->BUFFER[1].bit.VLD = spi->BUFFER[0].bit.VLD)) {
-        spi->BUFFER[1].bit.DATA = spi->BUFFER[0].bit.DATA;
-        spi->BUFFER[0].reg = 0;
-    } else if (unlikely(spi->CTRLA.bit.MODE ==
-                        SERCOM_SPI_CTRLA_MODE_SPI_MASTER_Val)) {
+    spi->INTFLAG.bit.DRE = !buffer->bit.VLD;
+    if (unlikely(spi->CTRLA.bit.MODE ==
+                 SERCOM_SPI_CTRLA_MODE_SPI_MASTER_Val)) {
         spi->INTFLAG.bit.TXC = true;
         if (likely(spi->INTEN.bit.TXC)) {
             arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
         }
     }
+    arm_mem_sercom_update_pending(arm, pin);
 }
 
 bool arm_mem_usart_send(arm_t *arm, uint8_t pin, uint16_t *val) {
@@ -1310,7 +1332,12 @@ static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t 
                                     return;
                                 case SERCOM_SPI_DATA_OFFSET >> 2: {
                                     SERCOM_BUFFER_Type *buffer = &spi->BUFFER[1];
-                                    if (likely(!spi->CTRLB.bit.PLOADEN || //spi->SS ||
+                                    /* SAM D21/DA1 data sheet DS40001882H,
+                                     * sections 27.6.2.6.2 and 27.6.3.2: with
+                                     * PLOADEN, DATA preloads an empty transmit
+                                     * shift register; otherwise it refills the
+                                     * transmit buffer and clears DRE. */
+                                    if (likely(!spi->CTRLB.bit.PLOADEN ||
                                                buffer->bit.VLD)) {
                                         spi->INTFLAG.bit.DRE = false;
                                         --buffer;
