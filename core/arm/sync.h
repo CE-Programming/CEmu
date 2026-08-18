@@ -11,9 +11,9 @@ extern "C" {
 
 typedef struct sync {
     mtx_t mtx;
-    cnd_t cnd[3];
+    cnd_t cnd[4];
     atomic_uint cnt;
-    bool run, slp, rdy;
+    bool run, slp, thr, rdy;
 } sync_t;
 
 bool sync_init(sync_t *sync);
@@ -25,15 +25,19 @@ void sync_unlock(sync_t *sync);
 
 /* Target thread or while synced only */
 bool sync_check(sync_t *sync);
-bool sync_loop(sync_t *sync);
+bool sync_loop(sync_t *sync, bool throttle);
 void sync_sleep(sync_t *sync);
 void sync_wake(sync_t *sync);
+void sync_throttle(sync_t *sync);
+void sync_throttle_wake(sync_t *sync);
+bool sync_idle(sync_t *sync);
 
 /* Thread-safe, not target thread */
 void sync_enter(sync_t *sync);
 void sync_run(sync_t *sync);
 void sync_leave(sync_t *sync);
 void sync_run_leave(sync_t *sync);
+void sync_wait_idle(sync_t *sync);
 
 #ifdef __cplusplus
 }

@@ -3,6 +3,7 @@
 #include "asic.h"
 #include "cpu.h"
 #include "cert.h"
+#include "coproc.h"
 #include "keypad.h"
 #include "os/os.h"
 #include "defines.h"
@@ -281,8 +282,9 @@ rerr:
     return state;
 }
 
-void emu_run(uint64_t ticks) {
+static bool emu_run_slice(uint64_t ticks) {
     uint8_t signals;
+    bool stopped = false;
     sched.run_event_triggered = false;
     sched_repeat(SCHED_RUN, ticks);
     while (!((signals = cpu_clear_signals()) & CPU_SIGNAL_EXIT)) {
@@ -296,6 +298,7 @@ void emu_run(uint64_t ticks) {
         if (signals & CPU_SIGNAL_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
+            stopped = true;
 #ifdef DEBUG_SUPPORT
             gui_debug_open(DBG_READY, 0);
 #endif
@@ -305,6 +308,23 @@ void emu_run(uint64_t ticks) {
         }
         cpu_execute();
     }
+    return stopped || (signals & CPU_SIGNAL_EXIT);
+}
+
+void emu_run(uint64_t ticks) {
+    if (!ticks) {
+        (void)emu_run_slice(0);
+        coproc_advance();
+        return;
+    }
+    do {
+        if (emu_run_slice(1)) {
+            break;
+        }
+        /* CLOCK_RUN is normally 1 kHz. Refreshing the limit after each tick
+         * lets the worker catch up concurrently without running ahead. */
+        coproc_advance();
+    } while (--ticks);
 }
 
 bool emu_set_run_rate(uint32_t rate) {
