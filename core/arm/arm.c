@@ -151,11 +151,14 @@ void arm_spi_sel(arm_t *arm, bool low) {
 }
 
 static void debug_byte(bool dir, unsigned char c) {
+    (void)dir;
+    (void)c;
     //printf("\x1b[%dm%02X\x1b[m", 94 + dir, c);
     //fflush(stdout);
 }
 
 static void debug_char(bool dir, char c) {
+    (void)dir;
     if (c >= ' ' && c <= '~') {
         //printf("\x1b[%dm%c\x1b[m", 94 + dir, c);
         //fflush(stdout);
