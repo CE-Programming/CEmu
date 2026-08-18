@@ -112,6 +112,7 @@ static uint8_t lowestsetbit32(uint32_t x) {
 void arm_cpu_reset(arm_t *arm) {
     arm_cpu_t *cpu = &arm->cpu;
     memset(cpu, 0, sizeof(*cpu));
+    cpu->systick.ctrl = SysTick_CTRL_CLKSOURCE_Msk;
     cpu->sp = arm_mem_load_word(arm, cpu->scb.vtor + 0);
     if (cpu->exc) {
         cpu->exc = false;

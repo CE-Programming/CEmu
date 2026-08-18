@@ -300,6 +300,13 @@ void arm_mem_destroy(arm_mem_t *mem) {
 
 void arm_mem_reset(arm_mem_t *mem, uint8_t rcause) {
     arm_nvm_clear_page_buffer(mem);
+    memset(&mem->pm, 0, sizeof(mem->pm));
+    memset(&mem->gclk, 0, sizeof(mem->gclk));
+    memset(&mem->nvmctrl, 0, sizeof(mem->nvmctrl));
+    mem->pm.AHBMASK.reg = PM_AHBMASK_RESETVALUE;
+    mem->pm.APBAMASK.reg = PM_APBAMASK_RESETVALUE;
+    mem->pm.APBBMASK.reg = PM_APBBMASK_RESETVALUE;
+    mem->pm.APBCMASK.reg = PM_APBCMASK_RESETVALUE;
     mem->pm.RCAUSE.reg = rcause;
     mem->nvmctrl.INTFLAG.bit.READY = true;
     mem->nvmctrl.LOCK.reg = NVMCTRL_LOCK_LOCK_Msk;
