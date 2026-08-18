@@ -13,7 +13,7 @@ extern "C" {
 typedef uint8_t spsc_queue_index_t;
 typedef uint32_t spsc_queue_entry_t;
 
-#define SPSC_QUEUE_SIZE 0x10
+#define SPSC_QUEUE_SIZE 0x40
 #define SPSC_QUEUE_MASK_INDEX(x) ((spsc_queue_index_t)(x & (SPSC_QUEUE_SIZE - 1)))
 #define SPSC_QUEUE_NEXT_INDEX(x) SPSC_QUEUE_MASK_INDEX(x + 1)
 #define SPSC_QUEUE_INVALID_ENTRY ((spsc_queue_entry_t)~0)
