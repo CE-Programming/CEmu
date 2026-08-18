@@ -109,6 +109,57 @@ static uint8_t lowestsetbit32(uint32_t x) {
 #endif
 }
 
+static int8_t arm_cpu_exception_priority(const arm_cpu_t *cpu,
+                                         arm_exception_number_t exc) {
+    switch (exc) {
+        case ARM_Thread_Mode:
+            return 4;
+        case ARM_Exception_NMI:
+            return -2;
+        case ARM_Exception_HardFault:
+            return -1;
+        case ARM_Exception_SVCall:
+            return cpu->scb.shp[0] >> 30 & 3;
+        case ARM_Exception_PendSV:
+            return cpu->scb.shp[1] >> 22 & 3;
+        case ARM_Exception_SysTick:
+            return cpu->scb.shp[1] >> 30 & 3;
+        default: {
+            uint8_t irq = exc - ARM_Exception_External;
+            return cpu->nvic.ip[irq >> 2] >> ((irq & 3) * 8 + 6) & 3;
+        }
+    }
+}
+
+static arm_exception_number_t arm_cpu_pending_exception(const arm_cpu_t *cpu) {
+    arm_exception_number_t best = ARM_Invalid_Exception;
+    int8_t best_priority = 5;
+    uint32_t pending = cpu->nvic.ipr & cpu->nvic.ier;
+
+#define CONSIDER_EXCEPTION(candidate) do { \
+    int8_t priority = arm_cpu_exception_priority(cpu, (candidate)); \
+    if (priority < best_priority) { \
+        best = (candidate); \
+        best_priority = priority; \
+    } \
+} while (0)
+
+    if (cpu->scb.icsr & SCB_ICSR_PENDSVSET_Msk) {
+        CONSIDER_EXCEPTION(ARM_Exception_PendSV);
+    }
+    if (cpu->scb.icsr & SCB_ICSR_PENDSTSET_Msk) {
+        CONSIDER_EXCEPTION(ARM_Exception_SysTick);
+    }
+    while (pending) {
+        uint8_t irq = lowestsetbit32(pending);
+        CONSIDER_EXCEPTION((arm_exception_number_t)(ARM_Exception_External + irq));
+        pending &= pending - 1;
+    }
+
+#undef CONSIDER_EXCEPTION
+    return best;
+}
+
 void arm_cpu_reset(arm_t *arm) {
     arm_cpu_t *cpu = &arm->cpu;
     memset(cpu, 0, sizeof(*cpu));
@@ -634,25 +685,21 @@ void arm_cpu_execute(arm_t *arm) {
                         (icsr & (SCB_ICSR_PENDSVSET_Msk |
                                  SCB_ICSR_PENDSTSET_Msk) ||
                          cpu->nvic.ipr & cpu->nvic.ier))) {
-        if (icsr & SCB_ICSR_PENDSVSET_Msk) {
-            if (likely(arm_cpu_exception(arm, ARM_Exception_PendSV))) {
+        arm_exception_number_t pending = arm_cpu_pending_exception(cpu);
+        cpu->wfi = false;
+        if (pending != ARM_Invalid_Exception &&
+            arm_cpu_exception_priority(cpu, pending) <
+                arm_cpu_exception_priority(cpu, curexc) &&
+            likely(arm_cpu_exception(arm, pending))) {
+            if (pending == ARM_Exception_PendSV) {
                 cpu->scb.icsr &= ~SCB_ICSR_PENDSVSET_Msk;
-                cpu->exc = false;
-                return;
-            }
-        } else if (icsr & SCB_ICSR_PENDSTSET_Msk) {
-            if (likely(arm_cpu_exception(arm, ARM_Exception_SysTick))) {
+            } else if (pending == ARM_Exception_SysTick) {
                 cpu->scb.icsr &= ~SCB_ICSR_PENDSTSET_Msk;
-                cpu->exc = false;
-                return;
-            }
-        } else {
-            uint8_t src = lowestsetbit32(cpu->nvic.ipr & cpu->nvic.ier);
-            if (likely(arm_cpu_exception(arm, ARM_Exception_External + src))) {
+            } else {
                 arm_mem_update_pending(arm);
-                cpu->exc = false;
-                return;
             }
+            cpu->exc = false;
+            return;
         }
         if (unlikely(cpu->exc)) {
             cpu->exc = false;
