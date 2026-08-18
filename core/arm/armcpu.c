@@ -144,6 +144,9 @@ static arm_exception_number_t arm_cpu_pending_exception(const arm_cpu_t *cpu) {
     } \
 } while (0)
 
+    if (cpu->svc_pending) {
+        CONSIDER_EXCEPTION(ARM_Exception_SVCall);
+    }
     if (cpu->scb.icsr & SCB_ICSR_PENDSVSET_Msk) {
         CONSIDER_EXCEPTION(ARM_Exception_PendSV);
     }
@@ -682,7 +685,8 @@ void arm_cpu_execute(arm_t *arm) {
             return;
         }
     } else if (unlikely((!cpu->pm || cpu->wfi) &&
-                        (icsr & (SCB_ICSR_PENDSVSET_Msk |
+                        (cpu->svc_pending ||
+                         icsr & (SCB_ICSR_PENDSVSET_Msk |
                                  SCB_ICSR_PENDSTSET_Msk) ||
                          cpu->nvic.ipr & cpu->nvic.ier))) {
         arm_exception_number_t pending = arm_cpu_pending_exception(cpu);
@@ -691,7 +695,9 @@ void arm_cpu_execute(arm_t *arm) {
             arm_cpu_exception_priority(cpu, pending) <
                 arm_cpu_exception_priority(cpu, curexc) &&
             likely(arm_cpu_exception(arm, pending))) {
-            if (pending == ARM_Exception_PendSV) {
+            if (pending == ARM_Exception_SVCall) {
+                cpu->svc_pending = false;
+            } else if (pending == ARM_Exception_PendSV) {
                 cpu->scb.icsr &= ~SCB_ICSR_PENDSVSET_Msk;
             } else if (pending == ARM_Exception_SysTick) {
                 cpu->scb.icsr &= ~SCB_ICSR_PENDSTSET_Msk;
@@ -1149,8 +1155,9 @@ void arm_cpu_execute(arm_t *arm) {
                     cpu->exc = false;
                     return;
                 case 15: // Supervisor Call
-                    arm_cpu_exception(arm, ARM_Exception_SVCall);
-                    cpu->exc = false;
+                    // SVC is configurable and can be masked or unable to preempt the current handler.
+                    // Keep it pending and let the normal exception arbitration take it.
+                    cpu->svc_pending = true;
                     return;
             }
             break;
