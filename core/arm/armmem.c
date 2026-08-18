@@ -813,8 +813,7 @@ uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
             case 0x020: // SHP[1]
                 return scb->shp[1];
             case 0x024: // SHCSR
-                return (scb->icsr & SCB_ICSR_PENDSVSET_Msk) >>
-                    SCB_ICSR_PENDSVSET_Pos << SCB_SHCSR_SVCALLPENDED_Pos;
+                return arm->cpu.svc_pending << SCB_SHCSR_SVCALLPENDED_Pos;
         }
     }
     if (arm->debug) {
@@ -1509,11 +1508,7 @@ void arm_mem_store_word(arm_t *arm, uint32_t val, uint32_t addr) {
                 scb->shp[1] = val & UINT32_C(0xC0C00000);
                 return;
             case 0x024: // SHCSR
-                if (val & SCB_SHCSR_SVCALLPENDED_Msk) {
-                    scb->icsr |= SCB_ICSR_PENDSVSET_Msk;
-                } else {
-                    scb->icsr &= ~SCB_ICSR_PENDSVSET_Msk;
-                }
+                arm->cpu.svc_pending = !!(val & SCB_SHCSR_SVCALLPENDED_Msk);
                 return;
             default:
                 break;
