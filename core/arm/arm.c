@@ -96,10 +96,12 @@ arm_t *arm_create(void) {
 
 void arm_destroy(arm_t *arm) {
     if (arm) {
+        thrd_t thread = arm->thrd;
         sync_enter(&arm->sync);
         arm->sync.run = false;
-        thrd_detach(arm->thrd);
+        sync_wake(&arm->sync);
         sync_leave(&arm->sync);
+        (void)thrd_join(thread, NULL);
     }
 }
 
