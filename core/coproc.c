@@ -9,6 +9,11 @@
 
 coproc_state_t coproc;
 
+void coproc_free(void) {
+    arm_destroy(coproc.arm);
+    memset(&coproc, 0, sizeof(coproc));
+}
+
 void coproc_reset(void) {
     gui_console_printf("[CEmu] Reset Coprocessor Interface...\n");
     if (asic.python && !coproc.arm) {
@@ -18,8 +23,7 @@ void coproc_reset(void) {
         if (asic.python) {
             arm_reset(coproc.arm);
         } else {
-            arm_destroy(coproc.arm);
-            memset(&coproc, 0, sizeof(coproc));
+            coproc_free();
         }
     }
 }

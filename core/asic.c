@@ -151,6 +151,7 @@ void asic_init(void) {
 }
 
 void asic_free(void) {
+    coproc_free();
     usb_plug_device(0, NULL, NULL, NULL);
     lcd_free();
     mem_free();
