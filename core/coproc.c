@@ -11,6 +11,26 @@ coproc_state_t coproc;
 
 static const uint8_t coproc_image_magic[] = { 'C', 'A', 'R', 'M' };
 
+static uint64_t coproc_cycle(void) {
+    return sched_total_time(CLOCK_48M);
+}
+
+void coproc_advance(void) {
+    if (coproc.arm) {
+        arm_advance_to(coproc.arm, coproc_cycle());
+    }
+}
+
+void coproc_pause(void) {
+    if (coproc.arm) {
+        arm_pause(coproc.arm);
+    }
+}
+
+void coproc_resume(void) {
+    coproc_advance();
+}
+
 void coproc_free(void) {
     arm_destroy(coproc.arm);
     memset(&coproc, 0, sizeof(coproc));
@@ -20,10 +40,16 @@ void coproc_reset(void) {
     gui_console_printf("[CEmu] Reset Coprocessor Interface...\n");
     if (asic.python && !coproc.arm) {
         coproc.arm = arm_create();
+        if (coproc.arm) {
+            arm_set_time(coproc.arm, coproc_cycle());
+        }
     }
     if (coproc.arm) {
         if (asic.python) {
             arm_reset(coproc.arm);
+            /* sched_reset() precedes this reset callback, so rebase the ARM
+             * budget to the reset scheduler epoch as well. */
+            arm_set_time(coproc.arm, coproc_cycle());
         } else {
             coproc_free();
         }
@@ -33,9 +59,16 @@ void coproc_reset(void) {
 bool coproc_load(const char *path) {
     if (asic.python && !coproc.arm) {
         coproc.arm = arm_create();
+        if (coproc.arm) {
+            arm_set_time(coproc.arm, coproc_cycle());
+        }
     }
     if (coproc.arm) {
-        return arm_load(coproc.arm, path);
+        bool success = arm_load(coproc.arm, path);
+        if (success) {
+            arm_set_time(coproc.arm, coproc_cycle());
+        }
+        return success;
     } else {
         return false;
     }
@@ -75,6 +108,7 @@ bool coproc_restore(FILE *image) {
         arm_destroy(restored);
         return false;
     }
+    arm_set_time(restored, coproc_cycle());
     coproc_free();
     coproc.arm = restored;
     return true;
