@@ -94,6 +94,7 @@ set(CEmu_Sources
     ../../core/arm/armstate.h
     ../../core/arm/spscqueue.c ../../core/arm/spscqueue.h
     ../../core/arm/sync.c ../../core/arm/sync.h
+    ../../core/arm/threading.h
     ../../core/asic.c ../../core/asic.h
     ../../core/atomics.h
     ../../core/backlight.c ../../core/backlight.h
