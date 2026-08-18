@@ -44,7 +44,7 @@ extern asic_state_t asic;
 void asic_init(void);
 void asic_free(void);
 void asic_reset(void);
-bool asic_restore(FILE *image);
+bool asic_restore(FILE *image, bool hasCoprocState);
 bool asic_save(FILE *image);
 void set_cpu_clock(uint32_t new_rate);
 void set_device_type(emu_device_t device);
