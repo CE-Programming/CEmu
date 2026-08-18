@@ -102,7 +102,18 @@ bool arm_load(arm_t *arm, const char *path) {
 
 void arm_spi_sel(arm_t *arm, bool low) {
     sync_enter(&arm->sync);
-    sync_wake(&arm->sync);
+    bool power_down_pending = arm->cpu.pm &&
+                              arm->mem.pm.SLEEP.bit.IDLE == PM_SLEEP_IDLE_APB_Val &&
+                              (arm->cpu.scb.scr & SCB_SCR_SLEEPDEEP_Msk);
+    if (low && power_down_pending) {
+        /* The firmware's shutdown command masks interrupts, configures deep
+         * sleep, and then waits for an external reset. A state image can land
+         * between those operations and WFI, so the register state is the
+         * reliable indication that selection should restart the coprocessor. */
+        reset(arm, PM_RCAUSE_EXT);
+    } else {
+        sync_wake(&arm->sync);
+    }
     //printf("%c\n", low ? 'L' : 'H');
     arm_mem_spi_sel(arm, 0, low);
     sync_run_leave(&arm->sync);
