@@ -98,7 +98,9 @@ static uint32_t spi_next_transfer(void) {
     if (unlikely(spi.deviceBits == 0)) {
         uint32_t rxData = 0;
         spi.deviceBits = spi.device_peek(&rxData);
-        spi.deviceFrame = rxData << (32 - spi.deviceBits);
+        spi.deviceFrame = spi.deviceBits
+                        ? rxData << (32 - spi.deviceBits)
+                        : 0;
     }
 
     uint8_t bitCount = spi.transferBits < spi.deviceBits ? spi.transferBits : spi.deviceBits;
@@ -125,7 +127,9 @@ static void spi_event(enum sched_item_id id) {
         if (spi.deviceBits == 0) {
             uint32_t rxData = 0;
             spi.deviceBits = spi.device_transfer(spi.deviceFrame, &rxData);
-            spi.deviceFrame = rxData << (32 - spi.deviceBits);
+            spi.deviceFrame = spi.deviceBits
+                            ? rxData << (32 - spi.deviceBits)
+                            : 0;
         }
 
         spi.transferBits -= bitCount;
