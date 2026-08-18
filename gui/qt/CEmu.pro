@@ -26,7 +26,13 @@ BACKUP_QMAKE_LINK = $$QMAKE_LINK
 CI = $$(CI)
 
 # Code beautifying
-DISTFILES += ../../.astylerc
+DISTFILES += ../../.astylerc \
+    ../../core/arm/bootloader/Makefile \
+    ../../core/arm/bootloader/README.md \
+    ../../core/arm/bootloader/LICENSE \
+    ../../core/arm/bootloader/bootloader.c \
+    ../../core/arm/bootloader/startup.c \
+    ../../core/arm/bootloader/linker.ld
 
 # Linux desktop files
 if (linux) {
@@ -300,6 +306,7 @@ INCLUDEPATH += ../../core/arm/CMSIS/Core/Include
 
 HEADERS  += \
     ../../tests/autotester/autotester.h \
+    ../../core/arm/free_bootloader_image.h \
     ../../core/arm/arm.h \
     ../../core/arm/armcpu.h \
     ../../core/arm/armmem.h \

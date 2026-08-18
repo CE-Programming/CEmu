@@ -1,6 +1,7 @@
 #include "armmem.h"
 
 #include "armstate.h"
+#include "free_bootloader_image.h"
 #include "../defines.h"
 
 #include <assert.h>
@@ -306,6 +307,9 @@ bool arm_mem_init(arm_mem_t *mem) {
     mem->nvm = malloc(FLASH_SIZE);
     if (likely(mem->nvm)) {
         memset(mem->nvm, ~0, FLASH_SIZE);
+        _Static_assert(sizeof(cemu_free_bootloader) <= 0x2000,
+                       "Free bootloader must fit in the SAMD21 boot region");
+        memcpy(mem->nvm, cemu_free_bootloader, sizeof(cemu_free_bootloader));
         mem->ram = malloc(HMCRAMC0_SIZE);
         if (likely(mem->ram)) {
             memset(mem->ram, 0, HMCRAMC0_SIZE);
