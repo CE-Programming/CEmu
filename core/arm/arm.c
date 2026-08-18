@@ -152,6 +152,12 @@ bool arm_usart_send(arm_t *arm, uint8_t val) {
         (void)spsc_queue_flush(&arm->usart[0]);
         debug_char(false, val);
     }
+
+    // The firmware can sleep while waiting for SERCOM RX; queued data must wake it.
+    sync_enter(&arm->sync);
+    sync_wake(&arm->sync);
+    sync_leave(&arm->sync);
+
     return success;
 }
 
@@ -160,6 +166,11 @@ bool arm_usart_recv(arm_t *arm, uint8_t *val) {
     *val = entry;
     if (entry != SPSC_QUEUE_INVALID_ENTRY) {
         debug_char(true, *val);
+
+        // Freeing transmit-queue space can make SERCOM DRE progress again
+        sync_enter(&arm->sync);
+        sync_wake(&arm->sync);
+        sync_leave(&arm->sync);
     }
     return entry != SPSC_QUEUE_INVALID_ENTRY;
 }
