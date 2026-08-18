@@ -158,10 +158,11 @@ void arm_mem_spi_sel(arm_t *arm, uint8_t pin, bool low) {
 uint8_t arm_mem_spi_peek(arm_t *arm, uint8_t pin, uint32_t *res) {
     SERCOM_SPI_Type* spi = &arm->mem.sercom[pin].SPI;
     assert(pin < SERCOM_INST_NUM && "pin out of range");
+    /* CTRLB.RXEN gates only the receive buffer. The client transmitter and
+     * shift register remain active while reception is disabled. */
     if (likely(!spi->CTRLA.bit.ENABLE ||
                spi->CTRLA.bit.MODE !=
-               SERCOM_SPI_CTRLA_MODE_SPI_SLAVE_Val ||
-               !spi->CTRLB.bit.RXEN)) {
+               SERCOM_SPI_CTRLA_MODE_SPI_SLAVE_Val)) {
         *res = 0;
         return 1;
     }
@@ -187,8 +188,7 @@ void arm_mem_spi_xfer(arm_t *arm, uint8_t pin, uint32_t val) {
     assert(pin < SERCOM_INST_NUM && "pin out of range");
     if (likely(!spi->CTRLA.bit.ENABLE ||
                spi->CTRLA.bit.MODE !=
-               SERCOM_SPI_CTRLA_MODE_SPI_SLAVE_Val ||
-               !spi->CTRLB.bit.RXEN)) {
+               SERCOM_SPI_CTRLA_MODE_SPI_SLAVE_Val)) {
         return;
     }
     if (unlikely(spi->CTRLA.bit.DORD)) {
@@ -200,25 +200,29 @@ void arm_mem_spi_xfer(arm_t *arm, uint8_t pin, uint32_t val) {
      * time, the shared shift register transmits the character received in the
      * preceding frame. */
     SERCOM_BUFFER_Type received = { .bit.DATA = val };
-    if (spi->BUFFER[3].bit.VLD) {
-        if (spi->CTRLA.bit.IBON) {
-            spi->INTFLAG.bit.ERROR = true;
-            if (likely(spi->INTEN.bit.ERROR)) {
+    /* SAM D21/DA1 data sheet DS40001882H, section 27.6.2.6.2 and the
+     * CTRLB.RXEN definition: a completed character is discarded instead of
+     * entering RxDATA when the receiver is disabled. */
+    if (spi->CTRLB.bit.RXEN) {
+        if (spi->BUFFER[3].bit.VLD) {
+            if (spi->CTRLA.bit.IBON) {
+                spi->INTFLAG.bit.ERROR = true;
+                if (likely(spi->INTEN.bit.ERROR)) {
+                    arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
+                }
+                spi->STATUS.bit.BUFOVF = true;
+            } else {
+                spi->BUFFER[2].bit.OVF = true;
+            }
+        } else {
+            spi->INTFLAG.bit.RXC = true;
+            if (likely(spi->INTEN.bit.RXC)) {
                 arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
             }
-            spi->STATUS.bit.BUFOVF = true;
-        } else {
-            spi->BUFFER[2].bit.OVF = true;
+            spi->BUFFER[3].reg = spi->BUFFER[2].reg;
+            spi->BUFFER[2].reg = received.reg;
+            spi->BUFFER[2].bit.VLD = true;
         }
-        //spi->BUFFER[1].bit.VLD = true;
-    } else {
-        spi->INTFLAG.bit.RXC = true;
-        if (likely(spi->INTEN.bit.RXC)) {
-            arm_mem_set_pending(arm, SERCOM0_IRQn + pin, true);
-        }
-        spi->BUFFER[3].reg = spi->BUFFER[2].reg;
-        spi->BUFFER[2].reg = received.reg;
-        spi->BUFFER[2].bit.VLD = true;
     }
     SERCOM_BUFFER_Type *shift = &spi->BUFFER[1];
     SERCOM_BUFFER_Type *buffer = &spi->BUFFER[0];
