@@ -217,6 +217,7 @@ SOURCES += \
     ../../core/arm/armmem.c \
     ../../core/arm/spscqueue.c \
     ../../core/arm/sync.c \
+    ../../core/arm/tinycthread.c \
     ../../core/asic.c \
     ../../core/bootver.c \
     ../../core/coproc.c \
@@ -313,6 +314,8 @@ HEADERS  += \
     ../../core/arm/armstate.h \
     ../../core/arm/spscqueue.h \
     ../../core/arm/sync.h \
+    ../../core/arm/threading.h \
+    ../../core/arm/tinycthread.h \
     ../../core/asic.h \
     ../../core/bootver.h \
     ../../core/coproc.h \
