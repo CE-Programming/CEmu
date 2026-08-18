@@ -16,29 +16,52 @@ static void reset(arm_t *arm, uint8_t rcause) {
     spsc_queue_clear(&arm->usart[1]);
 }
 
+static void run_quantum(arm_t *arm) {
+    uint8_t i = 0;
+    spsc_queue_entry_t peek;
+    uint16_t val;
+
+    do {
+        arm_cpu_execute(arm);
+    } while (++i && !arm->sync.slp);
+
+    peek = spsc_queue_peek(&arm->usart[0]);
+    if (unlikely(peek != SPSC_QUEUE_INVALID_ENTRY &&
+                 arm_mem_usart_recv(arm, 3, peek))) {
+        spsc_queue_entry_t entry = spsc_queue_dequeue(&arm->usart[0]);
+        (void)entry;
+        assert(entry == peek && "Already successfully peeked");
+    }
+    if (unlikely(spsc_queue_flush(&arm->usart[1]) &&
+                 arm_mem_usart_send(arm, 3, &val))) {
+        bool success = spsc_queue_enqueue(&arm->usart[1], val);
+        (void)success;
+        assert(success && "Already successfully flushed, so can't fail");
+    }
+}
+
+enum { ARM_SPI_EVENT_MAX_QUANTA = 64 };
+
+static void service_spi_event(arm_t *arm, uint8_t pending_flag) {
+    /* The coprocessor and ASIC run concurrently on hardware. Hand each frame
+     * edge to firmware before exposing the next edge to the eZ80, preventing
+     * SSL, RXC, and TXC from collapsing into one observation. The ceiling is
+     * a guard for firmware that is not currently servicing SPI; event flags
+     * normally clear after only a few instructions. */
+    for (uint8_t i = 0;
+         i < ARM_SPI_EVENT_MAX_QUANTA && !arm->sync.slp &&
+         (i == 0 ||
+          (arm->mem.sercom[0].SPI.INTFLAG.reg & pending_flag));
+         ++i) {
+        run_quantum(arm);
+    }
+}
+
 static int arm_thrd(void *context) {
     arm_t *arm = context;
     reset(arm, PM_RCAUSE_POR);
     while (sync_loop(&arm->sync)) {
-        uint8_t i = 0;
-        spsc_queue_entry_t peek;
-        uint16_t val;
-        do {
-            arm_cpu_execute(arm);
-        } while (++i && !arm->sync.slp);
-        peek = spsc_queue_peek(&arm->usart[0]);
-        if (unlikely(peek != SPSC_QUEUE_INVALID_ENTRY &&
-                     arm_mem_usart_recv(arm, 3, peek))) {
-            spsc_queue_entry_t entry = spsc_queue_dequeue(&arm->usart[0]);
-            (void)entry;
-            assert(entry == peek && "Already successfully peeked");
-        }
-        if (unlikely(spsc_queue_flush(&arm->usart[1]) &&
-                     arm_mem_usart_send(arm, 3, &val))) {
-            bool success = spsc_queue_enqueue(&arm->usart[1], val);
-            (void)success;
-            assert(success && "Already successfully flushed, so can't fail");
-        }
+        run_quantum(arm);
     }
     spsc_queue_destroy(&arm->usart[1]);
     spsc_queue_destroy(&arm->usart[0]);
@@ -116,7 +139,13 @@ void arm_spi_sel(arm_t *arm, bool low) {
     }
     //printf("%c\n", low ? 'L' : 'H');
     arm_mem_spi_sel(arm, 0, low);
-    sync_run_leave(&arm->sync);
+    service_spi_event(arm, low ? SERCOM_SPI_INTFLAG_SSL :
+                                SERCOM_SPI_INTFLAG_TXC);
+    if (arm->sync.slp) {
+        sync_leave(&arm->sync);
+    } else {
+        sync_run_leave(&arm->sync);
+    }
 }
 
 static void debug_byte(bool dir, unsigned char c) {
@@ -134,11 +163,16 @@ static void debug_char(bool dir, char c) {
 uint8_t arm_spi_peek(arm_t *arm, uint32_t *res) {
     sync_enter(&arm->sync);
     sync_wake(&arm->sync);
+    service_spi_event(arm, 0);
     uint8_t bits = arm_mem_spi_peek(arm, 0, res);
     if (bits == 8) {
         debug_byte(true, *res);
     }
-    sync_run_leave(&arm->sync);
+    if (arm->sync.slp) {
+        sync_leave(&arm->sync);
+    } else {
+        sync_run_leave(&arm->sync);
+    }
     return bits;
 }
 
@@ -148,12 +182,17 @@ uint8_t arm_spi_xfer(arm_t *arm, uint32_t val, uint32_t *res) {
     debug_byte(false, val);
     //printf("%02X ", val);
     arm_mem_spi_xfer(arm, 0, val);
+    service_spi_event(arm, SERCOM_SPI_INTFLAG_RXC);
     uint8_t bits = arm_mem_spi_peek(arm, 0, res);
     if (bits == 8) {
         debug_byte(true, *res);
     }
     //printf("<-> %02X\n", *res);
-    sync_run_leave(&arm->sync);
+    if (arm->sync.slp) {
+        sync_leave(&arm->sync);
+    } else {
+        sync_run_leave(&arm->sync);
+    }
     return bits;
 }
 
