@@ -87,6 +87,7 @@ endif()
 qt_add_resources(CEmu_Resources resources.qrc)
 
 set(CEmu_Sources
+    ../../core/arm/free_bootloader_image.h
     ../../core/arm/arm.c ../../core/arm/arm.h
     ../../core/arm/armcpu.c ../../core/arm/armcpu.h
     ../../core/arm/armmem.c ../../core/arm/armmem.h
