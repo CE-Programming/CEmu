@@ -16,6 +16,7 @@ Portions of this program use code, directly or modified, from:
 * KDMacTouchBar, developed by KDAB
 * FatCow's "Farm-Fresh Web Icons" (CC 3.0 license) - http://www.fatcow.com/free-icons
 * ATMEL's CMSIS & SAMD21A resources (see core/arm/README.md)
+* Microsoft's uf2-samdx1 bootloader (MIT license; see core/arm/bootloader/LICENSE)
 
 CEmu also uses the APNG-enabled fork of libpng (https://sourceforge.net/projects/libpng-apng/) released under the zlib/libpng License.
 
