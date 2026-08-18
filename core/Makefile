@@ -34,6 +34,8 @@ $(STATICLIB): $(OBJS)
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
+arm/armmem.o: arm/free_bootloader_image.h
+
 clean:
 	$(RM) $(OBJS) $(STATICLIB)
 
