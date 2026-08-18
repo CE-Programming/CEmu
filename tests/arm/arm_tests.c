@@ -57,7 +57,15 @@ static bool wait_for_arm_condition(arm_t *arm, arm_condition_t condition) {
 
 static void prepare_instruction(arm_t *arm, uint16_t opcode) {
     memset(&arm->cpu, 0, sizeof(arm->cpu));
+    arm->cycles = 0;
     arm->mem.nvm[0] = UINT32_C(0xBF00) << 16 | opcode;
+    arm->cpu.pc = 2;
+}
+
+static void prepare_instruction32(arm_t *arm, uint16_t first, uint16_t second) {
+    memset(&arm->cpu, 0, sizeof(arm->cpu));
+    arm->cycles = 0;
+    arm->mem.nvm[0] = (uint32_t)second << 16 | first;
     arm->cpu.pc = 2;
 }
 
@@ -205,6 +213,152 @@ static void test_relative_branches(void) {
           "branch with link sign-extends its backward offset");
     CHECK(arm.cpu.lr == UINT32_C(0x5),
           "branch with link records the Thumb return address");
+
+    destroy_arm(&arm);
+}
+
+static void test_instruction_cycle_counts(void) {
+    arm_t arm;
+    init_arm(&arm);
+
+    prepare_instruction(&arm, UINT16_C(0x4348)); /* MULS r0, r1, r0 */
+    arm.cpu.r0 = 3;
+    arm.cpu.r1 = 7;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 1, "SAMD21 fast multiplier takes one cycle");
+
+    prepare_instruction(&arm, UINT16_C(0x6808)); /* LDR r0, [r1] */
+    arm.cpu.r1 = HMCRAMC0_ADDR;
+    arm.mem.ram[0] = UINT32_C(0x12345678);
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "AHB load takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0x6008)); /* STR r0, [r1] */
+    arm.cpu.r0 = UINT32_C(0xA5A5A5A5);
+    arm.cpu.r1 = HMCRAMC0_ADDR;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "AHB store takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0x6808)); /* LDR r0, [r1] */
+    arm.cpu.r1 = (uint32_t)PORT_IOBUS;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 1, "IOBUS load takes one cycle");
+
+    prepare_instruction(&arm, UINT16_C(0x6008)); /* STR r0, [r1] */
+    arm.cpu.r1 = (uint32_t)PORT_IOBUS;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 1, "IOBUS store takes one cycle");
+
+    prepare_instruction(&arm, UINT16_C(0xB503)); /* PUSH {r0, r1, lr} */
+    arm.cpu.sp = HMCRAMC0_ADDR + 0x20;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 4, "PUSH takes one plus register-count cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xBC03)); /* POP {r0, r1} */
+    arm.cpu.sp = HMCRAMC0_ADDR;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "POP takes one plus register-count cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xBD03)); /* POP {r0, r1, pc} */
+    arm.cpu.sp = HMCRAMC0_ADDR;
+    arm.mem.ram[2] = UINT32_C(0x101);
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 6, "POP including PC takes three plus register-count cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xC11C)); /* STM r1!, {r2-r4} */
+    arm.cpu.r1 = HMCRAMC0_ADDR;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 4, "STM takes one plus register-count cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xC90C)); /* LDM r1!, {r2, r3} */
+    arm.cpu.r1 = HMCRAMC0_ADDR;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "LDM takes one plus register-count cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xD000)); /* BEQ +0 */
+    arm.cpu.z = false;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 1, "untaken conditional branch takes one cycle");
+
+    prepare_instruction(&arm, UINT16_C(0xD000)); /* BEQ +0 */
+    arm.cpu.z = true;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "taken conditional branch takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xE000)); /* B +0 */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "unconditional branch takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0x4687)); /* MOV pc, r0 */
+    arm.cpu.r0 = UINT32_C(0x101);
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "MOV to PC takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0x4487)); /* ADD pc, r0 */
+    arm.cpu.r0 = UINT32_C(0xFC);
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "ADD to PC takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0x4700)); /* BX r0 */
+    arm.cpu.r0 = UINT32_C(0x101);
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "BX takes two cycles");
+
+    prepare_instruction(&arm, UINT16_C(0x4780)); /* BLX r0 */
+    arm.cpu.r0 = UINT32_C(0x101);
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "BLX takes two cycles");
+
+    prepare_instruction32(&arm, UINT16_C(0xF7FF), UINT16_C(0xFFFE)); /* BL -4 */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "BL takes three cycles");
+
+    prepare_instruction32(&arm, UINT16_C(0xF3EF), UINT16_C(0x8014)); /* MRS r0, CONTROL */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "MRS takes three cycles");
+
+    prepare_instruction32(&arm, UINT16_C(0xF380), UINT16_C(0x8814)); /* MSR CONTROL, r0 */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "MSR takes three cycles");
+
+    prepare_instruction32(&arm, UINT16_C(0xF3BF), UINT16_C(0x8F5F)); /* DMB SY */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "DMB takes three cycles");
+
+    prepare_instruction32(&arm, UINT16_C(0xF3BF), UINT16_C(0x8F4F)); /* DSB SY */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "DSB takes three cycles");
+
+    prepare_instruction32(&arm, UINT16_C(0xF3BF), UINT16_C(0x8F6F)); /* ISB SY */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 3, "ISB takes three cycles");
+
+    prepare_instruction(&arm, UINT16_C(0xBF20)); /* WFE */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "WFE takes two cycles before waiting");
+
+    prepare_instruction(&arm, UINT16_C(0xBF30)); /* WFI */
+    arm_cpu_execute(&arm);
+    CHECK(arm.cycles == 2, "WFI takes two cycles before waiting");
+
+    prepare_instruction32(&arm, UINT16_C(0xF7FF), UINT16_C(0xFFFE)); /* BL -4 */
+    arm.cpu.systick.ctrl = SysTick_CTRL_ENABLE_Msk;
+    arm.cpu.systick.load = 10;
+    arm.cpu.systick.val = 10;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cpu.systick.val == 7,
+          "SysTick advances by every cycle of a multi-cycle instruction");
+
+    prepare_instruction32(&arm, UINT16_C(0xF7FF), UINT16_C(0xFFFE)); /* BL -4 */
+    arm.cpu.systick.ctrl = SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk;
+    arm.cpu.systick.load = 2;
+    arm.cpu.systick.val = 1;
+    arm_cpu_execute(&arm);
+    CHECK(arm.cpu.systick.val == 1,
+          "multi-cycle SysTick accounting reloads and continues counting");
+    CHECK((arm.cpu.systick.ctrl & SysTick_CTRL_COUNTFLAG_Msk) &&
+              (arm.cpu.scb.icsr & SCB_ICSR_PENDSTSET_Msk),
+          "multi-cycle SysTick accounting records and pends a wrap");
 
     destroy_arm(&arm);
 }
@@ -743,12 +897,14 @@ static void test_arm_cycle_throttle(void) {
 
     const uint64_t target = arm_get_time(arm) + UINT64_C(4096);
     arm_run_until(arm, target);
-    CHECK(arm_get_time(arm) == target,
-          "ARM worker consumes exactly its virtual cycle budget");
+    const uint64_t reached = arm_get_time(arm);
+    /* Instructions are atomic; POP {r0-r7, pc} is the longest at 12 cycles. */
+    CHECK(reached >= target && reached <= target + 11,
+          "ARM worker stops within one instruction of its virtual cycle budget");
     for (unsigned int attempt = 0; attempt != 1000; ++attempt) {
         thrd_yield();
     }
-    CHECK(arm_get_time(arm) == target,
+    CHECK(arm_get_time(arm) == reached,
           "ARM worker remains throttled after reaching its cycle budget");
 
     arm_advance_to(arm, target + UINT64_C(1000000));
@@ -901,6 +1057,7 @@ int main(void) {
     test_sbc_flags();
     test_random_adc_sbc_flags();
     test_relative_branches();
+    test_instruction_cycle_counts();
     test_high_exception_return();
     test_core_register_reset_values();
     test_exception_priorities();
