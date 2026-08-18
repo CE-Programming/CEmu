@@ -3,6 +3,7 @@
 #include "os.h"
 
 #include "../../core/asic.h"
+#include "../../core/coproc.h"
 #include "../../core/emu.h"
 #include "../../core/lcd.h"
 #include "../../core/link.h"
@@ -104,15 +105,18 @@ int EMSCRIPTEN_KEEPALIVE emsc_set_main_loop_timing(int mode, int value) {
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
+    coproc_pause();
     emscripten_pause_main_loop();
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_resume_main_loop() {
+    coproc_resume();
     emscripten_resume_main_loop();
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
     emu_reset();
+    coproc_pause();
     emscripten_cancel_main_loop();
 }
 

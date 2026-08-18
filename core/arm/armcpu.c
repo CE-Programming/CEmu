@@ -447,6 +447,7 @@ static int16_t arm_revsh(uint32_t x) {
 }
 
 static void arm_cpu_tick(arm_t *arm) {
+    ++arm->cycles;
     arm_systick_t *systick = &arm->cpu.systick;
     if (likely(systick->ctrl & SysTick_CTRL_ENABLE_Msk)) {
         if (unlikely(!systick->val)) {

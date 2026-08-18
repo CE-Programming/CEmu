@@ -16,14 +16,17 @@ static void reset(arm_t *arm, uint8_t rcause) {
     spsc_queue_clear(&arm->usart[1]);
 }
 
-static void run_quantum(arm_t *arm) {
+static void run_quantum(arm_t *arm, bool limited) {
     uint8_t i = 0;
     spsc_queue_entry_t peek;
     uint16_t val;
 
-    do {
-        arm_cpu_execute(arm);
-    } while (++i && !arm->sync.slp);
+    if (!limited || arm->cycles < arm->cycle_limit) {
+        do {
+            arm_cpu_execute(arm);
+        } while (++i && !arm->sync.slp &&
+                 (!limited || arm->cycles < arm->cycle_limit));
+    }
 
     peek = spsc_queue_peek(&arm->usart[0]);
     if (unlikely(peek != SPSC_QUEUE_INVALID_ENTRY &&
@@ -53,15 +56,15 @@ static void service_spi_event(arm_t *arm, uint8_t pending_flag) {
          (i == 0 ||
           (arm->mem.sercom[0].SPI.INTFLAG.reg & pending_flag));
          ++i) {
-        run_quantum(arm);
+        run_quantum(arm, false);
     }
 }
 
 static int arm_thrd(void *context) {
     arm_t *arm = context;
     reset(arm, PM_RCAUSE_POR);
-    while (sync_loop(&arm->sync)) {
-        run_quantum(arm);
+    while (sync_loop(&arm->sync, arm->cycles >= arm->cycle_limit)) {
+        run_quantum(arm, true);
     }
     spsc_queue_destroy(&arm->usart[1]);
     spsc_queue_destroy(&arm->usart[0]);
@@ -77,6 +80,8 @@ arm_t *arm_create(void) {
             if (likely(arm_mem_init(&arm->mem))) {
                 if (likely(spsc_queue_init(&arm->usart[0]))) {
                     if (likely(spsc_queue_init(&arm->usart[1]))) {
+                        arm->cycles = 0;
+                        arm->cycle_limit = 0;
                         arm->debug = false;
                         if (likely(thrd_create(&arm->thrd, &arm_thrd, arm) == thrd_success)) {
                             return arm;
@@ -100,9 +105,64 @@ void arm_destroy(arm_t *arm) {
         sync_enter(&arm->sync);
         arm->sync.run = false;
         sync_wake(&arm->sync);
+        sync_throttle_wake(&arm->sync);
         sync_leave(&arm->sync);
         (void)thrd_join(thread, NULL);
     }
+}
+
+void arm_set_time(arm_t *arm, uint64_t cycles) {
+    sync_enter(&arm->sync);
+    arm->cycles = cycles;
+    arm->cycle_limit = cycles;
+    sync_leave(&arm->sync);
+}
+
+void arm_advance_to(arm_t *arm, uint64_t cycles) {
+    sync_enter(&arm->sync);
+    if (cycles > arm->cycle_limit) {
+        arm->cycle_limit = cycles;
+    }
+    if (arm->sync.slp) {
+        /* Deep sleep gates the core clock. Keep its virtual timestamp aligned
+         * without ticking SysTick or executing instructions. */
+        if (cycles > arm->cycles) {
+            arm->cycles = cycles;
+        }
+        sync_leave(&arm->sync);
+        return;
+    }
+    if (arm->cycles < arm->cycle_limit) {
+        sync_throttle_wake(&arm->sync);
+    }
+    sync_leave(&arm->sync);
+}
+
+void arm_run_until(arm_t *arm, uint64_t cycles) {
+    arm_advance_to(arm, cycles);
+
+    sync_wait_idle(&arm->sync);
+
+    sync_enter(&arm->sync);
+    if (arm->sync.slp && cycles > arm->cycles) {
+        arm->cycles = cycles;
+    }
+    sync_leave(&arm->sync);
+}
+
+void arm_pause(arm_t *arm) {
+    sync_enter(&arm->sync);
+    arm->cycle_limit = arm->cycles;
+    sync_throttle(&arm->sync);
+    sync_leave(&arm->sync);
+}
+
+uint64_t arm_get_time(arm_t *arm) {
+    uint64_t cycles;
+    sync_enter(&arm->sync);
+    cycles = arm->cycles;
+    sync_leave(&arm->sync);
+    return cycles;
 }
 
 void arm_reset(arm_t *arm) {
@@ -194,7 +254,7 @@ void arm_spi_sel(arm_t *arm, bool low) {
     arm_mem_spi_sel(arm, 0, low);
     service_spi_event(arm, low ? SERCOM_SPI_INTFLAG_SSL :
                                 SERCOM_SPI_INTFLAG_TXC);
-    if (arm->sync.slp) {
+    if (sync_idle(&arm->sync)) {
         sync_leave(&arm->sync);
     } else {
         sync_run_leave(&arm->sync);
@@ -224,7 +284,7 @@ uint8_t arm_spi_peek(arm_t *arm, uint32_t *res) {
     if (bits == 8) {
         debug_byte(true, *res);
     }
-    if (arm->sync.slp) {
+    if (sync_idle(&arm->sync)) {
         sync_leave(&arm->sync);
     } else {
         sync_run_leave(&arm->sync);
@@ -244,7 +304,7 @@ uint8_t arm_spi_xfer(arm_t *arm, uint32_t val, uint32_t *res) {
         debug_byte(true, *res);
     }
     //printf("<-> %02X\n", *res);
-    if (arm->sync.slp) {
+    if (sync_idle(&arm->sync)) {
         sync_leave(&arm->sync);
     } else {
         sync_run_leave(&arm->sync);

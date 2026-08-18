@@ -2,6 +2,7 @@
 #include "../../core/arm/free_bootloader_image.h"
 #include "../../core/asic.h"
 #include "../../core/coproc.h"
+#include "../../core/schedule.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,6 +11,11 @@
 
 static unsigned int failures;
 asic_state_t asic;
+
+uint64_t sched_total_time(enum clock_id clock) {
+    (void)clock;
+    return 0;
+}
 
 void gui_console_printf(const char *format, ...) {
     (void)format;
@@ -44,7 +50,7 @@ static bool wait_for_arm_condition(arm_t *arm, arm_condition_t condition) {
         if (ready) {
             return true;
         }
-        thrd_yield();
+        arm_run_until(arm, arm_get_time(arm) + 256);
     }
     return false;
 }
@@ -728,6 +734,35 @@ static void test_arm_flash_serialization(void) {
     arm_destroy(arm);
 }
 
+static void test_arm_cycle_throttle(void) {
+    arm_t *arm = arm_create();
+    CHECK(arm != NULL, "ARM instance initializes for cycle throttling");
+    if (!arm) {
+        return;
+    }
+
+    const uint64_t target = arm_get_time(arm) + UINT64_C(4096);
+    arm_run_until(arm, target);
+    CHECK(arm_get_time(arm) == target,
+          "ARM worker consumes exactly its virtual cycle budget");
+    for (unsigned int attempt = 0; attempt != 1000; ++attempt) {
+        thrd_yield();
+    }
+    CHECK(arm_get_time(arm) == target,
+          "ARM worker remains throttled after reaching its cycle budget");
+
+    arm_advance_to(arm, target + UINT64_C(1000000));
+    arm_pause(arm);
+    const uint64_t paused = arm_get_time(arm);
+    for (unsigned int attempt = 0; attempt != 1000; ++attempt) {
+        thrd_yield();
+    }
+    CHECK(arm_get_time(arm) == paused,
+          "explicit pause synchronously stops an in-flight ARM budget");
+
+    arm_destroy(arm);
+}
+
 static void test_bundled_bootloader_identification(void) {
     arm_t *arm = arm_create();
     CHECK(arm != NULL, "ARM instance initializes for bootloader identification");
@@ -745,7 +780,7 @@ static void test_bundled_bootloader_identification(void) {
                 arm->mem.sercom[3].USART.CTRLB.bit.RXEN;
         sync_leave(&arm->sync);
         if (!ready) {
-            thrd_yield();
+            arm_run_until(arm, arm_get_time(arm) + 256);
         }
     }
     CHECK(ready, "bundled bootloader initializes its UART");
@@ -756,7 +791,7 @@ static void test_bundled_bootloader_identification(void) {
         if (arm_usart_recv(arm, &value)) {
             received[count++] = value;
         } else {
-            thrd_yield();
+            arm_run_until(arm, arm_get_time(arm) + 256);
         }
     }
     CHECK(count == sizeof(expected), "bundled bootloader answers the UART request");
@@ -769,6 +804,21 @@ static void write_coproc_header(FILE *image, uint8_t present) {
     static const uint8_t magic[] = { 'C', 'A', 'R', 'M' };
     (void)fwrite(magic, sizeof(magic), 1, image);
     (void)fwrite(&present, sizeof(present), 1, image);
+}
+
+static void test_coproc_reset_rebases_clock(void) {
+    asic.python = true;
+    coproc_reset();
+    CHECK(coproc.arm != NULL, "Python ASIC creates an ARM for reset timing");
+    if (!coproc.arm) {
+        return;
+    }
+
+    arm_run_until(coproc.arm, UINT64_C(4096));
+    coproc_reset();
+    CHECK(arm_get_time(coproc.arm) == 0,
+          "ASIC reset rebases the ARM to the scheduler clock epoch");
+    coproc_free();
 }
 
 static void test_coproc_state_serialization(void) {
@@ -868,7 +918,9 @@ int main(void) {
     test_bundled_bootloader();
     test_bundled_bootloader_double_tap_reset();
     test_arm_flash_serialization();
+    test_arm_cycle_throttle();
     test_bundled_bootloader_identification();
+    test_coproc_reset_rebases_clock();
     test_coproc_state_serialization();
 
     if (failures) {
