@@ -65,3 +65,8 @@ gui/qt/capture/libpng*
 gui/qt/CEmu.build/
 gui/qt/cmake-build-*/
 gui/qt/out/
+
+# Generated SAMD21 bootloader build outputs (the generated C header is tracked)
+core/arm/bootloader/free_bootloader.bin
+core/arm/bootloader/free_bootloader.elf
+core/arm/bootloader/free_bootloader.map
