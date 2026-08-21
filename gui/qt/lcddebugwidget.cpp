@@ -10,17 +10,28 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
+#include <QLineF>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPushButton>
 #include <QScrollArea>
+#include <QSignalBlocker>
 #include <QSpinBox>
 #include <QStringList>
 #include <QTabWidget>
+#include <QToolTip>
 #include <QVBoxLayout>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstring>
 #include <cstdint>
+#include <functional>
+#include <limits>
 
 namespace {
 
@@ -66,12 +77,16 @@ std::array<uint8_t, 2> wordBytes(uint16_t value) {
 
 template <size_t N>
 void writeCommand(uint8_t command, const std::array<uint8_t, N> &params) {
-    (void)panel_debug_write_command(command, params.data(), params.size());
+    const bool applied = panel_debug_write_command(command, params.data(), params.size());
+    Q_ASSERT_X(applied, "LcdDebugWidget", "Panel command parameter size mismatch");
+    (void)applied;
 }
 
 template <typename T>
 void writeCommand(uint8_t command, const T &params) {
-    (void)panel_debug_write_command(command, reinterpret_cast<const uint8_t *>(&params), sizeof(params));
+    const bool applied = panel_debug_write_command(command, reinterpret_cast<const uint8_t *>(&params), sizeof(params));
+    Q_ASSERT_X(applied, "LcdDebugWidget", "Panel command parameter size mismatch");
+    (void)applied;
 }
 
 QString panelModeText(uint8_t mode) {
@@ -94,7 +109,405 @@ QString lcdPhaseText(enum lcd_comp phase) {
     }
 }
 
+constexpr std::array<int, 16> gammaPointLevels = {
+    0, 1, 2, 4, 6, 13, 20, 27, 36, 43, 50, 57, 59, 61, 62, 63
+};
+
+constexpr std::array<const char *, 16> gammaPointNames = {
+    "V0", "V1", "V2", "V4", "V6", "V13", "V20", "V27",
+    "V36", "V43", "V50", "V57", "V59", "V61", "V62", "V63"
+};
+
+int gammaParameterValue(const panel_gamma_t &params, int point) {
+    switch (point) {
+        case 0: return params.V0;
+        case 1: return params.V1;
+        case 2: return params.V2;
+        case 3: return params.V4;
+        case 4: return params.V6;
+        case 5: return params.V13;
+        case 6: return params.V20;
+        case 7: return params.V27;
+        case 8: return params.V36;
+        case 9: return params.V43;
+        case 10: return params.V50;
+        case 11: return params.V57;
+        case 12: return params.V59;
+        case 13: return params.V61;
+        case 14: return params.V62;
+        case 15: return params.V63;
+        default: return 0;
+    }
+}
+
+int gammaParameterMaximum(int point) {
+    static constexpr std::array<int, 16> maximums = {
+        15, 63, 63, 31, 31, 15, 127, 7, 7, 127, 15, 31, 31, 63, 63, 15
+    };
+    return maximums[static_cast<size_t>(point)];
+}
+
+void setGammaParameterValue(panel_gamma_t &params, int point, int value) {
+    switch (point) {
+        case 0: params.V0 = value; break;
+        case 1: params.V1 = value; break;
+        case 2: params.V2 = value; break;
+        case 3: params.V4 = value; break;
+        case 4: params.V6 = value; break;
+        case 5: params.V13 = value; break;
+        case 6: params.V20 = value; break;
+        case 7: params.V27 = value; break;
+        case 8: params.V36 = value; break;
+        case 9: params.V43 = value; break;
+        case 10: params.V50 = value; break;
+        case 11: params.V57 = value; break;
+        case 12: params.V59 = value; break;
+        case 13: params.V61 = value; break;
+        case 14: params.V62 = value; break;
+        case 15: params.V63 = value; break;
+        default: break;
+    }
+}
+
 } // namespace
+
+class GammaCurveEditor : public QWidget {
+public:
+    explicit GammaCurveEditor(QWidget *parent = nullptr) : QWidget(parent) {
+        setMinimumHeight(260);
+        setMinimumWidth(440);
+        setFocusPolicy(Qt::StrongFocus);
+        setMouseTracking(true);
+        setAccessibleName(LcdDebugWidget::tr("ST7789 gamma curve editor"));
+        setAccessibleDescription(LcdDebugWidget::tr(
+            "Drag a control point or use the arrow keys to edit the selected gamma register."));
+    }
+
+    QSize sizeHint() const override {
+        return QSize(620, 300);
+    }
+
+    void setCurves(const panel_gamma_t &positive, const panel_gamma_t &negative) {
+        m_curves[0] = positive;
+        m_curves[1] = negative;
+        m_selectedPoint = -1;
+        m_hoverPoint = -1;
+        update();
+        notifySelectionChanged();
+    }
+
+    const panel_gamma_t &positiveCurve() const { return m_curves[0]; }
+    const panel_gamma_t &negativeCurve() const { return m_curves[1]; }
+
+    void setActiveCurve(int curve) {
+        m_activeCurve = std::clamp(curve, 0, 1);
+        m_selectedPoint = -1;
+        m_hoverPoint = -1;
+        update();
+        notifySelectionChanged();
+    }
+
+    void setInterpolation(int curve, int j0, int j1) {
+        panel_gamma_t &params = m_curves[std::clamp(curve, 0, 1)];
+        params.J0 = std::clamp(j0, 0, 3);
+        params.J1 = std::clamp(j1, 0, 3);
+        update();
+        if (changed) {
+            changed();
+        }
+    }
+
+    QString selectionText() const {
+        if (m_selectedPoint < 0) {
+            return LcdDebugWidget::tr("Drag a control point to edit it; use arrow keys for fine adjustments.");
+        }
+        float curve[64];
+        panel_get_gamma_curve(curve, &m_curves[m_activeCurve]);
+        const int level = gammaPointLevels[static_cast<size_t>(m_selectedPoint)];
+        return LcdDebugWidget::tr("%1 curve · %2 · input %3 · voltage %4 · register %5/%6")
+            .arg(m_activeCurve == 0 ? LcdDebugWidget::tr("Positive") : LcdDebugWidget::tr("Negative"))
+            .arg(QString::fromLatin1(gammaPointNames[static_cast<size_t>(m_selectedPoint)]))
+            .arg(level)
+            .arg(curve[level], 0, 'f', 3)
+            .arg(gammaParameterValue(m_curves[m_activeCurve], m_selectedPoint))
+            .arg(gammaParameterMaximum(m_selectedPoint));
+    }
+
+    std::function<void()> changed;
+    std::function<void()> selectionChanged;
+
+protected:
+    void paintEvent(QPaintEvent *) override {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        const QRectF graph = graphRect();
+        QColor background = palette().color(QPalette::Base);
+        QColor foreground = palette().color(QPalette::Text);
+        QColor grid = palette().color(QPalette::Mid);
+        background.setAlpha(180);
+        grid.setAlpha(90);
+
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(background);
+        painter.drawRoundedRect(graph.adjusted(-8, -8, 8, 8), 6, 6);
+
+        painter.setFont(QFont(painter.font().family(), painter.font().pointSize() - 1));
+        for (int step = 0; step <= 4; step++) {
+            const qreal fraction = step / 4.0;
+            const qreal y = graph.bottom() - fraction * graph.height();
+            painter.setPen(QPen(grid, 1));
+            painter.drawLine(QPointF(graph.left(), y), QPointF(graph.right(), y));
+            painter.setPen(foreground);
+            painter.drawText(QRectF(0, y - 9, graph.left() - 8, 18),
+                             Qt::AlignRight | Qt::AlignVCenter,
+                             QString::number(fraction, 'f', step == 0 || step == 4 ? 0 : 2));
+        }
+        static constexpr std::array<int, 5> inputTicks = { 0, 16, 32, 48, 63 };
+        for (int input : inputTicks) {
+            const qreal x = graph.left() + graph.width() * input / 63.0;
+            painter.setPen(QPen(grid, 1));
+            painter.drawLine(QPointF(x, graph.top()), QPointF(x, graph.bottom()));
+            painter.setPen(foreground);
+            painter.drawText(QRectF(x - 20, graph.bottom() + 7, 40, 18), Qt::AlignHCenter, QString::number(input));
+        }
+
+        painter.save();
+        painter.translate(13, graph.center().y());
+        painter.rotate(-90);
+        painter.drawText(QRectF(-70, -10, 140, 20), Qt::AlignCenter, LcdDebugWidget::tr("Normalized voltage"));
+        painter.restore();
+        painter.drawText(QRectF(graph.left(), graph.bottom() + 23, graph.width(), 18),
+                         Qt::AlignCenter, LcdDebugWidget::tr("Input level"));
+
+        float curves[2][64];
+        panel_get_gamma_curve(curves[0], &m_curves[0]);
+        panel_get_gamma_curve(curves[1], &m_curves[1]);
+        const QColor colors[2] = { QColor(41, 128, 255), QColor(255, 145, 35) };
+
+        QPainterPath averagePath;
+        for (int level = 0; level < 64; level++) {
+            const QPointF point = curvePoint(graph, level, (curves[0][level] + curves[1][level]) * 0.5f);
+            level ? averagePath.lineTo(point) : averagePath.moveTo(point);
+        }
+        QColor averageColor = foreground;
+        averageColor.setAlpha(150);
+        painter.setPen(QPen(averageColor, 1.5, Qt::DashLine));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawPath(averagePath);
+
+        for (int pass = 0; pass < 2; pass++) {
+            const int curve = pass == 0 ? 1 - m_activeCurve : m_activeCurve;
+            QPainterPath path;
+            for (int level = 0; level < 64; level++) {
+                const QPointF point = curvePoint(graph, level, curves[curve][level]);
+                level ? path.lineTo(point) : path.moveTo(point);
+            }
+            QColor color = colors[curve];
+            if (curve != m_activeCurve) {
+                color.setAlpha(150);
+            }
+            painter.setPen(QPen(color, curve == m_activeCurve ? 2.5 : 1.5));
+            painter.drawPath(path);
+        }
+
+        const QColor activeColor = colors[m_activeCurve];
+        for (int point = 0; point < static_cast<int>(gammaPointLevels.size()); point++) {
+            const int level = gammaPointLevels[static_cast<size_t>(point)];
+            const QPointF position = curvePoint(graph, level, curves[m_activeCurve][level]);
+            const bool selected = point == m_selectedPoint;
+            const bool hovered = point == m_hoverPoint;
+            painter.setPen(QPen(background, 2));
+            painter.setBrush(selected ? foreground : activeColor);
+            painter.drawEllipse(position, selected ? 6.0 : hovered ? 5.5 : 4.5,
+                                selected ? 6.0 : hovered ? 5.5 : 4.5);
+            if (selected) {
+                painter.setPen(QPen(activeColor, 2));
+                painter.setBrush(Qt::NoBrush);
+                painter.drawEllipse(position, 9, 9);
+            }
+        }
+
+        const qreal legendY = 12;
+        drawLegendItem(painter, 52, legendY, colors[0], foreground, LcdDebugWidget::tr("Positive"), false);
+        drawLegendItem(painter, 145, legendY, colors[1], foreground, LcdDebugWidget::tr("Negative"), false);
+        drawLegendItem(painter, 240, legendY, averageColor, foreground, LcdDebugWidget::tr("Average"), true);
+    }
+
+    void mousePressEvent(QMouseEvent *event) override {
+        if (event->button() != Qt::LeftButton) {
+            return;
+        }
+        const int point = pointAt(event->pos());
+        if (point >= 0) {
+            m_selectedPoint = point;
+            m_dragging = true;
+            setFocus(Qt::MouseFocusReason);
+            updatePointFromPosition(event->pos());
+            notifySelectionChanged();
+        }
+    }
+
+    void mouseMoveEvent(QMouseEvent *event) override {
+        if (m_dragging) {
+            updatePointFromPosition(event->pos());
+            return;
+        }
+        const int hover = pointAt(event->pos());
+        if (hover != m_hoverPoint) {
+            m_hoverPoint = hover;
+            setCursor(hover >= 0 ? Qt::OpenHandCursor : Qt::ArrowCursor);
+            update();
+        }
+        if (hover >= 0) {
+            const int previous = m_selectedPoint;
+            m_selectedPoint = hover;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QToolTip::showText(event->globalPosition().toPoint(), selectionText(), this);
+#else
+            QToolTip::showText(event->globalPos(), selectionText(), this);
+#endif
+            m_selectedPoint = previous;
+        }
+    }
+
+    void mouseReleaseEvent(QMouseEvent *event) override {
+        if (event->button() == Qt::LeftButton && m_dragging) {
+            m_dragging = false;
+            setCursor(Qt::OpenHandCursor);
+        }
+    }
+
+    void leaveEvent(QEvent *) override {
+        if (!m_dragging) {
+            m_hoverPoint = -1;
+            setCursor(Qt::ArrowCursor);
+            update();
+        }
+    }
+
+    void keyPressEvent(QKeyEvent *event) override {
+        if (m_selectedPoint < 0) {
+            QWidget::keyPressEvent(event);
+            return;
+        }
+        int delta = 0;
+        switch (event->key()) {
+            case Qt::Key_Up:
+            case Qt::Key_Right:
+                delta = 1;
+                break;
+            case Qt::Key_Down:
+            case Qt::Key_Left:
+                delta = -1;
+                break;
+            case Qt::Key_PageUp:
+                delta = 4;
+                break;
+            case Qt::Key_PageDown:
+                delta = -4;
+                break;
+            case Qt::Key_Home:
+                setSelectedParameter(0);
+                return;
+            case Qt::Key_End:
+                setSelectedParameter(gammaParameterMaximum(m_selectedPoint));
+                return;
+            default:
+                QWidget::keyPressEvent(event);
+                return;
+        }
+        setSelectedParameter(gammaParameterValue(m_curves[m_activeCurve], m_selectedPoint) + delta);
+    }
+
+private:
+    QRectF graphRect() const {
+        return QRectF(rect()).adjusted(52, 30, -18, -46);
+    }
+
+    static QPointF curvePoint(const QRectF &graph, int level, float value) {
+        return QPointF(graph.left() + graph.width() * level / 63.0,
+                       graph.bottom() - graph.height() * value);
+    }
+
+    int pointAt(const QPointF &position) const {
+        float curve[64];
+        panel_get_gamma_curve(curve, &m_curves[m_activeCurve]);
+        const QRectF graph = graphRect();
+        int nearest = -1;
+        qreal nearestDistance = 11.0;
+        for (int point = 0; point < static_cast<int>(gammaPointLevels.size()); point++) {
+            const int level = gammaPointLevels[static_cast<size_t>(point)];
+            const QLineF distance(position, curvePoint(graph, level, curve[level]));
+            if (distance.length() < nearestDistance) {
+                nearestDistance = distance.length();
+                nearest = point;
+            }
+        }
+        return nearest;
+    }
+
+    void updatePointFromPosition(const QPointF &position) {
+        if (m_selectedPoint < 0) {
+            return;
+        }
+        const QRectF graph = graphRect();
+        const float target = std::clamp(static_cast<float>((graph.bottom() - position.y()) / graph.height()), 0.0f, 1.0f);
+        const int level = gammaPointLevels[static_cast<size_t>(m_selectedPoint)];
+        const int maximum = gammaParameterMaximum(m_selectedPoint);
+        int bestValue = gammaParameterValue(m_curves[m_activeCurve], m_selectedPoint);
+        float bestDistance = std::numeric_limits<float>::max();
+        for (int value = 0; value <= maximum; value++) {
+            panel_gamma_t candidate = m_curves[m_activeCurve];
+            setGammaParameterValue(candidate, m_selectedPoint, value);
+            float curve[64];
+            panel_get_gamma_curve(curve, &candidate);
+            const float distance = std::abs(curve[level] - target);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestValue = value;
+            }
+        }
+        setSelectedParameter(bestValue);
+    }
+
+    void setSelectedParameter(int value) {
+        if (m_selectedPoint < 0) {
+            return;
+        }
+        const int maximum = gammaParameterMaximum(m_selectedPoint);
+        value = std::clamp(value, 0, maximum);
+        if (gammaParameterValue(m_curves[m_activeCurve], m_selectedPoint) == value) {
+            return;
+        }
+        setGammaParameterValue(m_curves[m_activeCurve], m_selectedPoint, value);
+        update();
+        notifySelectionChanged();
+        if (changed) {
+            changed();
+        }
+    }
+
+    static void drawLegendItem(QPainter &painter, qreal x, qreal y, const QColor &color,
+                               const QColor &textColor, const QString &text, bool dashed) {
+        painter.setPen(QPen(color, 2, dashed ? Qt::DashLine : Qt::SolidLine));
+        painter.drawLine(QPointF(x, y), QPointF(x + 22, y));
+        painter.setPen(textColor);
+        painter.drawText(QRectF(x + 27, y - 9, 68, 18), Qt::AlignLeft | Qt::AlignVCenter, text);
+    }
+
+    void notifySelectionChanged() {
+        if (selectionChanged) {
+            selectionChanged();
+        }
+    }
+
+    panel_gamma_t m_curves[2]{};
+    int m_activeCurve = 0;
+    int m_selectedPoint = -1;
+    int m_hoverPoint = -1;
+    bool m_dragging = false;
+};
 
 LcdDebugWidget::LcdDebugWidget(QWidget *parent) : QWidget(parent) {
     setObjectName(QStringLiteral("debugLcdWidget"));
@@ -147,6 +560,7 @@ LcdDebugWidget::LcdDebugWidget(QWidget *parent) : QWidget(parent) {
     m_panelEditor = new QGroupBox(tr("Commands"), panelPage);
     auto *panelEditorLayout = new QVBoxLayout(m_panelEditor);
 
+    auto *addressScrollLayout = new QHBoxLayout;
     auto *windowGroup = new QGroupBox(tr("Address window"), m_panelEditor);
     auto *windowForm = new QFormLayout(windowGroup);
     m_colStart = makeSpinBox(0, PANEL_ADDR_MASK, windowGroup);
@@ -157,7 +571,7 @@ LcdDebugWidget::LcdDebugWidget(QWidget *parent) : QWidget(parent) {
     windowForm->addRow(tr("Column end"), m_colEnd);
     windowForm->addRow(tr("Row start"), m_rowStart);
     windowForm->addRow(tr("Row end"), m_rowEnd);
-    panelEditorLayout->addWidget(windowGroup);
+    addressScrollLayout->addWidget(windowGroup, 1);
 
     auto *scrollGroup = new QGroupBox(tr("Vertical scrolling"), m_panelEditor);
     auto *scrollForm = new QFormLayout(scrollGroup);
@@ -169,7 +583,8 @@ LcdDebugWidget::LcdDebugWidget(QWidget *parent) : QWidget(parent) {
     scrollForm->addRow(tr("Scrollable area"), m_scrollArea);
     scrollForm->addRow(tr("Bottom fixed area"), m_scrollBottom);
     scrollForm->addRow(tr("Scroll start"), m_scrollStart);
-    panelEditorLayout->addWidget(scrollGroup);
+    addressScrollLayout->addWidget(scrollGroup, 1);
+    panelEditorLayout->addLayout(addressScrollLayout);
 
     auto *formatGroup = new QGroupBox(tr("Orientation and format"), m_panelEditor);
     auto *formatLayout = new QVBoxLayout(formatGroup);
@@ -213,17 +628,92 @@ LcdDebugWidget::LcdDebugWidget(QWidget *parent) : QWidget(parent) {
     timingForm->addRow(tr("Panel clock divider"), m_panelClockDiv);
     panelEditorLayout->addWidget(timingGroup);
 
-    auto *gammaGroup = new QGroupBox(tr("Gamma"), m_panelEditor);
-    auto *gammaForm = new QFormLayout(gammaGroup);
+    auto *gammaGroup = new QGroupBox(tr("Gamma curves"), m_panelEditor);
+    auto *gammaLayout = new QVBoxLayout(gammaGroup);
+    auto *gammaToolbar = new QHBoxLayout;
     m_gammaPreset = new QComboBox(gammaGroup);
     for (int value = 0; value < 16; value++) {
         QString name = tr("Raw %1").arg(value);
-        if (value == 1 || value == 2 || value == 4 || value == 8) {
-            name = tr("Preset %1").arg(value);
+        switch (value) {
+            case 1: name = tr("Gamma 2.2 (%1)").arg(value); break;
+            case 2: name = tr("Gamma 1.8 (%1)").arg(value); break;
+            case 4: name = tr("Gamma 2.5 (%1)").arg(value); break;
+            case 8: name = tr("Gamma 1.0 (%1)").arg(value); break;
+            default: break;
         }
         m_gammaPreset->addItem(name, value);
     }
-    gammaForm->addRow(tr("Gamma curve (GAMSET)"), m_gammaPreset);
+    auto *loadGammaPreset = new QPushButton(tr("Load preset"), gammaGroup);
+    m_gammaCurve = new QComboBox(gammaGroup);
+    m_gammaCurve->addItem(tr("Positive"), 0);
+    m_gammaCurve->addItem(tr("Negative"), 1);
+    gammaToolbar->addWidget(new QLabel(tr("Preset / GAMSET:"), gammaGroup));
+    gammaToolbar->addWidget(m_gammaPreset, 1);
+    gammaToolbar->addWidget(loadGammaPreset);
+    gammaToolbar->addSpacing(12);
+    gammaToolbar->addWidget(new QLabel(tr("Edit curve:"), gammaGroup));
+    gammaToolbar->addWidget(m_gammaCurve);
+    gammaLayout->addLayout(gammaToolbar);
+
+    m_gammaEditor = new GammaCurveEditor(gammaGroup);
+    gammaLayout->addWidget(m_gammaEditor);
+
+    auto *gammaInterpolation = new QGridLayout;
+    m_gammaPositiveJ0 = makeSpinBox(0, 3, gammaGroup);
+    m_gammaPositiveJ1 = makeSpinBox(0, 3, gammaGroup);
+    m_gammaNegativeJ0 = makeSpinBox(0, 3, gammaGroup);
+    m_gammaNegativeJ1 = makeSpinBox(0, 3, gammaGroup);
+    gammaInterpolation->addWidget(new QLabel(tr("Positive interpolation:"), gammaGroup), 0, 0);
+    gammaInterpolation->addWidget(new QLabel(tr("J0"), gammaGroup), 0, 1);
+    gammaInterpolation->addWidget(m_gammaPositiveJ0, 0, 2);
+    gammaInterpolation->addWidget(new QLabel(tr("J1"), gammaGroup), 0, 3);
+    gammaInterpolation->addWidget(m_gammaPositiveJ1, 0, 4);
+    gammaInterpolation->setColumnStretch(5, 1);
+    gammaInterpolation->addWidget(new QLabel(tr("Negative interpolation:"), gammaGroup), 0, 6);
+    gammaInterpolation->addWidget(new QLabel(tr("J0"), gammaGroup), 0, 7);
+    gammaInterpolation->addWidget(m_gammaNegativeJ0, 0, 8);
+    gammaInterpolation->addWidget(new QLabel(tr("J1"), gammaGroup), 0, 9);
+    gammaInterpolation->addWidget(m_gammaNegativeJ1, 0, 10);
+    gammaLayout->addLayout(gammaInterpolation);
+
+    m_gammaSelection = new QLabel(gammaGroup);
+    m_gammaSelection->setWordWrap(true);
+    m_gammaSelection->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    gammaLayout->addWidget(m_gammaSelection);
+
+    const auto previewPreset = [this] {
+        panel_gamma_t positive, negative;
+        panel_get_gamma_preset(static_cast<uint8_t>(m_gammaPreset->currentData().toInt()), &positive, &negative);
+        m_gammaEditor->setCurves(positive, negative);
+        updateGammaInterpolationEditors();
+    };
+    connect(m_gammaPreset, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [previewPreset](int) { previewPreset(); });
+    connect(loadGammaPreset, &QPushButton::clicked, this, previewPreset);
+    connect(m_gammaCurve, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this](int index) { m_gammaEditor->setActiveCurve(m_gammaCurve->itemData(index).toInt()); });
+    const auto updatePositiveInterpolation = [this] {
+        m_gammaEditor->setInterpolation(0, m_gammaPositiveJ0->value(), m_gammaPositiveJ1->value());
+    };
+    const auto updateNegativeInterpolation = [this] {
+        m_gammaEditor->setInterpolation(1, m_gammaNegativeJ0->value(), m_gammaNegativeJ1->value());
+    };
+    connect(m_gammaPositiveJ0, qOverload<int>(&QSpinBox::valueChanged), this,
+            [updatePositiveInterpolation](int) { updatePositiveInterpolation(); });
+    connect(m_gammaPositiveJ1, qOverload<int>(&QSpinBox::valueChanged), this,
+            [updatePositiveInterpolation](int) { updatePositiveInterpolation(); });
+    connect(m_gammaNegativeJ0, qOverload<int>(&QSpinBox::valueChanged), this,
+            [updateNegativeInterpolation](int) { updateNegativeInterpolation(); });
+    connect(m_gammaNegativeJ1, qOverload<int>(&QSpinBox::valueChanged), this,
+            [updateNegativeInterpolation](int) { updateNegativeInterpolation(); });
+    m_gammaEditor->changed = [this] {
+        updateGammaInterpolationEditors();
+        m_gammaSelection->setText(m_gammaEditor->selectionText());
+    };
+    m_gammaEditor->selectionChanged = [this] {
+        m_gammaSelection->setText(m_gammaEditor->selectionText());
+    };
+    previewPreset();
     panelEditorLayout->addWidget(gammaGroup);
     panelLayout->addWidget(m_panelEditor);
 
@@ -243,6 +733,19 @@ LcdDebugWidget::LcdDebugWidget(QWidget *parent) : QWidget(parent) {
 void LcdDebugWidget::setEditingEnabled(bool enabled) {
     m_pl111Editor->setEnabled(enabled);
     m_panelEditor->setEnabled(enabled);
+}
+
+void LcdDebugWidget::updateGammaInterpolationEditors() {
+    const panel_gamma_t &positive = m_gammaEditor->positiveCurve();
+    const panel_gamma_t &negative = m_gammaEditor->negativeCurve();
+    const QSignalBlocker positiveJ0Block(m_gammaPositiveJ0);
+    const QSignalBlocker positiveJ1Block(m_gammaPositiveJ1);
+    const QSignalBlocker negativeJ0Block(m_gammaNegativeJ0);
+    const QSignalBlocker negativeJ1Block(m_gammaNegativeJ1);
+    m_gammaPositiveJ0->setValue(positive.J0);
+    m_gammaPositiveJ1->setValue(positive.J1);
+    m_gammaNegativeJ0->setValue(negative.J0);
+    m_gammaNegativeJ1->setValue(negative.J1);
 }
 
 void LcdDebugWidget::populate() {
@@ -312,7 +815,13 @@ void LcdDebugWidget::populate() {
     m_rgbHorizBack->setValue(panel.params.RGBCTRL.HBP);
     m_panelHorizFront->setValue(panel.params.FRCTRL2.RTNA);
     m_panelClockDiv->setValue(panel.params.FRCTRL1.DIV);
-    m_gammaPreset->setCurrentIndex(panel.params.GAMSET.GC);
+    {
+        const QSignalBlocker gammaPresetBlock(m_gammaPreset);
+        m_gammaPreset->setCurrentIndex(m_gammaPreset->findData(panel.params.GAMSET.GC));
+    }
+    m_gammaEditor->setCurves(panel.params.PVGAMCTRL, panel.params.NVGAMCTRL);
+    updateGammaInterpolationEditors();
+    m_gammaSelection->setText(m_gammaEditor->selectionText());
 
     panel_timing_t panelTiming;
     panel_get_timing(&panelTiming);
@@ -441,5 +950,14 @@ void LcdDebugWidget::sync() const {
     gamset.GC = static_cast<uint8_t>(m_gammaPreset->currentData().toInt());
     if (memcmp(&gamset, &panel.params.GAMSET, sizeof(gamset))) {
         writeCommand(0x26, gamset);
+    }
+
+    const panel_gamma_t positiveGamma = m_gammaEditor->positiveCurve();
+    if (memcmp(&positiveGamma, &panel.params.PVGAMCTRL, sizeof(positiveGamma))) {
+        writeCommand(0xE0, positiveGamma);
+    }
+    const panel_gamma_t negativeGamma = m_gammaEditor->negativeCurve();
+    if (memcmp(&negativeGamma, &panel.params.NVGAMCTRL, sizeof(negativeGamma))) {
+        writeCommand(0xE1, negativeGamma);
     }
 }

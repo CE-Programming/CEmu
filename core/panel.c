@@ -96,6 +96,27 @@ static const panel_gamma_t gamma_presets[4][2] = {
 
 #undef GAMMA_PARAMS
 
+void panel_get_gamma_preset(uint8_t gammaCurve, panel_gamma_t *positive, panel_gamma_t *negative) {
+    size_t index;
+    switch (gammaCurve) {
+        case 8:
+            index = 3;
+            break;
+        case 4:
+            index = 2;
+            break;
+        case 2:
+            index = 1;
+            break;
+        case 1:
+        default:
+            index = 0;
+            break;
+    }
+    *positive = gamma_presets[index][0];
+    *negative = gamma_presets[index][1];
+}
+
 static inline uint32_t panel_bgr444_epf0(uint16_t bgr444) {
     return (bgr444 << 6 & 0x3C000) | (bgr444 << 4 & 0xF00) | (bgr444 << 2 & 0x3C);
 }
@@ -402,7 +423,7 @@ static float lerp_percent(float a, float b, uint8_t amount) {
     return b + (a - b) * amount * 0.01f;
 }
 
-static void panel_generate_gamma_curve(float curve[64], const panel_gamma_t *params) {
+void panel_get_gamma_curve(float curve[64], const panel_gamma_t *params) {
     static const uint8_t j0_percents[4][8] = {
         { 50, 50, 86, 71, 57, 43, 29, 14 },
         { 56, 44, 71, 57, 40, 29, 17, 6 },
@@ -483,8 +504,8 @@ static void panel_generate_luts(void) {
         if (panel.accurateGamma) {
             backlightFactor *= 255.0f;
             float gamma_pos[64], gamma_neg[64];
-            panel_generate_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
-            panel_generate_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
+            panel_get_gamma_curve(gamma_pos, &panel.params.PVGAMCTRL);
+            panel_get_gamma_curve(gamma_neg, &panel.params.NVGAMCTRL);
             const struct spline *piece = &spline[0];
             for (uint8_t c = 0; c < 64; c++) {
                 float gamma = (gamma_pos[c] + gamma_neg[c]) * 0.5f;
@@ -1254,24 +1275,9 @@ static void panel_write_param(uint8_t value) {
             panel_update_write_pixel_bounds();
         } else if (index >= offsetof(panel_params_t, GAMSET)) {
             if (unlikely(index == offsetof(panel_params_t, GAMSET))) {
-                const panel_gamma_t *gamma_preset;
-                switch (panel.params.GAMSET.GC) {
-                    case 8:
-                        gamma_preset = gamma_presets[3];
-                        break;
-                    case 4:
-                        gamma_preset = gamma_presets[2];
-                        break;
-                    case 2:
-                        gamma_preset = gamma_presets[1];
-                        break;
-                    case 1:
-                    default:
-                        gamma_preset = gamma_presets[0];
-                        break;
-                }
-                panel.params.PVGAMCTRL = gamma_preset[0];
-                panel.params.NVGAMCTRL = gamma_preset[1];
+                panel_get_gamma_preset(panel.params.GAMSET.GC,
+                                       &panel.params.PVGAMCTRL,
+                                       &panel.params.NVGAMCTRL);
             }
             panel.gammaDirty = true;
         }

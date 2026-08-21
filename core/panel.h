@@ -621,8 +621,11 @@ void panel_vsync(void);
 void panel_clock_porch(uint32_t clocks);
 void panel_scan_until(uint32_t currTick);
 void panel_get_timing(panel_timing_t *timing);
+void panel_get_gamma_curve(float curve[64], const panel_gamma_t *params);
+void panel_get_gamma_preset(uint8_t gammaCurve, panel_gamma_t *positive, panel_gamma_t *negative);
 
-/* Debugger API: only call while emulation is paused. */
+/* Debugger API: only call while emulation is paused. Uses the normal command
+ * parser so the same panel_update_* and gamma side effects occur as for SPI. */
 bool panel_debug_write_command(uint8_t command, const uint8_t *params, size_t size);
 
 void panel_spi_select(bool low);

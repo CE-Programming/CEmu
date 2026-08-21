@@ -8,6 +8,7 @@ class QComboBox;
 class QGroupBox;
 class QLabel;
 class QSpinBox;
+class GammaCurveEditor;
 
 class LcdDebugWidget : public QWidget {
     Q_OBJECT
@@ -58,8 +59,17 @@ private:
     QSpinBox *m_panelHorizFront;
     QSpinBox *m_panelClockDiv;
     QComboBox *m_gammaPreset;
+    QComboBox *m_gammaCurve;
+    QSpinBox *m_gammaPositiveJ0;
+    QSpinBox *m_gammaPositiveJ1;
+    QSpinBox *m_gammaNegativeJ0;
+    QSpinBox *m_gammaNegativeJ1;
+    GammaCurveEditor *m_gammaEditor;
+    QLabel *m_gammaSelection;
     QLabel *m_panelTiming;
     QLabel *m_panelState;
+
+    void updateGammaInterpolationEditors();
 };
 
 #endif
