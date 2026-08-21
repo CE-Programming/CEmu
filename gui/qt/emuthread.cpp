@@ -413,10 +413,17 @@ void EmuThread::test(const QString &config, bool run) {
 }
 
 void EmuThread::save(emu_data_t fileType, const QString &filePath) {
-    std::lock_guard<std::mutex> requestLock{m_requestMutex};
-    m_savePath = filePath;
-    m_saveType = fileType;
-    m_requestQueue.enqueue(RequestSave);
+    std::lock_guard<std::mutex> debugLock{m_mutexDebug};
+    {
+        std::lock_guard<std::mutex> requestLock{m_requestMutex};
+        m_savePath = filePath;
+        m_saveType = fileType;
+        m_requestQueue.enqueue(RequestSave);
+    }
+    if (m_debug) {
+        /* The debugger blocks this thread outside the normal request loop. */
+        m_cvDebug.notify_one();
+    }
 }
 
 void EmuThread::setSpeed(int value) {
@@ -453,7 +460,23 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
     std::unique_lock<std::mutex> lock(m_mutexDebug);
     m_debug = true;
     emit debugCommand(reason, data);
-    m_cvDebug.wait(lock, [this](){ return !m_debug; });
+    do {
+        m_cvDebug.wait(lock, [this]() {
+            std::lock_guard<std::mutex> requestLock{m_requestMutex};
+            return !m_debug || m_requestQueue.contains(RequestSave);
+        });
+        bool savePending;
+        {
+            std::lock_guard<std::mutex> requestLock{m_requestMutex};
+            savePending = m_requestQueue.removeOne(RequestSave);
+        }
+        if (savePending) {
+            /* Serialize the paused state before allowing execution to resume. */
+            lock.unlock();
+            doSave();
+            lock.lock();
+        }
+    } while (m_debug);
 }
 
 void EmuThread::resume() {

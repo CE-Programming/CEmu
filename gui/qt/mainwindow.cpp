@@ -1649,6 +1649,9 @@ bool MainWindow::isResetAll() const {
 }
 
 void MainWindow::stateToPath(const QString &path) {
+    if (guiDebug) {
+        debugSync();
+    }
     emu.save(EMU_DATA_IMAGE, appDir().absoluteFilePath(path));
 }
 
