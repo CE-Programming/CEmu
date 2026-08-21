@@ -13,6 +13,10 @@
 DockWidget::DockWidget(QWidget *parent)
     : QDockWidget{parent}, m_titleHide{new QWidget{this}}, m_tabs{this},
       m_closable{true}, m_expandable{true} {
+    connect(this, &QWidget::windowTitleChanged, this, [this](QString title) {
+        toggleViewAction()->setText(title.replace(QLatin1Char('&'), QStringLiteral("&&")));
+    });
+
     // If we just use a vanilla new QWidget for m_titleHide, as a Qt source
     // comment tells us to, then m_titleHide->sizeHint() will return {-1, -1}
     // which, as the exact same Qt comment hints at, doesn't work and causes,
@@ -133,4 +137,3 @@ void DockWidget::closeEvent(QCloseEvent *event) {
     event->accept();
     QDockWidget::closeEvent(event);
 }
-

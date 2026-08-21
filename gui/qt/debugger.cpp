@@ -96,7 +96,7 @@ namespace {
 
 void MainWindow::debugInit() {
     m_lcdDebug = new LcdDebugWidget(ui->tabDebug);
-    ui->tabDebug->addTab(m_lcdDebug, QIcon(QStringLiteral(":/icons/resources/icons/lcd.png")), tr("LCD Controller && Driver"));
+    ui->tabDebug->addTab(m_lcdDebug, QIcon(QStringLiteral(":/icons/resources/icons/lcd.png")), tr("LCD Controller & Driver"));
 
     disasmInit();
 
