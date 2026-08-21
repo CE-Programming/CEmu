@@ -8,8 +8,18 @@
 #include "../../core/mem.h"
 
 #include <QtGui/QPainter>
+#include <QtGui/QContextMenuEvent>
+#include <QtGui/QKeyEvent>
+#include <QtGui/QKeySequence>
+#include <QtGui/QMouseEvent>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMessageBox>
+
+namespace {
+constexpr int BASIC_EDITOR_MARKER_WIDTH = 22;
+}
 
 BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
@@ -21,7 +31,11 @@ BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
 
     connect(this, &QPlainTextEdit::blockCountChanged, this, &BasicEditor::updateLineNumberAreaWidth);
     connect(this, &QPlainTextEdit::updateRequest, this, &BasicEditor::updateLineNumberArea);
+    connect(document(), &QTextDocument::contentsChanged, this, [this] {
+        navigationHistory.clear();
+    });
 
+    setMouseTracking(true);
     updateLineNumberAreaWidth(0);
 }
 
@@ -54,7 +68,7 @@ int BasicEditor::lineNumberAreaWidth()
 
     int singlespace = fontMetrics().horizontalAdvance(QLatin1Char('9'));
 
-    int space = 3 + singlespace * digits;
+    int space = BASIC_EDITOR_MARKER_WIDTH + 3 + singlespace * digits;
 
     return space;
 }
@@ -97,13 +111,172 @@ void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event) const
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
             QString number = QString::number(blockNumber + 1);
-            painter.drawText(-2, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
+            painter.setPen(Qt::black);
+            painter.drawText(BASIC_EDITOR_MARKER_WIDTH, top,
+                             lineNumberArea->width() - BASIC_EDITOR_MARKER_WIDTH - 2,
+                             fontMetrics().height(), Qt::AlignRight, number);
         }
         block = block.next();
         top = bottom;
         bottom = top + static_cast<int>(blockBoundingRect(block).height());
         ++blockNumber;
     }
+}
+
+int BasicEditor::blockNumberAtY(int y) const
+{
+    QTextBlock block = firstVisibleBlock();
+    int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom = top + static_cast<int>(blockBoundingRect(block).height());
+    while (block.isValid()) {
+        if (y >= top && y < bottom) {
+            return block.blockNumber();
+        }
+        block = block.next();
+        top = bottom;
+        bottom = top + static_cast<int>(blockBoundingRect(block).height());
+    }
+    return -1;
+}
+
+QString BasicEditor::gotoLabelAt(const QPoint &pos) const
+{
+    const QTextCursor cursor = cursorForPosition(pos);
+    const QTextBlock block = cursor.block();
+    const int position = cursor.position() - block.position();
+    static const QRegularExpression gotoPattern(
+        QStringLiteral("\\bGoto\\s+([A-Z0-9θ]{1,2})(?![A-Z0-9θ])"),
+        QRegularExpression::CaseInsensitiveOption);
+    auto matches = gotoPattern.globalMatch(block.text());
+    while (matches.hasNext()) {
+        const QRegularExpressionMatch match = matches.next();
+        if (position >= match.capturedStart() && position <= match.capturedEnd()) {
+            return match.captured(1).toUpper();
+        }
+    }
+    return QString();
+}
+
+QStringList BasicEditor::labels() const
+{
+    QStringList result;
+    static const QRegularExpression labelPattern(
+        QStringLiteral("\\bLbl\\s+([A-Z0-9θ]{1,2})(?![A-Z0-9θ])"),
+        QRegularExpression::CaseInsensitiveOption);
+    for (QTextBlock block = document()->begin(); block.isValid(); block = block.next()) {
+        auto matches = labelPattern.globalMatch(block.text());
+        while (matches.hasNext()) {
+            const QString label = matches.next().captured(1).toUpper();
+            if (!result.contains(label)) {
+                result.append(label);
+            }
+        }
+    }
+    result.sort(Qt::CaseInsensitive);
+    return result;
+}
+
+bool BasicEditor::goToLabel(const QString &label)
+{
+    const QRegularExpression labelPattern(
+        QStringLiteral("\\bLbl\\s+%1(?![A-Z0-9θ])").arg(QRegularExpression::escape(label)),
+        QRegularExpression::CaseInsensitiveOption);
+    for (QTextBlock block = document()->begin(); block.isValid(); block = block.next()) {
+        const QRegularExpressionMatch match = labelPattern.match(block.text());
+        if (!match.hasMatch()) {
+            continue;
+        }
+        const int target = block.position() + match.capturedStart();
+        if (textCursor().position() != target) {
+            navigationHistory.append(textCursor().position());
+        }
+        QTextCursor cursor(document());
+        cursor.setPosition(target);
+        cursor.setPosition(target + match.capturedLength(), QTextCursor::KeepAnchor);
+        setTextCursor(cursor);
+        centerCursor();
+        return true;
+    }
+    return false;
+}
+
+bool BasicEditor::goBack()
+{
+    if (navigationHistory.isEmpty()) {
+        return false;
+    }
+    QTextCursor cursor(document());
+    cursor.setPosition(navigationHistory.takeLast());
+    setTextCursor(cursor);
+    centerCursor();
+    return true;
+}
+
+void BasicEditor::addCodeContextActions(QMenu *menu, const QPoint &pos)
+{
+    menu->addSeparator();
+    const QString targetLabel = gotoLabelAt(pos);
+    if (!targetLabel.isEmpty()) {
+        QAction *goToTarget = menu->addAction(tr("Go to Lbl %1").arg(targetLabel));
+        connect(goToTarget, &QAction::triggered, this, [this, targetLabel] { goToLabel(targetLabel); });
+    }
+
+    const QStringList availableLabels = labels();
+    QAction *goToAny = menu->addAction(tr("Go to label…"));
+    goToAny->setEnabled(!availableLabels.isEmpty());
+    connect(goToAny, &QAction::triggered, this, [this, availableLabels] {
+        bool accepted = false;
+        const QString label = QInputDialog::getItem(
+            this, tr("Go to label"), tr("Label:"), availableLabels, 0, false, &accepted);
+        if (accepted) {
+            goToLabel(label);
+        }
+    });
+
+    QAction *back = menu->addAction(tr("Go back"));
+    back->setEnabled(!navigationHistory.isEmpty());
+    connect(back, &QAction::triggered, this, [this] { goBack(); });
+}
+
+void BasicEditor::contextMenuEvent(QContextMenuEvent *event)
+{
+    QMenu *menu = createStandardContextMenu(event->pos());
+    addCodeContextActions(menu, event->pos());
+    menu->exec(event->globalPos());
+    delete menu;
+}
+
+void BasicEditor::keyPressEvent(QKeyEvent *event)
+{
+    if (event->matches(QKeySequence::Back) && goBack()) {
+        event->accept();
+        return;
+    }
+    QPlainTextEdit::keyPressEvent(event);
+}
+
+void BasicEditor::mouseMoveEvent(QMouseEvent *event)
+{
+    const bool modifier = event->modifiers().testFlag(Qt::ControlModifier) ||
+                          event->modifiers().testFlag(Qt::MetaModifier);
+    viewport()->setCursor(modifier && !gotoLabelAt(event->pos()).isEmpty()
+                              ? Qt::PointingHandCursor
+                              : Qt::IBeamCursor);
+    QPlainTextEdit::mouseMoveEvent(event);
+}
+
+void BasicEditor::mouseReleaseEvent(QMouseEvent *event)
+{
+    const bool modifier = event->modifiers().testFlag(Qt::ControlModifier) ||
+                          event->modifiers().testFlag(Qt::MetaModifier);
+    if (event->button() == Qt::LeftButton && modifier) {
+        const QString label = gotoLabelAt(event->pos());
+        if (!label.isEmpty() && goToLabel(label)) {
+            event->accept();
+            return;
+        }
+    }
+    QPlainTextEdit::mouseReleaseEvent(event);
 }
 
 /* Highlighter */

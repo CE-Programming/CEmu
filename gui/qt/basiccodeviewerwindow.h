@@ -2,9 +2,11 @@
 #define BASICCODEVIEWERWINDOW_H
 
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
+#include <QtCore/QVector>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtGui/QSyntaxHighlighter>
@@ -20,6 +22,10 @@ QT_BEGIN_NAMESPACE
     class QSize;
     class QWidget;
     class QTextDocument;
+    class QMenu;
+    class QMouseEvent;
+    class QKeyEvent;
+    class QContextMenuEvent;
 QT_END_NAMESPACE
 
 
@@ -66,17 +72,29 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event) const;
     int lineNumberAreaWidth();
     void toggleHighlight();
+    void addCodeContextActions(QMenu *menu, const QPoint &pos);
 
 protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    void contextMenuEvent(QContextMenuEvent *event) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void updateLineNumberArea(const QRect &, int);
 
 private:
+    int blockNumberAtY(int y) const;
+    QString gotoLabelAt(const QPoint &pos) const;
+    QStringList labels() const;
+    bool goToLabel(const QString &label);
+    bool goBack();
+
     QWidget *lineNumberArea;
     BasicHighlighter *highlighter;
+    QVector<int> navigationHistory;
 };
 
 class LineNumberArea : public QWidget
@@ -94,7 +112,6 @@ protected:
     void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE {
         basicEditor->lineNumberAreaPaintEvent(event);
     }
-
 private:
     virtual void anchor();
     BasicEditor *basicEditor;

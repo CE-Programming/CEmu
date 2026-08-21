@@ -348,6 +348,7 @@ void MainWindow::debugBasicContextMenu(const QPoint &pos) {
             runUntil->setEnabled(true);
         }
     }
+    editor->addCodeContextActions(menu, pos);
     QAction *action = menu->exec(editor->mapToGlobal(pos));
     if (action == runUntil && guiDebug && guiDebugBasic &&
         debugBasicPrgmLookup(false, &actualIndex) != DBG_BASIC_NO_EXECUTING_PRGM && index == actualIndex) {
@@ -355,6 +356,7 @@ void MainWindow::debugBasicContextMenu(const QPoint &pos) {
         debug_step(DBG_BASIC_STEP_NEXT, runUntilRange);
         emu.resume();
     }
+    delete menu;
 }
 
 void MainWindow::debugBasicStep() {
@@ -491,4 +493,3 @@ void MainWindow::debugBasicToggleLiveExecution(bool enabled) {
         debugBasicReconfigure(true);
     }
 }
-
