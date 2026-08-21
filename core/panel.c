@@ -1329,14 +1329,22 @@ static void panel_write_param(uint8_t value) {
 }
 
 bool panel_debug_write_command(uint8_t command, const uint8_t *params, size_t size) {
+    const uint8_t savedCmd = panel.cmd;
+    const uint8_t savedParamIter = panel.paramIter;
+    const uint8_t savedParamEnd = panel.paramEnd;
+
     panel_write_cmd(command);
-    if ((size_t)(panel.paramEnd - panel.paramIter) != size) {
-        return false;
+    const bool validSize = (size_t)(panel.paramEnd - panel.paramIter) == size;
+    if (validSize) {
+        while (size--) {
+            panel_write_param(*params++);
+        }
     }
-    while (size--) {
-        panel_write_param(*params++);
-    }
-    return true;
+
+    panel.cmd = savedCmd;
+    panel.paramIter = savedParamIter;
+    panel.paramEnd = savedParamEnd;
+    return validSize;
 }
 
 void panel_spi_select(bool low) {
