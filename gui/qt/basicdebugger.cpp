@@ -34,6 +34,14 @@ void MainWindow::debugBasicInit() {
 
     connect(ui->basicEdit, &BasicEditor::customContextMenuRequested, this, &MainWindow::debugBasicContextMenu);
     connect(ui->basicTempEdit, &BasicEditor::customContextMenuRequested, this, &MainWindow::debugBasicContextMenu);
+    connect(ui->basicEdit, &BasicEditor::breakpointToggled, this,
+            [this](int line, bool enabled) {
+                debugBasicToggleBreakpoint(ui->basicEdit, m_basicCodeIndex, line, enabled);
+            });
+    connect(ui->basicTempEdit, &BasicEditor::breakpointToggled, this,
+            [this](int line, bool enabled) {
+                debugBasicToggleBreakpoint(ui->basicTempEdit, 0, line, enabled);
+            });
 
     m_basicCurrLine.format.setProperty(QTextFormat::FullWidthSelection, true);
     debugBasicUpdateDarkMode();
@@ -64,11 +72,13 @@ void MainWindow::debugBasicReconfigure(bool forceUpdate) {
         if (guiDebugBasic) {
             debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
             debugBasicUpdate(forceUpdate);
+            debugBasicSyncPendingBreakpoints();
             if (!forceUpdate && !m_basicShowLiveExecution) {
                 debugBasicClearHighlights();
             }
         } else {
             debug_disable_basic_mode();
+            m_basicBreakpointSyncPending.clear();
             watchUpdate();
             debugBasicClearCache();
             debugBasicClearEdits();
@@ -84,6 +94,7 @@ void MainWindow::debugBasicRaise() {
 
 void MainWindow::debugBasicClearCache() {
     m_basicPrgmsTokensMap.clear();
+    m_basicPrgmsIds.clear();
     m_basicPrgmsMap.clear();
     m_basicPrgmsOriginalBytes.clear();
     m_basicPrgmsOriginalCode.clear();
@@ -92,6 +103,7 @@ void MainWindow::debugBasicClearCache() {
     m_basicTempParserNeedsRefresh = false;
 
     m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
+    m_basicPrgmsIds.push_back(QByteArray());
     m_basicPrgmsOriginalBytes.push_back(QByteArray());
     m_basicPrgmsOriginalCode.push_back(QString());
     //m_basicPrgmsFormattedCode.push_back(QString());
@@ -106,6 +118,8 @@ void MainWindow::debugBasicClearCache() {
 void MainWindow::debugBasicClearEdits() {
     ui->basicEdit->clear();
     ui->basicTempEdit->clear();
+    ui->basicEdit->setBreakpoints({});
+    ui->basicTempEdit->setBreakpoints({});
     ui->labelBasicStatus->setText(tr("No Basic Program Executing."));
     m_basicCodeIndex = 0;
 }
@@ -127,6 +141,8 @@ void MainWindow::debugBasicGuiState(bool state) const {
 
     ui->btnDebugBasicStep->setEnabled(state && guiDebugBasic);
     ui->btnDebugBasicStepNext->setEnabled(state && guiDebugBasic);
+    ui->basicEdit->setBreakpointEditingEnabled(guiDebugBasic);
+    ui->basicTempEdit->setBreakpointEditingEnabled(guiDebugBasic);
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwitch, int *idx) {
@@ -155,6 +171,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
 
     calc_var_type_t type = static_cast<calc_var_type_t>(name[0]);
     QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1]), strlen(&name[1]), true));
+    const QByteArray programId(name, 9);
 
     int index = 0;
 
@@ -178,10 +195,14 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
             m_basicPrgmsMap[var_name] = index;
             m_basicPrgmsOriginalBytes.push_back(QByteArray());
             m_basicPrgmsOriginalCode.push_back(QString());
+            m_basicPrgmsIds.push_back(programId);
             //m_basicPrgmsFormattedCode.push_back(QString());
             m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
         }
     }
+
+    const bool programIdChanged = m_basicPrgmsIds[index] != programId;
+    m_basicPrgmsIds[index] = programId;
 
     debug_basic_status_t status = DBG_BASIC_NEED_REFRESH;
     // check if the original program data matches
@@ -205,6 +226,10 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
         m_basicPrgmsOriginalBytes[index] = std::move(prgmBytes);
         //m_basicPrgmsFormattedCode[index] = QString::fromStdString(tivars::TypeHandlers::TH_Tokenized::reindentCodeString(str.toStdString()));
         m_basicPrgmsOriginalCode[index] = std::move(str);
+        debugBasicSyncBreakpoints(index);
+    }
+    if (programIdChanged && status != DBG_BASIC_NEED_REFRESH) {
+        debugBasicSyncBreakpoints(index);
     }
 
     if (idx) {
@@ -220,6 +245,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
             m_basicTempParserNeedsRefresh = true;
         }
     }
+    debugBasicShowBreakpoints(index);
     return status;
 }
 
@@ -228,7 +254,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPrgmLookup(bool allowSwit
 void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
     auto &tokensMap = m_basicPrgmsTokensMap[idx];
     tokensMap.clear();
-    token_highlight_t posinfo = { 0, 0, 0 };
+    token_highlight_t posinfo = { 0, 0, 0, 0 };
     int i = 0;
 
     // if we are doing normal debug, we just highlight based on the
@@ -270,6 +296,9 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
                 tokensMap.append(posinfo);
                 j--;
             }
+            if (i < data.size() && data[i] == 0x3F) {
+                posinfo.sourceLine++;
+            }
             posinfo.offset += posinfo.len + 1;
             posinfo.line++;
             posinfo.len = 0;
@@ -285,6 +314,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
                 posinfo.len = 1;
                 tokensMap.append(posinfo); // need new lines for temp parser
                 posinfo.line++;
+                posinfo.sourceLine++;
                 posinfo.offset++;
                 i++;
                 continue;
@@ -312,9 +342,109 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
     }
 }
 
+bool MainWindow::debugBasicLineRange(int idx, int line, uint16_t *begin, uint16_t *end) const {
+    if (idx < 0 || idx >= m_basicPrgmsTokensMap.size() || line < 0) {
+        return false;
+    }
+    const auto &tokensMap = m_basicPrgmsTokensMap[idx];
+    const auto first = std::find_if(tokensMap.cbegin(), tokensMap.cend(),
+                                    [line](const token_highlight_t &token) { return token.sourceLine == line; });
+    if (first == tokensMap.cend()) {
+        return false;
+    }
+    const auto last = std::find_if(first, tokensMap.cend(),
+                                   [line](const token_highlight_t &token) { return token.sourceLine != line; });
+    *begin = static_cast<uint16_t>(first - tokensMap.cbegin());
+    *end = static_cast<uint16_t>(last - tokensMap.cbegin() - 1);
+    return true;
+}
+
+void MainWindow::debugBasicSyncBreakpoints(int idx) {
+    if (idx < 0 || idx >= m_basicPrgmsIds.size() || m_basicPrgmsIds[idx].size() != 9) {
+        return;
+    }
+    const QByteArray programId = m_basicPrgmsIds[idx];
+    debug_basic_breakpoint_clear_program(programId.constData());
+
+    QSet<int> validLines;
+    for (int line : m_basicSourceBreakpoints.value(programId)) {
+        uint16_t begin, end;
+        if (debugBasicLineRange(idx, line, &begin, &end) &&
+            debug_basic_breakpoint_set(programId.constData(), begin, end, true)) {
+            validLines.insert(line);
+        }
+    }
+    if (validLines.isEmpty()) {
+        m_basicSourceBreakpoints.remove(programId);
+    } else {
+        m_basicSourceBreakpoints[programId] = validLines;
+    }
+}
+
+void MainWindow::debugBasicSyncPendingBreakpoints() {
+    for (int index : m_basicBreakpointSyncPending) {
+        debugBasicSyncBreakpoints(index);
+    }
+    m_basicBreakpointSyncPending.clear();
+}
+
+void MainWindow::debugBasicShowBreakpoints(int idx) const {
+    BasicEditor *editor = idx == 0 ? ui->basicTempEdit : ui->basicEdit;
+    if (idx < 0 || idx >= m_basicPrgmsIds.size()) {
+        editor->setBreakpoints({});
+        return;
+    }
+    editor->setBreakpoints(m_basicSourceBreakpoints.value(m_basicPrgmsIds[idx]));
+}
+
+void MainWindow::debugBasicToggleBreakpoint(BasicEditor *editor, int idx, int line, bool enabled) {
+    const bool editorMatchesIndex = (editor == ui->basicTempEdit && idx == 0) ||
+                                    (editor == ui->basicEdit && idx == m_basicCodeIndex);
+    if (!guiDebugBasic || idx < 0 || idx >= m_basicPrgmsIds.size() ||
+        m_basicPrgmsIds[idx].size() != 9) {
+        if (editorMatchesIndex) {
+            debugBasicShowBreakpoints(idx);
+        }
+        return;
+    }
+    uint16_t begin, end;
+    if (!debugBasicLineRange(idx, line, &begin, &end)) {
+        if (editorMatchesIndex) {
+            debugBasicShowBreakpoints(idx);
+        }
+        return;
+    }
+
+    const QByteArray programId = m_basicPrgmsIds[idx];
+    if (enabled) {
+        m_basicSourceBreakpoints[programId].insert(line);
+    } else {
+        auto breakpoints = m_basicSourceBreakpoints.value(programId);
+        breakpoints.remove(line);
+        if (breakpoints.isEmpty()) {
+            m_basicSourceBreakpoints.remove(programId);
+        } else {
+            m_basicSourceBreakpoints[programId] = breakpoints;
+        }
+    }
+    if (editorMatchesIndex) {
+        debugBasicShowBreakpoints(idx);
+    }
+    if (guiDebug) {
+        debugBasicSyncBreakpoints(idx);
+        debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
+    } else {
+        const bool requestSync = m_basicBreakpointSyncPending.isEmpty();
+        m_basicBreakpointSyncPending.insert(idx);
+        if (requestSync) {
+            emu.debug(true, EmuThread::RequestBasicDebugger);
+        }
+    }
+}
+
 void MainWindow::debugBasicContextMenu(const QPoint &pos) {
     BasicEditor *editor = static_cast<BasicEditor*>(sender());
-    bool valid = guiDebug && guiDebugBasic;
+    bool valid = guiDebugBasic;
     int index = 0;
     if (editor == ui->basicEdit) {
         index = m_basicCodeIndex;
@@ -329,10 +459,15 @@ void MainWindow::debugBasicContextMenu(const QPoint &pos) {
     menu->addSeparator();
     QAction *runUntil = menu->addAction(ACTION_RUN_UNTIL);
     runUntil->setEnabled(false);
+    const int sourceLine = editor->cursorForPosition(pos).blockNumber();
+    const bool sourceBreakpointWasSet = editor->hasBreakpoint(sourceLine);
+    QAction *sourceBreakpoint = menu->addAction(
+        sourceBreakpointWasSet ? tr("Remove source breakpoint") : tr("Add source breakpoint"));
+    sourceBreakpoint->setEnabled(false);
     uint32_t runUntilRange = 0;
 
     int actualIndex = 0;
-    if (valid && debugBasicPrgmLookup(false, &actualIndex) != DBG_BASIC_NO_EXECUTING_PRGM && index == actualIndex) {
+    if (guiDebug && valid && debugBasicPrgmLookup(false, &actualIndex) != DBG_BASIC_NO_EXECUTING_PRGM && index == actualIndex) {
         const auto &tokensMap = m_basicPrgmsTokensMap[index];
         const int cursorOffset = editor->cursorForPosition(pos).position();
         const auto last = std::make_reverse_iterator(
@@ -348,6 +483,10 @@ void MainWindow::debugBasicContextMenu(const QPoint &pos) {
             runUntil->setEnabled(true);
         }
     }
+    uint16_t breakpointBegin, breakpointEnd;
+    sourceBreakpoint->setEnabled(valid && index >= 0 && index < m_basicPrgmsIds.size() &&
+                                 m_basicPrgmsIds[index].size() == 9 &&
+                                 debugBasicLineRange(index, sourceLine, &breakpointBegin, &breakpointEnd));
     editor->addCodeContextActions(menu, pos);
     QAction *action = menu->exec(editor->mapToGlobal(pos));
     if (action == runUntil && guiDebug && guiDebugBasic &&
@@ -355,6 +494,8 @@ void MainWindow::debugBasicContextMenu(const QPoint &pos) {
         debugSync();
         debug_step(DBG_BASIC_STEP_NEXT, runUntilRange);
         emu.resume();
+    } else if (action == sourceBreakpoint) {
+        debugBasicToggleBreakpoint(editor, index, sourceLine, !sourceBreakpointWasSet);
     }
     delete menu;
 }

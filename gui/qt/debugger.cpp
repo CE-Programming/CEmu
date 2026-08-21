@@ -560,6 +560,20 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             guiDebug = false;
             emu.resume();
             return;
+        case DBG_BASIC_BREAKPOINT: {
+            int index = 0;
+            if (debugBasicPrgmLookup(true, &index) == DBG_BASIC_NO_EXECUTING_PRGM ||
+                index >= m_basicPrgmsTokensMap.size() || data >= static_cast<uint32_t>(m_basicPrgmsTokensMap[index].size())) {
+                emu.resume();
+                return;
+            }
+            debugBasicUpdate(true);
+            const int line = m_basicPrgmsTokensMap[index][data].line + 1;
+            ui->debuggerLabel->setText(
+                tr("Hit BASIC source breakpoint in %1 at line %2").arg(debugBasicGetPrgmName()).arg(line));
+            debugBasicRaise();
+            return;
+        }
         case DBG_BASIC_STEP:
             if (debugBasicUpdate(false) == DBG_BASIC_NO_EXECUTING_PRGM) {
                 emu.resume();

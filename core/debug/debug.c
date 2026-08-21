@@ -21,6 +21,32 @@ typedef struct debug_atomics {
 
 static debug_atomics_t debug_atomics;
 
+typedef struct basic_source_breakpoint {
+    char program[9];
+    uint16_t begin, end;
+} basic_source_breakpoint_t;
+
+#define DBG_BASIC_BREAKPOINT_MAX 256
+static basic_source_breakpoint_t basicBreakpoints[DBG_BASIC_BREAKPOINT_MAX];
+static size_t basicBreakpointCount;
+
+static bool debug_basic_breakpoint_hit(uint32_t *offset) {
+    char program[10];
+    if (!debug_get_executing_basic_prgm(program)) {
+        return false;
+    }
+    const uint32_t current = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
+    for (size_t i = 0; i < basicBreakpointCount; i++) {
+        const basic_source_breakpoint_t *breakpoint = &basicBreakpoints[i];
+        if (current >= breakpoint->begin && current <= breakpoint->end &&
+            !memcmp(program, breakpoint->program, sizeof breakpoint->program)) {
+            *offset = current;
+            return true;
+        }
+    }
+    return false;
+}
+
 void debug_init(void) {
     debug_clear_step();
     debug.stackIndex = debug.stackSize = 0;
@@ -28,6 +54,7 @@ void debug_init(void) {
     debug.addr = (uint8_t*)calloc(DBG_ADDR_SIZE, sizeof(uint8_t));
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
+    basicBreakpointCount = 0;
     debug_atomics.open = false;
     debug_disable_basic_mode();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
@@ -94,7 +121,11 @@ void debug_open(int reason, uint32_t data) {
                 }
             }
         }
-        if (debug.stepBasic && (reason == DBG_BASIC_CURPC_WRITE || reason == DBG_BASIC_BASIC_PROG_WRITE)) {
+        uint32_t basicBreakpointOffset;
+        if (reason == DBG_BASIC_CURPC_WRITE && debug_basic_breakpoint_hit(&basicBreakpointOffset)) {
+            reason = DBG_BASIC_BREAKPOINT;
+            data = basicBreakpointOffset;
+        } else if (debug.stepBasic && (reason == DBG_BASIC_CURPC_WRITE || reason == DBG_BASIC_BASIC_PROG_WRITE)) {
             uint32_t offset = mem_peek_long(DBG_BASIC_CURPC) - mem_peek_long(DBG_BASIC_BEGPC);
             /* Allow self-looping with Step In, but only if the hook PC is the same as what was stepped from */
             bool inRange = offset >= (uint32_t)debug.stepBasicBegin + (!debug.stepBasicNext && debug.basicLastHookPC == debug.stepBasicFromPC) &&
@@ -105,12 +136,14 @@ void debug_open(int reason, uint32_t data) {
             }
         }
 
-        if (!debug.basicModeLive && reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
+        if (!debug.basicModeLive && reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END &&
+            !(reason == DBG_BASIC_BASIC_PROG_WRITE && basicBreakpointCount)) {
             return;
         }
     }
 
-    if ((debug_get_flags() & DBG_IGNORE) && (reason >= DBG_BREAKPOINT && reason <= DBG_REG_WRITE)) {
+    if ((debug_get_flags() & DBG_IGNORE) &&
+        ((reason >= DBG_BREAKPOINT && reason <= DBG_REG_WRITE) || reason == DBG_BASIC_BREAKPOINT)) {
         return;
     }
 
@@ -489,6 +522,50 @@ bool debug_get_executing_basic_prgm(char *name) {
     } else {
         return false;
     }
+}
+
+bool debug_basic_breakpoint_set(const char program[9], uint16_t begin, uint16_t end, bool set) {
+    if (program == NULL || begin > end) {
+        return false;
+    }
+    for (size_t i = 0; i < basicBreakpointCount; i++) {
+        basic_source_breakpoint_t *breakpoint = &basicBreakpoints[i];
+        if (begin == breakpoint->begin && end == breakpoint->end &&
+            !memcmp(program, breakpoint->program, sizeof breakpoint->program)) {
+            if (!set) {
+                basicBreakpoints[i] = basicBreakpoints[--basicBreakpointCount];
+            }
+            return true;
+        }
+    }
+    if (!set) {
+        return true;
+    }
+    if (basicBreakpointCount == DBG_BASIC_BREAKPOINT_MAX) {
+        return false;
+    }
+    basic_source_breakpoint_t *breakpoint = &basicBreakpoints[basicBreakpointCount++];
+    memcpy(breakpoint->program, program, sizeof breakpoint->program);
+    breakpoint->begin = begin;
+    breakpoint->end = end;
+    return true;
+}
+
+void debug_basic_breakpoint_clear_program(const char program[9]) {
+    if (program == NULL) {
+        return;
+    }
+    for (size_t i = 0; i < basicBreakpointCount;) {
+        if (!memcmp(program, basicBreakpoints[i].program, sizeof basicBreakpoints[i].program)) {
+            basicBreakpoints[i] = basicBreakpoints[--basicBreakpointCount];
+        } else {
+            i++;
+        }
+    }
+}
+
+void debug_basic_breakpoint_clear_all(void) {
+    basicBreakpointCount = 0;
 }
 
 #endif

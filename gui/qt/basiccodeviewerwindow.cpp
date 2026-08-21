@@ -19,6 +19,7 @@
 
 namespace {
 constexpr int BASIC_EDITOR_MARKER_WIDTH = 22;
+constexpr int BASIC_EDITOR_GUTTER_VERTICAL_OFFSET = -2;
 }
 
 BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
@@ -110,11 +111,21 @@ void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event) const
 
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
+            if (breakpoints.contains(blockNumber)) {
+                constexpr int markerSize = 10;
+                const int markerLeft = (BASIC_EDITOR_MARKER_WIDTH - markerSize) / 2;
+                const int markerTop = top + (bottom - top - markerSize) / 2 +
+                                      BASIC_EDITOR_GUTTER_VERTICAL_OFFSET;
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(QColor(0xD0, 0x32, 0x32));
+                painter.drawEllipse(markerLeft, markerTop, markerSize, markerSize);
+            }
             QString number = QString::number(blockNumber + 1);
             painter.setPen(Qt::black);
-            painter.drawText(BASIC_EDITOR_MARKER_WIDTH, top,
+            painter.drawText(BASIC_EDITOR_MARKER_WIDTH,
+                             top + BASIC_EDITOR_GUTTER_VERTICAL_OFFSET,
                              lineNumberArea->width() - BASIC_EDITOR_MARKER_WIDTH - 2,
-                             fontMetrics().height(), Qt::AlignRight, number);
+                             bottom - top, Qt::AlignRight | Qt::AlignVCenter, number);
         }
         block = block.next();
         top = bottom;
@@ -137,6 +148,25 @@ int BasicEditor::blockNumberAtY(int y) const
         bottom = top + static_cast<int>(blockBoundingRect(block).height());
     }
     return -1;
+}
+
+void BasicEditor::lineNumberAreaMousePressEvent(QMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton || !breakpointEditingEnabled) {
+        return;
+    }
+    const int line = blockNumberAtY(event->pos().y());
+    if (line < 0) {
+        return;
+    }
+    const bool enabled = !breakpoints.contains(line);
+    if (enabled) {
+        breakpoints.insert(line);
+    } else {
+        breakpoints.remove(line);
+    }
+    lineNumberArea->update();
+    emit breakpointToggled(line, enabled);
 }
 
 QString BasicEditor::gotoLabelAt(const QPoint &pos) const
@@ -236,6 +266,23 @@ void BasicEditor::addCodeContextActions(QMenu *menu, const QPoint &pos)
     QAction *back = menu->addAction(tr("Go back"));
     back->setEnabled(!navigationHistory.isEmpty());
     connect(back, &QAction::triggered, this, [this] { goBack(); });
+}
+
+void BasicEditor::setBreakpointEditingEnabled(bool enabled)
+{
+    breakpointEditingEnabled = enabled;
+    lineNumberArea->setCursor(enabled ? Qt::PointingHandCursor : Qt::ArrowCursor);
+}
+
+void BasicEditor::setBreakpoints(const QSet<int> &lines)
+{
+    breakpoints = lines;
+    lineNumberArea->update();
+}
+
+bool BasicEditor::hasBreakpoint(int line) const
+{
+    return breakpoints.contains(line);
 }
 
 void BasicEditor::contextMenuEvent(QContextMenuEvent *event)

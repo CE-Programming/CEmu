@@ -5,6 +5,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QObject>
+#include <QtCore/QSet>
 #include <QtCore/QTimer>
 #include <QtCore/QVector>
 #include <QtWidgets/QDialog>
@@ -70,9 +71,16 @@ public:
 
     void updateDarkMode();
     void lineNumberAreaPaintEvent(QPaintEvent *event) const;
+    void lineNumberAreaMousePressEvent(QMouseEvent *event);
     int lineNumberAreaWidth();
     void toggleHighlight();
     void addCodeContextActions(QMenu *menu, const QPoint &pos);
+    void setBreakpointEditingEnabled(bool enabled);
+    void setBreakpoints(const QSet<int> &lines);
+    bool hasBreakpoint(int line) const;
+
+signals:
+    void breakpointToggled(int line, bool enabled);
 
 protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
@@ -94,7 +102,9 @@ private:
 
     QWidget *lineNumberArea;
     BasicHighlighter *highlighter;
+    QSet<int> breakpoints;
     QVector<int> navigationHistory;
+    bool breakpointEditingEnabled = false;
 };
 
 class LineNumberArea : public QWidget
@@ -112,6 +122,10 @@ protected:
     void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE {
         basicEditor->lineNumberAreaPaintEvent(event);
     }
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE {
+        basicEditor->lineNumberAreaMousePressEvent(event);
+    }
+
 private:
     virtual void anchor();
     BasicEditor *basicEditor;

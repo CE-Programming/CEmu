@@ -25,6 +25,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QStringList>
 #include <QtCore/QSettings>
+#include <QtCore/QSet>
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtCore/QPointer>
@@ -44,6 +45,8 @@ class QEvent;
 class QCloseEvent;
 class QObject;
 QT_END_NAMESPACE
+
+class BasicEditor;
 
 #ifdef LIBUSB_SUPPORT
 # include <libusb.h>
@@ -126,7 +129,8 @@ protected:
 
 private:
     typedef struct {
-        int line;
+        int line;       // statement group used by BASIC stepping
+        int sourceLine; // physical line in the source editor
         int offset;
         int len;
     } token_highlight_t;
@@ -347,6 +351,11 @@ private:
     debug_basic_status_t debugBasicUpdate(bool force);
     debug_basic_status_t debugBasicPrgmLookup(bool allowSwitch, int *idx);
     void debugBasicCreateTokenMap(int idx, const QByteArray &data);
+    bool debugBasicLineRange(int idx, int line, uint16_t *begin, uint16_t *end) const;
+    void debugBasicSyncBreakpoints(int idx);
+    void debugBasicSyncPendingBreakpoints();
+    void debugBasicShowBreakpoints(int idx) const;
+    void debugBasicToggleBreakpoint(BasicEditor *editor, int idx, int line, bool enabled);
     void debugBasicGuiState(bool state) const;
     void debugBasicContextMenu(const QPoint &pos);
     void debugBasicToggleHighlight(bool enabled);
@@ -720,7 +729,10 @@ private:
     bool m_basicShowLiveExecution = true;
     bool m_basicClearCache = false;
     QList<QList<token_highlight_t>> m_basicPrgmsTokensMap;
+    QList<QByteArray> m_basicPrgmsIds;
     QMap<QString, int> m_basicPrgmsMap;
+    QMap<QByteArray, QSet<int>> m_basicSourceBreakpoints;
+    QSet<int> m_basicBreakpointSyncPending;
     QList<QByteArray> m_basicPrgmsOriginalBytes;
     QStringList m_basicPrgmsOriginalCode;
     //QStringList m_basicPrgmsFormattedCode;

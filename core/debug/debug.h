@@ -33,6 +33,7 @@ enum {
     DBG_STEP,                /* step command executed */
     DBG_BASIC_RECONFIG,      /* basic mode reconfiguration needed */
     DBG_BASIC_STEP,          /* basic step command executed */
+    DBG_BASIC_BREAKPOINT,    /* BASIC source breakpoint hit */
     DBG_BASIC_LIVE_START,
     DBG_BASIC_BEGPC_READ,    /* begpc read */
     DBG_BASIC_CURPC_READ,    /* curpc read */
@@ -81,6 +82,9 @@ int debug_get_flags(void);
 void debug_enable_basic_mode(bool fetches, bool live);
 void debug_disable_basic_mode(void);
 bool debug_get_executing_basic_prgm(char *name);
+bool debug_basic_breakpoint_set(const char program[9], uint16_t begin, uint16_t end, bool set);
+void debug_basic_breakpoint_clear_program(const char program[9]);
+void debug_basic_breakpoint_clear_all(void);
 
 /* masks */
 #define DBG_MASK_NONE         (0 << 0)
