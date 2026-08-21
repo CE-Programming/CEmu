@@ -39,7 +39,7 @@ static void flash_set_mask(void) {
                    | flash.maskReg[1] << 8
                    | flash.maskReg[2] << 16
                    | flash.maskReg[3] << 24;
-    flash.mask = ~value & (SIZE_FLASH - 1);
+    flash.mask = ~value & (mem.flash.size - 1);
 }
 
 void flash_flush_cache(void) {
@@ -108,9 +108,9 @@ static void flash_finish_command(void) {
 }
 
 static void flash_erase(uint32_t size) {
-    assert(!(size & (size - 1)));
+    assert(!(size & (size - 1)) && size <= mem.flash.size);
     if (flash.commandStatus[1] & 1 << 1) {
-        memset(&mem.flash.block[flash.commandAddress & (SIZE_FLASH - 1) & -size], 0xFF, size);
+        memset(&mem.flash.block[flash.commandAddress & (mem.flash.size - size)], 0xFF, size);
     }
     flash_finish_command();
 }
@@ -150,7 +150,7 @@ static void flash_execute_command(void) {
             flash_erase(64 << 10);
             break;
         case 0xC7: case 0x60: // Chip Erase
-            flash_erase(SIZE_FLASH);
+            flash_erase(mem.flash.size);
             break;
     }
     if (!flash.commandLength && flash.commandStatus[0] & 3 << 1) {
@@ -201,8 +201,14 @@ static uint8_t flash_read_command(bool peek) {
                     flash.commandAddress = 0;
                 }
                 addr = 0;
+            } else if (addr == 2) {
+                value = 0x16;
+                while ((1 << value) < mem.flash.size) {
+                    value++;
+                }
+            } else {
+                value = 0xEF40 >> (1 - addr) * 8;
             }
-            value = 0xEF4016 >> (2 - addr) * 8;
             if (!peek) {
                 flash.commandAddress++;
             }
@@ -213,7 +219,7 @@ static uint8_t flash_read_command(bool peek) {
 static void flash_write_command(uint8_t byte) {
     switch (flash.command[0xF]) {
         case 0x32: // Quad Input Page Program
-            mem.flash.block[flash.commandAddress & (SIZE_FLASH - 1)] &= byte;
+            mem.flash.block[flash.commandAddress & (mem.flash.size - 1)] &= byte;
             flash.commandAddress = (flash.commandAddress & ~0xFF) | ((flash.commandAddress + 1) & 0xFF);
             break;
     }

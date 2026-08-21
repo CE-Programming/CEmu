@@ -91,7 +91,6 @@ private:
     QByteArray m_data;
     QByteArray m_modified;
     int m_size;
-    int m_maxOffset;
 
     QRect m_cursor;
     int m_cursorOffset = 0;
