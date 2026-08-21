@@ -156,6 +156,7 @@ set(CEmu_Sources
     keypad/rectkey.cpp keypad/rectkey.h
     keypad/secondkey.h
     lcdwidget.cpp lcdwidget.h
+    lcddebugwidget.cpp lcddebugwidget.h
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
     memorywidget.cpp

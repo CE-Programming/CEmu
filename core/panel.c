@@ -555,6 +555,22 @@ static uint32_t panel_start_frame() {
 
     panel_generate_luts();
 
+    panel_timing_t timing;
+    panel_get_timing(&timing);
+
+    panel.ticksPerLine = timing.horizActive + timing.horizFrontPorch;
+    panel.linesPerFrame = timing.vertActive + timing.vertFrontPorch;
+    panel.horizBackPorch = timing.horizBackPorch;
+    uint32_t ticksPerFrame = (timing.horizBackPorch + panel.ticksPerLine) * (timing.vertBackPorch + panel.linesPerFrame);
+    panel.lineStartTick = ticksPerFrame + panel.ticksPerLine;
+    panel_start_line(-timing.vertBackPorch);
+
+    panel.skipFrame = !lcd_gui_event();
+
+    return ticksPerFrame;
+}
+
+void panel_get_timing(panel_timing_t *timing) {
     uint16_t vertBackPorch, vertFrontPorch, horizBackPorch, horizFrontPorch;
     if (likely(panel.displayMode == PANEL_DM_RGB)) {
         if (unlikely(panel_hv_mode_enabled())) {
@@ -591,16 +607,12 @@ static uint32_t panel_start_frame() {
         vertBackPorch = 1;
     }
 
-    panel.ticksPerLine = PANEL_NUM_COLS + horizFrontPorch;
-    panel.linesPerFrame = PANEL_NUM_ROWS + vertFrontPorch;
-    panel.horizBackPorch = horizBackPorch;
-    uint32_t ticksPerFrame = (horizBackPorch + panel.ticksPerLine) * (vertBackPorch + panel.linesPerFrame);
-    panel.lineStartTick = ticksPerFrame + panel.ticksPerLine;
-    panel_start_line(-vertBackPorch);
-
-    panel.skipFrame = !lcd_gui_event();
-
-    return ticksPerFrame;
+    timing->horizBackPorch = horizBackPorch;
+    timing->horizActive = PANEL_NUM_COLS;
+    timing->horizFrontPorch = horizFrontPorch;
+    timing->vertBackPorch = vertBackPorch;
+    timing->vertActive = PANEL_NUM_ROWS;
+    timing->vertFrontPorch = vertFrontPorch;
 }
 
 bool panel_hsync(void) {
@@ -1314,6 +1326,17 @@ static void panel_write_param(uint8_t value) {
                 break;
         }
     }
+}
+
+bool panel_debug_write_command(uint8_t command, const uint8_t *params, size_t size) {
+    panel_write_cmd(command);
+    if ((size_t)(panel.paramEnd - panel.paramIter) != size) {
+        return false;
+    }
+    while (size--) {
+        panel_write_param(*params++);
+    }
+    return true;
 }
 
 void panel_spi_select(bool low) {

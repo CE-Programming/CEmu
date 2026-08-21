@@ -79,6 +79,8 @@ signals:
 
 namespace Ui { class MainWindow; }
 
+class LcdDebugWidget;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -776,6 +778,7 @@ private:
     QMenu *m_menuDebug;
 
     KeyHistoryWidget *m_windowKeys = nullptr;
+    LcdDebugWidget *m_lcdDebug = nullptr;
 
     bool m_isSendingRom = false;
     QString m_dragRom;

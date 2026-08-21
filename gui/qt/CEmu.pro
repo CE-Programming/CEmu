@@ -244,6 +244,7 @@ SOURCES += \
     mainwindow.cpp \
     romselection.cpp \
     lcdwidget.cpp \
+    lcddebugwidget.cpp \
     emuthread.cpp \
     datawidget.cpp \
     dockwidget.cpp \
@@ -330,6 +331,7 @@ HEADERS  += \
     mainwindow.h \
     romselection.h \
     lcdwidget.h \
+    lcddebugwidget.h \
     emuthread.h \
     datawidget.h \
     dockwidget.h \

@@ -3,6 +3,7 @@
 #include "dockwidget.h"
 #include "utils.h"
 #include "visualizerwidget.h"
+#include "lcddebugwidget.h"
 #include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
@@ -94,6 +95,9 @@ namespace {
 // -----------------------------------------------
 
 void MainWindow::debugInit() {
+    m_lcdDebug = new LcdDebugWidget(ui->tabDebug);
+    ui->tabDebug->addTab(m_lcdDebug, QIcon(QStringLiteral(":/icons/resources/icons/lcd.png")), tr("LCD Controller && Driver"));
+
     disasmInit();
 
     ui->afregView->installEventFilter(this);
@@ -658,6 +662,8 @@ void MainWindow::debugSync() const {
 
     lcd_update();
 
+    m_lcdDebug->sync();
+
     ui->debuggerLabel->clear();
 
     if (guiDebugBasic && !m_basicShowLiveExecution) {
@@ -676,6 +682,7 @@ void MainWindow::debugGuiState(bool state) const {
     }
 
     m_disasm->setEnabled(state);
+    m_lcdDebug->setEditingEnabled(state);
     ui->buttonGoto->setEnabled(state);
     ui->buttonStepIn->setEnabled(state);
     ui->buttonStepOver->setEnabled(state);
@@ -914,6 +921,8 @@ void MainWindow::debugPopulate() {
     ui->checkBEBO->setChecked(lcd.control & 0x200);
     ui->checkBGR->setChecked(lcd.control & 0x100);
     ui->brightnessSlider->setValue(backlight.brightness);
+
+    m_lcdDebug->populate();
 
     m_ports->blockSignals(true);
     m_watchpoints->blockSignals(true);

@@ -9,6 +9,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 
 #define PANEL_RAM_RED 0
@@ -49,6 +50,15 @@ typedef struct panel_mem_ptr {
     uint16_t xAddr;
     uint16_t yAddr;
 } panel_mem_ptr_t;
+
+typedef struct panel_timing {
+    uint16_t horizBackPorch;
+    uint16_t horizActive;
+    uint16_t horizFrontPorch;
+    uint16_t vertBackPorch;
+    uint16_t vertActive;
+    uint16_t vertFrontPorch;
+} panel_timing_t;
 
 #if CEMU_BITFIELD_ORDER == CEMU_LITTLE_ENDIAN
 # define PARAM_BYTE_LOW(NAME, WIDTH)    \
@@ -610,6 +620,10 @@ bool panel_hsync(void);
 void panel_vsync(void);
 void panel_clock_porch(uint32_t clocks);
 void panel_scan_until(uint32_t currTick);
+void panel_get_timing(panel_timing_t *timing);
+
+/* Debugger API: only call while emulation is paused. */
+bool panel_debug_write_command(uint8_t command, const uint8_t *params, size_t size);
 
 void panel_spi_select(bool low);
 uint8_t panel_spi_peek(uint32_t* rxData);
