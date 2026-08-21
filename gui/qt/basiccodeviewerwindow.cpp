@@ -1,12 +1,14 @@
 #include "basiccodeviewerwindow.h"
 #include "ui_basiccodeviewerwindow.h"
 
+#include "tibasicutils.h"
 #include "utils.h"
 
 #include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 
 #include "../../core/mem.h"
 
+#include <QtCore/QSignalBlocker>
 #include <QtGui/QPainter>
 #include <QtGui/QContextMenuEvent>
 #include <QtGui/QKeyEvent>
@@ -440,6 +442,8 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     rule.format = quotationFormat;
     highlightingRules.append(rule);
 
+    commentFormat.setForeground(darkMode ? Qt::lightGray : Qt::darkGray);
+
     otherFormat.setForeground(darkMode ? Qt::lightGray : Qt::black);
     rule.pattern = QRegularExpression("→");
     rule.format = otherFormat;
@@ -458,6 +462,22 @@ void BasicHighlighter::highlightBlock(const QString &text)
             }
         }
     }
+
+    bool withinString = false;
+    for (int pos = 0; pos < text.size(); pos++) {
+        const QChar character = text.at(pos);
+        if (!withinString && character == QLatin1Char('#')) {
+            setFormat(pos, text.size() - pos, commentFormat);
+            break;
+        }
+        if (character == QLatin1Char('"')) {
+            withinString = !withinString;
+        } else if (withinString && (character == QChar(0x2192) ||
+                   (character == QLatin1Char('-') && pos + 1 < text.size() &&
+                    text.at(pos + 1) == QLatin1Char('>')))) {
+            withinString = false;
+        }
+    }
     setCurrentBlockState(0);
 }
 
@@ -473,11 +493,15 @@ BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent, bool doHighlight, 
     connect(ui->checkboxHighlighting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleHighlight);
     connect(ui->checkboxLineWrapping, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleWrap);
     connect(ui->checkboxReformatting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleFormat);
+    connect(ui->buttonSave, &QPushButton::clicked, this, &BasicCodeViewerWindow::save);
+    connect(ui->basicEdit->document(), &QTextDocument::modificationChanged, this, [this] { updateSaveButton(); });
+    connect(ui->checkboxArchived, &QCheckBox::toggled, this, [this] { updateSaveButton(); });
 
     ui->basicEdit->setWordWrapMode(m_showingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
 
     // Add special jacobly font
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
+    setEditable(false);
 }
 
 void BasicCodeViewerWindow::setVariableName(const QString &name) {
@@ -487,12 +511,70 @@ void BasicCodeViewerWindow::setVariableName(const QString &name) {
 
 void BasicCodeViewerWindow::setOriginalCode(const QString &code, bool reindent) {
     m_originalCode = code;
+    m_canReformat = reindent;
     if (reindent) {
         m_formattedCode = QString::fromStdString(tivars::TypeHandlers::TH_Tokenized::reindentCodeString(m_originalCode.toStdString()));
     } else {
         m_formattedCode = m_originalCode;
+        if (m_showingFormatted) {
+            const QSignalBlocker blocker(ui->checkboxReformatting);
+            ui->checkboxReformatting->setChecked(false);
+            m_showingFormatted = false;
+        }
     }
+    ui->checkboxReformatting->setEnabled(m_canReformat);
     showCode();
+}
+
+void BasicCodeViewerWindow::setArchived(bool archived) {
+    m_originalArchived = archived;
+    const QSignalBlocker blocker(ui->checkboxArchived);
+    ui->checkboxArchived->setChecked(archived);
+    updateSaveButton();
+}
+
+void BasicCodeViewerWindow::setEditable(bool editable) {
+    m_editable = editable;
+    ui->basicEdit->setReadOnly(!editable);
+    ui->checkboxArchived->setEnabled(editable);
+    ui->buttonSave->setVisible(editable);
+    ui->checkboxReformatting->setEnabled(m_canReformat);
+    updateSaveButton();
+}
+
+void BasicCodeViewerWindow::save() {
+    if (!m_savePending) {
+        emit saveRequested(ui->basicEdit->toPlainText(), ui->checkboxArchived->isChecked());
+    }
+}
+
+void BasicCodeViewerWindow::saveStarted() {
+    m_savePending = true;
+    ui->basicEdit->setReadOnly(true);
+    ui->checkboxArchived->setEnabled(false);
+    ui->buttonSave->setEnabled(false);
+}
+
+void BasicCodeViewerWindow::saveFinished(bool success) {
+    if (!m_savePending) {
+        return;
+    }
+    m_savePending = false;
+    ui->basicEdit->setReadOnly(!m_editable);
+    ui->checkboxArchived->setEnabled(m_editable);
+    if (success) {
+        m_originalCode = ui->basicEdit->toPlainText();
+        m_formattedCode = m_originalCode;
+        m_originalArchived = ui->checkboxArchived->isChecked();
+        ui->basicEdit->document()->setModified(false);
+    }
+    updateSaveButton();
+}
+
+void BasicCodeViewerWindow::updateSaveButton() {
+    const bool changed = ui->basicEdit->document()->isModified() ||
+                         ui->checkboxArchived->isChecked() != m_originalArchived;
+    ui->buttonSave->setEnabled(m_editable && !m_savePending && changed);
 }
 
 void BasicCodeViewerWindow::toggleHighlight() {
@@ -508,9 +590,27 @@ void BasicCodeViewerWindow::toggleWrap() {
 }
 
 void BasicCodeViewerWindow::toggleFormat() {
-    m_showingFormatted = !m_showingFormatted;
+    m_showingFormatted = ui->checkboxReformatting->isChecked();
     const int scrollValue = ui->basicEdit->verticalScrollBar()->value();
-    ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
+    if (m_editable) {
+        const bool modified = ui->basicEdit->document()->isModified();
+        const QTextCursor oldCursor = ui->basicEdit->textCursor();
+        const int oldBlock = oldCursor.blockNumber();
+        const int oldColumn = oldCursor.positionInBlock();
+        m_originalCode = QString::fromStdString(ti_basic_deindent_source(ui->basicEdit->toPlainText().toStdString()));
+        m_formattedCode = QString::fromStdString(
+            tivars::TypeHandlers::TH_Tokenized::reindentCodeString(m_originalCode.toStdString()));
+        ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
+        ui->basicEdit->document()->setModified(modified);
+        const QTextBlock newBlock = ui->basicEdit->document()->findBlockByNumber(oldBlock);
+        if (newBlock.isValid()) {
+            QTextCursor newCursor(newBlock);
+            newCursor.setPosition(newBlock.position() + qMin(oldColumn, newBlock.length() - 1));
+            ui->basicEdit->setTextCursor(newCursor);
+        }
+    } else {
+        ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
+    }
     ui->basicEdit->verticalScrollBar()->setValue(scrollValue);
     showCode();
 }

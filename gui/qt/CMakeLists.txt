@@ -165,6 +165,7 @@ set(CEmu_Sources
     sendinghandler.cpp sendinghandler.h
     settings.cpp
     tablewidget.cpp tablewidget.h
+    tibasicutils.cpp tibasicutils.h
     tivars_lib_cpp/tivars_lib_cpp.cpp tivars_lib_cpp/tivars_lib_cpp.hpp
     utils.cpp utils.h
     vartablemodel.cpp vartablemodel.h

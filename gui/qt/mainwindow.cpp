@@ -7,6 +7,7 @@
 #include "basiccodeviewerwindow.h"
 #include "capture/animated-png.h"
 #include "keypad/qtkeypadbridge.h"
+#include "tibasicutils.h"
 #include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 #include "../../core/emu.h"
 #include "../../core/asic.h"
@@ -42,6 +43,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <QtCore/QSignalBlocker>
 #include <QtCore/QScopedValueRollback>
+#include <QtCore/QTemporaryFile>
 #include <fstream>
 #include <iostream>
 #include <cmath>
@@ -2341,7 +2343,7 @@ void MainWindow::varPressed(const QModelIndex &index) {
         return;
     }
     calc_var_t var = nameIndex.data(Qt::UserRole).value<calc_var_t>();
-    if (var.size <= 2 || calc_var_is_asmprog(&var)) {
+    if (calc_var_is_asmprog(&var)) {
         return;
     } else if (!calc_var_is_internal(&var) || var.name[0] == '#') {
         std::string str;
@@ -2355,7 +2357,82 @@ void MainWindow::varPressed(const QModelIndex &index) {
         codePopup->setVariableName(nameIndex.data().toString());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
-        codePopup->setOriginalCode(QString::fromStdString(str), calc_var_is_tokenized(&var));
+        const bool tiBasic = calc_var_is_prog(&var);
+        codePopup->setOriginalCode(QString::fromStdString(str), tiBasic);
+        codePopup->setArchived(var.archived);
+        tivars::TIVarType varType;
+        size_t varNameLength = var.namelen - calc_var_is_list(&var);
+        while (varNameLength && var.name[varNameLength - 1] == 0) {
+            varNameLength--;
+        }
+        const bool indexedName = var.name[0] == 0x3C || var.name[0] == 0x5C ||
+                                 var.name[0] == 0x5D || var.name[0] == 0x5E ||
+                                 var.name[0] == 0x60 || var.name[0] == 0x61 ||
+                                 var.name[0] == 0xAA;
+        const std::string varFileName = var.named || indexedName
+            ? std::string(reinterpret_cast<const char *>(var.name), varNameLength)
+            : std::string(calc_var_name_to_utf8(var.name, var.namelen, var.named));
+        bool editable = !calc_var_is_internal(&var) &&
+                        !(var.type == CALC_VAR_TYPE_EQU && var.name[0] == '$');
+        try {
+            if (var.type == CALC_VAR_TYPE_APP_VAR) {
+                const data_t data(var.data, var.data + var.size);
+                varType = tivars::TIVarType::createFromName(tivars::TypeHandlers::detectStructuredAppVarTypeName(data));
+            } else {
+                varType = tivars::TIVarType::createFromID(static_cast<uint8_t>(var.type));
+            }
+            const auto makeData = std::get<0>(varType.getHandlers());
+            const tivars::TIModel model{"83PCEEP"};
+            editable = editable
+                    && tivars::TIVarTypes::isValidID(static_cast<uint8_t>(var.type))
+                    && model.supportsType(varType)
+                    && makeData
+                    && makeData != &tivars::TypeHandlers::DummyHandler::makeDataFromString;
+            if (editable) {
+                tivars::TIVarFile::createNew(varType, varFileName, model);
+            }
+        } catch (...) {
+            editable = false;
+        }
+        if (editable) {
+            codePopup->setEditable(true);
+            connect(codePopup, &BasicCodeViewerWindow::saveRequested, this, [this, codePopup, varType, varFileName, tiBasic](const QString &code, bool archived) {
+                if (guiSend || guiDebug) {
+                    QMessageBox::warning(codePopup, MSG_WARNING,
+                                         tr("Cannot save a variable while another transfer or the debugger is active."));
+                    return;
+                }
+
+                const tivars::TIModel model{"83PCEEP"};
+                const QString extension = QString::fromStdString(varType.getExts().at(model.getOrderId()));
+                QTemporaryFile temporaryFile(QDir::tempPath() + QDir::separator()
+                                           + QStringLiteral("CEmu-variable-XXXXXX.") + extension);
+                if (!temporaryFile.open()) {
+                    QMessageBox::warning(codePopup, MSG_ERROR, tr("Could not create a temporary variable file."));
+                    return;
+                }
+                temporaryFile.setAutoRemove(false);
+                const QString temporaryPath = temporaryFile.fileName();
+                temporaryFile.close();
+
+                try {
+                    tivars::TIVarFile variable = tivars::TIVarFile::createNew(varType, varFileName, model);
+                    variable.setContentFromString(tiBasic ? ti_basic_prepare_source(code.toStdString())
+                                                          : code.toStdString());
+                    variable.setArchived(archived);
+                    variable.saveVarToFile(temporaryPath.toStdString());
+                } catch (const std::exception &e) {
+                    QFile::remove(temporaryPath);
+                    QMessageBox::warning(codePopup, MSG_ERROR, tr("Could not save the variable: ") + QString::fromUtf8(e.what()));
+                    return;
+                }
+
+                if (sendingHandler->sendTemporaryFiles({temporaryPath}, archived ? LINK_ARCH : LINK_RAM)) {
+                    codePopup->saveStarted();
+                }
+            });
+            connect(sendingHandler, &SendingHandler::sendCompleted, codePopup, &BasicCodeViewerWindow::saveFinished);
+        }
         codePopup->show();
     }
 }

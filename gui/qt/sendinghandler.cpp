@@ -83,6 +83,10 @@ SendingHandler::SendingHandler(QObject *parent, QPushButton *cancelBtn, QProgres
     connect(m_btnCancelTransfer, &QPushButton::clicked, this, &SendingHandler::cancelTransfer);
 }
 
+SendingHandler::~SendingHandler() {
+    removeTemporaryFiles();
+}
+
 void SendingHandler::dropOccured(QDropEvent *e, int location) {
     if (guiSend || guiDebug) {
         e->ignore();
@@ -157,6 +161,7 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 }
 
 void SendingHandler::linkProgress(int value, int total) {
+    bool success = false;
     if (total) {
         if (m_progressBar) {
             m_progressBar->setMaximum(total);
@@ -165,6 +170,7 @@ void SendingHandler::linkProgress(int value, int total) {
         if (value != total) {
             return;
         }
+        success = true;
     } else {
         switch (value) {
             default:
@@ -179,7 +185,16 @@ void SendingHandler::linkProgress(int value, int total) {
         m_progressBar->setValue(0);
     }
     guiSend = false;
+    removeTemporaryFiles();
+    emit sendCompleted(success);
     emit sendFinished();
+}
+
+void SendingHandler::removeTemporaryFiles() {
+    foreach (const QString &fileName, m_temporaryFiles) {
+        QFile::remove(fileName);
+    }
+    m_temporaryFiles.clear();
 }
 
 void SendingHandler::addFile(const QString &file, bool select) {
@@ -230,14 +245,28 @@ void SendingHandler::addFile(const QString &file, bool select) {
 }
 
 void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
+    sendFiles(fileNames, location, true, false);
+}
+
+bool SendingHandler::sendTemporaryFiles(const QStringList &fileNames, int location) {
+    return sendFiles(fileNames, location, false, true);
+}
+
+bool SendingHandler::sendFiles(const QStringList &fileNames, int location, bool addToRecent, bool removeAfterSend) {
     QStringList list = fileNames;
 
     if (guiSend || guiDebug || !list.size()) {
-        return;
+        if (removeAfterSend) {
+            foreach (const QString &fileName, fileNames) {
+                QFile::remove(fileName);
+            }
+        }
+        return false;
     }
 
     guiSend = true;
     m_dirs.clear();
+    m_temporaryFiles = removeAfterSend ? fileNames : QStringList{};
 
     foreach(const QString &fileName, fileNames) {
         QFileInfo fileInfo(fileName);
@@ -246,7 +275,9 @@ void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
             m_dirs.append(fileDir);
             checkDirForEquateFiles(fileDir);
         }
-        addFile(fileName, true);
+        if (addToRecent) {
+            addFile(fileName, true);
+        }
         if (pathHasBundleExtension(fileName)) {
             list.removeOne(fileName);
             list.append(getValidFilesFromArchive(fileName));
@@ -260,6 +291,7 @@ void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
     }
 
     emit send(list, location);
+    return true;
 }
 
 void SendingHandler::setLoadEquates(bool state) {

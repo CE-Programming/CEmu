@@ -493,7 +493,7 @@ bool calc_var_is_prog(const calc_var_t *var) {
 }
 
 bool calc_var_is_asmprog(const calc_var_t *var) {
-    return var && (calc_var_is_prog(var) && var->size >= 2 && var->data[2] == 0xEF && var->data[3] == 0x7B);
+    return var && (calc_var_is_prog(var) && var->size >= 4 && var->data[2] == 0xEF && var->data[3] == 0x7B);
 }
 
 bool calc_var_is_internal(const calc_var_t *var) {
@@ -511,4 +511,3 @@ bool calc_var_is_python_appvar(const calc_var_t *var) {
                && var->size > 6
                && memcmp("PYCD", var->data + 2, 4) == 0;
 }
-

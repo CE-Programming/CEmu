@@ -58,6 +58,7 @@ private:
     QTextCharFormat prgmFormat;
     QTextCharFormat delvarFormat;
     QTextCharFormat quotationFormat;
+    QTextCharFormat commentFormat;
     QTextCharFormat otherFormat;
 };
 
@@ -139,15 +140,26 @@ public:
     explicit BasicCodeViewerWindow(QWidget *p = Q_NULLPTR, bool doHighlight = true, bool doWrap = false, bool doFormat = false);
     void setVariableName(const QString &name);
     void setOriginalCode(const QString &code, bool reindent);
+    void setArchived(bool archived);
+    void setEditable(bool editable);
+    void saveStarted();
     ~BasicCodeViewerWindow() override;
+
+signals:
+    void saveRequested(const QString &code, bool archived);
+
+public slots:
+    void saveFinished(bool success);
 
 private slots:
     void toggleHighlight();
     void toggleWrap();
     void toggleFormat();
+    void save();
 
 private:
     void showCode();
+    void updateSaveButton();
 
     Ui::BasicCodeViewerWindow *ui;
     QString m_variableName;
@@ -156,6 +168,10 @@ private:
     bool m_showingHighlighted = true;
     bool m_showingWrapped = false;
     bool m_showingFormatted = false;
+    bool m_savePending = false;
+    bool m_editable = false;
+    bool m_canReformat = false;
+    bool m_originalArchived = false;
     bool hasCodeYet = false;
 };
 

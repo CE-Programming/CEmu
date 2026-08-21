@@ -22,9 +22,10 @@ class SendingHandler : public QObject {
 
 public:
     explicit SendingHandler(QObject *p = Q_NULLPTR, QPushButton *cancelBtn = Q_NULLPTR, QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
-    ~SendingHandler() = default;
+    ~SendingHandler() override;
 
     void sendFiles(const QStringList &fileNames, int location);
+    bool sendTemporaryFiles(const QStringList &fileNames, int location);
     static bool dragOccured(QDragEnterEvent *e);
     void dropOccured(QDropEvent *e, int location);
     void resendSelected();
@@ -41,8 +42,11 @@ signals:
     void loadEquateFile(const QString &path);
     void cancelTransfer();
     void sendFinished();
+    void sendCompleted(bool success);
 
 private:
+    bool sendFiles(const QStringList &fileNames, int location, bool addToRecent, bool removeAfterSend);
+    void removeTemporaryFiles();
     void checkDirForEquateFiles(QString &dirPath);
     QStringList getValidFilesFromArchive(const QString &archivePath) const;
 
@@ -60,6 +64,7 @@ private:
     QIcon m_iconSend;
     QIcon m_iconCheck, m_iconCheckGray;
     QStringList m_dirs;
+    QStringList m_temporaryFiles;
     bool m_sendEquates = false;
 };
 
