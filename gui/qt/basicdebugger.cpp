@@ -70,7 +70,7 @@ void MainWindow::debugBasicUpdateDarkMode() {
 void MainWindow::debugBasicReconfigure(bool forceUpdate) {
     if (guiDebug) {
         if (guiDebugBasic) {
-            debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
+            debug_enable_basic_mode(m_basicShowFetches, debugBasicNeedsLiveEvents());
             debugBasicUpdate(forceUpdate);
             debugBasicSyncPendingBreakpoints();
             if (!forceUpdate && !m_basicShowLiveExecution) {
@@ -432,7 +432,7 @@ void MainWindow::debugBasicToggleBreakpoint(BasicEditor *editor, int idx, int li
     }
     if (guiDebug) {
         debugBasicSyncBreakpoints(idx);
-        debug_enable_basic_mode(m_basicShowFetches, m_basicShowLiveExecution);
+        debug_enable_basic_mode(m_basicShowFetches, debugBasicNeedsLiveEvents());
     } else {
         const bool requestSync = m_basicBreakpointSyncPending.isEmpty();
         m_basicBreakpointSyncPending.insert(idx);
@@ -440,6 +440,10 @@ void MainWindow::debugBasicToggleBreakpoint(BasicEditor *editor, int idx, int li
             emu.debug(true, EmuThread::RequestBasicDebugger);
         }
     }
+}
+
+bool MainWindow::debugBasicNeedsLiveEvents() const {
+    return m_basicShowLiveExecution || m_varTableModel->hasWatchedVariables();
 }
 
 void MainWindow::debugBasicContextMenu(const QPoint &pos) {

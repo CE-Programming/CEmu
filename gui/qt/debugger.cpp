@@ -453,6 +453,17 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
     // handle live basic commands first
     if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
         guiDebug = true;
+        const QStringList watchedChanges = reason == DBG_BASIC_CURPC_WRITE &&
+                                                   m_varTableModel->hasWatchedVariables()
+            ? m_varTableModel->checkWatchedVariables()
+            : QStringList();
+        if (!watchedChanges.isEmpty()) {
+            debugBasicUpdate(true);
+            ui->debuggerLabel->setText(
+                tr("BASIC variable changed: %1").arg(watchedChanges.join(QStringLiteral(", "))));
+            debugBasicRaise();
+            return;
+        }
         if (reason == DBG_BASIC_BASIC_PROG_WRITE) {
             debugBasicPrgmLookup(false, Q_NULLPTR);
         } else if (reason == DBG_BASIC_CURPC_WRITE) {

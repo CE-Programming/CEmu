@@ -128,6 +128,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     m_varTableModel = new VarTableModel(ui->emuVarView);
     m_varTableSortFilterModel = new VarTableSortFilterModel(m_varTableModel);
+    connect(m_varTableModel, &VarTableModel::watchedVariablesChanged, this, [this] {
+        if (guiDebugBasic) {
+            debugBasicReconfigure(true);
+        }
+    });
     ui->emuVarView->setModel(m_varTableSortFilterModel);
     ui->emuVarView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->emuVarView->sortByColumn(VarTableModel::VAR_NAME_COL, Qt::AscendingOrder);
@@ -2980,14 +2985,34 @@ void MainWindow::contextVars(const QPoint& posa) {
     }
 
     const calc_var_t var = nameIndex.data(Qt::UserRole).value<calc_var_t>();
+    const QPersistentModelIndex sourceIndex = m_varTableSortFilterModel->mapToSource(nameIndex);
 
     QMenu contextMenu;
     QAction *launch = contextMenu.addAction(tr("Launch program"));
     launch->setVisible(calc_var_is_prog(&var) && !calc_var_is_internal(&var));
+    contextMenu.addSeparator();
+    QAction *setAlias = contextMenu.addAction(tr("Set alias…"));
+    QAction *clearAlias = contextMenu.addAction(tr("Clear alias"));
+    clearAlias->setEnabled(!m_varTableModel->alias(sourceIndex).isEmpty());
+    QAction *watchChange = contextMenu.addAction(tr("Break on BASIC value change"));
+    watchChange->setCheckable(true);
+    watchChange->setChecked(m_varTableModel->isWatched(sourceIndex));
 
     QAction *selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem == launch) {
         varLaunch(&var);
+    } else if (selectedItem == setAlias) {
+        bool accepted = false;
+        const QString alias = QInputDialog::getText(
+            this, tr("Variable alias"), tr("Alias for %1:").arg(nameIndex.data().toString()),
+            QLineEdit::Normal, m_varTableModel->alias(sourceIndex), &accepted);
+        if (accepted) {
+            m_varTableModel->setAlias(sourceIndex, alias);
+        }
+    } else if (selectedItem == clearAlias) {
+        m_varTableModel->setAlias(sourceIndex, QString());
+    } else if (selectedItem == watchChange) {
+        m_varTableModel->setWatched(sourceIndex, !m_varTableModel->isWatched(sourceIndex));
     }
 }
 

@@ -356,6 +356,7 @@ private:
     void debugBasicSyncPendingBreakpoints();
     void debugBasicShowBreakpoints(int idx) const;
     void debugBasicToggleBreakpoint(BasicEditor *editor, int idx, int line, bool enabled);
+    bool debugBasicNeedsLiveEvents() const;
     void debugBasicGuiState(bool state) const;
     void debugBasicContextMenu(const QPoint &pos);
     void debugBasicToggleHighlight(bool enabled);

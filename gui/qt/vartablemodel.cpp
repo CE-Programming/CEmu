@@ -4,12 +4,14 @@
 #include "utils.h"
 
 #include <QtGui/QBrush>
+#include <QtCore/QSet>
 #include <algorithm>
 #include <cassert>
 
 Q_DECLARE_METATYPE(calc_var_t)
 
-VarTableModel::VarData::VarData(const calc_var_t &var) : info(var), previewState(PreviewState::Outdated), checked(false) {
+VarTableModel::VarData::VarData(const calc_var_t &var)
+    : info(var), previewState(PreviewState::Outdated), checked(false) {
     info.data = new uint8_t[var.size];
     memcpy(info.data, var.data, var.size);
 }
@@ -47,11 +49,14 @@ uint8_t VarTableModel::VarData::updateInfo(const calc_var_t &var) {
     }
     uint8_t *data = info.data;
     if (var.size != info.size) {
-        changed |= (1 << VAR_TYPE_COL) | (1 << VAR_SIZE_COL) | (1 << VAR_PREVIEW_COL);
+        changed |= (1 << VAR_TYPE_COL) | (1 << VAR_SIZE_COL) |
+                   (1 << VAR_PREVIEW_COL);
         data = new uint8_t[var.size];
-        delete[] info.data;
     } else if (0 != memcmp(var.data, data, var.size)) {
         changed |= (1 << VAR_TYPE_COL) | (1 << VAR_PREVIEW_COL);
+    }
+    if (data != info.data) {
+        delete[] info.data;
     }
     info = var;
     info.data = data;
@@ -92,10 +97,135 @@ VarTableModel::VarTableModel(QObject *parent) : QAbstractTableModel(parent) {
     varPreviewItalicFont.setItalic(true);
 }
 
+QByteArray VarTableModel::variableKey(const calc_var_t &var) {
+    QByteArray key;
+    key.reserve(11);
+    key.append(static_cast<char>(calc_var_normalized_type(var.type)));
+    key.append(static_cast<char>(var.named));
+    const int nameLength = var.namelen - calc_var_is_list(&var);
+    key.append(reinterpret_cast<const char *>(var.name), nameLength);
+    return key;
+}
+
+QString VarTableModel::variableName(const calc_var_t &var) {
+    return QString::fromUtf8(calc_var_name_to_utf8(var.name, var.namelen, var.named));
+}
+
+QString VarTableModel::configuredName(const QByteArray &key, const calc_var_t *var) const {
+    const VariableConfig config = variableConfigs.value(key);
+    const QString name = var ? variableName(*var) : config.name;
+    const QString configuredAlias = config.alias;
+    if (configuredAlias.isEmpty()) {
+        return name;
+    }
+    return name.isEmpty() ? configuredAlias : tr("%1 (%2)").arg(configuredAlias, name);
+}
+
 void VarTableModel::clear() {
     beginResetModel();
     vars.clear();
     endResetModel();
+}
+
+QString VarTableModel::alias(const QModelIndex &index) const {
+    if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(vars.size())) {
+        return QString();
+    }
+    return variableConfigs.value(variableKey(vars[index.row()].info)).alias;
+}
+
+void VarTableModel::setAlias(const QModelIndex &index, const QString &newAlias) {
+    if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(vars.size())) {
+        return;
+    }
+    const QByteArray key = variableKey(vars[index.row()].info);
+    VariableConfig &config = variableConfigs[key];
+    config.alias = newAlias.trimmed();
+    config.name = variableName(vars[index.row()].info);
+    emit dataChanged(this->index(index.row(), VAR_NAME_COL),
+                     this->index(index.row(), VAR_ALIAS_COL),
+                     { Qt::DisplayRole, Qt::ToolTipRole });
+    if (config.alias.isEmpty() && !config.watched) {
+        variableConfigs.remove(key);
+    }
+}
+
+bool VarTableModel::isWatched(const QModelIndex &index) const {
+    if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(vars.size())) {
+        return false;
+    }
+    return variableConfigs.value(variableKey(vars[index.row()].info)).watched;
+}
+
+void VarTableModel::setWatched(const QModelIndex &index, bool watched) {
+    if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(vars.size())) {
+        return;
+    }
+    const VarData &var = vars[index.row()];
+    const QByteArray key = variableKey(var.info);
+    VariableConfig &config = variableConfigs[key];
+    config.name = variableName(var.info);
+    config.watched = watched;
+    config.watchInitialized = watched;
+    config.present = watched;
+    config.watchedData = watched
+        ? QByteArray(reinterpret_cast<const char *>(var.info.data), var.info.size)
+        : QByteArray();
+    emit dataChanged(this->index(index.row(), VAR_NAME_COL),
+                     this->index(index.row(), VAR_ALIAS_COL),
+                     { Qt::FontRole, Qt::ToolTipRole });
+    if (!watched && config.alias.isEmpty()) {
+        variableConfigs.remove(key);
+    }
+    emit watchedVariablesChanged();
+}
+
+bool VarTableModel::hasWatchedVariables() const {
+    for (const VariableConfig &config : variableConfigs) {
+        if (config.watched) {
+            return true;
+        }
+    }
+    return false;
+}
+
+QStringList VarTableModel::checkWatchedVariables() {
+    QStringList changedVariables;
+    QSet<QByteArray> seen;
+    calc_var_t var;
+    vat_search_init(&var);
+    while (vat_search_next(&var)) {
+        const QByteArray key = variableKey(var);
+        auto configIt = variableConfigs.find(key);
+        if (configIt == variableConfigs.end() || !configIt->watched) {
+            continue;
+        }
+        seen.insert(key);
+        VariableConfig &config = configIt.value();
+        config.name = variableName(var);
+        const QByteArray data(reinterpret_cast<const char *>(var.data), var.size);
+        if (config.watchInitialized && (!config.present || config.watchedData != data)) {
+            changedVariables.append(configuredName(key, &var));
+        }
+        config.watchedData = data;
+        config.watchInitialized = true;
+        config.present = true;
+    }
+
+    for (auto configIt = variableConfigs.begin(); configIt != variableConfigs.end(); ++configIt) {
+        VariableConfig &config = configIt.value();
+        if (!config.watched || seen.contains(configIt.key())) {
+            continue;
+        }
+        if (config.watchInitialized && config.present) {
+            const QString name = configuredName(configIt.key());
+            changedVariables.append(name.isEmpty() ? tr("Deleted variable") : tr("%1 (deleted)").arg(name));
+        }
+        config.watchedData.clear();
+        config.watchInitialized = true;
+        config.present = false;
+    }
+    return changedVariables;
 }
 
 static bool varLess(const calc_var_t &var, const calc_var_t &other) {
@@ -186,11 +316,15 @@ QVariant VarTableModel::data(const QModelIndex &index, int role) const {
     if (index.column() == VAR_PREVIEW_COL && var.previewState == PreviewState::Outdated) {
         var.updatePreview();
     }
+    const QByteArray key = variableKey(var.info);
+    const VariableConfig config = variableConfigs.value(key);
     switch (role) {
         case Qt::DisplayRole:
             switch (index.column()) {
                 case VAR_NAME_COL:
-                    return QString::fromUtf8(calc_var_name_to_utf8(var.info.name, var.info.namelen, var.info.named));
+                    return variableName(var.info);
+                case VAR_ALIAS_COL:
+                    return config.alias;
                 case VAR_LOCATION_COL:
                     return var.info.archived ? tr("Archive") : QStringLiteral("RAM");
                 case VAR_TYPE_COL:
@@ -212,6 +346,11 @@ QVariant VarTableModel::data(const QModelIndex &index, int role) const {
                     return QVariant();
             };
         case Qt::FontRole:
+            if (index.column() == VAR_NAME_COL && config.watched) {
+                QFont font;
+                font.setBold(true);
+                return font;
+            }
             if (index.column() == VAR_PREVIEW_COL) {
                 return var.previewState == PreviewState::Invalid ? varPreviewItalicFont : varPreviewCEFont;
             }
@@ -219,6 +358,18 @@ QVariant VarTableModel::data(const QModelIndex &index, int role) const {
         case Qt::ForegroundRole:
             if (index.column() == VAR_PREVIEW_COL && var.previewState == PreviewState::Invalid) {
                 return QBrush(Qt::gray);
+            }
+            return QVariant();
+        case Qt::ToolTipRole:
+            if (index.column() == VAR_NAME_COL || index.column() == VAR_ALIAS_COL) {
+                QStringList details;
+                if (!config.alias.isEmpty()) {
+                    details.append(tr("Alias: %1").arg(config.alias));
+                }
+                if (config.watched) {
+                    details.append(tr("Break on BASIC value change"));
+                }
+                return details.join(QLatin1Char('\n'));
             }
             return QVariant();
         case Qt::CheckStateRole:
@@ -247,6 +398,8 @@ QVariant VarTableModel::headerData(int section, Qt::Orientation orientation, int
         switch (section) {
             case VAR_NAME_COL:
                 return tr("Name");
+            case VAR_ALIAS_COL:
+                return tr("Alias");
             case VAR_LOCATION_COL:
                 return tr("Location");
             case VAR_TYPE_COL:
@@ -254,7 +407,7 @@ QVariant VarTableModel::headerData(int section, Qt::Orientation orientation, int
             case VAR_SIZE_COL:
                 return tr("Size");
             case VAR_PREVIEW_COL:
-                return tr("Preview");
+                return tr("Value");
             default:
                 return QVariant();
         }
