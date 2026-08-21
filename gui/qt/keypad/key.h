@@ -4,6 +4,7 @@
 #include "keycode.h"
 
 #include <QtCore/QRect>
+#include <QtCore/QStringList>
 #include <QtGui/QColor>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
@@ -43,6 +44,7 @@ public:
             painter.drawPath(mKeyShape);
         }
     }
+    virtual void setMappingLabels(const QStringList &, bool) {}
     virtual bool isUnder(const QPainterPath &area) const = 0;
     void pressOrRelease(bool isPress) {
         if (isPress) {

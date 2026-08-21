@@ -4,6 +4,7 @@
 #include "../../../core/asic.h"
 #include "keyconfig.h"
 #include "key.h"
+#include "keymap.h"
 
 #include <QtCore/QList>
 #include <QtCore/QMultiHash>
@@ -36,6 +37,8 @@ public:
 
     void setType(emu_device_t, unsigned int);
     void setHolding(bool);
+    void setKeymap(const HostKey *const *keymap);
+    void setMappingLabelsVisible(bool visible);
     unsigned getCurrColor(void) const;
 
 signals:
@@ -57,9 +60,13 @@ public slots:
 private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
+    void updateMappingLabels();
+    static QString bindingText(const HostKey &key);
 
     unsigned int color = KEYPAD_BLACK;
     bool mHoldingEnabled = true;
+    bool mMappingLabelsVisible = false;
+    const HostKey *const *mKeymap = nullptr;
     QColor cclrBackground;
     QPainterPath keypadPath;
     static const size_t sRows{8}, sCols{8};

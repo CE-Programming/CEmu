@@ -9222,6 +9222,35 @@ QPushButton:pressed {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_14">
                <item>
+                <widget class="QToolButton" name="buttonShowKeyBindings">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>Replace the calculator key labels with the selected key bindings</string>
+                 </property>
+                 <property name="text">
+                  <string>Reveal</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="Line" name="lineKeyBindings">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QRadioButton" name="radioNaturalKeys">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">

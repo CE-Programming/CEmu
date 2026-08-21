@@ -2,6 +2,7 @@
 #include <QtGui/QPaintEvent>
 #include <QtGui/QScreen>
 #include <QtGui/QFontDatabase>
+#include <QtGui/QKeySequence>
 
 #include "keypadwidget.h"
 #include "graphkey.h"
@@ -298,7 +299,49 @@ void KeypadWidget::setType(emu_device_t device_type, unsigned int color_scheme) 
     addKey(new ArrowKey{mConfig, outer, inner, 0, QStringLiteral("right"), 2});
     addKey(new ArrowKey{mConfig, outer, inner, 1, QStringLiteral("up"), 2});
 
+    updateMappingLabels();
     repaint();
+}
+
+QString KeypadWidget::bindingText(const HostKey &key) {
+    QString text = QKeySequence{static_cast<int>(key.modifier) | static_cast<int>(key.code)}
+                       .toString(QKeySequence::PortableText);
+    return text.isEmpty() ? key.name : text;
+}
+
+void KeypadWidget::setKeymap(const HostKey *const *keymap) {
+    mKeymap = keymap;
+    updateMappingLabels();
+}
+
+void KeypadWidget::setMappingLabelsVisible(bool visible) {
+    if (mMappingLabelsVisible != visible) {
+        mMappingLabelsVisible = visible;
+        updateMappingLabels();
+    }
+}
+
+void KeypadWidget::updateMappingLabels() {
+    for (uint8_t row = 0; row != sRows; ++row) {
+        for (uint8_t col = 0; col != sCols; ++col) {
+            Key *key = mKeys[row][col];
+            if (!key) {
+                continue;
+            }
+
+            QStringList bindings;
+            if (mKeymap) {
+                for (const HostKey *binding = mKeymap[row * sCols + col]; binding->code; ++binding) {
+                    const QString text = bindingText(*binding);
+                    if (!text.isEmpty() && !bindings.contains(text)) {
+                        bindings.append(text);
+                    }
+                }
+            }
+            key->setMappingLabels(bindings, mMappingLabelsVisible && mKeymap != nullptr);
+        }
+    }
+    update();
 }
 
 void KeypadWidget::setHolding(bool enabled) {

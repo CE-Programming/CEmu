@@ -516,6 +516,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // keypad mappings
     connect(ui->actionExportKeypadMapping, &QAction::triggered, this, &MainWindow::keymapExport);
+    connect(ui->buttonShowKeyBindings, &QToolButton::toggled, this, &MainWindow::setKeypadMappingLabels);
 
     // application state
     connect(qGuiApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::pauseEmu);
@@ -650,6 +651,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
     setKeypadGhosting(m_config->value(SETTING_KEYPAD_GHOSTING, true).toBool());
     setKeypadHolding(m_config->value(SETTING_KEYPAD_HOLDING, true).toBool());
+    setKeypadMappingLabels(m_config->value(SETTING_KEYPAD_MAPPING_LABELS, false).toBool());
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
     ui->checkSaveRestore->setChecked(m_config->value(SETTING_SAVE_ON_CLOSE, true).toBool());
     setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());

@@ -54,6 +54,7 @@ public:
             Qt::Alignment alphaAlign  = Qt::AlignVCenter | Qt::AlignRight);
 
     void paint(QPainter &painter) const override;
+    void setMappingLabels(const QStringList &bindings, bool visible) override;
     bool isUnder(const QPainterPath &area) const override;
 
 protected:
@@ -61,6 +62,8 @@ protected:
     Qt::Alignment mLabelAlign, mSecondAlign, mAlphaAlign;
     QFont mLabelFont, mSecondFont, mAlphaFont;
     const QString mSecondText, mAlphaText;
+    QString mMappingLabelText, mMappingSecondText, mMappingAlphaText;
+    bool mMappingLabelsVisible = false;
 };
 
 #endif

@@ -70,6 +70,7 @@ const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Ke
 const QString MainWindow::SETTING_KEYPAD_CUSTOM_PATH        = QStringLiteral("Keypad/custom_path");
 const QString MainWindow::SETTING_KEYPAD_GHOSTING           = QStringLiteral("Keypad/ghosting");
 const QString MainWindow::SETTING_KEYPAD_HOLDING            = QStringLiteral("Keypad/holding");
+const QString MainWindow::SETTING_KEYPAD_MAPPING_LABELS     = QStringLiteral("Keypad/show_key_bindings");
 const QString MainWindow::SETTING_WINDOW_GROUP_DRAG         = QStringLiteral("Window/group_dock_drag");
 const QString MainWindow::SETTING_WINDOW_FULLSCREEN         = QStringLiteral("Window/fullscreen");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
@@ -512,6 +513,16 @@ void MainWindow::setKeypadHolding(bool enabled) const {
     m_config->setValue(SETTING_KEYPAD_HOLDING, enabled);
 }
 
+void MainWindow::setKeypadMappingLabels(bool enabled) const {
+    ui->buttonShowKeyBindings->setChecked(enabled);
+    ui->buttonShowKeyBindings->setText(enabled ? tr("Hide") : tr("Reveal"));
+    ui->buttonShowKeyBindings->setToolTip(enabled
+        ? tr("Restore the calculator key labels")
+        : tr("Replace the calculator key labels with the selected key bindings"));
+    ui->keypadWidget->setMappingLabelsVisible(enabled);
+    m_config->setValue(SETTING_KEYPAD_MAPPING_LABELS, enabled);
+}
+
 void MainWindow::setCalcSkinTopFromType(bool python) const {
     QString fileName;
     switch (get_device_type()) {
@@ -918,6 +929,8 @@ void MainWindow::setKeymap(const QString &value) {
     }
     m_config->setValue(SETTING_KEYPAD_KEYMAP, map);
     keypadBridge->setKeymap(mode);
+    ui->keypadWidget->setKeymap(keypadBridge->getKeymap());
+    ui->buttonShowKeyBindings->setEnabled(mode != QtKeypadBridge::KEYMAP_NATURAL);
     if (map == SETTING_KEYPAD_CEMU) {
         ui->radioCEmuKeys->setChecked(true);
     }
