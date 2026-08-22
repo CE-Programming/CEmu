@@ -473,11 +473,6 @@ private:
     void debugExportFile(const QString &file) const;
     QString debugGetFile(bool save);
 
-    // bootable images
-    bool bootImageImport(const QString &path);
-    bool bootImageCheck();
-    void bootImageExport();
-
     // equates
     void setDebugAutoEquates(bool enable) const;
     void equatesAddDialog();
@@ -840,7 +835,6 @@ private:
     IpcSetupResult m_ipcSetupResult = IpcSetupResult::Error;
     bool m_useSoftCom = false;
     bool m_pauseOnFocus;
-    bool m_loadedBootImage = false;
     bool m_optimizeRecording;
     bool m_portableActivated = false;
     bool m_ignoreDmaCycles;

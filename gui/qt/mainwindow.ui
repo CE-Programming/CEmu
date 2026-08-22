@@ -10771,7 +10771,6 @@ local R, F = cpu.registers, cpu.registers.flags
      <addaction name="actionExportDebugger"/>
      <addaction name="actionExportWindowConfig"/>
      <addaction name="actionExportKeypadMapping"/>
-     <addaction name="actionExportCEmuImage"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
@@ -11171,15 +11170,6 @@ local R, F = cpu.registers, cpu.registers.flags
    </property>
    <property name="text">
     <string>Show key history</string>
-   </property>
-  </action>
-  <action name="actionExportCEmuImage">
-   <property name="icon">
-    <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/icon.png</normaloff>:/icons/resources/icons/icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Bootable CEmu image</string>
    </property>
   </action>
   <action name="actionHideMenuBar">

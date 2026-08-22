@@ -488,7 +488,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->emuVarView, &QTableView::doubleClicked, this, &MainWindow::varPressed);
     connect(ui->emuVarView, &QTableView::customContextMenuRequested, this, &MainWindow::contextVars);
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::stateAddNew);
-    connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::bootImageExport);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
     connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::contextLcd);
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoUpdates);
@@ -683,9 +682,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     QString sharedConfig = configPath + SETTING_DEFAULT_CONFIG_FILE;
 
     if (opts.settingsFile.isEmpty()) {
-        if (bootImageCheck()) {
-            m_pathConfig = sharedConfig;
-        } else if (fileExists(portableConfig)) {
+        if (fileExists(portableConfig)) {
             m_pathConfig = portableConfig;
             m_portable = true;
         } else {
@@ -703,9 +700,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         ui->checkPortable->blockSignals(false);
         m_config = new QSettings();
         m_config->clear();
-    }
-    if (m_loadedBootImage) {
-        m_config->setValue(SETTING_FIRST_RUN, false);
     }
 
     QFileInfo configDir(QFileInfo(m_pathConfig).path());
@@ -1616,16 +1610,11 @@ void MainWindow::optUsb(CEmuOpts &o) {
 
 void MainWindow::optLoadFiles(CEmuOpts &o) {
     if (o.romFile.isEmpty()) {
-        if (m_loadedBootImage) {
-            m_pathRom = configPath + SETTING_DEFAULT_ROM_FILE;
-            m_config->setValue(SETTING_ROM_PATH, m_pathRom);
+        const QString path = m_config->value(SETTING_ROM_PATH, QString()).toString();
+        if (path.isEmpty()) {
+            m_pathRom.clear();
         } else {
-            const QString path = m_config->value(SETTING_ROM_PATH, QString()).toString();
-            if (path.isEmpty()) {
-                m_pathRom.clear();
-            } else {
-                m_pathRom = QDir::cleanPath(appDir().absoluteFilePath(path));
-            }
+            m_pathRom = QDir::cleanPath(appDir().absoluteFilePath(path));
         }
     } else {
         m_pathRom = QDir::cleanPath(o.romFile);
