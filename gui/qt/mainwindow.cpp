@@ -64,6 +64,15 @@ Q_DECLARE_METATYPE(emu_data_t)
 
 using namespace Qt::StringLiterals;
 
+namespace {
+sol::table luaStringList(sol::table &payload, const QStringList &values) {
+    sol::state_view lua(payload.lua_state());
+    sol::table result = lua.create_table(static_cast<int>(values.size()), 0);
+    for (int index = 0; index < values.size(); ++index) result[index + 1] = values[index].toStdString();
+    return result;
+}
+}
+
 MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
     keypadBridge = new QtKeypadBridge(this); // This must be before setupUi for some reason >.>
 
@@ -497,6 +506,49 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&emu, &EmuThread::linkProgress, sendingHandler, &SendingHandler::linkProgress, Qt::QueuedConnection);
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
     connect(sendingHandler, &SendingHandler::sendFinished, this, [this] { if (guiReceive) { varShow(); } });
+    connect(sendingHandler, &SendingHandler::send, this, [this](const QStringList &files, int location) {
+        m_luaTransferFiles = files;
+        m_luaTransferLocation = location;
+        m_luaTransferProgress = 0;
+        m_luaTransferTotal = files.size();
+        m_luaTransferCancelRequested = false;
+        m_luaTransferLastSuccess = false;
+        m_luaTransferStatus = QStringLiteral("sending");
+        emitLuaEvent("transfer-start", [files, location](sol::table &payload) {
+            payload["files"] = luaStringList(payload, files);
+            payload["location"] = location;
+            payload["total"] = files.size();
+        });
+    });
+    connect(sendingHandler, &SendingHandler::transferProgress, this, [this](int amount, int total) {
+        m_luaTransferProgress = amount;
+        m_luaTransferTotal = total;
+        emitLuaEvent("transfer-progress", [amount, total](sol::table &payload) {
+            payload["amount"] = amount;
+            payload["total"] = total;
+            payload["fraction"] = total > 0 ? static_cast<double>(amount) / total : 0.0;
+        });
+    });
+    connect(sendingHandler, &SendingHandler::cancelTransfer, this, [this] {
+        m_luaTransferCancelRequested = true;
+        m_luaTransferStatus = QStringLiteral("cancelling");
+    });
+    connect(sendingHandler, &SendingHandler::sendCompleted, this, [this](bool success) {
+        m_luaTransferLastSuccess = success;
+        m_luaTransferStatus = success ? QStringLiteral("complete")
+                                      : (m_luaTransferCancelRequested ? QStringLiteral("cancelled")
+                                                                      : QStringLiteral("error"));
+        const std::string event = success ? "transfer-complete" : "transfer-error";
+        emitLuaEvent(event, [this, success](sol::table &payload) {
+            payload["success"] = success;
+            payload["cancelled"] = m_luaTransferCancelRequested;
+            payload["status"] = m_luaTransferStatus.toStdString();
+            payload["amount"] = m_luaTransferProgress;
+            payload["total"] = m_luaTransferTotal;
+            payload["location"] = m_luaTransferLocation;
+            payload["files"] = luaStringList(payload, m_luaTransferFiles);
+        });
+    });
 
     // memory editors
     connect(ui->buttonFlashSearch, &QPushButton::clicked, [this]{ memSearchEdit(ui->flashEdit); });

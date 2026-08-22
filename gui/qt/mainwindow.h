@@ -16,6 +16,7 @@
 #include "capture/animated-png.h"
 
 #include "../../core/cpu.h"
+#include "../../core/link.h"
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 
@@ -891,6 +892,13 @@ private:
     bool m_refreshingLuaScripts = false;
     QString m_currentLuaScript;
     QString m_lastLuaScriptPath;
+    QStringList m_luaTransferFiles;
+    QString m_luaTransferStatus = QStringLiteral("idle");
+    int m_luaTransferLocation = LINK_FILE;
+    int m_luaTransferProgress = 0;
+    int m_luaTransferTotal = 0;
+    bool m_luaTransferCancelRequested = false;
+    bool m_luaTransferLastSuccess = false;
 
     static const char *m_varExtensions[];
 

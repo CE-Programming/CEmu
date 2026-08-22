@@ -161,6 +161,7 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 }
 
 void SendingHandler::linkProgress(int value, int total) {
+    emit transferProgress(value, total);
     bool success = false;
     if (total) {
         if (m_progressBar) {
@@ -246,6 +247,14 @@ void SendingHandler::addFile(const QString &file, bool select) {
 
 void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
     sendFiles(fileNames, location, true, false);
+}
+
+bool SendingHandler::sendFile(const QString &fileName, int location) {
+    return sendFiles({fileName}, location, true, false);
+}
+
+void SendingHandler::requestCancel() {
+    emit cancelTransfer();
 }
 
 bool SendingHandler::sendTemporaryFiles(const QStringList &fileNames, int location) {

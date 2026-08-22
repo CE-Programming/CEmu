@@ -31,6 +31,8 @@ public:
     void resendSelected();
     void addFile(const QString &path, bool select);
     void setLoadEquates(bool state);
+    bool sendFile(const QString &fileName, int location);
+    void requestCancel();
 
 public slots:
     void linkProgress(int amount, int total);
@@ -43,6 +45,7 @@ signals:
     void cancelTransfer();
     void sendFinished();
     void sendCompleted(bool success);
+    void transferProgress(int amount, int total);
 
 private:
     bool sendFiles(const QStringList &fileNames, int location, bool addToRecent, bool removeAfterSend);

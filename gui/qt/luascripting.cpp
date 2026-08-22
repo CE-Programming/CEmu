@@ -262,6 +262,22 @@ std::optional<calc_var_type_t> variableTypeFilter(const sol::optional<sol::objec
     throw sol::error("unknown calculator variable type");
 }
 
+int transferLocation(const sol::optional<sol::object> &value) {
+    if (!value || !value->valid() || value->get_type() == sol::type::lua_nil) return LINK_FILE;
+    if (value->is<int>()) {
+        const int location = value->as<int>();
+        if (location < LINK_RAM || location > LINK_FILE) throw sol::error("transfer location must be 0, 1, or 2");
+        return location;
+    }
+    if (!value->is<std::string>()) throw sol::error("transfer location must be a numeric ID or name");
+    std::string location = value->as<std::string>();
+    std::ranges::transform(location, location.begin(), [](unsigned char c) { return std::tolower(c); });
+    if (location == "ram") return LINK_RAM;
+    if (location == "archive" || location == "arch") return LINK_ARCH;
+    if (location == "auto" || location == "file") return LINK_FILE;
+    throw sol::error("transfer location must be 'ram', 'archive', or 'auto'");
+}
+
 bool variableTypeMatches(const calc_var_t &var, const std::optional<calc_var_type_t> &filter) {
     return !filter || calc_var_normalized_type(var.type) == calc_var_normalized_type(*filter);
 }
@@ -726,6 +742,32 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     });
     emuTable.set_function("cancel", [this](uint64_t id) { return cancelLuaTimer(id); });
     emuTable.set_function("cancelAll", [this, &lua] { clearLuaTimers(&lua); });
+
+    sol::table linkTable = lua.create_named_table("link");
+    linkTable["RAM"] = LINK_RAM;
+    linkTable["ARCHIVE"] = LINK_ARCH;
+    linkTable["AUTO"] = LINK_FILE;
+    linkTable.set_function("send", [](const std::string &path, sol::optional<sol::object> location) {
+        return sendingHandler->sendFile(QString::fromStdString(path), transferLocation(location));
+    });
+    linkTable.set_function("cancel", [] {
+        if (!guiSend) return false;
+        sendingHandler->requestCancel();
+        return true;
+    });
+    linkTable.set_function("busy", [] { return guiSend; });
+    linkTable.set_function("status", [this](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        return view.create_table_with(
+            "busy", guiSend,
+            "status", m_luaTransferStatus.toStdString(),
+            "files", stringListTable(thisState, m_luaTransferFiles),
+            "location", m_luaTransferLocation,
+            "amount", m_luaTransferProgress,
+            "total", m_luaTransferTotal,
+            "cancelRequested", m_luaTransferCancelRequested,
+            "lastSuccess", m_luaTransferLastSuccess);
+    });
 
     sol::table debugTable = lua.create_named_table("dbg");
     debugTable.set_function("stop", [this] { if (!guiDebug) debugToggle(); });

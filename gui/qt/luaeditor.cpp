@@ -45,7 +45,7 @@ const QStringList &luaBuiltins()
 
 const QStringList &cemuGlobals()
 {
-    static const QStringList values = QStringLiteral("cemu cpu mem vars peripherals lcd keys gui emu dbg basic "
+    static const QStringList values = QStringLiteral("cemu cpu mem vars peripherals lcd keys gui emu link dbg basic "
                                                      "autotester cLog cErr R F")
                                           .split(QLatin1Char(' '));
     return values;
@@ -103,6 +103,7 @@ const QHash<QString, QStringList> &completionMembers()
         {words("emu"), wordList("reset reloadROM throttle setSpeed wait time cycles "
                                 "after afterCycles every everyCycles cancel cancelAll "
                                 "saveState loadState sendFile deviceType")},
+        {words("link"), wordList("send cancel busy status RAM ARCHIVE AUTO")},
         {words("dbg"), wordList("stop resume stepIn stepOver stepNext stepOut stepUntilReturn "
                                 "addBreakpoint "
                                 "removeBreakpoint addWatchpoint removeWatchpoint watchRegister "
