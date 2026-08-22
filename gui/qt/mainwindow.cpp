@@ -114,7 +114,18 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
+    connect(keypadBridge, &QtKeypadBridge::keyStateChanged, this, [this](KeyCode key, bool pressed, bool repeat) {
+        emitLuaEvent("key", [key, pressed, repeat](sol::table &payload) {
+            payload["row"] = key.row();
+            payload["column"] = key.col();
+            payload["pressed"] = pressed;
+            payload["repeat"] = repeat;
+        });
+    });
     connect(keypadBridge, &QtKeypadBridge::sendKeys, &emu, &EmuThread::enqueueKeys);
+    connect(ui->lcd, &LCDWidget::updateLcd, this, [this](double fps) {
+        emitLuaEvent("frame", [fps](sol::table &payload) { payload["fps"] = fps; });
+    });
     installEventFilter(keypadBridge);
 
     ui->centralWidget->installEventFilter(keypadBridge);
@@ -2852,6 +2863,7 @@ void MainWindow::autotesterRefreshCRC() {
 }
 
 void MainWindow::resetEmu() {
+    emitLuaEvent("reset", [](sol::table &payload) { payload["phase"] = "requested"; });
     guiReset = true;
 
     if (guiReceive) {
@@ -2904,6 +2916,10 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
         }
         emu.start();
         guiEmuValid = true;
+        emitLuaEvent("loaded", [type](sol::table &payload) {
+            payload["type"] = static_cast<int>(type);
+            payload["deviceType"] = static_cast<int>(get_device_type());
+        });
     }
 
     guiReset = false;

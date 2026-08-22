@@ -672,6 +672,11 @@ private:
 
     // Lua
     void initLuaThings(sol::state &lua, bool isREPL);
+    bool emitLuaEvent(const std::string &name,
+                      const std::function<void(sol::table &)> &populate = {});
+    bool emitLuaEventForState(sol::state &lua, bool initialized,
+                              const std::string &name,
+                              const std::function<void(sol::table &)> &populate);
     void loadLuaScript();
     void saveLuaScript();
     void runLuaScript();
@@ -853,6 +858,8 @@ private:
 
     sol::state ed_lua;
     sol::state repl_lua;
+    bool m_edLuaInitialized = false;
+    bool m_replLuaInitialized = false;
     bool m_luaUnsafe = false;
 
     static const char *m_varExtensions[];

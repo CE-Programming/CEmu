@@ -514,6 +514,15 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
                 return;
             }
 
+            if (!emitLuaEvent("breakpoint", [data, &label](sol::table &payload) {
+                    payload["address"] = data;
+                    payload["label"] = label.toStdString();
+                    payload["pc"] = cpu.registers.PC;
+                })) {
+                emu.resume();
+                return;
+            }
+
             text = tr("Hit breakpoint ") + input + QStringLiteral(" (") + label + QStringLiteral(")");
             break;
         case DBG_WATCHPOINT_READ:
@@ -533,6 +542,16 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
                 }
             }
             if (valid == false) {
+                emu.resume();
+                return;
+            }
+
+            if (!emitLuaEvent("watchpoint", [reason, addr, &label](sol::table &payload) {
+                    payload["address"] = addr;
+                    payload["label"] = label.toStdString();
+                    payload["write"] = reason == DBG_WATCHPOINT_WRITE;
+                    payload["pc"] = cpu.registers.PC;
+                })) {
                 emu.resume();
                 return;
             }

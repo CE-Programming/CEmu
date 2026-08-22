@@ -18,6 +18,78 @@
 
 namespace {
 
+constexpr auto LuaEventBootstrap = R"lua(
+cemu = cemu or {}
+cemu._handlers = {}
+cemu._nextHandler = 0
+cemu._eventSequence = 0
+
+function cemu.on(event, callback, options)
+    assert(type(event) == "string", "event name must be a string")
+    assert(type(callback) == "function", "event callback must be a function")
+    assert(options == nil or type(options) == "table", "event options must be a table")
+    cemu._nextHandler = cemu._nextHandler + 1
+    local handlers = cemu._handlers[event]
+    if not handlers then
+        handlers = {}
+        cemu._handlers[event] = handlers
+    end
+    handlers[cemu._nextHandler] = { callback = callback, options = options or {} }
+    return cemu._nextHandler
+end
+
+function cemu.off(event, id)
+    local handlers = cemu._handlers[event]
+    if handlers then handlers[id] = nil end
+end
+
+function cemu._emit(event, payload)
+    cemu._eventSequence = cemu._eventSequence + 1
+    payload.sequence = cemu._eventSequence
+    local handlers = cemu._handlers[event]
+    if not handlers then return true end
+
+    local ids = {}
+    for id in pairs(handlers) do ids[#ids + 1] = id end
+    table.sort(ids)
+
+    local keep = true
+    for _, id in ipairs(ids) do
+        local handler = handlers[id]
+        if handler then
+            local options = handler.options
+            local filters = options.where or options
+            local matches = true
+            for key, expected in pairs(filters) do
+                if key ~= "once" and key ~= "predicate" and key ~= "where" and payload[key] ~= expected then
+                    matches = false
+                    break
+                end
+            end
+            if matches and options.predicate then
+                local predicateOk, predicateResult = pcall(options.predicate, payload)
+                if not predicateOk then
+                    cErr("event '" .. event .. "' predicate: " .. tostring(predicateResult))
+                    matches = false
+                else
+                    matches = not not predicateResult
+                end
+            end
+            if matches then
+                if options.once then handlers[id] = nil end
+                local ok, result = pcall(handler.callback, payload)
+            if not ok then
+                cErr("event '" .. event .. "': " .. tostring(result))
+            elseif result == false then
+                keep = false
+            end
+            end
+        end
+    end
+    return keep
+end
+)lua";
+
 QString scriptError(const sol::protected_function_result &result) {
     const sol::error error = result;
     return QString::fromStdString(error.what());
@@ -207,10 +279,47 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "launchTest", [this] { autotesterLaunch(); }
     );
 
+    const sol::protected_function_result bootstrap = lua.safe_script(LuaEventBootstrap, sol::script_pass_on_error);
+    if (!bootstrap.valid()) {
+        console(QStringLiteral("[Lua] Event bootstrap failed: ") + scriptError(bootstrap) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+    }
     lua.script("dbg.disasmPC = function() return dbg.disasm(cpu.registers.PC, true) end");
     if (isREPL) {
         lua.script("R, F = cpu.registers, cpu.registers.flags");
+        m_replLuaInitialized = true;
+    } else {
+        m_edLuaInitialized = true;
     }
+}
+
+bool MainWindow::emitLuaEventForState(sol::state &lua, bool initialized, const std::string &name,
+                                      const std::function<void(sol::table &)> &populate) {
+    if (!initialized) return true;
+    sol::object cemuObject = lua["cemu"];
+    if (!cemuObject.is<sol::table>()) return true;
+    sol::table cemu = cemuObject.as<sol::table>();
+    sol::protected_function dispatcher = cemu["_emit"];
+    if (!dispatcher.valid()) return true;
+
+    sol::table payload = lua.create_table();
+    payload["event"] = name;
+    payload["time"] = static_cast<double>(sched_total_time(CLOCK_48M)) / 48000.0;
+    payload["cycles"] = sched_total_cycles();
+    payload["pc"] = cpu.registers.PC;
+    payload["paused"] = guiDebug;
+    if (populate) populate(payload);
+    const sol::protected_function_result result = dispatcher(name, payload);
+    if (!result.valid()) {
+        console(QStringLiteral("[Lua] Event dispatch failed: ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+        return true;
+    }
+    return result.get_type() != sol::type::boolean || result.get<bool>();
+}
+
+bool MainWindow::emitLuaEvent(const std::string &name, const std::function<void(sol::table &)> &populate) {
+    const bool editorResult = emitLuaEventForState(ed_lua, m_edLuaInitialized, name, populate);
+    const bool replResult = emitLuaEventForState(repl_lua, m_replLuaInitialized, name, populate);
+    return editorResult && replResult;
 }
 
 void MainWindow::loadLuaScript() {
