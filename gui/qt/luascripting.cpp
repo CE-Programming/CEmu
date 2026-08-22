@@ -11,18 +11,28 @@
 #include <QtWidgets/QMessageBox>
 
 #include <algorithm>
+#include <array>
 #include <string>
+#include <vector>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "lcddebugwidget.h"
 #include "sendinghandler.h"
+#include "tibasicutils.h"
 #include "utils.h"
+#include "vartablemodel.h"
 
 #include "../../core/asic.h"
+#include "../../core/backlight.h"
 #include "../../core/cpu.h"
+#include "../../core/lcd.h"
 #include "../../core/link.h"
 #include "../../core/mem.h"
+#include "../../core/panel.h"
+#include "../../core/port.h"
+#include "../../core/debug/debug.h"
 
 namespace {
 
@@ -101,6 +111,45 @@ end
 QString scriptError(const sol::protected_function_result &result) {
     const sol::error error = result;
     return QString::fromStdString(error.what());
+}
+
+sol::table gammaTable(const sol::this_state &thisState, const panel_gamma_t &gamma) {
+    sol::state_view lua(thisState);
+    return lua.create_table_with(
+        "v0", static_cast<unsigned int>(gamma.V0), "v1", static_cast<unsigned int>(gamma.V1),
+        "v2", static_cast<unsigned int>(gamma.V2), "v4", static_cast<unsigned int>(gamma.V4),
+        "v6", static_cast<unsigned int>(gamma.V6), "v13", static_cast<unsigned int>(gamma.V13),
+        "v20", static_cast<unsigned int>(gamma.V20), "v27", static_cast<unsigned int>(gamma.V27),
+        "v36", static_cast<unsigned int>(gamma.V36), "v43", static_cast<unsigned int>(gamma.V43),
+        "v50", static_cast<unsigned int>(gamma.V50), "v57", static_cast<unsigned int>(gamma.V57),
+        "v59", static_cast<unsigned int>(gamma.V59), "v61", static_cast<unsigned int>(gamma.V61),
+        "v62", static_cast<unsigned int>(gamma.V62), "v63", static_cast<unsigned int>(gamma.V63),
+        "j0", static_cast<unsigned int>(gamma.J0), "j1", static_cast<unsigned int>(gamma.J1));
+}
+
+sol::table stringListTable(const sol::this_state &thisState, const QStringList &values) {
+    sol::state_view lua(thisState);
+    sol::table result = lua.create_table(static_cast<int>(values.size()), 0);
+    for (int index = 0; index < values.size(); ++index) {
+        result[index + 1] = values[index].toStdString();
+    }
+    return result;
+}
+
+constexpr std::array<const char *, 16> PeripheralNames = {
+    "control", "flash", "sha256", "usb", "lcd", "interrupts", "watchdog", "timers",
+    "rtc", "protected", "keypad", "backlight", "misc", "spi", "uart", "reserved"
+};
+
+int registerId(std::string name) {
+    static constexpr std::array<const char *, DBG_REG_COUNT> RegNames = {
+        "a", "f", "b", "c", "d", "e", "h", "l", "ixh", "ixl", "iyh", "iyl",
+        "a_", "f_", "b_", "c_", "d_", "e_", "h_", "l_", "af", "bc", "de", "hl",
+        "ix", "iy", "af_", "bc_", "de_", "hl_", "sps", "spl", "pc", "i", "r", "mbase"
+    };
+    std::ranges::transform(name, name.begin(), [](unsigned char c){ return std::tolower(c); });
+    const auto found = std::ranges::find_if(RegNames, [&name](const char *r) { return name == r; });
+    return found == RegNames.cend() ? -1 : static_cast<int>(found - RegNames.cbegin());
 }
 
 } // namespace
@@ -191,6 +240,161 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "writeWord", mem_poke_word
     );
 
+    sol::table peripherals = lua.create_named_table("peripherals");
+    peripherals.set_function("peek", [](uint16_t address) { return port_peek_byte(address); });
+    peripherals.set_function("poke", [](uint16_t address, uint8_t value) { port_poke_byte(address, value); });
+    peripherals.set_function("read", [](uint16_t address) { return port_read_byte(address); });
+    peripherals.set_function("write", [](uint16_t address, uint8_t value) { port_write_byte(address, value); });
+    peripherals.set_function("describe", [](const sol::this_state &thisState, uint16_t address) {
+        const unsigned int range = address >> 12;
+        sol::state_view view(thisState);
+        return view.create_table_with(
+            "name", PeripheralNames[range], "range", range,
+            "base", range << 12, "offset", address & 0xFFF, "address", address);
+    });
+    peripherals.set_function("snapshot", [](const sol::this_state &thisState, uint16_t address,
+                                               sol::optional<unsigned int> requestedLength) {
+        const unsigned int length = requestedLength.value_or(1);
+        if (length > 0x10000u - address) {
+            throw sol::error("peripheral snapshot extends past port 0xffff");
+        }
+        sol::state_view view(thisState);
+        sol::table result = view.create_table(static_cast<int>(length), 0);
+        for (unsigned int offset = 0; offset < length; ++offset) {
+            result[offset + 1] = port_peek_byte(static_cast<uint16_t>(address + offset));
+        }
+        return result;
+    });
+    peripherals.set_function("monitor", [](uint16_t address, sol::optional<bool> read,
+                                              sol::optional<bool> write, sol::optional<bool> freeze) {
+        debug_ports(address, DBG_MASK_PORT_READ, read.value_or(false));
+        debug_ports(address, DBG_MASK_PORT_WRITE, write.value_or(false));
+        debug_ports(address, DBG_MASK_PORT_FREEZE, freeze.value_or(false));
+        return debug.port[address] & (DBG_MASK_PORT_READ | DBG_MASK_PORT_WRITE | DBG_MASK_PORT_FREEZE);
+    });
+    peripherals.set_function("monitorState", [](const sol::this_state &thisState, uint16_t address) {
+        const int mask = debug.port[address];
+        sol::state_view view(thisState);
+        return view.create_table_with(
+            "read", static_cast<bool>(mask & DBG_MASK_PORT_READ),
+            "write", static_cast<bool>(mask & DBG_MASK_PORT_WRITE),
+            "freeze", static_cast<bool>(mask & DBG_MASK_PORT_FREEZE));
+    });
+    sol::table peripheralRanges = lua.create_table();
+    for (size_t index = 0; index < PeripheralNames.size(); ++index) {
+        peripheralRanges[PeripheralNames[index]] = lua.create_table_with(
+            "base", static_cast<unsigned int>(index << 12), "size", 0x1000,
+            "last", static_cast<unsigned int>((index << 12) | 0xFFF));
+    }
+    peripherals["ranges"] = peripheralRanges;
+
+    const auto lcdControllerState = [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table timings = view.create_table(4, 0);
+        for (int index = 0; index < 4; ++index) timings[index + 1] = lcd.timing[index];
+        return view.create_table_with(
+            "timing", timings, "control", lcd.control, "interruptMask", lcd.imsc,
+            "rawInterruptStatus", lcd.ris, "upperBase", lcd.upbase, "lowerBase", lcd.lpbase,
+            "upperCurrent", lcd.upcurr, "lowerCurrent", lcd.lpcurr,
+            "cursorControl", lcd.crsrControl, "cursorConfig", lcd.crsrConfig,
+            "pixelsPerLine", lcd.PPL, "horizontalSync", lcd.HSW,
+            "horizontalFrontPorch", lcd.HFP, "horizontalBackPorch", lcd.HBP,
+            "linesPerPanel", lcd.LPP, "verticalSync", lcd.VSW,
+            "verticalFrontPorch", lcd.VFP, "verticalBackPorch", lcd.VBP,
+            "pixelClockDivider", lcd.PCD, "clocksPerLine", lcd.CPL,
+            "currentRow", lcd.curRow, "currentColumn", lcd.curCol,
+            "phase", static_cast<int>(lcd.compare), "dma", static_cast<bool>(lcd.useDma));
+    };
+    const auto lcdPanelState = [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        panel_timing_t timing;
+        panel_get_timing(&timing);
+        sol::table positive = gammaTable(thisState, panel.params.PVGAMCTRL);
+        sol::table negative = gammaTable(thisState, panel.params.NVGAMCTRL);
+        return view.create_table_with(
+            "command", panel.cmd,
+            "commandParameter", panel.paramIter,
+            "displayMode", panel.displayMode,
+            "modeFlags", panel.mode,
+            "pendingModeFlags", panel.pendingMode,
+            "inverted", panel.invert,
+            "tearing", panel.tear,
+            "row", panel.row,
+            "column", panel.col,
+            "sourceRow", panel.srcRow,
+            "destinationRow", panel.dstRow,
+            "columnStart", panel.params.CASET.XS,
+            "columnEnd", panel.params.CASET.XE,
+            "rowStart", panel.params.RASET.YS,
+            "rowEnd", panel.params.RASET.YE,
+            "scrollTop", panel.params.VSCRDEF.TFA,
+            "scrollArea", panel.params.VSCRDEF.VSA,
+            "scrollBottom", panel.params.VSCRDEF.BFA,
+            "scrollStart", panel.params.VSCRSADD.VSP,
+            "madctlMx", static_cast<bool>(panel.params.MADCTL.MX),
+            "madctlMy", static_cast<bool>(panel.params.MADCTL.MY),
+            "madctlMv", static_cast<bool>(panel.params.MADCTL.MV),
+            "madctlMl", static_cast<bool>(panel.params.MADCTL.ML),
+            "madctlMh", static_cast<bool>(panel.params.MADCTL.MH),
+            "madctlRgb", static_cast<bool>(panel.params.MADCTL.RGB),
+            "mcuPixelFormat", static_cast<unsigned int>(panel.params.COLMOD.MCU),
+            "rgbPixelFormat", static_cast<unsigned int>(panel.params.COLMOD.RGB),
+            "horizontalBackPorch", timing.horizBackPorch,
+            "horizontalActive", timing.horizActive,
+            "horizontalFrontPorch", timing.horizFrontPorch,
+            "verticalBackPorch", timing.vertBackPorch,
+            "verticalActive", timing.vertActive,
+            "verticalFrontPorch", timing.vertFrontPorch,
+            "clockRate", panel.clockRate,
+            "clockDivider", static_cast<unsigned int>(panel.params.FRCTRL1.DIV),
+            "gammaPreset", static_cast<unsigned int>(panel.params.GAMSET.GC),
+            "accurateGamma", panel.accurateGamma,
+            "positiveGamma", positive,
+            "negativeGamma", negative);
+    };
+    sol::table lcdTable = lua.create_named_table("lcd");
+    lcdTable.set_function("controllerState", lcdControllerState);
+    lcdTable.set_function("panelState", lcdPanelState);
+    lcdTable.set_function("state", [lcdControllerState, lcdPanelState](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        return view.create_table_with("controller", lcdControllerState(thisState),
+                                      "panel", lcdPanelState(thisState),
+                                      "backlight", view.create_table_with(
+                                          "brightness", backlight.brightness,
+                                          "factor", backlight.factor)
+                                      );
+    });
+    lcdTable.set_function("panelCommand", [](uint8_t command, const sol::table &parameters) {
+        if (!guiDebug) throw sol::error("lcd.panelCommand requires paused emulation");
+        const size_t size = parameters.size();
+        std::vector<uint8_t> bytes;
+        bytes.reserve(size);
+        for (size_t index = 1; index <= size; ++index) {
+            const unsigned int value = parameters.get<unsigned int>(index);
+            if (value > 0xFF) throw sol::error("LCD panel command parameter must be a byte");
+            bytes.push_back(static_cast<uint8_t>(value));
+        }
+        return panel_debug_write_command(command, bytes.data(), bytes.size());
+    });
+    lcdTable.set_function("refreshDebugPane", [this] { m_lcdDebug->populate(); });
+    lcdTable.set_function("applyDebugPane", [this] {
+        if (!guiDebug) throw sol::error("lcd.applyDebugPane requires paused emulation");
+        m_lcdDebug->sync();
+        lcd_update();
+    });
+    lcdTable.set_function("showDebugPane", [this] {
+        ui->tabDebug->setCurrentWidget(m_lcdDebug);
+        show();
+        raise();
+        activateWindow();
+    });
+    lcdTable.set_function("setDma", [this](bool enabled) { setLcdDma(enabled); });
+    lcdTable.set_function("setGamma", [this](bool enabled) { setLcdGamma(enabled); });
+    lcdTable.set_function("setResponse", [this](bool enabled) { setLcdResponse(enabled); });
+    lcdTable.set_function("setScale", [this](int percent) { setLcdScale(std::clamp(percent, 10, 500)); });
+    lcdTable.set_function("setUpscale", [this](int mode) { setLcdUpscale(std::clamp(mode, 0, 2)); });
+    lcdTable.set_function("setSkin", [this](bool enabled) { setSkinToggle(enabled); });
+
     lua.create_named_table("keys",
         "press", [this](const std::string &key) { sendEmuKeySequence(QString::fromStdString(key)); },
         "sequence", [this](const std::string &sequence) { sendEmuKeySequence(QString::fromStdString(sequence)); },
@@ -247,6 +451,30 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
             return breakAdd(QString::fromStdString(label), address, true, false, false);
         }));
     debugTable.set_function("removeBreakpoint", [this](uint32_t address) { breakRemove(address); });
+    debugTable.set_function("addWatchpoint", sol::overload(
+        [this](uint32_t low, uint32_t high, bool read, bool write) {
+            const int mask = (read ? DBG_MASK_READ : 0) | (write ? DBG_MASK_WRITE : 0);
+            return watchAdd(QStringLiteral("Lua"), low, high, mask, false, false);
+        },
+        [this](uint32_t low, uint32_t high, bool read, bool write, const std::string &label) {
+            const int mask = (read ? DBG_MASK_READ : 0) | (write ? DBG_MASK_WRITE : 0);
+            return watchAdd(QString::fromStdString(label), low, high, mask, false, false);
+        }));
+    debugTable.set_function("removeWatchpoint", [this](uint32_t address) { watchRemove(address); });
+    debugTable.set_function("watchRegister", [](const std::string &name, bool read, bool write) {
+        const int id = registerId(name);
+        if (id < 0) throw sol::error("unknown CPU register name");
+        debug_reg_watch(static_cast<unsigned int>(id), DBG_MASK_READ, read);
+        debug_reg_watch(static_cast<unsigned int>(id), DBG_MASK_WRITE, write);
+    });
+    debugTable.set_function("registerWatchState", [](const sol::this_state &thisState, const std::string &name) {
+        const int id = registerId(name);
+        if (id < 0) throw sol::error("unknown CPU register name");
+        const int mask = debug_reg_get_mask(static_cast<unsigned int>(id));
+        sol::state_view view(thisState);
+        return view.create_table_with("read", static_cast<bool>(mask & DBG_MASK_READ),
+                                      "write", static_cast<bool>(mask & DBG_MASK_WRITE));
+    });
     debugTable.set_function("gotoDisasm", [this](uint32_t address) { gotoDisasmAddr(address); });
     debugTable.set_function("disasm", [](const sol::this_state &thisState, uint32_t address, sol::optional<bool> useCpuMode) {
         const int32_t savedBase = disasm.base;
@@ -280,6 +508,92 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         disasm.cur = savedCur;
         return instruction;
     });
+
+    sol::table basicTable = lua.create_named_table("basic");
+    basicTable.set_function("enable", [this](bool enabled) { debugBasic(enabled); });
+    basicTable.set_function("enabled", [] { return guiDebugBasic; });
+    basicTable.set_function("showDebugger", [this] {
+        if (!guiDebugBasic) debugBasic(true);
+        ui->tabDebug->setCurrentWidget(ui->tab_tibasic_debugger);
+        show();
+        raise();
+        activateWindow();
+    });
+    basicTable.set_function("state", [this](const sol::this_state &thisState) {
+        const uint32_t begin = mem_peek_long(DBG_BASIC_BEGPC);
+        const uint32_t current = mem_peek_long(DBG_BASIC_CURPC);
+        const uint32_t end = mem_peek_long(DBG_BASIC_ENDPC);
+        int sourceLine = 0;
+        int byteOffset = -1;
+        int index = m_basicCodeIndex;
+        if (current >= begin && current <= end && index >= 0 && index < m_basicPrgmsTokensMap.size()) {
+            byteOffset = static_cast<int>(current - begin);
+            if (byteOffset < m_basicPrgmsTokensMap[index].size()) {
+                sourceLine = m_basicPrgmsTokensMap[index][byteOffset].sourceLine + 1;
+            }
+        }
+        sol::state_view view(thisState);
+        return view.create_table_with(
+            "enabled", guiDebugBasic, "paused", guiDebug,
+            "program", debugBasicGetPrgmName().toStdString(),
+            "begin", begin, "current", current, "end", end,
+            "byteOffset", byteOffset, "line", sourceLine,
+            "showFetches", m_basicShowFetches, "showTemporaryParser", m_basicShowTempParser,
+            "liveExecution", m_basicShowLiveExecution, "highlight", m_basicShowHighlighted);
+    });
+    basicTable.set_function("source", [this](sol::optional<bool> temporary) {
+        const int index = temporary.value_or(false) ? 0 : m_basicCodeIndex;
+        return index >= 0 && index < m_basicPrgmsOriginalCode.size()
+            ? m_basicPrgmsOriginalCode[index].toStdString() : std::string();
+    });
+    basicTable.set_function("step", [this] { debugBasicStep(); });
+    basicTable.set_function("stepNext", [this] { debugBasicStepNext(); });
+    basicTable.set_function("resume", [this] { if (guiDebug) debugToggle(); });
+    basicTable.set_function("setHighlight", [this](bool enabled) { debugBasicToggleHighlight(enabled); });
+    basicTable.set_function("setShowFetches", [this](bool enabled) { debugBasicToggleShowFetch(enabled); });
+    basicTable.set_function("setShowTemporaryParser", [this](bool enabled) { debugBasicToggleShowTempParse(enabled); });
+    basicTable.set_function("setLiveExecution", [this](bool enabled) { debugBasicToggleLiveExecution(enabled); });
+    basicTable.set_function("setSourceBreakpoint", [this](unsigned int line, bool enabled,
+                                                            sol::optional<bool> temporary) {
+        if (line == 0) throw sol::error("TI-BASIC source lines are 1-based");
+        const int index = temporary.value_or(false) ? 0 : m_basicCodeIndex;
+        BasicEditor *editor = index == 0 ? ui->basicTempEdit : ui->basicEdit;
+        debugBasicToggleBreakpoint(editor, index, static_cast<int>(line - 1), enabled);
+    });
+    basicTable.set_function("sourceBreakpoints", [this](const sol::this_state &thisState,
+                                                          sol::optional<bool> temporary) {
+        const int index = temporary.value_or(false) ? 0 : m_basicCodeIndex;
+        sol::state_view view(thisState);
+        sol::table result = view.create_table();
+        if (index < 0 || index >= m_basicPrgmsIds.size()) return result;
+        QList<int> lines = m_basicSourceBreakpoints.value(m_basicPrgmsIds[index]).values();
+        std::sort(lines.begin(), lines.end());
+        for (int item = 0; item < lines.size(); ++item) result[item + 1] = lines[item] + 1;
+        return result;
+    });
+    basicTable.set_function("watchVariable", [this](const std::string &name, bool enabled) {
+        m_varTableModel->refresh();
+        const QString wanted = QString::fromStdString(name);
+        for (int row = 0; row < m_varTableModel->rowCount(); ++row) {
+            const QModelIndex index = m_varTableModel->index(row, VarTableModel::VAR_NAME_COL);
+            if (index.data(Qt::DisplayRole).toString().compare(wanted, Qt::CaseInsensitive) == 0) {
+                m_varTableModel->setWatched(index, enabled);
+                return true;
+            }
+        }
+        return false;
+    });
+    basicTable.set_function("watchedVariables", [this](const sol::this_state &thisState) {
+        m_varTableModel->refresh();
+        QStringList watched;
+        for (int row = 0; row < m_varTableModel->rowCount(); ++row) {
+            const QModelIndex index = m_varTableModel->index(row, VarTableModel::VAR_NAME_COL);
+            if (m_varTableModel->isWatched(index)) watched.append(index.data(Qt::DisplayRole).toString());
+        }
+        return stringListTable(thisState, watched);
+    });
+    basicTable.set_function("prepareSource", [](const std::string &source) { return ti_basic_prepare_source(source); });
+    basicTable.set_function("deindentSource", [](const std::string &source) { return ti_basic_deindent_source(source); });
 
     lua.create_named_table("autotester",
         "loadJSON", [this](const std::string &path) { return autotesterOpen(QString::fromStdString(path)); },

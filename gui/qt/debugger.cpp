@@ -458,6 +458,20 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             ? m_varTableModel->checkWatchedVariables()
             : QStringList();
         if (!watchedChanges.isEmpty()) {
+            if (!emitLuaEvent("basic-variable-change", [&watchedChanges](sol::table &payload) {
+                    sol::state_view view(payload.lua_state());
+                    sol::table variables = view.create_table(static_cast<int>(watchedChanges.size()), 0);
+                    for (int index = 0; index < watchedChanges.size(); ++index) {
+                        variables[index + 1] = watchedChanges[index].toStdString();
+                    }
+                    payload["variables"] = variables;
+                    payload["program"] = debugBasicGetPrgmName().toStdString();
+                    payload["pc"] = cpu.registers.PC;
+                })) {
+                guiDebug = false;
+                emu.resume();
+                return;
+            }
             debugBasicUpdate(true);
             ui->debuggerLabel->setText(
                 tr("BASIC variable changed: %1").arg(watchedChanges.join(QStringLiteral(", "))));
@@ -566,6 +580,16 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         case DBG_REG_WRITE: {
             const QString rn = kRegIdToName[data];
             const QString act = (reason == DBG_REG_READ) ? tr("Read") : tr("Wrote");
+            if (!emitLuaEvent(reason == DBG_REG_READ ? "register-read" : "register-write",
+                              [reason, data, &rn](sol::table &payload) {
+                    payload["id"] = data;
+                    payload["name"] = rn.toStdString();
+                    payload["write"] = reason == DBG_REG_WRITE;
+                    payload["pc"] = cpu.registers.PC;
+                })) {
+                emu.resume();
+                return;
+            }
             text = act + tr(" register ") + rn;
             break;
         }
@@ -573,6 +597,17 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         case DBG_PORT_WRITE:
             input = int2hex(data, 4);
             type = (reason == DBG_PORT_READ) ? tr("Read") : tr("Wrote");
+            if (!emitLuaEvent(reason == DBG_PORT_READ ? "peripheral-read" : "peripheral-write",
+                              [reason, data](sol::table &payload) {
+                    payload["address"] = data;
+                    payload["range"] = static_cast<unsigned int>(data >> 12);
+                    payload["value"] = port_peek_byte(static_cast<uint16_t>(data));
+                    payload["write"] = reason == DBG_PORT_WRITE;
+                    payload["pc"] = cpu.registers.PC;
+                })) {
+                emu.resume();
+                return;
+            }
             text = type + tr(" port ") + input;
             break;
         case DBG_NMI_TRIGGERED:
@@ -599,18 +634,48 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             }
             debugBasicUpdate(true);
             const int line = m_basicPrgmsTokensMap[index][data].line + 1;
+            const QString program = debugBasicGetPrgmName();
+            if (!emitLuaEvent("basic-breakpoint", [data, line, &program](sol::table &payload) {
+                    payload["program"] = program.toStdString();
+                    payload["line"] = line;
+                    payload["byteOffset"] = data;
+                    payload["pc"] = cpu.registers.PC;
+                })) {
+                emu.resume();
+                return;
+            }
             ui->debuggerLabel->setText(
-                tr("Hit BASIC source breakpoint in %1 at line %2").arg(debugBasicGetPrgmName()).arg(line));
+                tr("Hit BASIC source breakpoint in %1 at line %2").arg(program).arg(line));
             debugBasicRaise();
             return;
         }
-        case DBG_BASIC_STEP:
+        case DBG_BASIC_STEP: {
             if (debugBasicUpdate(false) == DBG_BASIC_NO_EXECUTING_PRGM) {
+                emu.resume();
+                return;
+            }
+            const uint32_t begin = mem_peek_long(DBG_BASIC_BEGPC);
+            const uint32_t current = mem_peek_long(DBG_BASIC_CURPC);
+            int line = 0;
+            const int index = m_basicCodeIndex;
+            if (current >= begin && index >= 0 && index < m_basicPrgmsTokensMap.size()) {
+                const uint32_t offset = current - begin;
+                if (offset < static_cast<uint32_t>(m_basicPrgmsTokensMap[index].size())) {
+                    line = m_basicPrgmsTokensMap[index][offset].sourceLine + 1;
+                }
+            }
+            if (!emitLuaEvent("basic-step", [current, begin, line](sol::table &payload) {
+                    payload["program"] = debugBasicGetPrgmName().toStdString();
+                    payload["line"] = line;
+                    payload["byteOffset"] = current - begin;
+                    payload["pc"] = cpu.registers.PC;
+                })) {
                 emu.resume();
                 return;
             }
             debugBasicRaise();
             return;
+        }
         case DBG_USER:
         default:
             debugRaise();
