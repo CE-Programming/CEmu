@@ -805,8 +805,6 @@ private:
     KeyHistoryWidget *m_windowKeys = nullptr;
     LcdDebugWidget *m_lcdDebug = nullptr;
 
-    sol::state lua;
-
     bool m_isSendingRom = false;
     QString m_dragRom;
 
@@ -856,6 +854,7 @@ private:
 
     sol::state ed_lua;
     sol::state repl_lua;
+    bool m_luaUnsafe = false;
 
     static const char *m_varExtensions[];
 

@@ -1,6 +1,4 @@
 #include <QtCore/QFileInfo>
-#include <QtCore/QRegularExpression>
-#include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QFile>
 #include <QtCore/QDateTime>
@@ -18,73 +16,64 @@
 #include "../../core/mem.h"
 #include "../../core/link.h"
 
+namespace {
 
-void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
+QString scriptError(const sol::protected_function_result &result) {
+    const sol::error error = result;
+    return QString::fromStdString(error.what());
+}
 
-    lua = sol::state();
+} // namespace
 
-    lua.set_panic( [](lua_State* L) {
-        const char* message = lua_tostring(L, -1);
-        if (message) {
-            fprintf(stderr, "[Lua Panic] %s\n", message);
-            lua_pop(L, 1);
-        }
+void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
+
+    lua = sol::state{};
+
+    lua.set_panic([](lua_State *state) {
+        const char *message = lua_tostring(state, -1);
+        fprintf(stderr, "[Lua Panic] %s\n", message ? message : "unknown panic");
         return -1;
     });
 
-    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::math, sol::lib::string, sol::lib::table, sol::lib::utf8);
-    lua.script("require, loadfile, dofile = nil, nil, nil"); // More?
-    // TODO: io.*, os.*, debug.*, require(), etc. => opt-in via settings.
-
-    // Logging helpers (Note: print() goes to stdout)
-    if (isREPL) {
-        lua.set_function("cLog", [&](const sol::this_state& s) {
-            lua_State* L = s;
-            int nargs = lua_gettop(L);
-            for (int i=1; i <= nargs; ++i) {
-                ui->REPLConsole->appendPlainText(lua_tostring(L, i));
-                if (i != nargs) { ui->REPLConsole->appendPlainText("\t"); }
-            }
-        });
-        lua.set_function("cErr", [&](const sol::this_state& s) {
-            lua_State* L = s;
-            int nargs = lua_gettop(L);
-            ui->REPLConsole->appendPlainText("[Error] ");
-            for (int i=1; i <= nargs; ++i) {
-                ui->REPLConsole->appendPlainText(lua_tostring(L, i));
-                if (i != nargs) { ui->REPLConsole->appendPlainText("\t"); }
-            }
-        });
-        lua.script("print = function(...) local a={...}; for _,v in pairs(a) do cLog(tostring(v)) end end");
+    if (m_luaUnsafe) {
+        lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine,
+                           sol::lib::io, sol::lib::os, sol::lib::math,
+                           sol::lib::string, sol::lib::table, sol::lib::debug,
+                           sol::lib::utf8);
     } else {
-        lua.set_function("cLog", [&](const sol::this_state& s) {
-            lua_State* L = s;
-            int nargs = lua_gettop(L);
-            console(EmuThread::ConsoleNorm, "[Lua] ");
-            for (int i=1; i <= nargs; ++i) {
-                console(EmuThread::ConsoleNorm, lua_tostring(L, i));
-                if (i != nargs) { console(EmuThread::ConsoleNorm, "\t"); }
-            }
-            console(EmuThread::ConsoleNorm, "\n");
-        });
-        lua.set_function("cErr", [&](const sol::this_state& s) {
-            lua_State* L = s;
-            int nargs = lua_gettop(L);
-            console(EmuThread::ConsoleErr, "[Lua] ");
-            for (int i=1; i <= nargs; ++i) {
-                console(EmuThread::ConsoleErr, lua_tostring(L, i));
-                if (i != nargs) { console(EmuThread::ConsoleErr, "\t"); }
-            }
-            console(EmuThread::ConsoleErr, "\n");
-        });
+        lua.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::math,
+                           sol::lib::string, sol::lib::table, sol::lib::utf8);
+        lua.script("require, loadfile, dofile, package, io, os, debug = nil, nil, nil, nil, nil, nil, nil");
     }
 
-    // Bind core stuff
-    lua["cpu"] = std::cref(cpu);
+    const auto appendValues = [this, isREPL](const sol::this_state &thisState, bool error) {
+        lua_State *state = thisState;
+        const int count = lua_gettop(state);
+        QStringList values;
+        values.reserve(count);
+        for (int index = 1; index <= count; ++index) {
+            size_t length = 0;
+            const char *value = luaL_tolstring(state, index, &length);
+            values.append(QString::fromUtf8(value, static_cast<qsizetype>(length)));
+            lua_pop(state, 1);
+        }
+        const QString text = values.join(QLatin1Char('\t'));
+        if (isREPL) {
+            ui->REPLConsole->appendPlainText((error ? QStringLiteral("[Error] ") : QString()) + text);
+        } else {
+            console(QStringLiteral("[Lua] ") + text + QLatin1Char('\n'),
+                    error ? EmuThread::ConsoleErr : EmuThread::ConsoleNorm);
+        }
+    };
+    lua.set_function("cLog", [appendValues](const sol::this_state &state) { appendValues(state, false); });
+    lua.set_function("cErr", [appendValues](const sol::this_state &state) { appendValues(state, true); });
+    lua.script("print = function(...) local values={...}; for i=1,select('#', ...) do values[i]=tostring(values[i]) end; cLog(table.unpack(values, 1, select('#', ...))) end");
+
+    lua["cpu"] = std::ref(cpu);
 
     lua.new_usertype<decltype(cpu.registers.flags)>("eZ80flags_t",
-#define FLAG(f) (#f), (sol::property([](decltype(cpu.registers.flags)& flags) -> bool { return flags.f; }, \
-                                     [](decltype(cpu.registers.flags)& flags, bool val) -> void { flags.f = val; }))
+#define FLAG(f) (#f), sol::property([](decltype(cpu.registers.flags) &flags) { return static_cast<bool>(flags.f); }, \
+                                    [](decltype(cpu.registers.flags) &flags, bool value) { flags.f = value; })
         FLAG(C), FLAG(N), FLAG(PV), FLAG(_3), FLAG(H), FLAG(_5), FLAG(Z), FLAG(S)
 #undef FLAG
     );
@@ -102,16 +91,13 @@ void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
 
     lua.new_usertype<eZ80cpu_t>("eZ80cpu_t",
         "registers", sol::readonly(&eZ80cpu_t::registers),
-
-#define FLAG(f) (#f), (sol::property([](eZ80cpu_t &cpu) -> bool { return cpu.f; }, [](eZ80cpu_t &cpu, bool val) -> void { cpu.f = val; }))
-        FLAG(halted),
-        FLAG(ADL), FLAG(MADL),
-        FLAG(IEF1), FLAG(IEF2),
-#undef FLAG
-
-        "inBlock",  sol::property([](eZ80cpu_t &cpu) -> bool { return cpu.inBlock; }, [](eZ80cpu_t &, bool) -> void { /* RO */ }),
-        "cycles",   sol::readonly(&eZ80cpu_t::cycles),
-        "next",     sol::readonly(&eZ80cpu_t::next),
+#define CPU_FLAG(f) (#f), sol::property([](eZ80cpu_t &value) { return static_cast<bool>(value.f); }, \
+                                        [](eZ80cpu_t &value, bool enabled) { value.f = enabled; })
+        CPU_FLAG(halted), CPU_FLAG(ADL), CPU_FLAG(MADL), CPU_FLAG(IEF1), CPU_FLAG(IEF2),
+#undef CPU_FLAG
+        "inBlock", sol::readonly_property([](const eZ80cpu_t &value) { return static_cast<bool>(value.inBlock); }),
+        "cycles", sol::readonly(&eZ80cpu_t::cycles),
+        "next", sol::readonly(&eZ80cpu_t::next),
         "prefetch", sol::readonly(&eZ80cpu_t::prefetch)
     );
 
@@ -242,41 +228,26 @@ void MainWindow::saveLuaScript() {
 }
 
 void MainWindow::runLuaScript() {
-    // Reset Lua engine and bindings
-    this->initLuaThings(ed_lua, false);
-    // TODO: maybe have a separate thread for Lua (because of infinite loops...)
-    const std::string& code = ui->luaScriptEditor->toPlainText().toStdString();
-    const sol::protected_function_result& stringresult = ed_lua.do_string(code);
-    if (!stringresult.valid())
-    {
-        const sol::error& err = stringresult;
-        const std::string errStr = std::string("[Lua-Error] ") + err.what() + "\n";
-        console(EmuThread::ConsoleNorm, errStr.c_str());
+    initLuaThings(ed_lua, false);
+    const std::string code = ui->luaScriptEditor->toPlainText().toStdString();
+    const sol::protected_function_result result = ed_lua.safe_script(code, sol::script_pass_on_error);
+    if (!result.valid()) {
+        console(QStringLiteral("[Lua] ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
     }
 }
 
 void MainWindow::LuaREPLeval() {
-    // TODO: maybe have a separate thread for Lua (because of infinite loops...)
     std::string code = ui->REPLInput->text().toStdString();
-    if (code.empty()) {
-        return;
-    }
+    if (code.empty()) return;
     ui->REPLConsole->appendPlainText(QString::fromStdString("▶ " + code));
-    if (code.substr(0, 2) == "==") {
-        if (code.length() == 2) {
-            return;
-        }
+    ui->REPLInput->clear();
+    if (code.starts_with("==")) {
+        if (code.size() == 2) return;
         code = "print(string.format('hex: %X', " + code.substr(2) + "))";
-    } else if (code.substr(0, 1) == "=") {
-        if (code.length() == 1) {
-            return;
-        }
+    } else if (code.starts_with('=')) {
+        if (code.size() == 1) return;
         code = "print(" + code.substr(1) + ")";
     }
-    const sol::protected_function_result& stringresult = repl_lua.do_string(code);
-    if (!stringresult.valid())
-    {
-        const sol::error& err = stringresult;
-        ui->REPLConsole->appendPlainText("[Lua-Error] " + QString::fromStdString(err.what()));
-    }
+    const sol::protected_function_result result = repl_lua.safe_script(code, sol::script_pass_on_error);
+    if (!result.valid()) ui->REPLConsole->appendPlainText(QStringLiteral("[Lua] ") + scriptError(result));
 }
