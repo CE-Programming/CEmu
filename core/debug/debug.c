@@ -21,6 +21,50 @@ typedef struct debug_atomics {
 
 static debug_atomics_t debug_atomics;
 
+typedef struct debug_hit_counter_entry {
+    uint32_t address;
+    uint32_t references;
+    uint64_t count;
+    uint8_t state;
+} debug_hit_counter_entry_t;
+
+enum {
+    HIT_COUNTER_EMPTY,
+    HIT_COUNTER_ACTIVE,
+    HIT_COUNTER_DELETED,
+};
+
+#define DBG_HIT_COUNTER_TABLE_SIZE (DBG_HIT_COUNTER_MAX * 2)
+_Static_assert(DBG_HIT_COUNTER_TABLE_SIZE > 0 &&
+               (DBG_HIT_COUNTER_TABLE_SIZE & (DBG_HIT_COUNTER_TABLE_SIZE - 1)) == 0,
+               "hit counter table size must be a power of two");
+static debug_hit_counter_entry_t hitCounters[DBG_HIT_COUNTER_TABLE_SIZE];
+static size_t hitCounterCount;
+
+static size_t debug_hit_counter_hash(uint32_t address) {
+    return (address * UINT32_C(2654435761)) & (DBG_HIT_COUNTER_TABLE_SIZE - 1);
+}
+
+static debug_hit_counter_entry_t *debug_hit_counter_find(uint32_t address, bool insert) {
+    size_t index = debug_hit_counter_hash(address);
+    debug_hit_counter_entry_t *deleted = NULL;
+
+    for (size_t probe = 0; probe < DBG_HIT_COUNTER_TABLE_SIZE; probe++) {
+        debug_hit_counter_entry_t *entry = &hitCounters[index];
+        if (entry->state == HIT_COUNTER_EMPTY) {
+            return insert ? (deleted ? deleted : entry) : NULL;
+        }
+        if (entry->state == HIT_COUNTER_ACTIVE && entry->address == address) {
+            return entry;
+        }
+        if (!deleted && entry->state == HIT_COUNTER_DELETED) {
+            deleted = entry;
+        }
+        index = (index + 1) & (DBG_HIT_COUNTER_TABLE_SIZE - 1);
+    }
+    return insert ? deleted : NULL;
+}
+
 typedef struct basic_source_breakpoint {
     char program[9];
     uint16_t begin, end;
@@ -54,6 +98,8 @@ void debug_init(void) {
     debug.addr = (uint8_t*)calloc(DBG_ADDR_SIZE, sizeof(uint8_t));
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
+    memset(hitCounters, 0, sizeof hitCounters);
+    hitCounterCount = 0;
     basicBreakpointCount = 0;
     debug_atomics.open = false;
     debug_disable_basic_mode();
@@ -65,6 +111,80 @@ void debug_free(void) {
     free(debug.addr);
     free(debug.port);
     gui_console_printf("[CEmu] Freed Debugger.\n");
+}
+
+bool debug_hit_counter_add(uint32_t address, uint64_t *count) {
+    address &= 0xFFFFFF;
+    debug_hit_counter_entry_t *entry = debug_hit_counter_find(address, false);
+    if (entry) {
+        if (entry->references == UINT32_MAX) {
+            return false;
+        }
+        entry->references++;
+    } else {
+        if (hitCounterCount >= DBG_HIT_COUNTER_MAX) {
+            return false;
+        }
+        entry = debug_hit_counter_find(address, true);
+        if (!entry) {
+            return false;
+        }
+        entry->address = address;
+        entry->references = 1;
+        entry->count = 0;
+        entry->state = HIT_COUNTER_ACTIVE;
+        hitCounterCount++;
+    }
+
+    debug.addr[address] |= DBG_MASK_COUNT;
+    if (count) {
+        *count = entry->count;
+    }
+    return true;
+}
+
+bool debug_hit_counter_get(uint32_t address, uint64_t *count) {
+    debug_hit_counter_entry_t *entry = debug_hit_counter_find(address & 0xFFFFFF, false);
+    if (!entry) {
+        return false;
+    }
+    if (count) {
+        *count = entry->count;
+    }
+    return true;
+}
+
+bool debug_hit_counter_remove(uint32_t address, uint64_t *count) {
+    address &= 0xFFFFFF;
+    debug_hit_counter_entry_t *entry = debug_hit_counter_find(address, false);
+    if (!entry) {
+        return false;
+    }
+    if (count) {
+        *count = entry->count;
+    }
+    if (--entry->references == 0) {
+        debug.addr[address] &= ~DBG_MASK_COUNT;
+        entry->state = HIT_COUNTER_DELETED;
+        hitCounterCount--;
+    }
+    return true;
+}
+
+size_t debug_hit_counter_snapshot(debug_hit_counter_snapshot_t *counters, size_t capacity) {
+    size_t written = 0;
+    for (size_t index = 0; index < DBG_HIT_COUNTER_TABLE_SIZE; index++) {
+        const debug_hit_counter_entry_t *entry = &hitCounters[index];
+        if (entry->state != HIT_COUNTER_ACTIVE) {
+            continue;
+        }
+        if (counters && written < capacity) {
+            counters[written].address = entry->address;
+            counters[written].count = entry->count;
+        }
+        written++;
+    }
+    return written;
 }
 
 bool debug_is_open(void) {
@@ -413,10 +533,20 @@ void debug_inst_start(void) {
 
 void debug_inst_fetch(void) {
     uint32_t pc = cpu.registers.PC;
-    debug.addr[pc] |= DBG_INST_MARKER;
-    if (unlikely(debug.addr[pc] & DBG_MASK_EXEC)) {
-        debug_open(DBG_BREAKPOINT, pc);
-    } else if (unlikely(pc == debug.tempExec)) {
+    const uint8_t flags = debug.addr[pc] |= DBG_INST_MARKER;
+    if (unlikely(flags & (DBG_MASK_EXEC | DBG_MASK_COUNT))) {
+        if (flags & DBG_MASK_COUNT) {
+            debug_hit_counter_entry_t *entry = debug_hit_counter_find(pc, false);
+            if (likely(entry)) {
+                entry->count++;
+            }
+        }
+        if (flags & DBG_MASK_EXEC) {
+            debug_open(DBG_BREAKPOINT, pc);
+            return;
+        }
+    }
+    if (unlikely(pc == debug.tempExec)) {
         debug_open(DBG_STEP, pc);
     }
 }

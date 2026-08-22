@@ -9,6 +9,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define VERSION_DBG 0x0004
 
@@ -86,6 +87,16 @@ bool debug_basic_breakpoint_set(const char program[9], uint16_t begin, uint16_t 
 void debug_basic_breakpoint_clear_program(const char program[9]);
 void debug_basic_breakpoint_clear_all(void);
 
+typedef struct debug_hit_counter_snapshot {
+    uint32_t address;
+    uint64_t count;
+} debug_hit_counter_snapshot_t;
+
+bool debug_hit_counter_add(uint32_t address, uint64_t *count);
+bool debug_hit_counter_get(uint32_t address, uint64_t *count);
+bool debug_hit_counter_remove(uint32_t address, uint64_t *count);
+size_t debug_hit_counter_snapshot(debug_hit_counter_snapshot_t *counters, size_t capacity);
+
 /* masks */
 #define DBG_MASK_NONE         (0 << 0)
 #define DBG_IGNORE            (1 << 0)   /* ignore any breakpoints, watchpoints, or similar */
@@ -107,6 +118,9 @@ void debug_basic_breakpoint_clear_all(void);
 /* internal items below this line */
 #define DBG_INST_START_MARKER (1 << 3)
 #define DBG_INST_MARKER       (1 << 4)
+#define DBG_MASK_COUNT        (1 << 5)   /* core-side execution hit counter */
+
+#define DBG_HIT_COUNTER_MAX   512
 
 #define DBG_PORT_RANGE        0xFFFF00
 #define DBGOUT_PORT_RANGE     0xFB0000
