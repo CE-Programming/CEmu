@@ -4,6 +4,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QSignalBlocker>
 #include <QtCore/QStandardPaths>
+#include <QtCore/QTemporaryFile>
 #include <QtCore/QTextStream>
 #include <QtGui/QDesktopServices>
 #include <QtWidgets/QFileDialog>
@@ -16,6 +17,7 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -27,6 +29,7 @@
 #include "lcddebugwidget.h"
 #include "sendinghandler.h"
 #include "tibasicutils.h"
+#include "tivars_lib_cpp/tivars_lib_cpp.hpp"
 #include "utils.h"
 #include "vartablemodel.h"
 
@@ -223,18 +226,18 @@ void validateMemoryRange(uint32_t address, uint32_t length) {
     }
 }
 
-std::vector<uint8_t> luaByteVector(const sol::object &value) {
+std::vector<uint8_t> luaByteVector(const sol::object &value, const char *description = "memory data") {
     if (value.is<std::string>()) {
         const std::string bytes = value.as<std::string>();
         return {bytes.begin(), bytes.end()};
     }
-    if (!value.is<sol::table>()) throw sol::error("memory data must be a string or byte table");
+    if (!value.is<sol::table>()) throw sol::error(std::string(description) + " must be a string or byte table");
     const sol::table table = value.as<sol::table>();
     std::vector<uint8_t> bytes;
     bytes.reserve(table.size());
     for (size_t index = 1; index <= table.size(); ++index) {
         const unsigned int byte = table.get<unsigned int>(index);
-        if (byte > 0xFF) throw sol::error("memory byte table contains a value above 255");
+        if (byte > 0xFF) throw sol::error(std::string(description) + " byte table contains a value above 255");
         bytes.push_back(static_cast<uint8_t>(byte));
     }
     return bytes;
@@ -366,6 +369,147 @@ sol::table variableInfo(const sol::this_state &thisState, const calc_var_t &var)
         "tokenized", calc_var_is_tokenized(&var),
         "python", calc_var_is_python_appvar(&var),
         "internal", calc_var_is_internal(&var));
+}
+
+struct LuaTIVar {
+    LuaTIVar(tivars::TIVarType requestedType, std::string requestedName, tivars::TIModel requestedModel)
+        : file(tivars::TIVarFile::createNew(requestedType, requestedName, requestedModel)),
+          type(std::move(requestedType)), model(std::move(requestedModel)), name(std::move(requestedName)) {}
+
+    tivars::TIVarFile file;
+    tivars::TIVarType type;
+    tivars::TIModel model;
+    std::string name;
+    bool archived = false;
+    bool hasContent = false;
+};
+
+std::string normalizedTIVarName(std::string name) {
+    std::string normalized;
+    for (const unsigned char character : name) {
+        if (std::isalnum(character) || character == '+') {
+            normalized.push_back(static_cast<char>(std::tolower(character)));
+        }
+    }
+    return normalized;
+}
+
+tivars::TIVarType luaTIVarType(const sol::object &value) {
+    if (value.is<unsigned int>()) {
+        const unsigned int id = value.as<unsigned int>();
+        if (id > 0xFF || !tivars::TIVarTypes::isValidID(static_cast<uint8_t>(id))) {
+            throw sol::error("unknown TI variable type ID");
+        }
+        return tivars::TIVarTypes::fromId(static_cast<uint8_t>(id));
+    }
+    if (!value.is<std::string>()) throw sol::error("TI variable type must be a numeric ID or type name");
+    const std::string wanted = normalizedTIVarName(value.as<std::string>());
+    for (const auto &[name, type] : tivars::TIVarTypes::all()) {
+        if (wanted == normalizedTIVarName(name)) return type;
+    }
+    throw sol::error("unknown TI variable type");
+}
+
+tivars::TIModel luaTIVarModel(const std::string &requestedName) {
+    const std::string wanted = normalizedTIVarName(requestedName);
+    for (const auto &[name, model] : tivars::TIModels::all()) {
+        if (wanted == normalizedTIVarName(name)) return model;
+    }
+    throw sol::error("unknown TI calculator model");
+}
+
+std::string currentTIVarModelName() {
+    switch (get_device_type()) {
+        case TI83PCE: return asic.python ? "83PCEEP" : "83PCE";
+        case TI82AEP: return "82AEP";
+        case TI84PCE:
+        default: return asic.python ? "84+CEPy" : "84+CE";
+    }
+}
+
+options_t luaTIVarConversionOptions(const sol::optional<sol::table> &options) {
+    options_t converted;
+    if (!options) return converted;
+    sol::object conversionObject = (*options)["conversion"];
+    if (!conversionObject.valid() || conversionObject.get_type() == sol::type::lua_nil) return converted;
+    if (!conversionObject.is<sol::table>()) throw sol::error("TI variable conversion options must be a table");
+    for (const auto &[keyObject, valueObject] : conversionObject.as<sol::table>()) {
+        if (!keyObject.is<std::string>()) throw sol::error("TI variable conversion option names must be strings");
+        int value;
+        if (valueObject.is<bool>()) {
+            value = valueObject.as<bool>() ? 1 : 0;
+        } else if (valueObject.is<int>()) {
+            value = valueObject.as<int>();
+        } else {
+            throw sol::error("TI variable conversion option values must be integers or booleans");
+        }
+        converted[keyObject.as<std::string>()] = value;
+    }
+    return converted;
+}
+
+bool isTIBasicType(const tivars::TIVarType &type) {
+    return type.getId() == CALC_VAR_TYPE_PROG || type.getId() == CALC_VAR_TYPE_PROT_PROG;
+}
+
+bool luaTIVarSupportsArchive(const LuaTIVar &variable) {
+    return variable.model.getFlags() & tivars::TIFeatureFlags::hasFlash;
+}
+
+void setLuaTIVarArchived(LuaTIVar &variable, bool archived) {
+    if (archived && !luaTIVarSupportsArchive(variable)) {
+        throw sol::error("archive storage is not supported by the selected calculator model");
+    }
+    variable.archived = archived;
+    if (variable.hasContent && luaTIVarSupportsArchive(variable)) variable.file.setArchived(archived);
+}
+
+void setLuaTIVarContent(LuaTIVar &variable, const sol::object &content,
+                        const sol::optional<sol::table> &options) {
+    const bool raw = options ? options->get_or("raw", false) : false;
+    if (raw) {
+        variable.file.setContentFromData(luaByteVector(content, "TI variable raw content"));
+    } else {
+        if (!content.is<std::string>()) throw sol::error("TI variable textual content must be a string");
+        std::string text = content.as<std::string>();
+        const bool prepareBasic = options ? options->get_or("prepareBasic", true) : true;
+        if (prepareBasic && isTIBasicType(variable.type)) text = ti_basic_prepare_source(text);
+        variable.file.setContentFromString(text, luaTIVarConversionOptions(options));
+    }
+    variable.hasContent = true;
+    variable.file.setVarName(variable.name);
+    if (luaTIVarSupportsArchive(variable)) variable.file.setArchived(variable.archived);
+}
+
+void requireLuaTIVarContent(const LuaTIVar &variable) {
+    if (!variable.hasContent) throw sol::error("TI variable has no content");
+}
+
+std::string luaTIVarExtension(const LuaTIVar &variable) {
+    const int order = variable.model.getOrderId();
+    const std::vector<std::string> &extensions = variable.type.getExts();
+    if (order < 0 || static_cast<size_t>(order) >= extensions.size() || extensions[order].empty()) {
+        throw sol::error("TI variable type has no file extension for the selected model");
+    }
+    return extensions[order];
+}
+
+QString saveTemporaryLuaTIVar(LuaTIVar &variable) {
+    QTemporaryFile temporaryFile(QDir::tempPath() + QDir::separator()
+                              + QStringLiteral("CEmu-lua-variable-XXXXXX.")
+                              + QString::fromStdString(luaTIVarExtension(variable)));
+    temporaryFile.setAutoRemove(false);
+    if (!temporaryFile.open()) throw sol::error("could not create a temporary TI variable file");
+    const QString placeholderPath = temporaryFile.fileName();
+    temporaryFile.close();
+    try {
+        const QString savedPath = QString::fromStdString(variable.file.saveVarToFile(placeholderPath.toStdString()));
+        if (savedPath != placeholderPath) QFile::remove(placeholderPath);
+        return savedPath;
+    } catch (...) {
+        QFile::remove(placeholderPath);
+        throw;
+    }
 }
 
 } // namespace
@@ -576,6 +720,135 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
             types[type + 1] = view.create_table_with("id", type, "name", calc_var_type_names[type]);
         }
         return types;
+    });
+
+    sol::table tivarsTable = lua.create_named_table("tivars");
+    tivarsTable.new_usertype<LuaTIVar>("Variable", sol::no_constructor,
+        "name", sol::property(
+            [](const LuaTIVar &variable) { return variable.name; },
+            [](LuaTIVar &variable, const std::string &name) {
+                if (variable.hasContent) {
+                    variable.file.setVarName(name);
+                } else {
+                    tivars::TIVarFile::createNew(variable.type, name, variable.model);
+                }
+                variable.name = name;
+            }),
+        "archived", sol::property(
+            [](const LuaTIVar &variable) { return variable.archived; },
+            [](LuaTIVar &variable, bool archived) {
+                setLuaTIVarArchived(variable, archived);
+            }),
+        "type", sol::readonly_property([](const LuaTIVar &variable) { return variable.type.getName(); }),
+        "typeId", sol::readonly_property([](const LuaTIVar &variable) { return variable.type.getId(); }),
+        "model", sol::readonly_property([](const LuaTIVar &variable) { return variable.model.getName(); }),
+        "extension", sol::readonly_property(luaTIVarExtension),
+        "setContent", [](LuaTIVar &variable, const sol::object &content,
+                          sol::optional<sol::table> options) {
+            setLuaTIVarContent(variable, content, options);
+        },
+        "setRawContent", [](LuaTIVar &variable, const sol::object &content) {
+            variable.file.setContentFromData(luaByteVector(content, "TI variable raw content"));
+            variable.hasContent = true;
+            variable.file.setVarName(variable.name);
+            if (luaTIVarSupportsArchive(variable)) variable.file.setArchived(variable.archived);
+        },
+        "content", [](LuaTIVar &variable, sol::optional<sol::table> options) {
+            requireLuaTIVarContent(variable);
+            return variable.file.getReadableContent(luaTIVarConversionOptions(options));
+        },
+        "rawContent", [](LuaTIVar &variable) {
+            requireLuaTIVarContent(variable);
+            const data_t bytes = variable.file.getRawContent();
+            return std::string(reinterpret_cast<const char *>(bytes.data()), bytes.size());
+        },
+        "save", [](LuaTIVar &variable, const std::string &path) {
+            requireLuaTIVarContent(variable);
+            return variable.file.saveVarToFile(path);
+        },
+        "bytes", [](LuaTIVar &variable) {
+            requireLuaTIVarContent(variable);
+            const QString path = saveTemporaryLuaTIVar(variable);
+            QFile file(path);
+            if (!file.open(QIODevice::ReadOnly)) {
+                QFile::remove(path);
+                throw sol::error("could not read the temporary TI variable file");
+            }
+            const QByteArray bytes = file.readAll();
+            file.close();
+            QFile::remove(path);
+            return std::string(bytes.constData(), static_cast<size_t>(bytes.size()));
+        },
+        "send", [](LuaTIVar &variable, sol::optional<sol::object> requestedLocation) {
+            requireLuaTIVarContent(variable);
+            const int location = requestedLocation && requestedLocation->valid()
+                              && requestedLocation->get_type() != sol::type::lua_nil
+                ? transferLocation(requestedLocation)
+                : (variable.archived ? LINK_ARCH : LINK_RAM);
+            const QString path = saveTemporaryLuaTIVar(variable);
+            return sendingHandler->sendTemporaryFiles({path}, location);
+        }
+    );
+    tivarsTable.set_function("create", [](const sol::object &requestedType, const std::string &name,
+                                           sol::optional<sol::object> content,
+                                           sol::optional<sol::table> options) {
+        tivars::TIVarType type = luaTIVarType(requestedType);
+        const std::string modelName = options
+            ? options->get_or("model", currentTIVarModelName())
+            : currentTIVarModelName();
+        tivars::TIModel model = luaTIVarModel(modelName);
+        if (!model.supportsType(type)) throw sol::error("TI variable type is not supported by the selected model");
+        auto variable = std::make_shared<LuaTIVar>(std::move(type), name, std::move(model));
+        const bool archived = options ? options->get_or("archived", false) : false;
+        setLuaTIVarArchived(*variable, archived);
+        if (content && content->valid() && content->get_type() != sol::type::lua_nil) {
+            setLuaTIVarContent(*variable, *content, options);
+        }
+        return variable;
+    });
+    tivarsTable.set_function("currentModel", currentTIVarModelName);
+    tivarsTable.set_function("models", [](const sol::this_state &thisState) {
+        std::vector<tivars::TIModel> models;
+        models.reserve(tivars::TIModels::all().size());
+        for (const auto &[name, model] : tivars::TIModels::all()) models.push_back(model);
+        std::ranges::sort(models, [](const tivars::TIModel &left, const tivars::TIModel &right) {
+            if (left.getOrderId() != right.getOrderId()) return left.getOrderId() < right.getOrderId();
+            return left.getName() < right.getName();
+        });
+        sol::state_view view(thisState);
+        sol::table result = view.create_table(static_cast<int>(models.size()), 0);
+        const std::string current = currentTIVarModelName();
+        for (size_t index = 0; index < models.size(); ++index) {
+            const tivars::TIModel &model = models[index];
+            result[index + 1] = view.create_table_with(
+                "name", model.getName(), "productId", model.getProductId(),
+                "signature", model.getSig(), "flags", model.getFlags(),
+                "current", model.getName() == current);
+        }
+        return result;
+    });
+    tivarsTable.set_function("types", [](const sol::this_state &thisState,
+                                          sol::optional<std::string> requestedModel) {
+        const tivars::TIModel model = luaTIVarModel(requestedModel.value_or(currentTIVarModelName()));
+        std::vector<tivars::TIVarType> types;
+        for (const auto &[name, type] : tivars::TIVarTypes::all()) {
+            if (model.supportsType(type)) types.push_back(type);
+        }
+        std::ranges::sort(types, [](const tivars::TIVarType &left, const tivars::TIVarType &right) {
+            if (left.getId() != right.getId()) return left.getId() < right.getId();
+            return left.getName() < right.getName();
+        });
+        sol::state_view view(thisState);
+        sol::table result = view.create_table(static_cast<int>(types.size()), 0);
+        for (size_t index = 0; index < types.size(); ++index) {
+            const tivars::TIVarType &type = types[index];
+            const auto makeData = std::get<0>(type.getHandlers());
+            result[index + 1] = view.create_table_with(
+                "name", type.getName(), "id", type.getId(),
+                "extension", type.getExts().at(model.getOrderId()),
+                "writable", makeData && makeData != &tivars::TypeHandlers::DummyHandler::makeDataFromString);
+        }
+        return result;
     });
 
     sol::table peripherals = lua.create_named_table("peripherals");
