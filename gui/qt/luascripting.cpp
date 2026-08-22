@@ -48,6 +48,7 @@ namespace {
 constexpr auto LuaEventBootstrap = R"lua(
 cemu = cemu or {}
 cemu._handlers = {}
+cemu._activeEvents = {}
 cemu._nextHandler = 0
 cemu._eventSequence = 0
 cemu._unloadHandlers = {}
@@ -65,12 +66,22 @@ function cemu.on(event, callback, options)
         cemu._handlers[event] = handlers
     end
     handlers[cemu._nextHandler] = { callback = callback, options = options or {} }
+    cemu._activeEvents[event] = true
     return cemu._nextHandler
 end
 
-function cemu.off(event, id)
+function cemu._removeHandler(event, id)
     local handlers = cemu._handlers[event]
-    if handlers then handlers[id] = nil end
+    if not handlers or not handlers[id] then return end
+    handlers[id] = nil
+    if next(handlers) == nil then
+        cemu._handlers[event] = nil
+        cemu._activeEvents[event] = nil
+    end
+end
+
+function cemu.off(event, id)
+    cemu._removeHandler(event, id)
 end
 
 function cemu.onUnload(callback)
@@ -92,6 +103,7 @@ function cemu._cleanup(reason)
         for id in pairs(handlers) do handlers[id] = nil end
     end
     cemu._handlers = {}
+    cemu._activeEvents = {}
     if emu and emu.cancelAll then emu.cancelAll() end
 
     local ids = {}
@@ -145,7 +157,7 @@ function cemu._emit(event, payload)
                 end
             end
             if matches then
-                if options.once then handlers[id] = nil end
+                if options.once then cemu._removeHandler(event, id) end
                 local ok, result = pcall(handler.callback, payload)
             if not ok then
                 cErr("event '" .. event .. "': " .. tostring(result))
@@ -357,6 +369,18 @@ sol::table variableInfo(const sol::this_state &thisState, const calc_var_t &var)
 }
 
 } // namespace
+
+sol::state &MainWindow::luaState(bool isREPL) {
+    setLuaEnabled(true);
+    std::optional<sol::state> &state = isREPL ? repl_lua : ed_lua;
+    if (!state) state.emplace();
+    return *state;
+}
+
+void MainWindow::ensureLuaStateInitialized(bool isREPL) {
+    if (isREPL ? m_replLuaInitialized : m_edLuaInitialized) return;
+    initLuaThings(luaState(isREPL), isREPL);
+}
 
 void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     if (isREPL ? m_replLuaInitialized : m_edLuaInitialized) runLuaCleanup(lua, "reset");
@@ -1146,9 +1170,11 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         if (!QFileInfo::exists(path)) throw sol::error("script to reload does not exist");
         runLuaCleanup(lua, "reload");
         QTimer::singleShot(0, this, [this, path] {
-            initLuaThings(ed_lua, false);
+            if (!m_luaEnabled) return;
+            sol::state &state = luaState(false);
+            initLuaThings(state, false);
             m_luaAutoloadRan = true;
-            executeLuaFile(ed_lua, path);
+            executeLuaFile(state, path);
         });
         return true;
     });
@@ -1164,18 +1190,25 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
 void MainWindow::setupLuaUi() {
     m_luaUnsafe = m_config->value(SETTING_LUA_UNSAFE, false).toBool();
     {
+        const QSignalBlocker enabledBlocker(ui->checkLuaEnabled);
         const QSignalBlocker blocker(ui->checkLuaUnsafe);
+        ui->checkLuaEnabled->setChecked(false);
         ui->checkLuaUnsafe->setChecked(m_luaUnsafe);
+        ui->checkLuaUnsafe->setEnabled(false);
     }
 
+    connect(ui->checkLuaEnabled, &QCheckBox::toggled, this, [this](bool enabled) {
+        setLuaEnabled(enabled);
+        if (enabled && hasLuaAutoloadScripts() && !m_luaAutoloadRan) runLuaStartupScripts({});
+    });
     connect(ui->buttonRefreshLuaScripts, &QPushButton::clicked, this, &MainWindow::refreshLuaScripts);
     connect(ui->buttonOpenLuaScriptsFolder, &QPushButton::clicked, this, [this] {
         QDesktopServices::openUrl(QUrl::fromLocalFile(luaScriptsPath()));
     });
     connect(ui->buttonRunSelectedLuaScript, &QPushButton::clicked, this, [this] {
         if (QListWidgetItem *item = ui->luaScriptList->currentItem()) {
-            if (!m_edLuaInitialized) initLuaThings(ed_lua, false);
-            executeLuaFile(ed_lua, item->data(Qt::UserRole).toString());
+            ensureLuaStateInitialized(false);
+            executeLuaFile(*ed_lua, item->data(Qt::UserRole).toString());
         }
     });
     connect(ui->luaScriptList, &QListWidget::itemSelectionChanged, this, [this] {
@@ -1193,6 +1226,7 @@ void MainWindow::setupLuaUi() {
             if (item->checkState() == Qt::Checked) autoload.append(item->text());
         }
         m_config->setValue(SETTING_LUA_AUTOLOAD, autoload);
+        if (!autoload.isEmpty()) setLuaEnabled(true);
     });
     connect(ui->checkLuaUnsafe, &QCheckBox::toggled, this, &MainWindow::setLuaUnsafe);
 
@@ -1202,6 +1236,10 @@ void MainWindow::setupLuaUi() {
 
 QString MainWindow::luaScriptsPath() const {
     return QDir(QFileInfo(m_pathConfig).absolutePath()).filePath(QStringLiteral("scripts"));
+}
+
+bool MainWindow::hasLuaAutoloadScripts() const {
+    return !m_config->value(SETTING_LUA_AUTOLOAD).toStringList().isEmpty();
 }
 
 void MainWindow::installLuaExamples() {
@@ -1242,19 +1280,53 @@ void MainWindow::refreshLuaScripts() {
     ui->buttonRunSelectedLuaScript->setEnabled(false);
 }
 
+void MainWindow::setLuaEnabled(bool enabled) {
+    if (m_luaEnabled == enabled) return;
+    m_luaEnabled = enabled;
+    {
+        const QSignalBlocker blocker(ui->checkLuaEnabled);
+        ui->checkLuaEnabled->setChecked(enabled);
+    }
+    ui->checkLuaUnsafe->setEnabled(enabled);
+
+    if (enabled) return;
+
+    if (m_edLuaInitialized && ed_lua) runLuaCleanup(*ed_lua, "disabled");
+    if (m_replLuaInitialized && repl_lua) runLuaCleanup(*repl_lua, "disabled");
+    clearLuaTimers();
+    ed_lua.reset();
+    repl_lua.reset();
+    m_edLuaInitialized = false;
+    m_replLuaInitialized = false;
+    m_luaAutoloadRan = false;
+    m_luaStartupEmitted = false;
+}
+
 void MainWindow::setLuaUnsafe(bool enabled) {
     if (m_luaUnsafe == enabled) return;
-    if (m_edLuaInitialized) runLuaCleanup(ed_lua, "reset");
-    if (m_replLuaInitialized) runLuaCleanup(repl_lua, "reset");
+    const bool restartEditor = m_edLuaInitialized;
+    const bool restartREPL = m_replLuaInitialized;
+    const bool restartedState = restartEditor || restartREPL;
+    if (restartEditor && ed_lua) runLuaCleanup(*ed_lua, "reset");
+    if (restartREPL && repl_lua) runLuaCleanup(*repl_lua, "reset");
+    clearLuaTimers();
+    ed_lua.reset();
+    repl_lua.reset();
     m_luaUnsafe = enabled;
     m_config->setValue(SETTING_LUA_UNSAFE, enabled);
     m_edLuaInitialized = false;
     m_replLuaInitialized = false;
     m_luaAutoloadRan = false;
     m_luaStartupEmitted = false;
-    initLuaThings(repl_lua, true);
-    runLuaStartupScripts({});
-    console(QStringLiteral("[Lua] Unsafe libraries %1; Lua states were restarted.\n").arg(enabled ? QStringLiteral("enabled") : QStringLiteral("disabled")),
+    if (m_luaEnabled) {
+        if (restartREPL) ensureLuaStateInitialized(true);
+        if (restartEditor || hasLuaAutoloadScripts()) runLuaStartupScripts({});
+    }
+    const QString effect = restartedState
+        ? QStringLiteral("active Lua states were restarted")
+        : QStringLiteral("new Lua states will use this setting");
+    console(QStringLiteral("[Lua] Unsafe libraries %1; %2.\n")
+                .arg(enabled ? QStringLiteral("enabled") : QStringLiteral("disabled"), effect),
             EmuThread::ConsoleNorm);
 }
 
@@ -1264,7 +1336,7 @@ bool MainWindow::executeLuaFile(sol::state &lua, const QString &path) {
         return false;
     }
     const QString absolutePath = QFileInfo(path).absoluteFilePath();
-    if (&lua == &ed_lua) m_lastLuaScriptPath = absolutePath;
+    if (ed_lua && &lua == &*ed_lua) m_lastLuaScriptPath = absolutePath;
     sol::table cemu = lua["cemu"];
     cemu["scriptPath"] = absolutePath.toStdString();
     const sol::protected_function_result result = lua.safe_script_file(absolutePath.toStdString(), sol::script_pass_on_error);
@@ -1288,14 +1360,15 @@ void MainWindow::runLuaCleanup(sol::state &lua, const std::string &reason) {
 }
 
 void MainWindow::runLuaStartupScripts(const QStringList &cliScripts) {
-    if (!m_edLuaInitialized) initLuaThings(ed_lua, false);
+    ensureLuaStateInitialized(false);
+    sol::state &lua = *ed_lua;
 
     if (!m_luaAutoloadRan) {
         const QStringList autoload = m_config->value(SETTING_LUA_AUTOLOAD).toStringList();
-        for (const QString &name : autoload) executeLuaFile(ed_lua, QDir(luaScriptsPath()).filePath(name));
+        for (const QString &name : autoload) executeLuaFile(lua, QDir(luaScriptsPath()).filePath(name));
         m_luaAutoloadRan = true;
     }
-    for (const QString &path : cliScripts) executeLuaFile(ed_lua, path);
+    for (const QString &path : cliScripts) executeLuaFile(lua, path);
 
     if (!m_luaStartupEmitted) {
         m_luaStartupEmitted = true;
@@ -1314,6 +1387,10 @@ bool MainWindow::emitLuaEventForState(sol::state &lua, bool initialized, const s
     sol::table cemu = cemuObject.as<sol::table>();
     sol::protected_function dispatcher = cemu["_emit"];
     if (!dispatcher.valid()) return true;
+    sol::object activeEventsObject = cemu["_activeEvents"];
+    if (!activeEventsObject.is<sol::table>()) return true;
+    sol::object activeEvent = activeEventsObject.as<sol::table>()[name];
+    if (!activeEvent.is<bool>() || !activeEvent.as<bool>()) return true;
 
     sol::table payload = lua.create_table();
     payload["event"] = name;
@@ -1331,8 +1408,11 @@ bool MainWindow::emitLuaEventForState(sol::state &lua, bool initialized, const s
 }
 
 bool MainWindow::emitLuaEvent(const std::string &name, const std::function<void(sol::table &)> &populate) {
-    const bool editorResult = emitLuaEventForState(ed_lua, m_edLuaInitialized, name, populate);
-    const bool replResult = emitLuaEventForState(repl_lua, m_replLuaInitialized, name, populate);
+    if (!m_luaEnabled) return true;
+    const bool editorResult = ed_lua && m_edLuaInitialized
+        ? emitLuaEventForState(*ed_lua, true, name, populate) : true;
+    const bool replResult = repl_lua && m_replLuaInitialized
+        ? emitLuaEventForState(*repl_lua, true, name, populate) : true;
     return editorResult && replResult;
 }
 
@@ -1447,10 +1527,11 @@ void MainWindow::saveLuaScript() {
 }
 
 void MainWindow::runLuaScript() {
-    initLuaThings(ed_lua, false);
+    sol::state &lua = luaState(false);
+    initLuaThings(lua, false);
     m_luaAutoloadRan = true;
     const std::string code = ui->luaScriptEditor->toPlainText().toStdString();
-    const sol::protected_function_result result = ed_lua.safe_script(code, sol::script_pass_on_error);
+    const sol::protected_function_result result = lua.safe_script(code, sol::script_pass_on_error);
     if (!result.valid()) {
         console(QStringLiteral("[Lua] ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
     }
@@ -1468,6 +1549,7 @@ void MainWindow::LuaREPLeval() {
         if (code.size() == 1) return;
         code = "print(" + code.substr(1) + ")";
     }
-    const sol::protected_function_result result = repl_lua.safe_script(code, sol::script_pass_on_error);
+    ensureLuaStateInitialized(true);
+    const sol::protected_function_result result = repl_lua->safe_script(code, sol::script_pass_on_error);
     if (!result.valid()) ui->REPLConsole->appendPlainText(QStringLiteral("[Lua] ") + scriptError(result));
 }

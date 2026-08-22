@@ -39,6 +39,7 @@
 #include <QtCore/QStandardPaths>
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 QT_BEGIN_NAMESPACE
@@ -633,7 +634,7 @@ private:
     bool isFirstRun() const;
 
     // options
-    void optSend(CEmuOpts &o);
+    void optSend(CEmuOpts &o, bool initialStartup = false);
     void optUsb(CEmuOpts &o);
     void optLoadFiles(CEmuOpts &o);
     void optAttemptLoad(CEmuOpts &o);
@@ -673,10 +674,14 @@ private:
 
     // Lua
     void initLuaThings(sol::state &lua, bool isREPL);
+    sol::state &luaState(bool isREPL);
+    void ensureLuaStateInitialized(bool isREPL);
     void setupLuaUi();
     QString luaScriptsPath() const;
+    bool hasLuaAutoloadScripts() const;
     void installLuaExamples();
     void refreshLuaScripts();
+    void setLuaEnabled(bool enabled);
     void setLuaUnsafe(bool enabled);
     bool executeLuaFile(sol::state &lua, const QString &path);
     void runLuaCleanup(sol::state &lua, const std::string &reason);
@@ -871,8 +876,8 @@ private:
 
     
 
-    sol::state ed_lua;
-    sol::state repl_lua;
+    std::optional<sol::state> ed_lua;
+    std::optional<sol::state> repl_lua;
     struct LuaTimer {
         uint64_t id;
         sol::state *lua;
@@ -888,6 +893,7 @@ private:
     bool m_replLuaInitialized = false;
     bool m_luaAutoloadRan = false;
     bool m_luaStartupEmitted = false;
+    bool m_luaEnabled = false;
     bool m_luaUnsafe = false;
     bool m_refreshingLuaScripts = false;
     QString m_currentLuaScript;

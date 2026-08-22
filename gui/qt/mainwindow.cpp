@@ -663,7 +663,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRunLuaScript, &QPushButton::clicked, this, &MainWindow::runLuaScript);
     connect(ui->buttonLoadLuaScript, &QPushButton::clicked, this, [this] { loadLuaScript(); });
     connect(ui->buttonSaveLuaScript, &QPushButton::clicked, this, &MainWindow::saveLuaScript);
-    connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [&](){ this->initLuaThings(repl_lua, true); });
+    connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [this] { initLuaThings(luaState(true), true); });
     connect(ui->clearREPLConsole, &QPushButton::clicked, ui->REPLConsole, &QPlainTextEdit::clear);
     connect(&m_luaTimerPoll, &QTimer::timeout, this, &MainWindow::processLuaTimers);
     connect(ui->REPLInput, &QLineEdit::returnPressed, this, &MainWindow::LuaREPLeval);
@@ -1494,7 +1494,7 @@ void MainWindow::setup() {
     translateExtras(TRANSLATE_UPDATE);
 
     optUsb(opts);
-    optSend(opts);
+    optSend(opts, true);
     if (opts.speed != -1) {
         setEmuSpeed(opts.speed);
     }
@@ -1544,7 +1544,7 @@ void MainWindow::sendEmuKeySequence(const QString &sequence) {
     autotester::runKeySequence(sequence.toStdString(), handlers);
 }
 
-void MainWindow::optSend(CEmuOpts &o) {
+void MainWindow::optSend(CEmuOpts &o, bool initialStartup) {
     int speed = m_config->value(SETTING_EMUSPEED).toInt();
     if (!o.autotesterFile.isEmpty()) {
         if (!autotesterOpen(o.autotesterFile)) {
@@ -1578,8 +1578,9 @@ void MainWindow::optSend(CEmuOpts &o) {
         }
     }
 
-    initLuaThings(repl_lua, true);
-    runLuaStartupScripts(o.luaScripts);
+    if (!o.luaScripts.isEmpty() || (initialStartup && !m_luaAutoloadRan && hasLuaAutoloadScripts())) {
+        runLuaStartupScripts(o.luaScripts);
+    }
 
     setThrottle(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
     setEmuSpeed(speed);
@@ -1658,8 +1659,8 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
-    if (m_edLuaInitialized) runLuaCleanup(ed_lua, "shutdown");
-    if (m_replLuaInitialized) runLuaCleanup(repl_lua, "shutdown");
+    if (m_edLuaInitialized && ed_lua) runLuaCleanup(*ed_lua, "shutdown");
+    if (m_replLuaInitialized && repl_lua) runLuaCleanup(*repl_lua, "shutdown");
 #ifdef LIBUSB_SUPPORT
     if (m_usbContext) {
         if (m_usbHotplugCallbackHandle) {
