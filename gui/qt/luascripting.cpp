@@ -16,6 +16,7 @@
 #include <array>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -47,6 +48,11 @@
 #include "../../core/debug/debug.h"
 
 namespace {
+
+struct LuaHitCounterHandle {
+    uint64_t id;
+    uint32_t address;
+};
 
 constexpr auto LuaEventBootstrap = R"lua(
 cemu = cemu or {}
@@ -1149,6 +1155,87 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     });
 
     sol::table debugTable = lua.create_named_table("dbg");
+    const auto findHitCounter = [this](uint64_t id) {
+        return std::ranges::find_if(m_luaHitCounters, [id](const LuaHitCounterRegistration &counter) {
+            return counter.id == id;
+        });
+    };
+    const auto closeHitCounter = [this, findHitCounter](uint64_t id, bool required) {
+        const auto found = findHitCounter(id);
+        if (found == m_luaHitCounters.end()) {
+            if (required) throw sol::error("hit counter is closed");
+            return uint64_t{0};
+        }
+        const auto result = emu.hitCounter(EmuThread::HitCounterOperation::Remove, found->address);
+        const uint64_t value = result.success ? result.value - found->baseline : 0;
+        m_luaHitCounters.erase(found);
+        if (!result.success && required) throw sol::error("core hit counter is unavailable");
+        return value;
+    };
+    lua.new_usertype<LuaHitCounterHandle>("HitCounter",
+        sol::no_constructor,
+        "id", sol::readonly(&LuaHitCounterHandle::id),
+        "address", sol::readonly(&LuaHitCounterHandle::address),
+        "active", sol::property([this, findHitCounter](const LuaHitCounterHandle &counter) {
+            return findHitCounter(counter.id) != m_luaHitCounters.end();
+        }),
+        "value", [this, findHitCounter](const LuaHitCounterHandle &counter) {
+            const auto found = findHitCounter(counter.id);
+            if (found == m_luaHitCounters.end()) throw sol::error("hit counter is closed");
+            const auto result = emu.hitCounter(EmuThread::HitCounterOperation::Read, found->address);
+            if (!result.success) throw sol::error("core hit counter is unavailable");
+            return result.value - found->baseline;
+        },
+        "reset", [this, findHitCounter](const LuaHitCounterHandle &counter) {
+            const auto found = findHitCounter(counter.id);
+            if (found == m_luaHitCounters.end()) throw sol::error("hit counter is closed");
+            const auto result = emu.hitCounter(EmuThread::HitCounterOperation::Read, found->address);
+            if (!result.success) throw sol::error("core hit counter is unavailable");
+            const uint64_t value = result.value - found->baseline;
+            found->baseline = result.value;
+            return value;
+        },
+        "close", [closeHitCounter](const LuaHitCounterHandle &counter) {
+            return closeHitCounter(counter.id, true);
+        },
+        sol::meta_function::garbage_collect, [closeHitCounter](const LuaHitCounterHandle &counter) {
+            closeHitCounter(counter.id, false);
+        },
+        sol::meta_function::to_string, [](const LuaHitCounterHandle &counter) {
+            char text[64];
+            snprintf(text, sizeof text, "HitCounter(%06X)", counter.address);
+            return std::string(text);
+        });
+    debugTable.set_function("hitCounter", [this, &lua](uint32_t address) {
+        address &= 0xFFFFFF;
+        const auto result = emu.hitCounter(EmuThread::HitCounterOperation::Add, address);
+        if (!result.success) throw sol::error("could not allocate core hit counter");
+        const uint64_t id = m_nextLuaHitCounterId++;
+        m_luaHitCounters.push_back({id, &lua, address, result.value});
+        return LuaHitCounterHandle{id, address};
+    });
+    debugTable.set_function("hitCounterSnapshot", [this, &lua](const sol::this_state &thisState,
+                                                                 sol::optional<bool> reset) {
+        sol::state_view view(thisState);
+        const auto core = emu.hitCounter(EmuThread::HitCounterOperation::Snapshot);
+        if (!core.success) throw sol::error("could not snapshot core hit counters");
+        sol::table result = view.create_table();
+        unsigned int index = 0;
+        for (LuaHitCounterRegistration &counter : m_luaHitCounters) {
+            if (counter.lua != &lua) continue;
+            const auto found = std::ranges::find_if(core.counters, [&counter](const auto &snapshot) {
+                return snapshot.address == counter.address;
+            });
+            if (found == core.counters.end()) continue;
+            const uint64_t value = found->count - counter.baseline;
+            result[++index] = view.create_table_with(
+                "id", counter.id,
+                "address", counter.address,
+                "count", value);
+            if (reset.value_or(false)) counter.baseline = found->count;
+        }
+        return result;
+    });
     debugTable.set_function("stop", [this] { if (!guiDebug) debugToggle(); });
     debugTable.set_function("resume", [this] { if (guiDebug) debugToggle(); });
     debugTable.set_function("stepIn", [this] { stepIn(); });
@@ -1213,7 +1300,9 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
                 "high", static_cast<uint32_t>(hex2int(high)),
                 "label", m_watchpoints->item(row, WATCH_NAME_COL)->text().toStdString(),
                 "read", static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_COL))->isChecked(),
-                "write", static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_COL))->isChecked());
+                "write", static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_COL))->isChecked(),
+                "count", watchIsCount(row),
+                "hits", m_watchpoints->item(row, WATCH_HITS_COL)->text().toULongLong());
         }
         return result;
     });
@@ -1623,13 +1712,16 @@ bool MainWindow::executeLuaFile(sol::state &lua, const QString &path) {
 
 void MainWindow::runLuaCleanup(sol::state &lua, const std::string &reason) {
     sol::object cemuObject = lua["cemu"];
-    if (!cemuObject.is<sol::table>()) return;
-    sol::protected_function cleanup = cemuObject.as<sol::table>()["_cleanup"];
-    if (!cleanup.valid()) return;
-    const sol::protected_function_result result = cleanup(reason);
-    if (!result.valid()) {
-        console(QStringLiteral("[Lua] Cleanup failed: ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+    if (cemuObject.is<sol::table>()) {
+        sol::protected_function cleanup = cemuObject.as<sol::table>()["_cleanup"];
+        if (cleanup.valid()) {
+            const sol::protected_function_result result = cleanup(reason);
+            if (!result.valid()) {
+                console(QStringLiteral("[Lua] Cleanup failed: ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+            }
+        }
     }
+    clearLuaHitCounters(&lua);
 }
 
 void MainWindow::runLuaStartupScripts(const QStringList &cliScripts) {
@@ -1711,6 +1803,17 @@ bool MainWindow::cancelLuaTimer(uint64_t id) {
 void MainWindow::clearLuaTimers(sol::state *lua) {
     std::erase_if(m_luaTimers, [lua](const LuaTimer &timer) { return !lua || timer.lua == lua; });
     if (m_luaTimers.empty()) m_luaTimerPoll.stop();
+}
+
+void MainWindow::clearLuaHitCounters(sol::state *lua) {
+    for (auto counter = m_luaHitCounters.begin(); counter != m_luaHitCounters.end();) {
+        if (lua && counter->lua != lua) {
+            ++counter;
+            continue;
+        }
+        emu.hitCounter(EmuThread::HitCounterOperation::Remove, counter->address);
+        counter = m_luaHitCounters.erase(counter);
+    }
 }
 
 void MainWindow::processLuaTimers() {

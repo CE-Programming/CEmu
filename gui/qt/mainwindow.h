@@ -699,6 +699,7 @@ private:
                          uint64_t delay, uint64_t interval, bool cycles);
     bool cancelLuaTimer(uint64_t id);
     void clearLuaTimers(sol::state *lua = nullptr);
+    void clearLuaHitCounters(sol::state *lua = nullptr);
     void processLuaTimers();
     void loadLuaScript();
     void loadLuaScript(const QString &path);
@@ -893,6 +894,14 @@ private:
     QTimer m_luaTimerPoll;
     std::vector<LuaTimer> m_luaTimers;
     uint64_t m_nextLuaTimerId = 1;
+    struct LuaHitCounterRegistration {
+        uint64_t id;
+        sol::state *lua;
+        uint32_t address;
+        uint64_t baseline;
+    };
+    std::vector<LuaHitCounterRegistration> m_luaHitCounters;
+    uint64_t m_nextLuaHitCounterId = 1;
     bool m_edLuaInitialized = false;
     bool m_replLuaInitialized = false;
     bool m_luaAutoloadRan = false;

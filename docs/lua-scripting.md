@@ -78,10 +78,14 @@ end, {
 - Transfers emit `transfer-start`, `transfer-progress`, and either `transfer-complete` or `transfer-error`. Payloads report file paths, location, progress, and completion/cancellation status as applicable; these events also receive the standard emulator event metadata.
 - `dbg.stop/resume/stepIn/stepOver/stepNext/stepOut/stepUntilReturn`, `dbg.addBreakpoint(address[, label])`, `dbg.removeBreakpoint(address)`, and `dbg.gotoDisasm(address)` control the debugger.
 - `dbg.addWatchpoint(low, high, read, write[, label])` and `dbg.removeWatchpoint(low)` mirror memory watchpoints. `dbg.watchRegister(name, read, write)` and `dbg.registerWatchState(name)` mirror CPU-register watches; names are the lowercase debugger names such as `a`, `af`, `hl`, `pc`, and `mbase` (alternate registers use a trailing underscore).
-- `dbg.breakpoints()`, `dbg.watchpoints()`, `dbg.peripheralMonitors()`, and `dbg.registerWatches()` return coherent configuration snapshots. `dbg.registerSnapshot()` captures the principal CPU registers and mode flags in one table. `dbg.clearBreakpoints()` and `dbg.clearWatchpoints()` remove their respective configurations.
+- `dbg.breakpoints()`, `dbg.watchpoints()`, `dbg.peripheralMonitors()`, and `dbg.registerWatches()` return coherent configuration snapshots. Watchpoint entries include `count` and the displayed, reset-relative `hits` value for Count rows. `dbg.registerSnapshot()` captures the principal CPU registers and mode flags in one table. `dbg.clearBreakpoints()` and `dbg.clearWatchpoints()` remove their respective configurations.
 - `dbg.equates()` enumerates symbols, `dbg.resolveSymbol(name)` resolves a name, and `dbg.symbolAt(address)`/`dbg.symbolsAt(address)` perform the reverse lookup. `dbg.loadEquates(path)` loads a supported debugger equate file and retains it in the debugger configuration.
 - `dbg.disasm(address[, useCpuMode])` uses CEmu's zdis decoder and returns `address`, `next`, `size`, `bytes`, `opcode`, `operands`, and `text`. `dbg.disasmPC()` decodes the current PC.
+- `dbg.hitCounter(address)` creates a native execution counter and returns a handle with read-only `id`, `address`, and `active` properties. `counter:value()` reads the hits since that handle was created or last reset, `counter:reset()` returns that value and starts a new interval, and `counter:close()` returns the final value and releases the counter. Dropped handles are released automatically.
+- `dbg.hitCounterSnapshot([reset])` returns one `{ id, address, count }` entry for every active handle owned by the current Lua state. Passing `true` also resets their independent baselines. Multiple handles, including handles in the separate REPL state, may share one address without sharing their reported baselines.
 - `autotester.loadJSON(path)`, `autotester.reloadJSON()`, and `autotester.launchTest()` bridge existing deterministic tests.
+
+Address hits are counted inside the core's instruction-fetch path. No Lua callback, event payload, Qt signal, or debugger stop occurs per hit, so a counted address executed millions of times only pays for a flag check, a lookup in the fixed native table, and a counter increment. Creating, reading, resetting, snapshotting, and closing counters cross to the emulator thread, but those operations are intended to be infrequent. CEmu supports up to 512 unique active counter addresses at once; all counters belonging to a Lua state are released when that state is stopped, reset, disabled, or destroyed.
 
 ## LCD controller and panel
 
@@ -113,7 +117,7 @@ print("ST7789 window", panel.columnStart, panel.columnEnd, panel.rowStart, panel
 
 ## Bundled examples
 
-The Scripts tab installs editable examples without overwriting existing copies. Start with `hello_cemu.lua`, `memory_dump.lua`, `bulk_memory.lua`, `variable_inspector.lua`, `key_sequence.lua`, and `screenshot.lua`. `create_program.lua` builds a TI-BASIC program with `tivars_lib_cpp` and sends it to calculator RAM. The event logger, disassembly, peripheral, LCD, debugger-snapshot, and framebuffer scripts demonstrate read-only inspection.
+The Scripts tab installs editable examples without overwriting existing copies. Start with `hello_cemu.lua`, `memory_dump.lua`, `bulk_memory.lua`, `variable_inspector.lua`, `key_sequence.lua`, and `screenshot.lua`. `create_program.lua` builds a TI-BASIC program with `tivars_lib_cpp` and sends it to calculator RAM. The event logger, disassembly, peripheral, LCD, debugger-snapshot, framebuffer, and address-hit-counter scripts demonstrate read-only inspection.
 
 `filtered_events.lua`, `virtual_time.lua`, `lifecycle_cleanup.lua`, and `transfer_monitor.lua` demonstrate persistent callbacks and their cleanup. `conditional_breakpoint.lua`, `memory_watchpoint.lua`, `register_watch.lua`, `peripheral_monitor.lua`, `basic_debugger.lua`, and `tas_demo.lua` install debugger hooks or change emulator state and should be run deliberately.
 
