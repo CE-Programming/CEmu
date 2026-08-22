@@ -18,6 +18,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "mainwindow.h"
@@ -32,6 +33,7 @@
 #include "../../core/asic.h"
 #include "../../core/backlight.h"
 #include "../../core/cpu.h"
+#include "../../core/control.h"
 #include "../../core/lcd.h"
 #include "../../core/link.h"
 #include "../../core/mem.h"
@@ -233,6 +235,45 @@ uint32_t memoryCrc32(uint32_t address, uint32_t length) {
         for (int bit = 0; bit < 8; ++bit) {
             crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
         }
+    }
+    return ~crc;
+}
+
+QRect screenRegion(int x, int y, int width, int height) {
+    if (x < 0 || y < 0 || width < 0 || height < 0 || x > LCD_WIDTH || y > LCD_HEIGHT ||
+        width > LCD_WIDTH - x || height > LCD_HEIGHT - y) {
+        throw sol::error("screen region extends outside the 320x240 framebuffer");
+    }
+    return {x, y, width, height};
+}
+
+std::string screenBytes(const QImage &source, const QRect &region, std::string format) {
+    std::ranges::transform(format, format.begin(), [](unsigned char character) { return std::tolower(character); });
+    QImage image;
+    int bytesPerPixel;
+    if (format == "rgba") {
+        image = source.convertToFormat(QImage::Format_RGBA8888);
+        bytesPerPixel = 4;
+    } else if (format == "rgb") {
+        image = source.convertToFormat(QImage::Format_RGB888);
+        bytesPerPixel = 3;
+    } else {
+        throw sol::error("framebuffer format must be 'rgb' or 'rgba'");
+    }
+    std::string bytes;
+    bytes.reserve(static_cast<size_t>(region.width()) * region.height() * bytesPerPixel);
+    for (int y = region.top(); y <= region.bottom(); ++y) {
+        const char *row = reinterpret_cast<const char *>(image.constScanLine(y)) + region.left() * bytesPerPixel;
+        bytes.append(row, static_cast<size_t>(region.width()) * bytesPerPixel);
+    }
+    return bytes;
+}
+
+uint32_t byteCrc32(std::string_view bytes) {
+    uint32_t crc = 0xFFFFFFFF;
+    for (const unsigned char byte : bytes) {
+        crc ^= byte;
+        for (int bit = 0; bit < 8; ++bit) crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
     }
     return ~crc;
 }
@@ -626,6 +667,8 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
             "negativeGamma", negative);
     };
     sol::table lcdTable = lua.create_named_table("lcd");
+    lcdTable["width"] = LCD_WIDTH;
+    lcdTable["height"] = LCD_HEIGHT;
     lcdTable.set_function("controllerState", lcdControllerState);
     lcdTable.set_function("panelState", lcdPanelState);
     lcdTable.set_function("state", [lcdControllerState, lcdPanelState](const sol::this_state &thisState) {
@@ -667,6 +710,45 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     lcdTable.set_function("setScale", [this](int percent) { setLcdScale(std::clamp(percent, 10, 500)); });
     lcdTable.set_function("setUpscale", [this](int mode) { setLcdUpscale(std::clamp(mode, 0, 2)); });
     lcdTable.set_function("setSkin", [this](bool enabled) { setSkinToggle(enabled); });
+    lcdTable.set_function("framebuffer", [this](sol::optional<std::string> requestedFormat) {
+        return screenBytes(ui->lcd->getImage(), screenRegion(0, 0, LCD_WIDTH, LCD_HEIGHT),
+                           requestedFormat.value_or("rgba"));
+    });
+    lcdTable.set_function("region", [this](int x, int y, int width, int height,
+                                            sol::optional<std::string> requestedFormat) {
+        return screenBytes(ui->lcd->getImage(), screenRegion(x, y, width, height),
+                           requestedFormat.value_or("rgba"));
+    });
+    lcdTable.set_function("pixel", [this](int x, int y) {
+        screenRegion(x, y, 1, 1);
+        const QColor color = ui->lcd->getImage().pixelColor(x, y);
+        return static_cast<uint32_t>((color.red() << 16) | (color.green() << 8) | color.blue());
+    });
+    lcdTable.set_function("matches", [this](int x, int y, uint32_t expected,
+                                             sol::optional<unsigned int> requestedTolerance) {
+        screenRegion(x, y, 1, 1);
+        if (expected > 0xFFFFFF) throw sol::error("screen color must be 0xRRGGBB");
+        const unsigned int tolerance = requestedTolerance.value_or(0);
+        if (tolerance > 255) throw sol::error("screen color tolerance must be between 0 and 255");
+        const QColor actual = ui->lcd->getImage().pixelColor(x, y);
+        return std::abs(actual.red() - static_cast<int>(expected >> 16)) <= static_cast<int>(tolerance) &&
+               std::abs(actual.green() - static_cast<int>(expected >> 8 & 0xFF)) <= static_cast<int>(tolerance) &&
+               std::abs(actual.blue() - static_cast<int>(expected & 0xFF)) <= static_cast<int>(tolerance);
+    });
+    lcdTable.set_function("frameHash", [this] {
+        const std::string bytes = screenBytes(ui->lcd->getImage(), screenRegion(0, 0, LCD_WIDTH, LCD_HEIGHT), "rgba");
+        return byteCrc32(bytes);
+    });
+    lcdTable.set_function("frameInfo", [this](const sol::this_state &thisState) {
+        const QImage image = ui->lcd->getImage();
+        const std::string bytes = screenBytes(image, screenRegion(0, 0, LCD_WIDTH, LCD_HEIGHT), "rgba");
+        sol::state_view view(thisState);
+        return view.create_table_with(
+            "width", LCD_WIDTH, "height", LCD_HEIGHT, "format", "rgba8888",
+            "bytes", bytes.size(), "crc32", byteCrc32(bytes),
+            "enabled", static_cast<bool>((control.ports[5] & 1 << 4) && (lcd.control & 1 << 11)),
+            "dma", static_cast<bool>(lcd.useDma), "backlight", backlight.factor);
+    });
 
     lua.create_named_table("keys",
         "press", [this](const std::string &key) { sendEmuKeySequence(QString::fromStdString(key)); },

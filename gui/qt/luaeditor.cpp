@@ -96,7 +96,8 @@ const QHash<QString, QStringList> &completionMembers()
         {words("lcd"), wordList("controllerState panelState state panelCommand "
                                 "refreshDebugPane applyDebugPane "
                                 "showDebugPane setDma setGamma setResponse "
-                                "setScale setUpscale setSkin")},
+                                "setScale setUpscale setSkin width height framebuffer region pixel "
+                                "matches frameHash frameInfo")},
         {words("keys"), wordList("press sequence down up hold")},
         {words("gui"), wordList("screenshot refresh messageBox status setKeypadColor "
                                 "setFullscreen openScriptsFolder quit")},
