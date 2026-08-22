@@ -672,12 +672,18 @@ private:
 
     // Lua
     void initLuaThings(sol::state &lua, bool isREPL);
+    QString luaScriptsPath() const;
+    void installLuaExamples();
+    void setLuaUnsafe(bool enabled);
+    bool executeLuaFile(sol::state &lua, const QString &path);
+    void runLuaStartupScripts(const QStringList &cliScripts);
     bool emitLuaEvent(const std::string &name,
                       const std::function<void(sol::table &)> &populate = {});
     bool emitLuaEventForState(sol::state &lua, bool initialized,
                               const std::string &name,
                               const std::function<void(sol::table &)> &populate);
     void loadLuaScript();
+    void loadLuaScript(const QString &path);
     void saveLuaScript();
     void runLuaScript();
     void LuaREPLeval();
@@ -860,7 +866,10 @@ private:
     sol::state repl_lua;
     bool m_edLuaInitialized = false;
     bool m_replLuaInitialized = false;
+    bool m_luaAutoloadRan = false;
+    bool m_luaStartupEmitted = false;
     bool m_luaUnsafe = false;
+    QString m_currentLuaScript;
 
     static const char *m_varExtensions[];
 
@@ -940,6 +949,8 @@ private:
     static const QString SETTING_RECENT_SAVE;
     static const QString SETTING_RECENT_PATHS;
     static const QString SETTING_RECENT_SELECT;
+    static const QString SETTING_LUA_AUTOLOAD;
+    static const QString SETTING_LUA_UNSAFE;
 
     static const QString SETTING_KEYPAD_NATURAL;
     static const QString SETTING_KEYPAD_CEMU;

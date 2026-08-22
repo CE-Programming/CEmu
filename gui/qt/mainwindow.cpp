@@ -609,7 +609,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // Lua
     connect(ui->buttonRunLuaScript, &QPushButton::clicked, this, &MainWindow::runLuaScript);
-    connect(ui->buttonLoadLuaScript, &QPushButton::clicked, this, &MainWindow::loadLuaScript);
+    connect(ui->buttonLoadLuaScript, &QPushButton::clicked, this, [this] { loadLuaScript(); });
     connect(ui->buttonSaveLuaScript, &QPushButton::clicked, this, &MainWindow::saveLuaScript);
     connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [&](){ this->initLuaThings(repl_lua, true); });
     connect(ui->clearREPLConsole, &QPushButton::clicked, ui->REPLConsole, &QPlainTextEdit::clear);
@@ -1524,6 +1524,7 @@ void MainWindow::optSend(CEmuOpts &o) {
     }
 
     initLuaThings(repl_lua, true);
+    runLuaStartupScripts(o.luaScripts);
 
     setThrottle(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
     setEmuSpeed(speed);
@@ -3432,7 +3433,8 @@ MainWindow::IpcSetupResult MainWindow::ipcSetup() {
            << opts.launchPrgm
            << opts.screenshotFile
            << opts.keySequence
-           << opts.usbDevice;
+           << opts.usbDevice
+           << opts.luaScripts;
 
     // blocking call
     if (!com.send(byteArray)) {
@@ -3462,7 +3464,8 @@ void MainWindow::ipcCli(QDataStream &stream) {
            >> o.launchPrgm
            >> o.screenshotFile
            >> o.keySequence
-           >> o.usbDevice;
+           >> o.usbDevice
+           >> o.luaScripts;
 
     opts.suppressTestDialog = o.suppressTestDialog;
     optLoadFiles(o);

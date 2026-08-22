@@ -1,20 +1,26 @@
-#include <QtCore/QFileInfo>
-#include <QtWidgets/QMessageBox>
-#include <QtCore/QFile>
 #include <QtCore/QDateTime>
+#include <QtCore/QDir>
+#include <QtCore/QFile>
+#include <QtCore/QFileInfo>
+#include <QtCore/QStandardPaths>
+#include <QtCore/QTextStream>
+#include <QtGui/QDesktopServices>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMessageBox>
 
 #include <algorithm>
+#include <string>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "utils.h"
 #include "sendinghandler.h"
+#include "utils.h"
 
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
-#include "../../core/mem.h"
 #include "../../core/link.h"
+#include "../../core/mem.h"
 
 namespace {
 
@@ -98,7 +104,6 @@ QString scriptError(const sol::protected_function_result &result) {
 } // namespace
 
 void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
-
     lua = sol::state{};
 
     lua.set_panic([](lua_State *state) {
@@ -174,14 +179,14 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     );
 
     lua.create_named_table("mem",
-       "readByte",   mem_peek_byte,
-       "readShort",  mem_peek_short,
-       "readLong",   mem_peek_long,
-       "readWord",   mem_peek_word,
-       "writeByte",  mem_poke_byte,
-       "writeShort", mem_poke_short,
-       "writeLong",  mem_poke_long,
-       "writeWord",  mem_poke_word
+        "readByte", mem_peek_byte,
+        "readShort", mem_peek_short,
+        "readLong", mem_peek_long,
+        "readWord", mem_peek_word,
+        "writeByte", mem_poke_byte,
+        "writeShort", mem_poke_short,
+        "writeLong", mem_poke_long,
+        "writeWord", mem_poke_word
     );
 
     lua.create_named_table("keys",
@@ -208,6 +213,7 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "status", [this](const std::string &message) { showStatusMsg(QString::fromStdString(message)); },
         "setKeypadColor", [this](unsigned int color) { setKeypadColor(color); },
         "setFullscreen", [this](int mode) { setFullscreen(std::clamp(mode, 0, 2)); },
+        "openScriptsFolder", [this] { QDesktopServices::openUrl(QUrl::fromLocalFile(luaScriptsPath())); },
         "quit", [] { QTimer::singleShot(0, qApp, &QCoreApplication::quit); }
     );
 
@@ -292,6 +298,79 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     }
 }
 
+QString MainWindow::luaScriptsPath() const {
+    return QDir(QFileInfo(m_pathConfig).absolutePath()).filePath(QStringLiteral("scripts"));
+}
+
+void MainWindow::installLuaExamples() {
+    QDir destination(luaScriptsPath());
+    if (!destination.mkpath(QStringLiteral("."))) {
+        console(QStringLiteral("[Lua] Could not create scripts folder: ") + destination.path() + QLatin1Char('\n'), EmuThread::ConsoleErr);
+        return;
+    }
+
+    const QDir examples(QStringLiteral(":/lua/examples"));
+    for (const QString &name : examples.entryList({QStringLiteral("*.lua")}, QDir::Files, QDir::Name)) {
+        const QString target = destination.filePath(name);
+        if (QFileInfo::exists(target)) continue;
+        if (!QFile::copy(examples.filePath(name), target)) {
+            console(QStringLiteral("[Lua] Could not install example script: ") + name + QLatin1Char('\n'), EmuThread::ConsoleErr);
+            continue;
+        }
+        if (!QFile::setPermissions(target, QFileDevice::ReadOwner | QFileDevice::WriteOwner |
+                                            QFileDevice::ReadGroup | QFileDevice::ReadOther)) {
+            console(QStringLiteral("[Lua] Could not make example script writable: ") + name + QLatin1Char('\n'), EmuThread::ConsoleErr);
+        }
+    }
+}
+
+void MainWindow::setLuaUnsafe(bool enabled) {
+    if (m_luaUnsafe == enabled) return;
+    m_luaUnsafe = enabled;
+    m_config->setValue(SETTING_LUA_UNSAFE, enabled);
+    m_edLuaInitialized = false;
+    m_replLuaInitialized = false;
+    m_luaAutoloadRan = false;
+    m_luaStartupEmitted = false;
+    initLuaThings(repl_lua, true);
+    runLuaStartupScripts({});
+    console(QStringLiteral("[Lua] Unsafe libraries %1; Lua states were restarted.\n").arg(enabled ? QStringLiteral("enabled") : QStringLiteral("disabled")),
+            EmuThread::ConsoleNorm);
+}
+
+bool MainWindow::executeLuaFile(sol::state &lua, const QString &path) {
+    if (!QFileInfo::exists(path)) {
+        console(QStringLiteral("[Lua] Script does not exist: ") + path + QLatin1Char('\n'), EmuThread::ConsoleErr);
+        return false;
+    }
+    const sol::protected_function_result result = lua.safe_script_file(path.toStdString(), sol::script_pass_on_error);
+    if (!result.valid()) {
+        console(QStringLiteral("[Lua] ") + path + QStringLiteral(": ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+        return false;
+    }
+    emitLuaEvent("script-loaded", [&path](sol::table &payload) { payload["path"] = path.toStdString(); });
+    return true;
+}
+
+void MainWindow::runLuaStartupScripts(const QStringList &cliScripts) {
+    if (!m_edLuaInitialized) initLuaThings(ed_lua, false);
+
+    if (!m_luaAutoloadRan) {
+        const QStringList autoload = m_config->value(SETTING_LUA_AUTOLOAD).toStringList();
+        for (const QString &name : autoload) executeLuaFile(ed_lua, QDir(luaScriptsPath()).filePath(name));
+        m_luaAutoloadRan = true;
+    }
+    for (const QString &path : cliScripts) executeLuaFile(ed_lua, path);
+
+    if (!m_luaStartupEmitted) {
+        m_luaStartupEmitted = true;
+        emitLuaEvent("startup", [this](sol::table &payload) {
+            payload["scriptsPath"] = luaScriptsPath().toStdString();
+            payload["unsafe"] = m_luaUnsafe;
+        });
+    }
+}
+
 bool MainWindow::emitLuaEventForState(sol::state &lua, bool initialized, const std::string &name,
                                       const std::function<void(sol::table &)> &populate) {
     if (!initialized) return true;
@@ -324,46 +403,44 @@ bool MainWindow::emitLuaEvent(const std::string &name, const std::function<void(
 
 void MainWindow::loadLuaScript() {
     QFileDialog dialog(this);
-
-    dialog.setDirectory(QDir::homePath());
+    dialog.setDirectory(luaScriptsPath());
     dialog.setFileMode(QFileDialog::ExistingFile);
     dialog.setNameFilter(QStringLiteral("Lua script (*.lua)"));
-    if (!dialog.exec()) {
-        return;
-    }
+    if (dialog.exec()) loadLuaScript(dialog.selectedFiles().constFirst());
+}
 
-    QFile file(dialog.selectedFiles().at(0));
+void MainWindow::loadLuaScript(const QString &path) {
+    QFile file(path);
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
         QMessageBox::warning(this, tr("File loading error"), tr("Error. Could not load that file."));
         return;
     }
-    ui->luaScriptEditor->document()->setPlainText(file.readAll());
-    file.close();
+    ui->luaScriptEditor->document()->setPlainText(QString::fromUtf8(file.readAll()));
+    m_currentLuaScript = QFileInfo(path).absoluteFilePath();
 }
 
 void MainWindow::saveLuaScript() {
     QFileDialog dialog(this);
-
-    dialog.setDirectory(QDir::homePath());
+    dialog.setDirectory(m_currentLuaScript.isEmpty() ? luaScriptsPath() : QFileInfo(m_currentLuaScript).absolutePath());
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setNameFilter(QStringLiteral("Lua script (*.lua)"));
-    if (!dialog.exec()) {
-        return;
-    }
+    if (!dialog.exec()) return;
 
-    QFile file(dialog.selectedFiles().at(0));
-    if(!file.open(QIODevice::WriteOnly | QFile::Text)) {
+    QString path = dialog.selectedFiles().constFirst();
+    if (QFileInfo(path).suffix().isEmpty()) path += QStringLiteral(".lua");
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QFile::Text)) {
         QMessageBox::warning(this, tr("File writing error"), tr("Error. Could not write to that file."));
         return;
     }
-    QTextStream outStream(&file);
-    outStream << ui->luaScriptEditor->document()->toPlainText();
-    file.close();
+    QTextStream(&file) << ui->luaScriptEditor->document()->toPlainText();
+    m_currentLuaScript = QFileInfo(path).absoluteFilePath();
 }
 
 void MainWindow::runLuaScript() {
     initLuaThings(ed_lua, false);
+    m_luaAutoloadRan = true;
     const std::string code = ui->luaScriptEditor->toPlainText().toStdString();
     const sol::protected_function_result result = ed_lua.safe_script(code, sol::script_pass_on_error);
     if (!result.valid()) {

@@ -86,6 +86,12 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "TestFile"));
     parser.addOption(loadTestFile);
 
+    // Runs one or more Lua scripts on application startup
+    QCommandLineOption luaScript(QStringList() << QStringLiteral("lua-script"),
+                QCoreApplication::translate("main", "Run Lua <Script> after the emulator is initialized. May be repeated."),
+                QCoreApplication::translate("main", "Script"));
+    parser.addOption(luaScript);
+
     // Suppresses the output of an autotester file
     QCommandLineOption suppressTestDialog(QStringList() << QStringLiteral("no-test-dialog"),
                 QCoreApplication::translate("main", "Hides test complete dialog"));
@@ -188,6 +194,9 @@ int main(int argc, char *argv[]) {
     opts.sendFiles          = parser.values(sendFiles);
     opts.sendArchFiles      = parser.values(sendArchFiles);
     opts.sendRAMFiles       = parser.values(sendRAMFiles);
+    for (const QString &script : parser.values(luaScript)) {
+        opts.luaScripts.append(QFileInfo(script).absoluteFilePath());
+    }
     opts.reset              = parser.isSet(resetOption);
     if (parser.isSet(emuSpeed)) {
         opts.speed          = parser.value(emuSpeed).toInt();

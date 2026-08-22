@@ -108,6 +108,8 @@ const QString MainWindow::SETTING_ENABLE_WIN_CONSOLE        = QStringLiteral("en
 const QString MainWindow::SETTING_RECENT_SAVE               = QStringLiteral("Recent/save_paths");
 const QString MainWindow::SETTING_RECENT_PATHS              = QStringLiteral("Recent/paths");
 const QString MainWindow::SETTING_RECENT_SELECT             = QStringLiteral("Recent/selected");
+const QString MainWindow::SETTING_LUA_AUTOLOAD              = QStringLiteral("Lua/autoload");
+const QString MainWindow::SETTING_LUA_UNSAFE                = QStringLiteral("Lua/unsafe");
 
 const QString MainWindow::SETTING_KEYPAD_NATURAL            = QStringLiteral("natural");
 const QString MainWindow::SETTING_KEYPAD_CEMU               = QStringLiteral("cemu");

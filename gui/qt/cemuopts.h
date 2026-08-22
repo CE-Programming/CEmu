@@ -29,6 +29,7 @@ struct CEmuOpts {
     QStringList sendFiles;
     QStringList sendArchFiles;
     QStringList sendRAMFiles;
+    QStringList luaScripts;
 };
 
 #endif
