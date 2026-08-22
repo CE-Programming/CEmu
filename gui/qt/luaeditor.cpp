@@ -87,8 +87,8 @@ const QHash<QString, QStringList> &completionMembers()
         {words("cpu.registers.flags"), flags},
         {words("R.flags"), flags},
         {words("F"), flags},
-        {words("mem"), wordList("readByte readShort readLong readWord writeByte "
-                                "writeShort writeLong writeWord")},
+        {words("mem"), wordList("read readTable readByte readShort readLong readWord write "
+                                "writeByte writeShort writeLong writeWord fill copy crc32 search")},
         {words("peripherals"), wordList("peek poke read write describe snapshot "
                                         "monitor monitorState ranges")},
         {words("peripherals.ranges"), ranges},

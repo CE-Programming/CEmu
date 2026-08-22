@@ -155,6 +155,41 @@ int registerId(std::string name) {
     return found == RegNames.cend() ? -1 : static_cast<int>(found - RegNames.cbegin());
 }
 
+void validateMemoryRange(uint32_t address, uint32_t length) {
+    constexpr uint32_t AddressSpaceSize = 0x1000000;
+    if (address >= AddressSpaceSize || length > AddressSpaceSize - address) {
+        throw sol::error("memory range extends past address 0xffffff");
+    }
+}
+
+std::vector<uint8_t> luaByteVector(const sol::object &value) {
+    if (value.is<std::string>()) {
+        const std::string bytes = value.as<std::string>();
+        return {bytes.begin(), bytes.end()};
+    }
+    if (!value.is<sol::table>()) throw sol::error("memory data must be a string or byte table");
+    const sol::table table = value.as<sol::table>();
+    std::vector<uint8_t> bytes;
+    bytes.reserve(table.size());
+    for (size_t index = 1; index <= table.size(); ++index) {
+        const unsigned int byte = table.get<unsigned int>(index);
+        if (byte > 0xFF) throw sol::error("memory byte table contains a value above 255");
+        bytes.push_back(static_cast<uint8_t>(byte));
+    }
+    return bytes;
+}
+
+uint32_t memoryCrc32(uint32_t address, uint32_t length) {
+    uint32_t crc = 0xFFFFFFFF;
+    for (uint32_t offset = 0; offset < length; ++offset) {
+        crc ^= mem_peek_byte(address + offset);
+        for (int bit = 0; bit < 8; ++bit) {
+            crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
+        }
+    }
+    return ~crc;
+}
+
 } // namespace
 
 void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
@@ -233,7 +268,7 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "prefetch", sol::readonly(&eZ80cpu_t::prefetch)
     );
 
-    lua.create_named_table("mem",
+    sol::table memoryTable = lua.create_named_table("mem",
         "readByte", mem_peek_byte,
         "readShort", mem_peek_short,
         "readLong", mem_peek_long,
@@ -243,6 +278,69 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "writeLong", mem_poke_long,
         "writeWord", mem_poke_word
     );
+    memoryTable.set_function("read", [](uint32_t address, uint32_t length) {
+        validateMemoryRange(address, length);
+        std::string bytes(length, '\0');
+        for (uint32_t offset = 0; offset < length; ++offset) {
+            bytes[offset] = static_cast<char>(mem_peek_byte(address + offset));
+        }
+        return bytes;
+    });
+    memoryTable.set_function("readTable", [](const sol::this_state &thisState,
+                                                uint32_t address, uint32_t length) {
+        validateMemoryRange(address, length);
+        sol::state_view view(thisState);
+        sol::table bytes = view.create_table(static_cast<int>(length), 0);
+        for (uint32_t offset = 0; offset < length; ++offset) {
+            bytes[offset + 1] = mem_peek_byte(address + offset);
+        }
+        return bytes;
+    });
+    memoryTable.set_function("write", [](uint32_t address, const sol::object &data) {
+        const std::vector<uint8_t> bytes = luaByteVector(data);
+        validateMemoryRange(address, static_cast<uint32_t>(bytes.size()));
+        for (size_t offset = 0; offset < bytes.size(); ++offset) mem_poke_byte(address + offset, bytes[offset]);
+        return bytes.size();
+    });
+    memoryTable.set_function("fill", [](uint32_t address, uint32_t length, uint8_t value) {
+        validateMemoryRange(address, length);
+        for (uint32_t offset = 0; offset < length; ++offset) mem_poke_byte(address + offset, value);
+    });
+    memoryTable.set_function("copy", [](uint32_t destination, uint32_t source, uint32_t length) {
+        validateMemoryRange(source, length);
+        validateMemoryRange(destination, length);
+        std::vector<uint8_t> bytes(length);
+        for (uint32_t offset = 0; offset < length; ++offset) bytes[offset] = mem_peek_byte(source + offset);
+        for (uint32_t offset = 0; offset < length; ++offset) mem_poke_byte(destination + offset, bytes[offset]);
+    });
+    memoryTable.set_function("crc32", [](uint32_t address, uint32_t length) {
+        validateMemoryRange(address, length);
+        return memoryCrc32(address, length);
+    });
+    memoryTable.set_function("search", [](const sol::this_state &thisState, uint32_t address,
+                                              uint32_t length, const sol::object &patternValue,
+                                              sol::optional<unsigned int> requestedLimit) {
+        validateMemoryRange(address, length);
+        const std::vector<uint8_t> pattern = luaByteVector(patternValue);
+        if (pattern.empty()) throw sol::error("memory search pattern must not be empty");
+        const unsigned int limit = requestedLimit.value_or(1024);
+        sol::state_view view(thisState);
+        sol::table matches = view.create_table();
+        if (pattern.size() > length || limit == 0) return matches;
+        unsigned int count = 0;
+        const uint32_t lastOffset = length - static_cast<uint32_t>(pattern.size());
+        for (uint32_t offset = 0; offset <= lastOffset && count < limit; ++offset) {
+            bool equal = true;
+            for (size_t index = 0; index < pattern.size(); ++index) {
+                if (mem_peek_byte(address + offset + index) != pattern[index]) {
+                    equal = false;
+                    break;
+                }
+            }
+            if (equal) matches[++count] = address + offset;
+        }
+        return matches;
+    });
 
     sol::table peripherals = lua.create_named_table("peripherals");
     peripherals.set_function("peek", [](uint16_t address) { return port_peek_byte(address); });
