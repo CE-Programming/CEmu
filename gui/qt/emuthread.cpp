@@ -463,6 +463,7 @@ void EmuThread::setForcePython(Qt::CheckState state) {
 
 void EmuThread::debugOpen(int reason, uint32_t data) {
     std::unique_lock<std::mutex> lock(m_mutexDebug);
+    coproc_pause();
     m_debug = true;
     emit debugCommand(reason, data);
     do {
@@ -482,6 +483,7 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
             lock.lock();
         }
     } while (m_debug);
+    coproc_resume();
 }
 
 void EmuThread::resume() {
