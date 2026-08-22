@@ -10642,6 +10642,81 @@ local R, F = cpu.registers, cpu.registers.flags
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="LuaScriptsTab">
+           <attribute name="title">
+            <string>Scripts</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayoutLuaScripts">
+            <item>
+             <widget class="QLabel" name="labelLuaScripts">
+              <property name="text">
+               <string>Scripts in the CEmu configuration folder. Check a script to run it automatically at startup.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="luaScriptList">
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkLuaUnsafe">
+              <property name="toolTip">
+               <string>Enables require/loadfile/dofile and the package, io, os, and debug libraries for trusted scripts.</string>
+              </property>
+              <property name="text">
+               <string>Enable unsafe filesystem/OS/debug functions</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayoutLuaScripts">
+              <item>
+               <widget class="QPushButton" name="buttonOpenLuaScriptsFolder">
+                <property name="text">
+                 <string>Open folder</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonRefreshLuaScripts">
+                <property name="text">
+                 <string>Refresh</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacerLuaScripts">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonRunSelectedLuaScript">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Run selected</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
        </layout>

@@ -672,8 +672,10 @@ private:
 
     // Lua
     void initLuaThings(sol::state &lua, bool isREPL);
+    void setupLuaUi();
     QString luaScriptsPath() const;
     void installLuaExamples();
+    void refreshLuaScripts();
     void setLuaUnsafe(bool enabled);
     bool executeLuaFile(sol::state &lua, const QString &path);
     void runLuaStartupScripts(const QStringList &cliScripts);
@@ -869,6 +871,7 @@ private:
     bool m_luaAutoloadRan = false;
     bool m_luaStartupEmitted = false;
     bool m_luaUnsafe = false;
+    bool m_refreshingLuaScripts = false;
     QString m_currentLuaScript;
 
     static const char *m_varExtensions[];

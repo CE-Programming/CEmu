@@ -2,10 +2,12 @@
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSignalBlocker>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QTextStream>
 #include <QtGui/QDesktopServices>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QListWidget>
 #include <QtWidgets/QMessageBox>
 
 #include <algorithm>
@@ -298,6 +300,45 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     }
 }
 
+void MainWindow::setupLuaUi() {
+    m_luaUnsafe = m_config->value(SETTING_LUA_UNSAFE, false).toBool();
+    {
+        const QSignalBlocker blocker(ui->checkLuaUnsafe);
+        ui->checkLuaUnsafe->setChecked(m_luaUnsafe);
+    }
+
+    connect(ui->buttonRefreshLuaScripts, &QPushButton::clicked, this, &MainWindow::refreshLuaScripts);
+    connect(ui->buttonOpenLuaScriptsFolder, &QPushButton::clicked, this, [this] {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(luaScriptsPath()));
+    });
+    connect(ui->buttonRunSelectedLuaScript, &QPushButton::clicked, this, [this] {
+        if (QListWidgetItem *item = ui->luaScriptList->currentItem()) {
+            if (!m_edLuaInitialized) initLuaThings(ed_lua, false);
+            executeLuaFile(ed_lua, item->data(Qt::UserRole).toString());
+        }
+    });
+    connect(ui->luaScriptList, &QListWidget::itemSelectionChanged, this, [this] {
+        ui->buttonRunSelectedLuaScript->setEnabled(ui->luaScriptList->currentItem() != nullptr);
+    });
+    connect(ui->luaScriptList, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem *item) {
+        loadLuaScript(item->data(Qt::UserRole).toString());
+        ui->LuaTabs->setCurrentWidget(ui->LuaEditorTab);
+    });
+    connect(ui->luaScriptList, &QListWidget::itemChanged, this, [this] {
+        if (m_refreshingLuaScripts) return;
+        QStringList autoload;
+        for (int row = 0; row < ui->luaScriptList->count(); ++row) {
+            QListWidgetItem *item = ui->luaScriptList->item(row);
+            if (item->checkState() == Qt::Checked) autoload.append(item->text());
+        }
+        m_config->setValue(SETTING_LUA_AUTOLOAD, autoload);
+    });
+    connect(ui->checkLuaUnsafe, &QCheckBox::toggled, this, &MainWindow::setLuaUnsafe);
+
+    if (opts.useSettings) installLuaExamples();
+    refreshLuaScripts();
+}
+
 QString MainWindow::luaScriptsPath() const {
     return QDir(QFileInfo(m_pathConfig).absolutePath()).filePath(QStringLiteral("scripts"));
 }
@@ -322,6 +363,22 @@ void MainWindow::installLuaExamples() {
             console(QStringLiteral("[Lua] Could not make example script writable: ") + name + QLatin1Char('\n'), EmuThread::ConsoleErr);
         }
     }
+}
+
+void MainWindow::refreshLuaScripts() {
+    const QStringList autoload = m_config->value(SETTING_LUA_AUTOLOAD).toStringList();
+    const QDir directory(luaScriptsPath());
+    m_refreshingLuaScripts = true;
+    ui->luaScriptList->clear();
+    for (const QFileInfo &file : directory.entryInfoList({QStringLiteral("*.lua")}, QDir::Files, QDir::Name)) {
+        auto *item = new QListWidgetItem(file.fileName(), ui->luaScriptList);
+        item->setData(Qt::UserRole, file.absoluteFilePath());
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(autoload.contains(file.fileName()) ? Qt::Checked : Qt::Unchecked);
+        item->setToolTip(file.absoluteFilePath());
+    }
+    m_refreshingLuaScripts = false;
+    ui->buttonRunSelectedLuaScript->setEnabled(false);
 }
 
 void MainWindow::setLuaUnsafe(bool enabled) {
@@ -436,6 +493,7 @@ void MainWindow::saveLuaScript() {
     }
     QTextStream(&file) << ui->luaScriptEditor->document()->toPlainText();
     m_currentLuaScript = QFileInfo(path).absoluteFilePath();
+    refreshLuaScripts();
 }
 
 void MainWindow::runLuaScript() {

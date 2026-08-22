@@ -663,6 +663,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         m_portable = true;
     }
 
+    setupLuaUi();
+
     setAutoUpdates(m_config->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
     setThemePreference(m_config->value(SETTING_UI_THEME, static_cast<int>(ThemePreference::System)).toInt());
     checkVersion();
