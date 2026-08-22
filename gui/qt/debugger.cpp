@@ -26,6 +26,7 @@
 
 #include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
+#include <QtCore/QHash>
 #include <QtCore/QStringList>
 #include <QtCore/QRegularExpression>
 #include <QtWidgets/QMenu>
@@ -58,6 +59,9 @@ const QString MainWindow::DEBUG_UNSET_ADDR = QStringLiteral("XXXXXX");
 const QString MainWindow::DEBUG_UNSET_PORT = QStringLiteral("XXXX");
 
 namespace {
+    constexpr int WatchHitBaselineRole = Qt::UserRole;
+    constexpr int WatchHitAddressRole = Qt::UserRole + 1;
+
     // Register name lookup for watchpoint UI
     constexpr std::array<QLatin1String, DBG_REG_COUNT> kRegIdToName = { {
         // order must match dbg_reg_t
@@ -201,12 +205,20 @@ error:
     QStringList watchHigh = info.value(QStringLiteral("watchpoints/high")).toStringList();
     QStringList watchR = info.value(QStringLiteral("watchpoints/read")).toStringList();
     QStringList watchW = info.value(QStringLiteral("watchpoints/write")).toStringList();
-    if ((watchLabel.size() + watchLow.size() + watchHigh.size() + watchR.size() + watchW.size()) / 5 != watchLabel.size()) {
+    QStringList watchC = info.value(QStringLiteral("watchpoints/count")).toStringList();
+    if (watchC.isEmpty() && !watchLabel.isEmpty()) {
+        watchC.fill(TXT_NO, watchLabel.size());
+    }
+    if (watchLow.size() != watchLabel.size() || watchHigh.size() != watchLabel.size() ||
+        watchR.size() != watchLabel.size() || watchW.size() != watchLabel.size() ||
+        watchC.size() != watchLabel.size()) {
         goto error;
     }
     for (i = 0; i < watchLabel.size(); i++) {
-        int mask = (watchR.at(i) == TXT_YES ? DBG_MASK_READ : DBG_MASK_NONE) |
-                   (watchW.at(i) == TXT_YES ? DBG_MASK_WRITE : DBG_MASK_NONE);
+        int mask = watchC.at(i) == TXT_YES
+            ? DBG_MASK_COUNT
+            : (watchR.at(i) == TXT_YES ? DBG_MASK_READ : DBG_MASK_NONE) |
+              (watchW.at(i) == TXT_YES ? DBG_MASK_WRITE : DBG_MASK_NONE);
         watchAdd(watchLabel.at(i), static_cast<uint32_t>(hex2int(watchLow.at(i))),
                  static_cast<uint32_t>(hex2int(watchHigh.at(i))), mask, false, false);
     }
@@ -284,6 +296,7 @@ void MainWindow::debugExportFile(const QString &filename) const {
     QStringList watchHigh;
     QStringList watchR;
     QStringList watchW;
+    QStringList watchC;
     for(i = 0; i < m_watchpoints->rowCount(); i++) {
         if (m_watchpoints->item(i, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR) {
             watchLabel.append(m_watchpoints->item(i, WATCH_NAME_COL)->text());
@@ -291,6 +304,7 @@ void MainWindow::debugExportFile(const QString &filename) const {
             watchHigh.append(m_watchpoints->item(i, WATCH_HIGH_COL)->text());
             watchR.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_READ_COL))->isChecked() ? TXT_YES : TXT_NO);
             watchW.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_WRITE_COL))->isChecked() ? TXT_YES : TXT_NO);
+            watchC.append(watchIsCount(i) ? TXT_YES : TXT_NO);
         }
     }
 
@@ -299,6 +313,7 @@ void MainWindow::debugExportFile(const QString &filename) const {
     info.setValue(QStringLiteral("watchpoints/high"), watchHigh);
     info.setValue(QStringLiteral("watchpoints/read"), watchR);
     info.setValue(QStringLiteral("watchpoints/write"), watchW);
+    info.setValue(QStringLiteral("watchpoints/count"), watchC);
 
     // Save port monitor information
     QStringList portAddr;
@@ -1601,7 +1616,9 @@ void MainWindow::watchSetPrev(QTableWidgetItem *current, [[maybe_unused]] QTable
 }
 
 void MainWindow::watchRemoveRow(int row) {
-    if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
+    if (watchIsCount(row)) {
+        watchReleaseCount(row);
+    } else if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
         m_watchpoints->item(row, WATCH_HIGH_COL)->text() != DEBUG_UNSET_ADDR) {
         uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
         uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
@@ -1616,6 +1633,7 @@ void MainWindow::watchRemoveRow(int row) {
         }
     }
     m_watchpoints->removeRow(row);
+    watchUpdateHitColumnVisibility();
     watchUpdate();
 }
 
@@ -1640,8 +1658,20 @@ void MainWindow::watchRemove(uint32_t address) {
 
 void MainWindow::contextWatchpoint(const QPoint &posa) {
     QTableWidgetItem *item = m_watchpoints->itemAt(posa);
-    if (item == Q_NULLPTR ||
-        (item->column() != WATCH_LOW_COL && item->column() != WATCH_HIGH_COL) ||
+    if (item == Q_NULLPTR) {
+        return;
+    }
+
+    if (item->column() == WATCH_HITS_COL && watchIsCount(item->row())) {
+        QMenu menu;
+        QAction *reset = menu.addAction(tr("Reset Hit Count"));
+        if (menu.exec(m_watchpoints->viewport()->mapToGlobal(posa)) == reset) {
+            watchResetHitCount(item->row());
+        }
+        return;
+    }
+
+    if ((item->column() != WATCH_LOW_COL && item->column() != WATCH_HIGH_COL) ||
         item->text() == DEBUG_UNSET_ADDR) {
         return;
     }
@@ -1737,11 +1767,197 @@ void MainWindow::watchAddSlot() {
     watchAdd(watchNextLabel(), 0, 0, DBG_MASK_READ | DBG_MASK_WRITE, false, true);
 }
 
+bool MainWindow::watchIsCount(int row) const {
+    if (row < 0 || row >= m_watchpoints->rowCount()) {
+        return false;
+    }
+    const auto *button = qobject_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_COUNT_COL));
+    return button && button->isChecked();
+}
+
+void MainWindow::watchReleaseCount(int row) {
+    QTableWidgetItem *itemHits = m_watchpoints->item(row, WATCH_HITS_COL);
+    if (!itemHits) {
+        return;
+    }
+    const QVariant address = itemHits->data(WatchHitAddressRole);
+    if (address.isValid()) {
+        emu.hitCounter(EmuThread::HitCounterOperation::Remove, address.toUInt());
+    }
+    itemHits->setData(WatchHitAddressRole, QVariant());
+    itemHits->setData(WatchHitBaselineRole, QVariant());
+}
+
+bool MainWindow::watchMoveCount(int row, const QString &addressText) {
+    QTableWidgetItem *itemHits = m_watchpoints->item(row, WATCH_HITS_COL);
+    if (!itemHits) {
+        return false;
+    }
+
+    const QVariant oldAddressData = itemHits->data(WatchHitAddressRole);
+    const uint64_t oldBaseline = itemHits->data(WatchHitBaselineRole).toULongLong();
+    if (addressText == DEBUG_UNSET_ADDR) {
+        watchReleaseCount(row);
+        itemHits->setText(QString());
+        return true;
+    }
+
+    bool ok = false;
+    const uint32_t address = addressText.toUInt(&ok, 16) & 0xFFFFFF;
+    if (!ok) {
+        return false;
+    }
+    if (oldAddressData.isValid() && oldAddressData.toUInt() == address) {
+        return true;
+    }
+
+    EmuThread::HitCounterResult added = emu.hitCounter(EmuThread::HitCounterOperation::Add, address);
+    if (!added.success && oldAddressData.isValid()) {
+        /* At the native counter limit, moving this row can first free its old slot. */
+        emu.hitCounter(EmuThread::HitCounterOperation::Remove, oldAddressData.toUInt());
+        added = emu.hitCounter(EmuThread::HitCounterOperation::Add, address);
+        if (!added.success) {
+            const auto restored = emu.hitCounter(EmuThread::HitCounterOperation::Add, oldAddressData.toUInt());
+            if (restored.success) {
+                itemHits->setData(WatchHitAddressRole, oldAddressData);
+                itemHits->setData(WatchHitBaselineRole,
+                                  static_cast<qulonglong>(std::min(oldBaseline, restored.value)));
+            } else {
+                itemHits->setData(WatchHitAddressRole, QVariant());
+                itemHits->setData(WatchHitBaselineRole, QVariant());
+            }
+            return false;
+        }
+    } else if (!added.success) {
+        return false;
+    } else if (oldAddressData.isValid()) {
+        emu.hitCounter(EmuThread::HitCounterOperation::Remove, oldAddressData.toUInt());
+    }
+
+    itemHits->setData(WatchHitAddressRole, address);
+    itemHits->setData(WatchHitBaselineRole, static_cast<qulonglong>(added.value));
+    itemHits->setText(QStringLiteral("0"));
+    return true;
+}
+
+bool MainWindow::watchSetCount(int row, bool enabled) {
+    auto *btnCount = qobject_cast<QToolButton *>(m_watchpoints->cellWidget(row, WATCH_COUNT_COL));
+    auto *btnRead = qobject_cast<QToolButton *>(m_watchpoints->cellWidget(row, WATCH_READ_COL));
+    auto *btnWrite = qobject_cast<QToolButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_COL));
+    QTableWidgetItem *itemLow = m_watchpoints->item(row, WATCH_LOW_COL);
+    QTableWidgetItem *itemHigh = m_watchpoints->item(row, WATCH_HIGH_COL);
+    QTableWidgetItem *itemHits = m_watchpoints->item(row, WATCH_HITS_COL);
+    if (!btnCount || !btnRead || !btnWrite || !itemLow || !itemHigh || !itemHits) {
+        return false;
+    }
+
+    if (enabled) {
+        if (!watchMoveCount(row, itemLow->text())) {
+            btnCount->setChecked(false);
+            btnCount->setIcon(m_iconCheckGray);
+            showStatusMsg(tr("Unable to enable the hit counter"));
+            return false;
+        }
+
+        /* Count is exclusive with range watchpoints, so remove this row's old range first. */
+        if (itemLow->text() != DEBUG_UNSET_ADDR && itemHigh->text() != DEBUG_UNSET_ADDR) {
+            const uint32_t low = static_cast<uint32_t>(hex2int(itemLow->text()));
+            const uint32_t high = static_cast<uint32_t>(hex2int(itemHigh->text()));
+            for (uint32_t address = low; address <= high; ++address) {
+                debug_watch(address, DBG_MASK_READ | DBG_MASK_WRITE, false);
+            }
+        }
+
+        btnRead->setChecked(false);
+        btnRead->setIcon(m_iconCheckGray);
+        btnWrite->setChecked(false);
+        btnWrite->setIcon(m_iconCheckGray);
+        btnCount->setChecked(true);
+        btnCount->setIcon(m_iconCheck);
+        itemHigh->setText(itemLow->text());
+        itemHigh->setFlags(itemHigh->flags() & ~(Qt::ItemIsEditable | Qt::ItemIsEnabled));
+    } else {
+        watchReleaseCount(row);
+        btnCount->setChecked(false);
+        btnCount->setIcon(m_iconCheckGray);
+        itemHigh->setFlags(itemHigh->flags() | Qt::ItemIsEditable | Qt::ItemIsEnabled);
+        itemHits->setText(QString());
+    }
+
+    watchUpdateHitColumnVisibility();
+    return true;
+}
+
+void MainWindow::watchUpdateHitColumnVisibility() {
+    bool visible = false;
+    for (int row = 0; row < m_watchpoints->rowCount(); ++row) {
+        if (watchIsCount(row)) {
+            visible = true;
+            break;
+        }
+    }
+    m_watchpoints->setColumnHidden(WATCH_HITS_COL, !visible);
+    if (visible) {
+        if (!m_watchHitTimer.isActive()) {
+            m_watchHitTimer.start();
+        }
+    } else {
+        m_watchHitTimer.stop();
+    }
+}
+
+void MainWindow::watchRefreshHitCounts() {
+    if (m_watchpoints->isColumnHidden(WATCH_HITS_COL)) {
+        return;
+    }
+    const auto snapshot = emu.hitCounter(EmuThread::HitCounterOperation::Snapshot);
+    if (!snapshot.success) {
+        return;
+    }
+
+    QHash<uint32_t, uint64_t> counts;
+    counts.reserve(snapshot.counters.size());
+    for (const debug_hit_counter_snapshot_t &counter : snapshot.counters) {
+        counts.insert(counter.address, counter.count);
+    }
+
+    for (int row = 0; row < m_watchpoints->rowCount(); ++row) {
+        if (!watchIsCount(row)) {
+            continue;
+        }
+        QTableWidgetItem *itemHits = m_watchpoints->item(row, WATCH_HITS_COL);
+        const QVariant address = itemHits->data(WatchHitAddressRole);
+        if (!address.isValid() || !counts.contains(address.toUInt())) {
+            continue;
+        }
+        const uint64_t count = counts.value(address.toUInt());
+        const uint64_t baseline = itemHits->data(WatchHitBaselineRole).toULongLong();
+        itemHits->setText(QString::number(count >= baseline ? count - baseline : 0));
+    }
+}
+
+void MainWindow::watchResetHitCount(int row) {
+    if (!watchIsCount(row)) {
+        return;
+    }
+    QTableWidgetItem *itemHits = m_watchpoints->item(row, WATCH_HITS_COL);
+    const QVariant address = itemHits->data(WatchHitAddressRole);
+    if (!address.isValid()) {
+        return;
+    }
+    const auto current = emu.hitCounter(EmuThread::HitCounterOperation::Read, address.toUInt());
+    if (current.success) {
+        itemHits->setData(WatchHitBaselineRole, static_cast<qulonglong>(current.value));
+        itemHits->setText(QStringLiteral("0"));
+    }
+}
+
 void MainWindow::watchUpdate() {
 
     // this is needed in the case of overlapping address spaces
     for (int row = 0; row < m_watchpoints->rowCount(); row++) {
-        if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
+        if (!watchIsCount(row) &&
+            m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
             m_watchpoints->item(row, WATCH_HIGH_COL)->text() != DEBUG_UNSET_ADDR) {
             uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
             uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
@@ -1776,6 +1992,7 @@ void MainWindow::watchUpdateRow(QTableWidgetItem *itemLow, QTableWidgetItem *ite
 
 bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int mask, bool toggle, bool unset) {
     const int row = m_watchpoints->rowCount();
+    const bool count = mask & DBG_MASK_COUNT;
     QString lowStr;
     QString highStr;
     QString watchLen;
@@ -1785,7 +2002,7 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
         highStr = DEBUG_UNSET_ADDR;
     } else {
         lowStr = int2hex((low &= 0xFFFFFF), 6).toUpper();
-        highStr = int2hex((high &= 0xFFFFFF), 6).toUpper();
+        highStr = count ? lowStr : int2hex((high &= 0xFFFFFF), 6).toUpper();
     }
 
     // return if address is already set
@@ -1817,25 +2034,44 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
     QTableWidgetItem *itemHigh = new QTableWidgetItem(highStr);
     QTableWidgetItem *itemRead = new QTableWidgetItem;
     QTableWidgetItem *itemWrite = new QTableWidgetItem;
+    QTableWidgetItem *itemCount = new QTableWidgetItem;
     QTableWidgetItem *itemRemove = new QTableWidgetItem;
+    QTableWidgetItem *itemHits = new QTableWidgetItem;
+    itemHits->setFlags(itemHits->flags() & ~Qt::ItemIsEditable);
+    itemHits->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     QToolButton *btnRead = new QToolButton;
-    btnRead->setIcon((mask & DBG_MASK_READ) ? m_iconCheck : m_iconCheckGray);
+    btnRead->setIcon(!count && (mask & DBG_MASK_READ) ? m_iconCheck : m_iconCheckGray);
     btnRead->setCheckable(true);
-    btnRead->setChecked((mask & DBG_MASK_READ) ? true : false);
+    btnRead->setChecked(!count && (mask & DBG_MASK_READ));
 
     QToolButton *btnWrite = new QToolButton;
-    btnWrite->setIcon((mask & DBG_MASK_WRITE) ? m_iconCheck : m_iconCheckGray);
+    btnWrite->setIcon(!count && (mask & DBG_MASK_WRITE) ? m_iconCheck : m_iconCheckGray);
     btnWrite->setCheckable(true);
-    btnWrite->setChecked((mask & DBG_MASK_WRITE) ? true : false);
+    btnWrite->setChecked(!count && (mask & DBG_MASK_WRITE));
 
-    connect(btnRead, &QToolButton::clicked, [this, btnRead, itemLow, itemHigh](bool checked) {
+    QToolButton *btnCount = new QToolButton;
+    btnCount->setIcon(m_iconCheckGray);
+    btnCount->setCheckable(true);
+
+    connect(btnRead, &QToolButton::clicked, [this, btnRead, btnCount, itemLow, itemHigh](bool checked) {
+        if (checked && btnCount->isChecked()) {
+            watchSetCount(itemLow->row(), false);
+        }
         btnRead->setIcon(checked ? m_iconCheck : m_iconCheckGray);
         watchUpdateRow(itemLow, itemHigh);
     });
-    connect(btnWrite, &QToolButton::clicked, [this, btnWrite, itemLow, itemHigh](bool checked) {
+    connect(btnWrite, &QToolButton::clicked, [this, btnWrite, btnCount, itemLow, itemHigh](bool checked) {
+        if (checked && btnCount->isChecked()) {
+            watchSetCount(itemLow->row(), false);
+        }
         btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray);
         watchUpdateRow(itemLow, itemHigh);
+    });
+    connect(btnCount, &QToolButton::clicked, [this, itemLow](bool checked) {
+        if (watchSetCount(itemLow->row(), checked)) {
+            watchUpdate();
+        }
     });
 
     m_watchpoints->setRowCount(row + 1);
@@ -1844,10 +2080,20 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
     m_watchpoints->setItem(row, WATCH_HIGH_COL, itemHigh);
     m_watchpoints->setItem(row, WATCH_READ_COL, itemRead);
     m_watchpoints->setItem(row, WATCH_WRITE_COL, itemWrite);
+    m_watchpoints->setItem(row, WATCH_COUNT_COL, itemCount);
     m_watchpoints->setItem(row, WATCH_REMOVE_COL, itemRemove);
+    m_watchpoints->setItem(row, WATCH_HITS_COL, itemHits);
     m_watchpoints->setCellWidget(row, WATCH_REMOVE_COL, button);
     m_watchpoints->setCellWidget(row, WATCH_READ_COL, btnRead);
     m_watchpoints->setCellWidget(row, WATCH_WRITE_COL, btnWrite);
+    m_watchpoints->setCellWidget(row, WATCH_COUNT_COL, btnCount);
+
+    if (count && !watchSetCount(row, true)) {
+        m_watchpoints->removeRow(row);
+        m_watchpoints->blockSignals(false);
+        watchUpdateHitColumnVisibility();
+        return false;
+    }
 
     m_watchpoints->setCurrentCell(row, WATCH_REMOVE_COL);
 
@@ -1879,6 +2125,9 @@ void MainWindow::memUpdate() {
 }
 
 int MainWindow::watchGetMask(int row) const {
+    if (watchIsCount(row)) {
+        return DBG_MASK_COUNT;
+    }
     int mask = 0;
     if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_COL))->isChecked()) {
         mask |= DBG_MASK_READ;
@@ -1900,6 +2149,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
     int row = item->row();
     int col = item->column();
+    const bool count = watchIsCount(row);
     QString lowStr;
     QString highStr;
     uint32_t addr;
@@ -1926,13 +2176,16 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         highStr = m_watchpoints->item(row, WATCH_HIGH_COL)->text();
 
         if (isNotValidHex(s) || s.length() > 6 ||
-           (highStr != DEBUG_UNSET_ADDR && addr > static_cast<uint32_t>(hex2int(highStr)))) {
+           (!count && highStr != DEBUG_UNSET_ADDR && addr > static_cast<uint32_t>(hex2int(highStr)))) {
             item->setText(m_prevWatchLow);
             m_watchpoints->blockSignals(false);
             return;
         }
 
         lowStr = int2hex(addr, 6);
+        if (count) {
+            highStr = lowStr;
+        }
 
         // return if address is already set in this range
         for (int i = 0; i < m_watchpoints->rowCount(); i++) {
@@ -1945,7 +2198,15 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
             }
         }
 
-        if (m_prevWatchLow != DEBUG_UNSET_ADDR) {
+        if (count) {
+            if (!watchMoveCount(row, lowStr)) {
+                item->setText(m_prevWatchLow);
+                m_watchpoints->item(row, WATCH_HIGH_COL)->setText(m_prevWatchLow);
+                m_watchpoints->blockSignals(false);
+                showStatusMsg(tr("Unable to move the hit counter"));
+                return;
+            }
+        } else if (m_prevWatchLow != DEBUG_UNSET_ADDR) {
             uint32_t low = static_cast<uint32_t>(hex2int(m_prevWatchLow));
             uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
@@ -1955,11 +2216,18 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         }
 
 
-        if (highStr == DEBUG_UNSET_ADDR) {
+        if (count) {
+            m_watchpoints->item(row, WATCH_HIGH_COL)->setText(lowStr);
+        } else if (highStr == DEBUG_UNSET_ADDR) {
             m_watchpoints->item(row, WATCH_HIGH_COL)->setText(lowStr);
         }
         item->setText(lowStr);
     } else if (col == WATCH_HIGH_COL) {
+        if (count) {
+            item->setText(m_watchpoints->item(row, WATCH_LOW_COL)->text());
+            m_watchpoints->blockSignals(false);
+            return;
+        }
         std::string s = item->text().toUpper().toStdString();
         QString equate;
 
@@ -2066,14 +2334,20 @@ void MainWindow::updateLabels() {
         QString next = getAddressOfEquate(m_watchpoints->item(row, WATCH_NAME_COL)->text().toUpper().toStdString());
         QString old = m_watchpoints->item(row, WATCH_LOW_COL)->text();
         if (!next.isEmpty() && next != old) {
-            unsigned int mask = (m_watchpoints->item(row, WATCH_READ_COL)->checkState() == Qt::Checked ? DBG_MASK_READ : DBG_MASK_NONE) |
-                                (m_watchpoints->item(row, WATCH_WRITE_COL)->checkState() == Qt::Checked ? DBG_MASK_WRITE : DBG_MASK_NONE);
             // remove old watchpoint and add new one
             m_watchpoints->blockSignals(true);
-            debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
-            m_watchpoints->item(row, WATCH_LOW_COL)->setText(next);
-            debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
-            m_watchpoints->blockSignals(true);
+            if (watchIsCount(row)) {
+                if (watchMoveCount(row, next)) {
+                    m_watchpoints->item(row, WATCH_LOW_COL)->setText(next);
+                    m_watchpoints->item(row, WATCH_HIGH_COL)->setText(next);
+                }
+            } else {
+                const unsigned int mask = watchGetMask(row);
+                debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
+                m_watchpoints->item(row, WATCH_LOW_COL)->setText(next);
+                debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
+            }
+            m_watchpoints->blockSignals(false);
         }
     }
     for (int row = 0; row < m_breakpoints->rowCount(); row++) {

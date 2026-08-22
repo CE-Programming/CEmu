@@ -115,6 +115,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_watchpoints = ui->watchpoints;
     m_breakpoints = ui->breakpoints;
     m_ports = ui->ports;
+    m_watchpoints->setColumnHidden(WATCH_HITS_COL, true);
     m_disasm = ui->disasm;
     m_disasm->installEventFilter(this);
 
@@ -431,6 +432,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->statusInterval, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setStatusInterval);
     connect(&m_timerEmu, &QTimer::timeout, [this]{ if (std::exchange(m_timerEmuTriggered, true)) timeoutEmuSpeed(); });
     connect(&m_timerFps, &QTimer::timeout, [this]{ if (std::exchange(m_timerFpsTriggered, true)) timeoutFpsSpeed(); });
+    m_watchHitTimer.setInterval(1000);
+    connect(&m_watchHitTimer, &QTimer::timeout, this, &MainWindow::watchRefreshHitCounts);
 
     // screen capture
     connect(ui->buttonSavePNG, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -1650,6 +1653,11 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 MainWindow::~MainWindow() {
     if (m_edLuaInitialized && ed_lua) runLuaCleanup(*ed_lua, "shutdown");
     if (m_replLuaInitialized && repl_lua) runLuaCleanup(*repl_lua, "shutdown");
+    if (m_watchpoints) {
+        for (int row = 0; row < m_watchpoints->rowCount(); ++row) {
+            watchReleaseCount(row);
+        }
+    }
 #ifdef LIBUSB_SUPPORT
     if (m_usbContext) {
         if (m_usbHotplugCallbackHandle) {

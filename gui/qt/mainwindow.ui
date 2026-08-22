@@ -4786,6 +4786,11 @@
           </column>
           <column>
            <property name="text">
+            <string>Count</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Low</string>
            </property>
           </column>
@@ -4797,6 +4802,11 @@
           <column>
            <property name="text">
             <string>Name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string># Hits</string>
            </property>
           </column>
          </widget>

@@ -46,6 +46,19 @@ public:
     void load(emu_data_t fileType, const QString &filePath);
     void test(const QString &config, bool run);
 
+    enum class HitCounterOperation {
+        Add,
+        Read,
+        Remove,
+        Snapshot,
+    };
+    struct HitCounterResult {
+        bool success = false;
+        uint64_t value = 0;
+        QVector<debug_hit_counter_snapshot_t> counters;
+    };
+    HitCounterResult hitCounter(HitCounterOperation operation, uint32_t address = 0);
+
     enum {
         ConsoleNorm,
         ConsoleErr,
@@ -62,7 +75,8 @@ public:
         RequestUsbPlugDevice,
         RequestAutoTester,
         RequestDebugger,
-        RequestBasicDebugger
+        RequestBasicDebugger,
+        RequestHitCounter
     };
 
     int type = ConsoleNorm;
@@ -110,6 +124,10 @@ private:
     void doSend();
     void doUsbPlugDevice();
     void doAutotest();
+    void doHitCounter();
+    void finishHitCounterRequests();
+    bool hasPendingRequest(int request);
+    bool takePendingRequest(int request);
 
     void block(int status);
 
@@ -145,8 +163,19 @@ private:
 
     std::mutex m_mutex;
     std::condition_variable m_cv;
+    bool m_blocked = false;
     std::mutex m_mutexDebug;
     std::condition_variable m_cvDebug; // protected by m_mutexDebug
+
+    std::mutex m_hitCounterCallMutex;
+    std::mutex m_hitCounterMutex;
+    std::condition_variable m_cvHitCounter;
+    HitCounterOperation m_hitCounterOperation = HitCounterOperation::Read;
+    uint32_t m_hitCounterAddress = 0;
+    HitCounterResult m_hitCounterResult;
+    bool m_hitCounterDone = false;
+    bool m_hitCounterThreadActive = false;
+    std::atomic_bool m_stopping = false;
 
     std::atomic_int m_asicRev;
     std::atomic_bool m_allowAnyRev;

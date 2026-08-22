@@ -98,12 +98,35 @@ EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SI
 }
 
 void EmuThread::run() {
+    m_stopping.store(false);
+    {
+        std::lock_guard<std::mutex> commandLock(m_hitCounterMutex);
+        m_hitCounterThreadActive = true;
+    }
+    m_cvHitCounter.notify_all();
     while (!(cpu_check_signals() & CPU_SIGNAL_EXIT)) {
         emu_run(1u);
         doStuff();
         throttleWait();
     }
+    finishHitCounterRequests();
     asic_free();
+}
+
+void EmuThread::finishHitCounterRequests() {
+    {
+        std::lock_guard<std::mutex> commandLock(m_hitCounterMutex);
+        m_hitCounterThreadActive = false;
+        if (!m_hitCounterDone) {
+            m_hitCounterResult = {};
+            m_hitCounterDone = true;
+        }
+    }
+    {
+        std::lock_guard<std::mutex> requestLock(m_requestMutex);
+        while (m_requestQueue.removeOne(RequestHitCounter)) {}
+    }
+    m_cvHitCounter.notify_all();
 }
 
 void EmuThread::writeConsole(int console, const char *format, va_list args) {
@@ -194,6 +217,9 @@ void EmuThread::doStuff() {
                 case RequestBasicDebugger:
                 debug_open(DBG_BASIC_RECONFIG, 0);
                     break;
+                case RequestHitCounter:
+                    doHitCounter();
+                    break;
                 case RequestSave:
                     doSave();
                     break;
@@ -226,15 +252,26 @@ void EmuThread::doStuff() {
 void EmuThread::throttleWait() {
     int speed;
     bool throttle;
+    bool resumed = false;
     {
         std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
+        while (!m_speed && m_throttle && !m_stopping.load()) {
+            resumed = true;
+            emit sendSpeed(0);
+            m_cvSpeed.wait(lockSpeed, [this] {
+                return m_speed != 0 || !m_throttle || m_stopping.load() ||
+                       hasPendingRequest(RequestHitCounter);
+            });
+            if (takePendingRequest(RequestHitCounter)) {
+                lockSpeed.unlock();
+                doHitCounter();
+                lockSpeed.lock();
+            }
+        }
+        if (m_stopping.load()) return;
         speed = m_speed;
         throttle = m_throttle;
-        if (!speed && throttle) {
-            emit sendSpeed(0);
-            m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0 || !m_throttle; });
-            speed = m_speed;
-            throttle = m_throttle;
+        if (resumed) {
             m_lastTime = std::chrono::steady_clock::now();
         }
     }
@@ -269,14 +306,100 @@ void EmuThread::throttleWait() {
 
 void EmuThread::block(int status) {
     std::unique_lock<std::mutex> lock(m_mutex);
+    m_blocked = true;
     emit blocked(status);
-    m_cv.wait(lock);
+    while (m_blocked && !m_stopping.load()) {
+        m_cv.wait(lock, [this] {
+            return !m_blocked || m_stopping.load() || hasPendingRequest(RequestHitCounter);
+        });
+        if (m_blocked && takePendingRequest(RequestHitCounter)) {
+            lock.unlock();
+            doHitCounter();
+            lock.lock();
+        }
+    }
 }
 
 void EmuThread::unblock() {
-    m_mutex.lock();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_blocked = false;
     m_cv.notify_all();
-    m_mutex.unlock();
+}
+
+bool EmuThread::hasPendingRequest(int request) {
+    std::lock_guard<std::mutex> requestLock(m_requestMutex);
+    return m_requestQueue.contains(request);
+}
+
+bool EmuThread::takePendingRequest(int request) {
+    std::lock_guard<std::mutex> requestLock(m_requestMutex);
+    return m_requestQueue.removeOne(request);
+}
+
+EmuThread::HitCounterResult EmuThread::hitCounter(HitCounterOperation operation, uint32_t address) {
+    std::lock_guard<std::mutex> callLock(m_hitCounterCallMutex);
+    std::unique_lock<std::mutex> commandLock(m_hitCounterMutex);
+    m_hitCounterOperation = operation;
+    m_hitCounterAddress = address & 0xFFFFFF;
+    m_hitCounterResult = {};
+    m_hitCounterDone = false;
+
+    if (!m_hitCounterThreadActive) {
+        if (isRunning()) {
+            if (m_stopping.load()) return m_hitCounterResult;
+            /* QThread is starting; wait until run() has exclusive ownership. */
+            m_cvHitCounter.wait(commandLock, [this] {
+                return m_hitCounterThreadActive || m_stopping.load();
+            });
+            if (!m_hitCounterThreadActive) return m_hitCounterResult;
+        } else {
+            commandLock.unlock();
+            doHitCounter();
+            commandLock.lock();
+            return m_hitCounterResult;
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> requestLock(m_requestMutex);
+        m_requestQueue.enqueue(RequestHitCounter);
+    }
+    m_cvDebug.notify_all();
+    m_cv.notify_all();
+    m_cvSpeed.notify_all();
+    m_cvHitCounter.wait(commandLock, [this] { return m_hitCounterDone; });
+    return m_hitCounterResult;
+}
+
+void EmuThread::doHitCounter() {
+    {
+        std::lock_guard<std::mutex> commandLock(m_hitCounterMutex);
+        uint64_t value = 0;
+        switch (m_hitCounterOperation) {
+            case HitCounterOperation::Add:
+                m_hitCounterResult.success = debug_hit_counter_add(m_hitCounterAddress, &value);
+                m_hitCounterResult.value = value;
+                break;
+            case HitCounterOperation::Read:
+                m_hitCounterResult.success = debug_hit_counter_get(m_hitCounterAddress, &value);
+                m_hitCounterResult.value = value;
+                break;
+            case HitCounterOperation::Remove:
+                m_hitCounterResult.success = debug_hit_counter_remove(m_hitCounterAddress, &value);
+                m_hitCounterResult.value = value;
+                break;
+            case HitCounterOperation::Snapshot: {
+                m_hitCounterResult.counters.resize(DBG_HIT_COUNTER_MAX);
+                const size_t count = debug_hit_counter_snapshot(m_hitCounterResult.counters.data(),
+                                                                m_hitCounterResult.counters.size());
+                m_hitCounterResult.counters.resize(static_cast<qsizetype>(count));
+                m_hitCounterResult.success = true;
+                break;
+            }
+        }
+        m_hitCounterDone = true;
+    }
+    m_cvHitCounter.notify_all();
 }
 
 asic_rev_t EmuThread::handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, emu_device_t device, bool* python) {
@@ -463,12 +586,14 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
     do {
         m_cvDebug.wait(lock, [this]() {
             std::lock_guard<std::mutex> requestLock{m_requestMutex};
-            return !m_debug || m_requestQueue.contains(RequestSave);
+            return !m_debug || m_stopping.load() || m_requestQueue.contains(RequestSave) ||
+                   m_requestQueue.contains(RequestHitCounter);
         });
-        bool savePending;
+        bool savePending, hitCounterPending;
         {
             std::lock_guard<std::mutex> requestLock{m_requestMutex};
             savePending = m_requestQueue.removeOne(RequestSave);
+            hitCounterPending = m_requestQueue.removeOne(RequestHitCounter);
         }
         if (savePending) {
             /* Serialize the paused state before allowing execution to resume. */
@@ -476,7 +601,12 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
             doSave();
             lock.lock();
         }
-    } while (m_debug);
+        if (hitCounterPending) {
+            lock.unlock();
+            doHitCounter();
+            lock.lock();
+        }
+    } while (m_debug && !m_stopping.load());
 }
 
 void EmuThread::resume() {
@@ -525,10 +655,15 @@ void EmuThread::stop() {
     if (!isRunning()) {
         return;
     }
+    m_stopping.store(true);
     emu_exit();
+    m_cvDebug.notify_all();
+    m_cv.notify_all();
+    m_cvSpeed.notify_all();
     QTimer::singleShot(500, &eventLoop, [&]() { eventLoop.exit(1); });
     if (eventLoop.exec()) {
         terminate();
         wait(500);
     }
+    finishHitCounterRequests();
 }

@@ -169,9 +169,11 @@ private:
         WATCH_REMOVE_COL,
         WATCH_READ_COL,
         WATCH_WRITE_COL,
+        WATCH_COUNT_COL,
         WATCH_LOW_COL,
         WATCH_HIGH_COL,
         WATCH_NAME_COL,
+        WATCH_HITS_COL,
     };
 
     enum {
@@ -434,6 +436,13 @@ private:
     void watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
     void watchUpdate();
     void watchUpdateRow(QTableWidgetItem *itemLow, QTableWidgetItem *itemHigh);
+    bool watchSetCount(int row, bool enabled);
+    bool watchMoveCount(int row, const QString &address);
+    void watchReleaseCount(int row);
+    void watchRefreshHitCounts();
+    void watchResetHitCount(int row);
+    void watchUpdateHitColumnVisibility();
+    bool watchIsCount(int row) const;
     int watchGetMask(int row) const;
 
     // watchpoint additions
@@ -865,6 +874,7 @@ private:
     QString m_pathImage;
     QTimer m_timerEmu;
     QTimer m_timerFps;
+    QTimer m_watchHitTimer;
     bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
 
