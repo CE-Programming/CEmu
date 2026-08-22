@@ -3,8 +3,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QDateTime>
 
-#include <thread>
-#include <chrono>
+#include <algorithm>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -112,48 +111,45 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
        "writeWord",  mem_poke_word
     );
 
-    lua.set_function("pressKey",  [&](const std::string& key) { pressKeyFromName(key); });
-    lua.set_function("pressKeys", [&](const sol::variadic_args& keys) {
-        for (const std::string key: keys) {
-            pressKeyFromName(key);
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    lua.create_named_table("keys",
+        "press", [this](const std::string &key) { sendEmuKeySequence(QString::fromStdString(key)); },
+        "sequence", [this](const std::string &sequence) { sendEmuKeySequence(QString::fromStdString(sequence)); },
+        "down", [this](const std::string &key) { sendEmuKeySequence(QStringLiteral("down:") + QString::fromStdString(key)); },
+        "up", [this](const std::string &key) { sendEmuKeySequence(QStringLiteral("up:") + QString::fromStdString(key)); },
+        "hold", [this](const std::string &key, unsigned int milliseconds) {
+            sendEmuKeySequence(QStringLiteral("hold:%1:%2").arg(QString::fromStdString(key)).arg(milliseconds));
         }
-    });
+    );
 
     lua.create_named_table("gui",
-       "screenshot", sol::as_function([&](const std::string& p = "") -> int {
-           QString path = QString::fromStdString(p);
-           if (path.length() == 0) {
-               path = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + QDir::separator();
-           }
-           if (!path.endsWith(".png")) {
-               if (!path.endsWith(QDir::separator())) {
-                   path += QDir::separator();
-               }
-               const QString now = QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss");
-               path += QStringLiteral("CEmu_screenshot_") + now + QStringLiteral(".png");
-           }
-           return !(ui->lcd->getImage().save(path, "PNG", 0));
-       }),
-       "refresh",    sol::as_function([] { QApplication::processEvents(); }),
-       "messageBox", sol::as_function([&](const std::string& t, const std::string& msg) {
-           QMessageBox::information(this, QString::fromStdString("[Lua] " + t), QString::fromStdString(msg));
-       }),
-       "setKeypadColor", sol::as_function([&](unsigned c){ setKeypadColor(c); })
-
-       // todo: see mainwindow.h -> Settings
+        "screenshot", sol::overload(
+            [this]() { return ui->lcd->getImage().save(
+                QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) +
+                QStringLiteral("/CEmu_screenshot_") + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-hhmmss")) +
+                QStringLiteral(".png"), "PNG", 0); },
+            [this](const std::string &path) { return ui->lcd->getImage().save(QString::fromStdString(path), "PNG", 0); }),
+        "refresh", [] { QApplication::processEvents(); },
+        "messageBox", [this](const std::string &title, const std::string &message) {
+            QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(message));
+        },
+        "status", [this](const std::string &message) { showStatusMsg(QString::fromStdString(message)); },
+        "setKeypadColor", [this](unsigned int color) { setKeypadColor(color); },
+        "setFullscreen", [this](int mode) { setFullscreen(std::clamp(mode, 0, 2)); },
+        "quit", [] { QTimer::singleShot(0, qApp, &QCoreApplication::quit); }
     );
 
     lua.create_named_table("emu",
-       "reset",     sol::as_function([&] { resetEmu(); }),
-       "reloadROM", sol::as_function([&] { emuLoad(EMU_DATA_ROM); }),
-       "throttle",  sol::as_function([&](bool t){ setThrottle(t ? Qt::Checked : Qt::Unchecked); }),
-       "setSpeed",  sol::as_function([&](int s){ s /= 10; setEmuSpeed(s<0 ? 0 : (s>50 ? 50 : s)); }), // todo: maybe fix this
-       "sendFile",  sol::as_function([&](const std::string& path) {
-           sendingHandler->sendFiles(QStringList(QString::fromStdString(path)), LINK_FILE);
-       })
-
-        // todo: getFile
+        "reset", [this] { resetEmu(); },
+        "reloadROM", [this] { emuLoad(EMU_DATA_ROM); },
+        "throttle", [this](bool enabled) { setThrottle(enabled ? Qt::Checked : Qt::Unchecked); },
+        "setSpeed", [this](int speed) { setEmuSpeed(std::clamp(speed, 0, 500)); },
+        "wait", [](unsigned int milliseconds) { guiDelay(static_cast<int>(milliseconds)); },
+        "saveState", [this](const std::string &path) { stateToPath(QString::fromStdString(path)); },
+        "loadState", [this](const std::string &path) { stateFromPath(QString::fromStdString(path)); },
+        "sendFile", [](const std::string &path) {
+            sendingHandler->sendFiles({QString::fromStdString(path)}, LINK_FILE);
+        },
+        "deviceType", [] { return static_cast<int>(get_device_type()); }
     );
 
     lua.create_named_table("debug",
@@ -173,14 +169,10 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     lua.script("debug.disasmPC = function() cLog('todo') end");
 
     lua.create_named_table("autotester",
-       "loadJSON",   sol::as_function([&](const std::string& path) -> int { return autotesterOpen(QString::fromStdString(path)); }),
-       "reloadJSON", sol::as_function([&] { autotesterReload(); }),
-       "launchTest", sol::as_function([&] { autotesterLaunch(); })
-
-      // todo: actually test this
+        "loadJSON", [this](const std::string &path) { return autotesterOpen(QString::fromStdString(path)); },
+        "reloadJSON", [this] { autotesterReload(); },
+        "launchTest", [this] { autotesterLaunch(); }
     );
-
-    // TODO: bind more stuff (all features that are accessible from the GUI should have a Lua equivalent)
 
     if (isREPL) {
         lua.script("R, F = cpu.registers, cpu.registers.flags");

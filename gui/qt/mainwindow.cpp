@@ -2668,11 +2668,6 @@ void MainWindow::varClipboardListToL1() {
 // Autotester things
 // ------------------------------------------------
 
-void MainWindow::pressKeyFromName(const std::string& key)
-{
-    sendEmuKeySequence(QString::fromStdString(key));
-}
-
 void MainWindow::autotesterErr(int errCode) {
     QString errMsg;
     switch (errCode) {

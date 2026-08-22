@@ -46,8 +46,7 @@ const QStringList &luaBuiltins()
 const QStringList &cemuGlobals()
 {
     static const QStringList values = QStringLiteral("cemu cpu mem peripherals lcd keys gui emu dbg basic "
-                                                     "autotester cLog cErr "
-                                                     "pressKey pressKeys R F")
+                                                     "autotester cLog cErr R F")
                                           .split(QLatin1Char(' '));
     return values;
 }
