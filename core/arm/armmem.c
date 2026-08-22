@@ -56,7 +56,12 @@ static void arm_mem_nvmctrl_update_pending(arm_t *arm) {
 static void arm_mem_sercom_update_pending(arm_t *arm, uint8_t idx) {
     SERCOM_Type *sercom = &arm->mem.sercom[idx];
     sercom->USART.INTFLAG.bit.ERROR =
-        sercom->USART.STATUS.reg & ~SERCOM_USART_STATUS_CTS;
+        !!(sercom->USART.STATUS.reg &
+           (SERCOM_USART_STATUS_PERR |
+            SERCOM_USART_STATUS_FERR |
+            SERCOM_USART_STATUS_BUFOVF |
+            SERCOM_USART_STATUS_ISF |
+            SERCOM_USART_STATUS_COLL));
     arm_mem_set_pending(arm, SERCOM0_IRQn + idx,
                         sercom->USART.INTFLAG.reg &
                         sercom->USART.INTEN.reg);
@@ -619,7 +624,7 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
                             case (SERCOM_USART_INTFLAG_OFFSET |
                                   SERCOM_USART_STATUS_OFFSET) >> 2:
                                 return usart->INTFLAG.reg |
-                                    usart->STATUS.reg << 16;
+                                    (usart->STATUS.reg & ~SERCOM_USART_STATUS_TXE) << 16;
                             case SERCOM_USART_SYNCBUSY_OFFSET >> 2:
                                 return SERCOM_USART_SYNCBUSY_RESETVALUE;
                             case SERCOM_USART_DATA_OFFSET >> 2: {
