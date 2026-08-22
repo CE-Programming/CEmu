@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "sendinghandler.h"
 
+#include "../../core/asic.h"
 #include "../../core/cpu.h"
 #include "../../core/mem.h"
 #include "../../core/link.h"
@@ -152,21 +153,53 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "deviceType", [] { return static_cast<int>(get_device_type()); }
     );
 
-    lua.create_named_table("debug",
-       "stop",      sol::as_function([&] { if (!guiDebug) { debugToggle(); } }),
-       "resume",    sol::as_function([&] { if (guiDebug)  { debugToggle(); } }),
-       "stepIn",    sol::as_function([&] { stepIn(); }),
-       "stepOver",  sol::as_function([&] { stepOver(); }),
-       "stepNext",  sol::as_function([&] { stepNext(); }),
-       "stepOut",   sol::as_function([&] { stepOut(); }),
-       "disasm",    sol::as_function([&](uint32_t addr) -> auto {
-           /* todo with zdis compat */
-           (void)addr;
-       })
+    sol::table debugTable = lua.create_named_table("dbg");
+    debugTable.set_function("stop", [this] { if (!guiDebug) debugToggle(); });
+    debugTable.set_function("resume", [this] { if (guiDebug) debugToggle(); });
+    debugTable.set_function("stepIn", [this] { stepIn(); });
+    debugTable.set_function("stepOver", [this] { stepOver(); });
+    debugTable.set_function("stepNext", [this] { stepNext(); });
+    debugTable.set_function("stepOut", [this] { stepOut(); });
+    debugTable.set_function("stepUntilReturn", [this] { stepUntilRet(); });
+    debugTable.set_function("addBreakpoint", sol::overload(
+        [this](uint32_t address) { return breakAdd(QStringLiteral("Lua"), address, true, false, false); },
+        [this](uint32_t address, const std::string &label) {
+            return breakAdd(QString::fromStdString(label), address, true, false, false);
+        }));
+    debugTable.set_function("removeBreakpoint", [this](uint32_t address) { breakRemove(address); });
+    debugTable.set_function("gotoDisasm", [this](uint32_t address) { gotoDisasmAddr(address); });
+    debugTable.set_function("disasm", [](const sol::this_state &thisState, uint32_t address, sol::optional<bool> useCpuMode) {
+        const int32_t savedBase = disasm.base;
+        const int32_t savedNext = disasm.next;
+        const bool savedAdl = disasm.adl;
+        const auto savedInstr = disasm.instr;
+        const auto savedHighlight = disasm.highlight;
+        std::string *savedCur = disasm.cur;
 
-       // todo: equates, breakpoints, watchpoints, port monitor stuff, etc.
-    );
-    lua.script("debug.disasmPC = function() cLog('todo') end");
+        const bool cpuMode = useCpuMode.value_or(true);
+        disasm.base = static_cast<int32_t>(address & 0xFFFFFF);
+        disasm.adl = cpuMode ? static_cast<bool>(cpu.ADL) : savedAdl;
+        disasmGet(cpuMode);
+
+        sol::state_view view(thisState);
+        sol::table instruction = view.create_table();
+        instruction["address"] = static_cast<uint32_t>(disasm.base);
+        instruction["next"] = static_cast<uint32_t>(disasm.next);
+        instruction["size"] = disasm.instr.size;
+        instruction["bytes"] = disasm.instr.data;
+        instruction["opcode"] = disasm.instr.opcode;
+        instruction["operands"] = disasm.instr.operands;
+        instruction["text"] = disasm.instr.opcode +
+            (disasm.instr.operands.empty() ? std::string() : std::string(" ") + disasm.instr.operands);
+
+        disasm.base = savedBase;
+        disasm.next = savedNext;
+        disasm.adl = savedAdl;
+        disasm.instr = savedInstr;
+        disasm.highlight = savedHighlight;
+        disasm.cur = savedCur;
+        return instruction;
+    });
 
     lua.create_named_table("autotester",
         "loadJSON", [this](const std::string &path) { return autotesterOpen(QString::fromStdString(path)); },
@@ -174,6 +207,7 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "launchTest", [this] { autotesterLaunch(); }
     );
 
+    lua.script("dbg.disasmPC = function() return dbg.disasm(cpu.registers.PC, true) end");
     if (isREPL) {
         lua.script("R, F = cpu.registers, cpu.registers.flags");
     }

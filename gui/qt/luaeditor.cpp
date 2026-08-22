@@ -101,11 +101,14 @@ const QHash<QString, QStringList> &completionMembers()
                                 "setFullscreen openScriptsFolder quit")},
         {words("emu"), wordList("reset reloadROM throttle setSpeed wait "
                                 "saveState loadState sendFile deviceType")},
-        {words("debug"), wordList("stop resume stepIn stepOver stepNext stepOut stepUntilReturn "
-                                  "addBreakpoint "
-                                  "removeBreakpoint addWatchpoint removeWatchpoint watchRegister "
-                                  "registerWatchState "
-                                  "gotoDisasm disasm disasmPC")},
+        {words("dbg"), wordList("stop resume stepIn stepOver stepNext stepOut stepUntilReturn "
+                                "addBreakpoint "
+                                "removeBreakpoint addWatchpoint removeWatchpoint watchRegister "
+                                "registerWatchState "
+                                "gotoDisasm disasm disasmPC")},
+        {words("debug"), wordList("debug gethook getinfo getlocal getmetatable getregistry "
+                                  "getupvalue getuservalue setcstacklimit sethook setlocal "
+                                  "setmetatable setupvalue setuservalue traceback upvalueid upvaluejoin")},
         {words("basic"), wordList("enable enabled showDebugger state source step stepNext resume "
                                   "setHighlight setShowFetches "
                                   "setShowTemporaryParser setLiveExecution setSourceBreakpoint "
