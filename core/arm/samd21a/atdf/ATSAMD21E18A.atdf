@@ -3105,7 +3105,7 @@
           <bitfield name="SAMPR" caption="Sample" mask="0xE000" values="SERCOM_USART_CTRLA__SAMPR"/>
           <bitfield name="TXPO" caption="Transmit Data Pinout" mask="0x30000" values="SERCOM_USART_CTRLA__TXPO"/>
           <bitfield name="RXPO" caption="Receive Data Pinout" mask="0x300000" values="SERCOM_USART_CTRLA__RXPO"/>
-          <bitfield name="SAMPA" caption="Sample Adjustment" mask="0xC00000"/>
+          <bitfield name="SAMPA" caption="Sample Adjustment" mask="0xC00000" values="SERCOM_USART_CTRLA__SAMPA"/>
           <bitfield name="FORM" caption="Frame Format" mask="0xF000000" values="SERCOM_USART_CTRLA__FORM"/>
           <bitfield name="CMODE" caption="Communication Mode" mask="0x10000000" values="SERCOM_USART_CTRLA__CMODE"/>
           <bitfield name="CPOL" caption="Clock Polarity" mask="0x20000000" values="SERCOM_USART_CTRLA__CPOL"/>
@@ -3120,7 +3120,7 @@
           <bitfield name="SAMPR" caption="Sample" mask="0xE000" values="SERCOM_USART_CTRLA__SAMPR"/>
           <bitfield name="TXPO" caption="Transmit Data Pinout" mask="0x30000" values="SERCOM_USART_CTRLA__TXPO"/>
           <bitfield name="RXPO" caption="Receive Data Pinout" mask="0x300000" values="SERCOM_USART_CTRLA__RXPO"/>
-          <bitfield name="SAMPA" caption="Sample Adjustment" mask="0xC00000"/>
+          <bitfield name="SAMPA" caption="Sample Adjustment" mask="0xC00000" values="SERCOM_USART_CTRLA__SAMPA"/>
           <bitfield name="FORM" caption="Frame Format" mask="0xF000000" values="SERCOM_USART_CTRLA__FORM"/>
           <bitfield name="CMODE" caption="Communication Mode" mask="0x10000000" values="SERCOM_USART_CTRLA__CMODE"/>
           <bitfield name="CPOL" caption="Clock Polarity" mask="0x20000000" values="SERCOM_USART_CTRLA__CPOL"/>
@@ -3376,6 +3376,7 @@
           <bitfield name="CTS" caption="Clear To Send" mask="0x8"/>
           <bitfield name="ISF" caption="Inconsistent Sync Field" mask="0x10"/>
           <bitfield name="COLL" caption="Collision Detected" mask="0x20"/>
+          <bitfield name="TXE" caption="Transmitter Empty" mask="0x40"/>
         </register>
         <register modes="USART_INT" name="STATUS" offset="0x1A" rw="RW" size="2" initval="0x0000" caption="USART_INT Status">
           <bitfield name="PERR" caption="Parity Error" mask="0x1"/>
@@ -3384,6 +3385,7 @@
           <bitfield name="CTS" caption="Clear To Send" mask="0x8"/>
           <bitfield name="ISF" caption="Inconsistent Sync Field" mask="0x10"/>
           <bitfield name="COLL" caption="Collision Detected" mask="0x20"/>
+          <bitfield name="TXE" caption="Transmitter Empty" mask="0x40"/>
         </register>
         <register modes="I2CM" name="SYNCBUSY" offset="0x1C" rw="R" size="4" initval="0x00000000" caption="I2CM Synchronization Busy">
           <bitfield name="SWRST" caption="Software Reset Synchronization Busy" mask="0x1"/>
@@ -3572,8 +3574,9 @@
         <value name="PAD3" caption="SERCOM PAD[3] is used for data reception" value="0x3"/>
       </value-group>
       <value-group name="SERCOM_USART_CTRLA__TXPO">
-        <value name="PAD0" caption="SERCOM PAD[0] is used for data transmission" value="0x0"/>
-        <value name="PAD2" caption="SERCOM PAD[2] is used for data transmission" value="0x1"/>
+        <value name="PAD0" caption="PAD[0] = TxD; PAD[1] = XCK" value="0x0"/>
+        <value name="PAD1" caption="PAD[2] = TxD; PAD[3] = XCK" value="0x1"/>
+        <value name="PAD2" caption="PAD[0] = TxD; PAD[2] = RTS; PAD[3] = CTS" value="0x2"/>
       </value-group>
       <value-group name="SERCOM_USART_CTRLA__SAMPR">
         <value name="16X_ARITHMETIC" caption="16x over-sampling using arithmetic baudrate generation" value="0x0"/>
@@ -3581,6 +3584,12 @@
         <value name="8X_ARITHMETIC" caption="8x over-sampling using arithmetic baudrate generation" value="0x2"/>
         <value name="8X_FRACTIONAL" caption="8x over-sampling using fractional baudrate generation" value="0x3"/>
         <value name="3X_ARITHMETIC" caption="3x over-sampling using arithmetic baudrate generation" value="0x4"/>
+      </value-group>
+      <value-group name="SERCOM_USART_CTRLA__SAMPA">
+        <value name="ADJ0" caption="16x Over-sampling = 7-8-9; 8x Over-sampling = 3-4-5" value="0x0"/>
+        <value name="ADJ1" caption="16x Over-sampling = 9-10-11; 8x Over-sampling = 4-5-6" value="0x1"/>
+        <value name="ADJ2" caption="16x Over-sampling = 11-12-13; 8x Over-sampling = 5-6-7" value="0x2"/>
+        <value name="ADJ3" caption="16x Over-sampling = 13-14-15; 8x Over-sampling = 6-7-8" value="0x3"/>
       </value-group>
       <value-group name="SERCOM_USART_CTRLB__CHSIZE">
         <value name="8_BIT" caption="8 Bits" value="0x0"/>
@@ -3851,7 +3860,7 @@
         <value name="CYCLE130" caption="3.967 ms" value="7"/>
       </value-group>
       <value-group name="SYSCTRL_XOSC32K__STARTUP">
-        <value name="CYCLE1" caption="0.112 ms" value="0"/>
+        <value name="CYCLE1" caption="0.122 ms" value="0"/>
         <value name="CYCLE32" caption="1.068 ms" value="1"/>
         <value name="CYCLE2048" caption="62.592 ms" value="2"/>
         <value name="CYCLE4096" caption="125.092 ms" value="3"/>
