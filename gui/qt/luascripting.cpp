@@ -12,8 +12,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,6 +37,7 @@
 #include "../../core/panel.h"
 #include "../../core/port.h"
 #include "../../core/schedule.h"
+#include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 
 namespace {
@@ -190,6 +193,68 @@ uint32_t memoryCrc32(uint32_t address, uint32_t length) {
     return ~crc;
 }
 
+std::string normalizedVariableTypeName(std::string name) {
+    std::string normalized;
+    for (const unsigned char character : name) {
+        if (std::isalnum(character)) normalized.push_back(static_cast<char>(std::tolower(character)));
+    }
+    return normalized;
+}
+
+std::optional<calc_var_type_t> variableTypeFilter(const sol::optional<sol::object> &value) {
+    if (!value || !value->valid() || value->get_type() == sol::type::lua_nil) return std::nullopt;
+    if (value->is<unsigned int>()) {
+        const unsigned int type = value->as<unsigned int>();
+        if (type >= std::size(calc_var_type_names)) throw sol::error("variable type must be between 0 and 63");
+        return static_cast<calc_var_type_t>(type);
+    }
+    if (!value->is<std::string>()) throw sol::error("variable type must be a numeric ID or type name");
+    const std::string wanted = normalizedVariableTypeName(value->as<std::string>());
+    for (size_t type = 0; type < std::size(calc_var_type_names); ++type) {
+        if (wanted == normalizedVariableTypeName(calc_var_type_names[type])) {
+            return static_cast<calc_var_type_t>(type);
+        }
+    }
+    throw sol::error("unknown calculator variable type");
+}
+
+bool variableTypeMatches(const calc_var_t &var, const std::optional<calc_var_type_t> &filter) {
+    return !filter || calc_var_normalized_type(var.type) == calc_var_normalized_type(*filter);
+}
+
+std::string variableName(const calc_var_t &var) {
+    return calc_var_name_to_utf8(var.name, var.namelen, var.named);
+}
+
+bool findVariable(const std::string &name, const std::optional<calc_var_type_t> &filter, calc_var_t &result) {
+    vat_search_init(&result);
+    while (vat_search_next(&result)) {
+        if (variableTypeMatches(result, filter) && variableName(result) == name) return true;
+    }
+    return false;
+}
+
+sol::table variableInfo(const sol::this_state &thisState, const calc_var_t &var) {
+    sol::state_view lua(thisState);
+    const calc_var_type_t normalizedType = calc_var_normalized_type(var.type);
+    return lua.create_table_with(
+        "name", variableName(var),
+        "rawName", std::string(reinterpret_cast<const char *>(var.name), var.namelen),
+        "type", calc_var_type_names[var.type],
+        "typeId", static_cast<unsigned int>(var.type),
+        "normalizedType", calc_var_type_names[normalizedType],
+        "normalizedTypeId", static_cast<unsigned int>(normalizedType),
+        "size", var.size,
+        "address", var.address,
+        "vatAddress", var.originalVat,
+        "version", var.version,
+        "archived", var.archived,
+        "named", var.named,
+        "tokenized", calc_var_is_tokenized(&var),
+        "python", calc_var_is_python_appvar(&var),
+        "internal", calc_var_is_internal(&var));
+}
+
 } // namespace
 
 void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
@@ -340,6 +405,51 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
             if (equal) matches[++count] = address + offset;
         }
         return matches;
+    });
+
+    sol::table variableTable = lua.create_named_table("vars");
+    variableTable.set_function("list", [](const sol::this_state &thisState,
+                                           sol::optional<sol::object> requestedType) {
+        const std::optional<calc_var_type_t> filter = variableTypeFilter(requestedType);
+        sol::state_view view(thisState);
+        sol::table variables = view.create_table();
+        calc_var_t var;
+        vat_search_init(&var);
+        unsigned int index = 0;
+        while (vat_search_next(&var)) {
+            if (variableTypeMatches(var, filter)) variables[++index] = variableInfo(thisState, var);
+        }
+        return variables;
+    });
+    variableTable.set_function("find", [](const sol::this_state &thisState, const std::string &name,
+                                           sol::optional<sol::object> requestedType) {
+        calc_var_t var;
+        if (!findVariable(name, variableTypeFilter(requestedType), var)) return sol::make_object(thisState, sol::lua_nil);
+        return sol::make_object(thisState, variableInfo(thisState, var));
+    });
+    variableTable.set_function("read", [](const sol::this_state &thisState, const std::string &name,
+                                           sol::optional<sol::object> requestedType) {
+        calc_var_t var;
+        if (!findVariable(name, variableTypeFilter(requestedType), var)) return sol::make_object(thisState, sol::lua_nil);
+        return sol::make_object(thisState,
+            std::string(reinterpret_cast<const char *>(var.data), var.size));
+    });
+    variableTable.set_function("launch", [this](const std::string &name,
+                                                  sol::optional<sol::object> requestedType) {
+        calc_var_t var;
+        if (!findVariable(name, variableTypeFilter(requestedType), var)) throw sol::error("calculator variable not found");
+        if (!calc_var_is_prog(&var) || calc_var_is_internal(&var)) {
+            throw sol::error("calculator variable is not a launchable program");
+        }
+        varLaunch(&var);
+    });
+    variableTable.set_function("types", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table types = view.create_table(64, 0);
+        for (unsigned int type = 0; type < std::size(calc_var_type_names); ++type) {
+            types[type + 1] = view.create_table_with("id", type, "name", calc_var_type_names[type]);
+        }
+        return types;
     });
 
     sol::table peripherals = lua.create_named_table("peripherals");
