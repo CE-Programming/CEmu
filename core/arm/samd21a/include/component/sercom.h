@@ -302,12 +302,26 @@ typedef union {
 #define SERCOM_USART_CTRLA_TXPO_Pos 16           /**< \brief (SERCOM_USART_CTRLA) Transmit Data Pinout */
 #define SERCOM_USART_CTRLA_TXPO_Msk (_U_(0x3) << SERCOM_USART_CTRLA_TXPO_Pos)
 #define SERCOM_USART_CTRLA_TXPO(value) (SERCOM_USART_CTRLA_TXPO_Msk & ((value) << SERCOM_USART_CTRLA_TXPO_Pos))
+#define   SERCOM_USART_CTRLA_TXPO_PAD0_Val _U_(0x0)   /**< \brief (SERCOM_USART_CTRLA) PAD[0] = TxD; PAD[1] = XCK */
+#define   SERCOM_USART_CTRLA_TXPO_PAD1_Val _U_(0x1)   /**< \brief (SERCOM_USART_CTRLA) PAD[2] = TxD; PAD[3] = XCK */
+#define   SERCOM_USART_CTRLA_TXPO_PAD2_Val _U_(0x2)   /**< \brief (SERCOM_USART_CTRLA) PAD[0] = TxD; PAD[2] = RTS; PAD[3] = CTS */
+#define SERCOM_USART_CTRLA_TXPO_PAD0 (SERCOM_USART_CTRLA_TXPO_PAD0_Val << SERCOM_USART_CTRLA_TXPO_Pos)
+#define SERCOM_USART_CTRLA_TXPO_PAD1 (SERCOM_USART_CTRLA_TXPO_PAD1_Val << SERCOM_USART_CTRLA_TXPO_Pos)
+#define SERCOM_USART_CTRLA_TXPO_PAD2 (SERCOM_USART_CTRLA_TXPO_PAD2_Val << SERCOM_USART_CTRLA_TXPO_Pos)
 #define SERCOM_USART_CTRLA_RXPO_Pos 20           /**< \brief (SERCOM_USART_CTRLA) Receive Data Pinout */
 #define SERCOM_USART_CTRLA_RXPO_Msk (_U_(0x3) << SERCOM_USART_CTRLA_RXPO_Pos)
 #define SERCOM_USART_CTRLA_RXPO(value) (SERCOM_USART_CTRLA_RXPO_Msk & ((value) << SERCOM_USART_CTRLA_RXPO_Pos))
 #define SERCOM_USART_CTRLA_SAMPA_Pos 22           /**< \brief (SERCOM_USART_CTRLA) Sample Adjustment */
 #define SERCOM_USART_CTRLA_SAMPA_Msk (_U_(0x3) << SERCOM_USART_CTRLA_SAMPA_Pos)
 #define SERCOM_USART_CTRLA_SAMPA(value) (SERCOM_USART_CTRLA_SAMPA_Msk & ((value) << SERCOM_USART_CTRLA_SAMPA_Pos))
+#define   SERCOM_USART_CTRLA_SAMPA_ADJ0_Val _U_(0x0)   /**< \brief (SERCOM_USART_CTRLA) 16x: 7-8-9; 8x: 3-4-5 */
+#define   SERCOM_USART_CTRLA_SAMPA_ADJ1_Val _U_(0x1)   /**< \brief (SERCOM_USART_CTRLA) 16x: 9-10-11; 8x: 4-5-6 */
+#define   SERCOM_USART_CTRLA_SAMPA_ADJ2_Val _U_(0x2)   /**< \brief (SERCOM_USART_CTRLA) 16x: 11-12-13; 8x: 5-6-7 */
+#define   SERCOM_USART_CTRLA_SAMPA_ADJ3_Val _U_(0x3)   /**< \brief (SERCOM_USART_CTRLA) 16x: 13-14-15; 8x: 6-7-8 */
+#define SERCOM_USART_CTRLA_SAMPA_ADJ0 (SERCOM_USART_CTRLA_SAMPA_ADJ0_Val << SERCOM_USART_CTRLA_SAMPA_Pos)
+#define SERCOM_USART_CTRLA_SAMPA_ADJ1 (SERCOM_USART_CTRLA_SAMPA_ADJ1_Val << SERCOM_USART_CTRLA_SAMPA_Pos)
+#define SERCOM_USART_CTRLA_SAMPA_ADJ2 (SERCOM_USART_CTRLA_SAMPA_ADJ2_Val << SERCOM_USART_CTRLA_SAMPA_Pos)
+#define SERCOM_USART_CTRLA_SAMPA_ADJ3 (SERCOM_USART_CTRLA_SAMPA_ADJ3_Val << SERCOM_USART_CTRLA_SAMPA_Pos)
 #define SERCOM_USART_CTRLA_FORM_Pos 24           /**< \brief (SERCOM_USART_CTRLA) Frame Format */
 #define SERCOM_USART_CTRLA_FORM_Msk (_U_(0xF) << SERCOM_USART_CTRLA_FORM_Pos)
 #define SERCOM_USART_CTRLA_FORM(value) (SERCOM_USART_CTRLA_FORM_Msk & ((value) << SERCOM_USART_CTRLA_FORM_Pos))
@@ -1056,7 +1070,8 @@ typedef union {
     uint16_t CTS:1;            /*!< bit:      3  Clear To Send                      */
     uint16_t ISF:1;            /*!< bit:      4  Inconsistent Sync Field            */
     uint16_t COLL:1;           /*!< bit:      5  Collision Detected                 */
-    uint16_t :10;              /*!< bit:  6..15  Reserved                           */
+    uint16_t TXE:1;            /*!< bit:      6  Transmitter Empty                  */
+    uint16_t :9;               /*!< bit:  7..15  Reserved                           */
   } bit;                       /*!< Structure used for bit  access                  */
   uint16_t reg;                /*!< Type      used for register access              */
 } SERCOM_USART_STATUS_Type;
@@ -1077,7 +1092,9 @@ typedef union {
 #define SERCOM_USART_STATUS_ISF     (_U_(0x1) << SERCOM_USART_STATUS_ISF_Pos)
 #define SERCOM_USART_STATUS_COLL_Pos 5            /**< \brief (SERCOM_USART_STATUS) Collision Detected */
 #define SERCOM_USART_STATUS_COLL    (_U_(0x1) << SERCOM_USART_STATUS_COLL_Pos)
-#define SERCOM_USART_STATUS_MASK    _U_(0x003F)  /**< \brief (SERCOM_USART_STATUS) MASK Register */
+#define SERCOM_USART_STATUS_TXE_Pos 6            /**< \brief (SERCOM_USART_STATUS) Transmitter Empty */
+#define SERCOM_USART_STATUS_TXE     (_U_(0x1) << SERCOM_USART_STATUS_TXE_Pos)
+#define SERCOM_USART_STATUS_MASK    _U_(0x007F)  /**< \brief (SERCOM_USART_STATUS) MASK Register */
 
 /* -------- SERCOM_I2CM_SYNCBUSY : (SERCOM Offset: 0x1C) (R/  32) I2CM I2CM Syncbusy -------- */
 #if !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
