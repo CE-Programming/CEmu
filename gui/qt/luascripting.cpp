@@ -7,6 +7,7 @@
 #include <QtCore/QTextStream>
 #include <QtGui/QDesktopServices>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QAbstractButton>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QMessageBox>
 
@@ -147,15 +148,16 @@ constexpr std::array<const char *, 16> PeripheralNames = {
     "rtc", "protected", "keypad", "backlight", "misc", "spi", "uart", "reserved"
 };
 
+constexpr std::array<const char *, DBG_REG_COUNT> RegisterNames = {
+    "a", "f", "b", "c", "d", "e", "h", "l", "ixh", "ixl", "iyh", "iyl",
+    "a_", "f_", "b_", "c_", "d_", "e_", "h_", "l_", "af", "bc", "de", "hl",
+    "ix", "iy", "af_", "bc_", "de_", "hl_", "sps", "spl", "pc", "i", "r", "mbase"
+};
+
 int registerId(std::string name) {
-    static constexpr std::array<const char *, DBG_REG_COUNT> RegNames = {
-        "a", "f", "b", "c", "d", "e", "h", "l", "ixh", "ixl", "iyh", "iyl",
-        "a_", "f_", "b_", "c_", "d_", "e_", "h_", "l_", "af", "bc", "de", "hl",
-        "ix", "iy", "af_", "bc_", "de_", "hl_", "sps", "spl", "pc", "i", "r", "mbase"
-    };
     std::ranges::transform(name, name.begin(), [](unsigned char c){ return std::tolower(c); });
-    const auto found = std::ranges::find_if(RegNames, [&name](const char *r) { return name == r; });
-    return found == RegNames.cend() ? -1 : static_cast<int>(found - RegNames.cbegin());
+    const auto found = std::ranges::find_if(RegisterNames, [&name](const char *r) { return name == r; });
+    return found == RegisterNames.cend() ? -1 : static_cast<int>(found - RegisterNames.cbegin());
 }
 
 void validateMemoryRange(uint32_t address, uint32_t length) {
@@ -719,6 +721,119 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         sol::state_view view(thisState);
         return view.create_table_with("read", static_cast<bool>(mask & DBG_MASK_READ),
                                       "write", static_cast<bool>(mask & DBG_MASK_WRITE));
+    });
+    debugTable.set_function("breakpoints", [this](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table result = view.create_table();
+        unsigned int index = 0;
+        for (int row = 0; row < m_breakpoints->rowCount(); ++row) {
+            const QString address = m_breakpoints->item(row, BREAK_ADDR_COL)->text();
+            if (address == DEBUG_UNSET_ADDR) continue;
+            result[++index] = view.create_table_with(
+                "address", static_cast<uint32_t>(hex2int(address)),
+                "label", m_breakpoints->item(row, BREAK_NAME_COL)->text().toStdString(),
+                "enabled", static_cast<QAbstractButton *>(m_breakpoints->cellWidget(row, BREAK_ENABLE_COL))->isChecked());
+        }
+        return result;
+    });
+    debugTable.set_function("watchpoints", [this](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table result = view.create_table();
+        unsigned int index = 0;
+        for (int row = 0; row < m_watchpoints->rowCount(); ++row) {
+            const QString low = m_watchpoints->item(row, WATCH_LOW_COL)->text();
+            const QString high = m_watchpoints->item(row, WATCH_HIGH_COL)->text();
+            if (low == DEBUG_UNSET_ADDR || high == DEBUG_UNSET_ADDR) continue;
+            result[++index] = view.create_table_with(
+                "low", static_cast<uint32_t>(hex2int(low)),
+                "high", static_cast<uint32_t>(hex2int(high)),
+                "label", m_watchpoints->item(row, WATCH_NAME_COL)->text().toStdString(),
+                "read", static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_COL))->isChecked(),
+                "write", static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_COL))->isChecked());
+        }
+        return result;
+    });
+    debugTable.set_function("peripheralMonitors", [this](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table result = view.create_table();
+        unsigned int index = 0;
+        for (int row = 0; row < m_ports->rowCount(); ++row) {
+            const QString address = m_ports->item(row, PORT_ADDR_COL)->text();
+            if (address == DEBUG_UNSET_PORT) continue;
+            result[++index] = view.create_table_with(
+                "address", static_cast<uint16_t>(hex2int(address)),
+                "value", static_cast<uint8_t>(hex2int(m_ports->item(row, PORT_VALUE_COL)->text())),
+                "read", static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_READ_COL))->isChecked(),
+                "write", static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_WRITE_COL))->isChecked(),
+                "freeze", static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_FREEZE_COL))->isChecked());
+        }
+        return result;
+    });
+    debugTable.set_function("registerWatches", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table result = view.create_table();
+        unsigned int index = 0;
+        for (unsigned int id = 0; id < RegisterNames.size(); ++id) {
+            const int mask = debug_reg_get_mask(id);
+            if (mask == DBG_MASK_NONE) continue;
+            result[++index] = view.create_table_with(
+                "name", RegisterNames[id],
+                "id", id,
+                "read", static_cast<bool>(mask & DBG_MASK_READ),
+                "write", static_cast<bool>(mask & DBG_MASK_WRITE));
+        }
+        return result;
+    });
+    debugTable.set_function("registerSnapshot", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        return view.create_table_with(
+            "af", cpu.registers.AF, "bc", cpu.registers.BC, "de", cpu.registers.DE,
+            "hl", cpu.registers.HL, "ix", cpu.registers.IX, "iy", cpu.registers.IY,
+            "af_", cpu.registers._AF, "bc_", cpu.registers._BC, "de_", cpu.registers._DE,
+            "hl_", cpu.registers._HL, "sps", cpu.registers.SPS, "spl", cpu.registers.SPL,
+            "pc", cpu.registers.PC, "i", cpu.registers.I, "r", cpu.registers.R,
+            "mbase", cpu.registers.MBASE, "adl", static_cast<bool>(cpu.ADL),
+            "madl", static_cast<bool>(cpu.MADL), "halted", static_cast<bool>(cpu.halted),
+            "ief1", static_cast<bool>(cpu.IEF1), "ief2", static_cast<bool>(cpu.IEF2));
+    });
+    debugTable.set_function("equates", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        sol::table result = view.create_table(static_cast<int>(disasm.reverse.size()), 0);
+        unsigned int index = 0;
+        for (const auto &[name, address] : disasm.reverse) {
+            result[++index] = view.create_table_with("name", name, "address", address);
+        }
+        return result;
+    });
+    debugTable.set_function("resolveSymbol", [](const sol::this_state &thisState, std::string name) {
+        std::ranges::transform(name, name.begin(), [](unsigned char c) { return std::toupper(c); });
+        const auto found = disasm.reverse.find(name);
+        return found == disasm.reverse.end() ? sol::make_object(thisState, sol::lua_nil)
+                                             : sol::make_object(thisState, found->second);
+    });
+    debugTable.set_function("symbolsAt", [](const sol::this_state &thisState, uint32_t address) {
+        sol::state_view view(thisState);
+        sol::table result = view.create_table();
+        const auto [begin, end] = disasm.map.equal_range(address & 0xFFFFFF);
+        unsigned int index = 0;
+        for (auto symbol = begin; symbol != end; ++symbol) result[++index] = symbol->second;
+        return result;
+    });
+    debugTable.set_function("symbolAt", [](const sol::this_state &thisState, uint32_t address) {
+        const auto found = disasm.map.find(address & 0xFFFFFF);
+        return found == disasm.map.end() ? sol::make_object(thisState, sol::lua_nil)
+                                         : sol::make_object(thisState, found->second);
+    });
+    debugTable.set_function("loadEquates", [this](const std::string &path) {
+        const QString file = QString::fromStdString(path);
+        if (!m_equateFiles.contains(file)) m_equateFiles.append(file);
+        equatesAddFile(file);
+    });
+    debugTable.set_function("clearBreakpoints", [this] {
+        while (m_breakpoints->rowCount()) breakRemoveRow(m_breakpoints->rowCount() - 1);
+    });
+    debugTable.set_function("clearWatchpoints", [this] {
+        while (m_watchpoints->rowCount()) watchRemoveRow(m_watchpoints->rowCount() - 1);
     });
     debugTable.set_function("gotoDisasm", [this](uint32_t address) { gotoDisasmAddr(address); });
     debugTable.set_function("disasm", [](const sol::this_state &thisState, uint32_t address, sol::optional<bool> useCpuMode) {

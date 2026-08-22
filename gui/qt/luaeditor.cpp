@@ -106,7 +106,9 @@ const QHash<QString, QStringList> &completionMembers()
         {words("dbg"), wordList("stop resume stepIn stepOver stepNext stepOut stepUntilReturn "
                                 "addBreakpoint "
                                 "removeBreakpoint addWatchpoint removeWatchpoint watchRegister "
-                                "registerWatchState "
+                                "registerWatchState breakpoints watchpoints peripheralMonitors "
+                                "registerWatches registerSnapshot equates resolveSymbol symbolAt symbolsAt "
+                                "loadEquates clearBreakpoints clearWatchpoints "
                                 "gotoDisasm disasm disasmPC")},
         {words("debug"), wordList("debug gethook getinfo getlocal getmetatable getregistry "
                                   "getupvalue getuservalue setcstacklimit sethook setlocal "
