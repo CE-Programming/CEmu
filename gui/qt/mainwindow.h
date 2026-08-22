@@ -684,6 +684,11 @@ private:
     bool emitLuaEventForState(sol::state &lua, bool initialized,
                               const std::string &name,
                               const std::function<void(sol::table &)> &populate);
+    uint64_t addLuaTimer(sol::state &lua, sol::protected_function callback,
+                         uint64_t delay, uint64_t interval, bool cycles);
+    bool cancelLuaTimer(uint64_t id);
+    void clearLuaTimers(sol::state *lua = nullptr);
+    void processLuaTimers();
     void loadLuaScript();
     void loadLuaScript(const QString &path);
     void saveLuaScript();
@@ -866,6 +871,17 @@ private:
 
     sol::state ed_lua;
     sol::state repl_lua;
+    struct LuaTimer {
+        uint64_t id;
+        sol::state *lua;
+        sol::protected_function callback;
+        uint64_t deadline;
+        uint64_t interval;
+        bool cycles;
+    };
+    QTimer m_luaTimerPoll;
+    std::vector<LuaTimer> m_luaTimers;
+    uint64_t m_nextLuaTimerId = 1;
     bool m_edLuaInitialized = false;
     bool m_replLuaInitialized = false;
     bool m_luaAutoloadRan = false;

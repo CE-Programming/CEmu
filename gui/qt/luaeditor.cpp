@@ -99,7 +99,8 @@ const QHash<QString, QStringList> &completionMembers()
         {words("keys"), wordList("press sequence down up hold")},
         {words("gui"), wordList("screenshot refresh messageBox status setKeypadColor "
                                 "setFullscreen openScriptsFolder quit")},
-        {words("emu"), wordList("reset reloadROM throttle setSpeed wait "
+        {words("emu"), wordList("reset reloadROM throttle setSpeed wait time cycles "
+                                "after afterCycles every everyCycles cancel cancelAll "
                                 "saveState loadState sendFile deviceType")},
         {words("dbg"), wordList("stop resume stepIn stepOver stepNext stepOut stepUntilReturn "
                                 "addBreakpoint "

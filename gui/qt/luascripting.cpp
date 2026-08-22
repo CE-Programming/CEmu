@@ -12,6 +12,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -32,6 +34,7 @@
 #include "../../core/mem.h"
 #include "../../core/panel.h"
 #include "../../core/port.h"
+#include "../../core/schedule.h"
 #include "../../core/debug/debug.h"
 
 namespace {
@@ -155,6 +158,7 @@ int registerId(std::string name) {
 } // namespace
 
 void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
+    clearLuaTimers(&lua);
     lua = sol::state{};
 
     lua.set_panic([](lua_State *state) {
@@ -423,7 +427,7 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "quit", [] { QTimer::singleShot(0, qApp, &QCoreApplication::quit); }
     );
 
-    lua.create_named_table("emu",
+    sol::table emuTable = lua.create_named_table("emu",
         "reset", [this] { resetEmu(); },
         "reloadROM", [this] { emuLoad(EMU_DATA_ROM); },
         "throttle", [this](bool enabled) { setThrottle(enabled ? Qt::Checked : Qt::Unchecked); },
@@ -436,6 +440,39 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         },
         "deviceType", [] { return static_cast<int>(get_device_type()); }
     );
+    const auto millisecondsToTicks = [](double milliseconds, bool allowZero) {
+        if (!std::isfinite(milliseconds) || milliseconds < 0.0 || (!allowZero && milliseconds == 0.0)) {
+            throw sol::error(allowZero ? "delay must be a finite non-negative number"
+                                       : "interval must be a finite positive number");
+        }
+        constexpr double TicksPerMillisecond = 48000.0;
+        if (milliseconds > static_cast<double>((std::numeric_limits<uint64_t>::max)()) / TicksPerMillisecond) {
+            throw sol::error("timer delay is too large");
+        }
+        return static_cast<uint64_t>(std::ceil(milliseconds * TicksPerMillisecond));
+    };
+    emuTable.set_function("time", [] {
+        return static_cast<double>(sched_total_time(CLOCK_48M)) / 48000.0;
+    });
+    emuTable.set_function("cycles", [] { return sched_total_cycles(); });
+    emuTable.set_function("after", [this, &lua, millisecondsToTicks](double milliseconds,
+                                                                     sol::protected_function callback) {
+        return addLuaTimer(lua, std::move(callback), millisecondsToTicks(milliseconds, true), 0, false);
+    });
+    emuTable.set_function("afterCycles", [this, &lua](uint64_t cycles, sol::protected_function callback) {
+        return addLuaTimer(lua, std::move(callback), cycles, 0, true);
+    });
+    emuTable.set_function("every", [this, &lua, millisecondsToTicks](double milliseconds,
+                                                                     sol::protected_function callback) {
+        const uint64_t interval = millisecondsToTicks(milliseconds, false);
+        return addLuaTimer(lua, std::move(callback), interval, interval, false);
+    });
+    emuTable.set_function("everyCycles", [this, &lua](uint64_t cycles, sol::protected_function callback) {
+        if (cycles == 0) throw sol::error("cycle interval must be positive");
+        return addLuaTimer(lua, std::move(callback), cycles, cycles, true);
+    });
+    emuTable.set_function("cancel", [this](uint64_t id) { return cancelLuaTimer(id); });
+    emuTable.set_function("cancelAll", [this, &lua] { clearLuaTimers(&lua); });
 
     sol::table debugTable = lua.create_named_table("dbg");
     debugTable.set_function("stop", [this] { if (!guiDebug) debugToggle(); });
@@ -770,6 +807,78 @@ bool MainWindow::emitLuaEvent(const std::string &name, const std::function<void(
     const bool editorResult = emitLuaEventForState(ed_lua, m_edLuaInitialized, name, populate);
     const bool replResult = emitLuaEventForState(repl_lua, m_replLuaInitialized, name, populate);
     return editorResult && replResult;
+}
+
+uint64_t MainWindow::addLuaTimer(sol::state &lua, sol::protected_function callback,
+                                 uint64_t delay, uint64_t interval, bool cycles) {
+    if (!callback.valid()) throw sol::error("timer callback must be a function");
+    const uint64_t now = cycles ? sched_total_cycles() : sched_total_time(CLOCK_48M);
+    if (delay > (std::numeric_limits<uint64_t>::max)() - now) throw sol::error("timer deadline is too large");
+    const uint64_t id = m_nextLuaTimerId++;
+    m_luaTimers.push_back({id, &lua, std::move(callback), now + delay, interval, cycles});
+    if (!m_luaTimerPoll.isActive()) m_luaTimerPoll.start(1);
+    return id;
+}
+
+bool MainWindow::cancelLuaTimer(uint64_t id) {
+    const auto timer = std::ranges::find_if(m_luaTimers, [id](const LuaTimer &item) { return item.id == id; });
+    if (timer == m_luaTimers.end()) return false;
+    m_luaTimers.erase(timer);
+    if (m_luaTimers.empty()) m_luaTimerPoll.stop();
+    return true;
+}
+
+void MainWindow::clearLuaTimers(sol::state *lua) {
+    std::erase_if(m_luaTimers, [lua](const LuaTimer &timer) { return !lua || timer.lua == lua; });
+    if (m_luaTimers.empty()) m_luaTimerPoll.stop();
+}
+
+void MainWindow::processLuaTimers() {
+    const uint64_t nowTime = sched_total_time(CLOCK_48M);
+    const uint64_t nowCycles = sched_total_cycles();
+    std::vector<uint64_t> due;
+    due.reserve(m_luaTimers.size());
+    for (const LuaTimer &timer : m_luaTimers) {
+        if ((timer.cycles ? nowCycles : nowTime) >= timer.deadline) due.push_back(timer.id);
+    }
+
+    for (uint64_t id : due) {
+        const auto found = std::ranges::find_if(m_luaTimers, [id](const LuaTimer &item) { return item.id == id; });
+        if (found == m_luaTimers.end()) continue;
+
+        sol::state *lua = found->lua;
+        sol::protected_function callback = found->callback;
+        const bool cycles = found->cycles;
+        const uint64_t deadline = found->deadline;
+        const uint64_t interval = found->interval;
+        const uint64_t now = cycles ? nowCycles : nowTime;
+
+        if (interval == 0) {
+            m_luaTimers.erase(found);
+        } else {
+            const uint64_t elapsedIntervals = (now - deadline) / interval + 1;
+            found->deadline += elapsedIntervals * interval;
+        }
+
+        sol::table payload = lua->create_table_with(
+            "id", id,
+            "time", static_cast<double>(nowTime) / 48000.0,
+            "cycles", nowCycles);
+        if (cycles) {
+            payload["late"] = now - deadline;
+        } else {
+            payload["late"] = static_cast<double>(now - deadline) / 48000.0;
+        }
+        const sol::protected_function_result result = callback(payload);
+        if (!result.valid()) {
+            console(QStringLiteral("[Lua] Timer callback failed: ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+            cancelLuaTimer(id);
+        } else if (result.get_type() == sol::type::boolean && !result.get<bool>()) {
+            cancelLuaTimer(id);
+        }
+    }
+
+    if (m_luaTimers.empty()) m_luaTimerPoll.stop();
 }
 
 void MainWindow::loadLuaScript() {

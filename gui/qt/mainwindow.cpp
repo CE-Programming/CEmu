@@ -613,6 +613,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonSaveLuaScript, &QPushButton::clicked, this, &MainWindow::saveLuaScript);
     connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [&](){ this->initLuaThings(repl_lua, true); });
     connect(ui->clearREPLConsole, &QPushButton::clicked, ui->REPLConsole, &QPlainTextEdit::clear);
+    connect(&m_luaTimerPoll, &QTimer::timeout, this, &MainWindow::processLuaTimers);
     connect(ui->REPLInput, &QLineEdit::returnPressed, this, &MainWindow::LuaREPLeval);
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
