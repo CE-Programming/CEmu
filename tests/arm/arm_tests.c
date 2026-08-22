@@ -560,6 +560,35 @@ static void test_sercom_status_polling(void) {
     destroy_arm(&arm);
 }
 
+static void test_usart_transmitter_empty_status(void) {
+    arm_t arm;
+    const uint32_t status_address = HPB2_ADDR +
+        ((ID_SERCOM0 - ID_PAC2) << 10) + SERCOM_USART_INTFLAG_OFFSET;
+    init_arm(&arm);
+
+    SERCOM_USART_Type *usart = &arm.mem.sercom[0].USART;
+    usart->CTRLA.bit.MODE = SERCOM_USART_CTRLA_MODE_USART_INT_CLK_Val;
+    usart->STATUS.bit.TXE = true;
+    arm_mem_update_pending(&arm);
+    CHECK(!usart->INTFLAG.bit.ERROR,
+          "USART TXE status is not reported as an error");
+    CHECK(!(arm_mem_load_word(&arm, status_address) &
+            (SERCOM_USART_STATUS_TXE << 16)),
+          "USART TXE status always reads as zero");
+
+    usart->STATUS.bit.FERR = true;
+    arm_mem_update_pending(&arm);
+    CHECK(usart->INTFLAG.bit.ERROR,
+          "USART frame errors raise the aggregate error flag");
+    usart->STATUS.bit.FERR = false;
+
+    arm_mem_store_word(&arm, SERCOM_USART_STATUS_TXE << 16, status_address);
+    CHECK(!usart->STATUS.bit.TXE,
+          "writing one clears the USART TXE status bit");
+
+    destroy_arm(&arm);
+}
+
 static void test_spi_transmit_shift_register(void) {
     arm_t arm;
     uint32_t response;
@@ -1065,6 +1094,7 @@ int main(void) {
     test_svc_instruction_pending();
     test_peripheral_reset();
     test_sercom_status_polling();
+    test_usart_transmitter_empty_status();
     test_spi_transmit_shift_register();
     test_spi_preload_after_selection();
     test_spi_transmit_with_receiver_disabled();
