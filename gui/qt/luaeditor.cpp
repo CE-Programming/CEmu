@@ -80,7 +80,7 @@ const QHash<QString, QStringList> &completionMembers()
                                                "protected keypad backlight "
                                                "misc spi uart reserved");
     static const QHash<QString, QStringList> values = {
-        {words("cemu"), wordList("on off")},
+        {words("cemu"), wordList("on off onUnload offUnload cleanup stopScript reloadScript scriptPath")},
         {words("cpu"), wordList("registers halted ADL MADL IEF1 IEF2 inBlock cycles next prefetch")},
         {words("cpu.registers"), registers},
         {words("R"), registers},

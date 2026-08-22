@@ -1606,6 +1606,8 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
+    if (m_edLuaInitialized) runLuaCleanup(ed_lua, "shutdown");
+    if (m_replLuaInitialized) runLuaCleanup(repl_lua, "shutdown");
 #ifdef LIBUSB_SUPPORT
     if (m_usbContext) {
         if (m_usbHotplugCallbackHandle) {

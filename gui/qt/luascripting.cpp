@@ -48,6 +48,9 @@ cemu = cemu or {}
 cemu._handlers = {}
 cemu._nextHandler = 0
 cemu._eventSequence = 0
+cemu._unloadHandlers = {}
+cemu._nextUnloadHandler = 0
+cemu._cleaningUp = false
 
 function cemu.on(event, callback, options)
     assert(type(event) == "string", "event name must be a string")
@@ -66,6 +69,45 @@ end
 function cemu.off(event, id)
     local handlers = cemu._handlers[event]
     if handlers then handlers[id] = nil end
+end
+
+function cemu.onUnload(callback)
+    assert(type(callback) == "function", "unload callback must be a function")
+    cemu._nextUnloadHandler = cemu._nextUnloadHandler + 1
+    cemu._unloadHandlers[cemu._nextUnloadHandler] = callback
+    return cemu._nextUnloadHandler
+end
+
+function cemu.offUnload(id)
+    cemu._unloadHandlers[id] = nil
+end
+
+function cemu._cleanup(reason)
+    if cemu._cleaningUp then return false end
+    cemu._cleaningUp = true
+
+    for _, handlers in pairs(cemu._handlers) do
+        for id in pairs(handlers) do handlers[id] = nil end
+    end
+    cemu._handlers = {}
+    if emu and emu.cancelAll then emu.cancelAll() end
+
+    local ids = {}
+    for id in pairs(cemu._unloadHandlers) do ids[#ids + 1] = id end
+    table.sort(ids, function(left, right) return left > right end)
+    local callbacks = cemu._unloadHandlers
+    cemu._unloadHandlers = {}
+    for _, id in ipairs(ids) do
+        local ok, result = pcall(callbacks[id], { reason = reason or "cleanup" })
+        if not ok then cErr("cleanup: " .. tostring(result)) end
+    end
+
+    cemu._cleaningUp = false
+    return true
+end
+
+function cemu.cleanup(reason)
+    return cemu._cleanup(reason or "manual")
 end
 
 function cemu._emit(event, payload)
@@ -260,6 +302,7 @@ sol::table variableInfo(const sol::this_state &thisState, const calc_var_t &var)
 } // namespace
 
 void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
+    if (isREPL ? m_replLuaInitialized : m_edLuaInitialized) runLuaCleanup(lua, "reset");
     clearLuaTimers(&lua);
     lua = sol::state{};
 
@@ -965,6 +1008,26 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
     if (!bootstrap.valid()) {
         console(QStringLiteral("[Lua] Event bootstrap failed: ") + scriptError(bootstrap) + QLatin1Char('\n'), EmuThread::ConsoleErr);
     }
+    sol::table cemuTable = lua["cemu"];
+    cemuTable.set_function("stopScript", [this, &lua] {
+        runLuaCleanup(lua, "stopped");
+        throw sol::error("script stopped");
+    });
+    cemuTable.set_function("reloadScript", [this, &lua, isREPL](sol::optional<std::string> requestedPath) {
+        if (isREPL) throw sol::error("cemu.reloadScript is only available in the Scripts/editor runtime");
+        const QString path = requestedPath
+            ? QFileInfo(QString::fromStdString(*requestedPath)).absoluteFilePath()
+            : m_lastLuaScriptPath;
+        if (path.isEmpty()) throw sol::error("no script path is available to reload");
+        if (!QFileInfo::exists(path)) throw sol::error("script to reload does not exist");
+        runLuaCleanup(lua, "reload");
+        QTimer::singleShot(0, this, [this, path] {
+            initLuaThings(ed_lua, false);
+            m_luaAutoloadRan = true;
+            executeLuaFile(ed_lua, path);
+        });
+        return true;
+    });
     lua.script("dbg.disasmPC = function() return dbg.disasm(cpu.registers.PC, true) end");
     if (isREPL) {
         lua.script("R, F = cpu.registers, cpu.registers.flags");
@@ -1057,6 +1120,8 @@ void MainWindow::refreshLuaScripts() {
 
 void MainWindow::setLuaUnsafe(bool enabled) {
     if (m_luaUnsafe == enabled) return;
+    if (m_edLuaInitialized) runLuaCleanup(ed_lua, "reset");
+    if (m_replLuaInitialized) runLuaCleanup(repl_lua, "reset");
     m_luaUnsafe = enabled;
     m_config->setValue(SETTING_LUA_UNSAFE, enabled);
     m_edLuaInitialized = false;
@@ -1074,13 +1139,28 @@ bool MainWindow::executeLuaFile(sol::state &lua, const QString &path) {
         console(QStringLiteral("[Lua] Script does not exist: ") + path + QLatin1Char('\n'), EmuThread::ConsoleErr);
         return false;
     }
-    const sol::protected_function_result result = lua.safe_script_file(path.toStdString(), sol::script_pass_on_error);
+    const QString absolutePath = QFileInfo(path).absoluteFilePath();
+    if (&lua == &ed_lua) m_lastLuaScriptPath = absolutePath;
+    sol::table cemu = lua["cemu"];
+    cemu["scriptPath"] = absolutePath.toStdString();
+    const sol::protected_function_result result = lua.safe_script_file(absolutePath.toStdString(), sol::script_pass_on_error);
     if (!result.valid()) {
         console(QStringLiteral("[Lua] ") + path + QStringLiteral(": ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
         return false;
     }
-    emitLuaEvent("script-loaded", [&path](sol::table &payload) { payload["path"] = path.toStdString(); });
+    emitLuaEvent("script-loaded", [&absolutePath](sol::table &payload) { payload["path"] = absolutePath.toStdString(); });
     return true;
+}
+
+void MainWindow::runLuaCleanup(sol::state &lua, const std::string &reason) {
+    sol::object cemuObject = lua["cemu"];
+    if (!cemuObject.is<sol::table>()) return;
+    sol::protected_function cleanup = cemuObject.as<sol::table>()["_cleanup"];
+    if (!cleanup.valid()) return;
+    const sol::protected_function_result result = cleanup(reason);
+    if (!result.valid()) {
+        console(QStringLiteral("[Lua] Cleanup failed: ") + scriptError(result) + QLatin1Char('\n'), EmuThread::ConsoleErr);
+    }
 }
 
 void MainWindow::runLuaStartupScripts(const QStringList &cliScripts) {

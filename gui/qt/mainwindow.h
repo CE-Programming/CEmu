@@ -678,6 +678,7 @@ private:
     void refreshLuaScripts();
     void setLuaUnsafe(bool enabled);
     bool executeLuaFile(sol::state &lua, const QString &path);
+    void runLuaCleanup(sol::state &lua, const std::string &reason);
     void runLuaStartupScripts(const QStringList &cliScripts);
     bool emitLuaEvent(const std::string &name,
                       const std::function<void(sol::table &)> &populate = {});
@@ -889,6 +890,7 @@ private:
     bool m_luaUnsafe = false;
     bool m_refreshingLuaScripts = false;
     QString m_currentLuaScript;
+    QString m_lastLuaScriptPath;
 
     static const char *m_varExtensions[];
 
