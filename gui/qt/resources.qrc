@@ -92,5 +92,30 @@
         <file>i18n/nl_NL.qm</file>
         <file>i18n/zh_CN.qm</file>
     </qresource>
+    <qresource prefix="/lua/examples">
+        <file alias="basic_debugger.lua">../../scripts/examples/basic_debugger.lua</file>
+        <file alias="bulk_memory.lua">../../scripts/examples/bulk_memory.lua</file>
+        <file alias="conditional_breakpoint.lua">../../scripts/examples/conditional_breakpoint.lua</file>
+        <file alias="create_program.lua">../../scripts/examples/create_program.lua</file>
+        <file alias="debugger_snapshot.lua">../../scripts/examples/debugger_snapshot.lua</file>
+        <file alias="disassembly_walk.lua">../../scripts/examples/disassembly_walk.lua</file>
+        <file alias="event_logger.lua">../../scripts/examples/event_logger.lua</file>
+        <file alias="filtered_events.lua">../../scripts/examples/filtered_events.lua</file>
+        <file alias="framebuffer_inspection.lua">../../scripts/examples/framebuffer_inspection.lua</file>
+        <file alias="hello_cemu.lua">../../scripts/examples/hello_cemu.lua</file>
+        <file alias="key_sequence.lua">../../scripts/examples/key_sequence.lua</file>
+        <file alias="lcd_diagnostics.lua">../../scripts/examples/lcd_diagnostics.lua</file>
+        <file alias="lifecycle_cleanup.lua">../../scripts/examples/lifecycle_cleanup.lua</file>
+        <file alias="memory_dump.lua">../../scripts/examples/memory_dump.lua</file>
+        <file alias="memory_watchpoint.lua">../../scripts/examples/memory_watchpoint.lua</file>
+        <file alias="peripheral_inspector.lua">../../scripts/examples/peripheral_inspector.lua</file>
+        <file alias="peripheral_monitor.lua">../../scripts/examples/peripheral_monitor.lua</file>
+        <file alias="register_watch.lua">../../scripts/examples/register_watch.lua</file>
+        <file alias="screenshot.lua">../../scripts/examples/screenshot.lua</file>
+        <file alias="tas_demo.lua">../../scripts/examples/tas_demo.lua</file>
+        <file alias="transfer_monitor.lua">../../scripts/examples/transfer_monitor.lua</file>
+        <file alias="variable_inspector.lua">../../scripts/examples/variable_inspector.lua</file>
+        <file alias="virtual_time.lua">../../scripts/examples/virtual_time.lua</file>
+    </qresource>
     <qresource prefix="/"/>
 </RCC>
