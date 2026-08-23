@@ -16,19 +16,26 @@ class InterCom : public QObject {
     Q_OBJECT
 
 public:
+    enum class SetupResult {
+        LocalServer,
+        RemoteServer,
+        Error,
+    };
+
     explicit InterCom(QObject *p = Q_NULLPTR);
     ~InterCom();
 
     void serverSetup(const QString &name);
     void clientSetup(const QString &name);
-    void serverListen() const;
+    bool serverListen() const;
     void idClose();
     bool send(const QByteArray &pkt) const;
 
     QString getServerName();
     QString getClientName();
 
-    bool ipcSetup(const QString &id, const QString &pid);
+    SetupResult ipcSetup(const QString &id, const QString &pid);
+    SetupResult recover(const QString &pid);
     static bool idOpen(const QString &name);
 
     QByteArray getData();
@@ -38,6 +45,7 @@ signals:
 
 private:
     void accepted();
+    SetupResult createLocalServer(const QString &pid);
 
     // server
     QLocalServer *m_server;
@@ -49,6 +57,10 @@ private:
 
     // id / storage
     QFile m_file;
+    QString m_lockFileName;
+    QString m_ownerPid;
+    QString m_clientPid;
+    bool m_ownsId = false;
     QByteArray m_data;
 };
 

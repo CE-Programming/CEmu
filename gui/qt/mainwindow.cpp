@@ -3470,14 +3470,21 @@ void MainWindow::usbRefresh() {
 
 MainWindow::IpcSetupResult MainWindow::ipcSetup() {
     // start the main communictions
-    if (com.ipcSetup(opts.idString, opts.pidString)) {
-        if (opts.ipcOnly) {
-            com.idClose();
-            fprintf(stderr, "[CEmu] IPC target '%s' is not running.\n",
+    switch (com.ipcSetup(opts.idString, opts.pidString)) {
+        case InterCom::SetupResult::LocalServer:
+            if (opts.ipcOnly) {
+                com.idClose();
+                fprintf(stderr, "[CEmu] IPC target '%s' is not running.\n",
+                        opts.idString.toUtf8().constData());
+                return IpcSetupResult::Error;
+            }
+            return IpcSetupResult::LocalServer;
+        case InterCom::SetupResult::RemoteServer:
+            break;
+        case InterCom::SetupResult::Error:
+            fprintf(stderr, "[CEmu] Failed to initialize IPC for '%s'.\n",
                     opts.idString.toUtf8().constData());
             return IpcSetupResult::Error;
-        }
-        return IpcSetupResult::LocalServer;
     }
 
     // if failure, then send a command to the other process with the command options
@@ -3505,13 +3512,30 @@ MainWindow::IpcSetupResult MainWindow::ipcSetup() {
            << opts.usbDevice
            << opts.luaScripts;
 
-    // blocking call
-    if (!com.send(byteArray)) {
-        fprintf(stderr, "[CEmu] Failed to deliver IPC command to '%s'.\n",
-                opts.idString.toUtf8().constData());
-        return IpcSetupResult::Error;
+    // A live PID does not guarantee that it belongs to CEmu. If the endpoint is
+    // unreachable, recover the ID under a cross-platform lock. Another process
+    // may win that recovery race, in which case retry its newly published endpoint.
+    for (int attempt = 0; attempt < 3; ++attempt) {
+        if (com.send(byteArray)) {
+            return IpcSetupResult::CommandDelivered;
+        }
+        if (opts.ipcOnly) {
+            break;
+        }
+        switch (com.recover(opts.pidString)) {
+            case InterCom::SetupResult::LocalServer:
+                return IpcSetupResult::LocalServer;
+            case InterCom::SetupResult::RemoteServer:
+                break;
+            case InterCom::SetupResult::Error:
+                fprintf(stderr, "[CEmu] Failed to recover IPC for '%s'.\n",
+                        opts.idString.toUtf8().constData());
+                return IpcSetupResult::Error;
+        }
     }
-    return IpcSetupResult::CommandDelivered;
+    fprintf(stderr, "[CEmu] Failed to deliver IPC command to '%s'.\n",
+            opts.idString.toUtf8().constData());
+    return IpcSetupResult::Error;
 }
 
 void MainWindow::ipcCli(QDataStream &stream) {
@@ -3617,9 +3641,10 @@ void MainWindow::ipcSetId() {
     if (ok && !text.isEmpty() && text != opts.idString) {
         if (!InterCom::idOpen(text)) {
             com.idClose();
-            com.ipcSetup(opts.idString = text, opts.pidString);
-            console(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com.getServerName() + QStringLiteral("]\n"));
-            setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
+            if (com.ipcSetup(opts.idString = text, opts.pidString) == InterCom::SetupResult::LocalServer) {
+                console(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com.getServerName() + QStringLiteral("]\n"));
+                setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
+            }
         }
     }
 }

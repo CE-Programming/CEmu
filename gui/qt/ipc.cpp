@@ -2,7 +2,33 @@
 #include "utils.h"
 
 #include <QtCore/QDir>
-#include <sys/types.h>
+#include <QtCore/QLockFile>
+#include <QtCore/QSaveFile>
+
+namespace {
+
+QString readPid(const QString &fileName) {
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+
+    const QString pid = QTextStream(&file).readLine();
+    bool ok;
+    const qlonglong value = pid.toLongLong(&ok);
+    return ok && value > 0 ? pid : QString{};
+}
+
+bool writePid(const QString &fileName, const QString &pid) {
+    QSaveFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+    QTextStream(&file) << pid << Qt::endl;
+    return file.commit();
+} // namespace
+
+}
 
 InterCom::InterCom(QObject *parent) : QObject{parent} {
     m_server = new QLocalServer();
@@ -11,6 +37,7 @@ InterCom::InterCom(QObject *parent) : QObject{parent} {
 }
 
 InterCom::~InterCom() {
+    idClose();
     delete m_socket;
     delete m_server;
 }
@@ -18,17 +45,33 @@ InterCom::~InterCom() {
 void InterCom::idClose() {
     m_socket->disconnectFromServer();
     m_server->close();
-    m_file.remove();
+    if (m_ownsId) {
+        QLockFile lock(m_lockFileName);
+        if (lock.tryLock(5000) && readPid(m_file.fileName()) == m_ownerPid) {
+            m_file.remove();
+        }
+    }
+    m_ownsId = false;
+    m_ownerPid.clear();
+    m_clientPid.clear();
+    m_clientName.clear();
+    m_serverName.clear();
 }
 
-void InterCom::serverListen() const {
+bool InterCom::serverListen() const {
     if (m_serverName.isEmpty()) {
-        return;
+        return false;
     }
     m_server->close();
-    if (!m_server->listen(m_serverName)) {
-        qDebug() << "err: " << m_server->errorString();
+    if (m_server->listen(m_serverName)) {
+        return true;
     }
+    QLocalServer::removeServer(m_serverName);
+    if (m_server->listen(m_serverName)) {
+        return true;
+    }
+    qDebug() << "err: " << m_server->errorString();
+    return false;
 }
 
 void InterCom::accepted() {
@@ -76,6 +119,7 @@ bool InterCom::send(const QByteArray &pkt) const {
 
 void InterCom::clientSetup(const QString &name) {
     m_clientName = "cemu-" + name;
+    m_clientPid = name;
 }
 
 void InterCom::serverSetup(const QString &name) {
@@ -96,40 +140,57 @@ bool InterCom::idOpen(const QString &name) {
     return QFile(idFile).exists();
 }
 
-bool InterCom::ipcSetup(const QString &id, const QString &pid) {
-    bool ret = true;
-
+InterCom::SetupResult InterCom::ipcSetup(const QString &id, const QString &pid) {
     // find the default configuration path
-    QString idPath = configPath + QStringLiteral("/id/");
-    QString idFile = idPath + id;
+    const QString idPath = configPath + QStringLiteral("/id/");
+    const QString idFile = idPath + id;
+    const QString lockPath = configPath + QStringLiteral("/id-lock/");
 
     QDir config;
-    config.mkpath(idPath);
+    if (!config.mkpath(idPath) || !config.mkpath(lockPath)) {
+        return SetupResult::Error;
+    }
 
     m_file.setFileName(idFile);
-    if (m_file.exists()) {
-        // send to alternate id
-        if (m_file.open(QIODevice::ReadOnly)) {
-            QTextStream stream(&m_file);
-            QString pidtest = stream.readLine();
-            if (!isProcRunning(static_cast<pid_t>(pidtest.toLongLong()))) {
-                m_file.close();
-                m_file.remove();
-                goto create_id;
-            }
-            clientSetup(pidtest);
-            ret = false;
-        }
-    } else {
-    // create a local id
-create_id:
-        if (m_file.open(QIODevice::WriteOnly)) {
-            QTextStream stream(&m_file);
-            stream << pid << Qt::endl;
-            serverSetup(pid);
-            serverListen();
-        }
+    m_lockFileName = lockPath + id;
+    QLockFile lock(m_lockFileName);
+    if (!lock.tryLock(5000)) {
+        return SetupResult::Error;
     }
-    m_file.close();
-    return ret;
+
+    const QString existingPid = readPid(idFile);
+    if (!existingPid.isEmpty() && existingPid != pid) {
+        clientSetup(existingPid);
+        return SetupResult::RemoteServer;
+    }
+
+    return createLocalServer(pid);
+}
+
+InterCom::SetupResult InterCom::recover(const QString &pid) {
+    QLockFile lock(m_lockFileName);
+    if (!lock.tryLock(5000)) {
+        return SetupResult::Error;
+    }
+
+    const QString existingPid = readPid(m_file.fileName());
+    if (!existingPid.isEmpty() && existingPid != m_clientPid && existingPid != pid) {
+        clientSetup(existingPid);
+        return SetupResult::RemoteServer;
+    }
+
+    return createLocalServer(pid);
+}
+
+InterCom::SetupResult InterCom::createLocalServer(const QString &pid) {
+    serverSetup(pid);
+    if (!serverListen() || !writePid(m_file.fileName(), pid)) {
+        m_server->close();
+        return SetupResult::Error;
+    }
+    m_clientName.clear();
+    m_clientPid.clear();
+    m_ownerPid = pid;
+    m_ownsId = true;
+    return SetupResult::LocalServer;
 }
