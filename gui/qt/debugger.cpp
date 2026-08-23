@@ -1820,8 +1820,7 @@ bool MainWindow::watchMoveCount(int row, const QString &addressText) {
             const auto restored = emu.hitCounter(EmuThread::HitCounterOperation::Add, oldAddressData.toUInt());
             if (restored.success) {
                 itemHits->setData(WatchHitAddressRole, oldAddressData);
-                itemHits->setData(WatchHitBaselineRole,
-                                  static_cast<qulonglong>(std::min(oldBaseline, restored.value)));
+                itemHits->setData(WatchHitBaselineRole, static_cast<qulonglong>((std::min)(oldBaseline, restored.value)));
             } else {
                 itemHits->setData(WatchHitAddressRole, QVariant());
                 itemHits->setData(WatchHitBaselineRole, QVariant());
