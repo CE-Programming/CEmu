@@ -65,6 +65,19 @@ alloc_err:
     return err == 0 ? LINK_GOOD : LINK_ERR;
 }
 
+int emu_set_datetime(uint16_t year, uint8_t month, uint8_t day,
+                     uint8_t hour, uint8_t minute, uint8_t second,
+                     uint8_t date_format, uint8_t time_format,
+                     usb_progress_handler_t *progress_handler, void *progress_context) {
+    char command[64];
+    const char *argv[] = { "dusb", command };
+
+    snprintf(command, sizeof command, "clock:%u-%u-%uT%u:%u:%u,%u,%u",
+             year, month, day, hour, minute, second, date_format, time_format);
+    return usb_plug_device(2, argv, progress_handler, progress_context) == USB_SUCCESS
+        ? LINK_GOOD : LINK_ERR;
+}
+
 static inline size_t write_le16(uint16_t val, FILE *fd) {
     uint16_t to_write = to_le16(val);
     return fwrite(&to_write, sizeof to_write, 1, fd);

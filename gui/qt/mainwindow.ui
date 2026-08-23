@@ -10836,6 +10836,7 @@ local R, F = cpu.registers, cpu.registers.flags
     <property name="title">
      <string>Extras</string>
     </property>
+    <addaction name="actionSyncDateTime"/>
     <addaction name="actionCheckForUpdates"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
@@ -11072,6 +11073,18 @@ local R, F = cpu.registers, cpu.registers.flags
    </property>
    <property name="text">
     <string>Reset calculator</string>
+   </property>
+  </action>
+  <action name="actionSyncDateTime">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/clock.png</normaloff>:/icons/resources/icons/clock.png</iconset>
+   </property>
+   <property name="text">
+    <string>Sync computer clock to calc</string>
+   </property>
+   <property name="toolTip">
+    <string>Set the calculator's date and time to the computer's local date and time</string>
    </property>
   </action>
   <action name="actionCheckForUpdates">

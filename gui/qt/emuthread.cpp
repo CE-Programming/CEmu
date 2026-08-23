@@ -10,9 +10,11 @@
 #include "../../tests/autotester/crc32.hpp"
 #include "capture/animated-png.h"
 
-#include <QtCore/QVector>
 #include <QtCore/QEventLoop>
+#include <QtCore/QDateTime>
+#include <QtCore/QLocale>
 #include <QtCore/QTimer>
+#include <QtCore/QVector>
 
 #include <cassert>
 #include <cstdarg>
@@ -220,6 +222,9 @@ void EmuThread::doStuff() {
                 case RequestHitCounter:
                     doHitCounter();
                     break;
+                case RequestSetDateTime:
+                    doSetDateTime();
+                    break;
                 case RequestSave:
                     doSave();
                     break;
@@ -260,11 +265,16 @@ void EmuThread::throttleWait() {
             emit sendSpeed(0);
             m_cvSpeed.wait(lockSpeed, [this] {
                 return m_speed != 0 || !m_throttle || m_stopping.load() ||
-                       hasPendingRequest(RequestHitCounter);
+                       hasPendingRequest(RequestHitCounter) || hasPendingRequest(RequestSetDateTime);
             });
             if (takePendingRequest(RequestHitCounter)) {
                 lockSpeed.unlock();
                 doHitCounter();
+                lockSpeed.lock();
+            }
+            if (takePendingRequest(RequestSetDateTime)) {
+                lockSpeed.unlock();
+                doSetDateTime();
                 lockSpeed.lock();
             }
         }
@@ -310,11 +320,17 @@ void EmuThread::block(int status) {
     emit blocked(status);
     while (m_blocked && !m_stopping.load()) {
         m_cv.wait(lock, [this] {
-            return !m_blocked || m_stopping.load() || hasPendingRequest(RequestHitCounter);
+            return !m_blocked || m_stopping.load() || hasPendingRequest(RequestHitCounter) ||
+                   hasPendingRequest(RequestSetDateTime);
         });
         if (m_blocked && takePendingRequest(RequestHitCounter)) {
             lock.unlock();
             doHitCounter();
+            lock.lock();
+        }
+        if (m_blocked && takePendingRequest(RequestSetDateTime)) {
+            lock.unlock();
+            doSetDateTime();
             lock.lock();
         }
     }
@@ -579,6 +595,65 @@ void EmuThread::setForcePython(Qt::CheckState state) {
     m_forcePython.store(state);
 }
 
+void EmuThread::setCurrentDateTime() {
+    const QDateTime now = QDateTime::currentDateTime();
+    const QDate date = now.date();
+    const QTime time = now.time();
+    const QLocale locale;
+    const QString datePattern = locale.dateFormat(QLocale::ShortFormat);
+    const int yearIndex = datePattern.indexOf(QLatin1Char('y'), 0, Qt::CaseInsensitive);
+    const int monthIndex = datePattern.indexOf(QLatin1Char('M'));
+    const int dayIndex = datePattern.indexOf(QLatin1Char('d'), 0, Qt::CaseInsensitive);
+
+    {
+        std::lock_guard<std::mutex> requestLock{m_requestMutex};
+        m_dateTimeYear = static_cast<uint16_t>(date.year());
+        m_dateTimeMonth = static_cast<uint8_t>(date.month());
+        m_dateTimeDay = static_cast<uint8_t>(date.day());
+        m_dateTimeHour = static_cast<uint8_t>(time.hour());
+        m_dateTimeMinute = static_cast<uint8_t>(time.minute());
+        m_dateTimeSecond = static_cast<uint8_t>(time.second());
+        m_dateTimeDateFormat = yearIndex < monthIndex && yearIndex < dayIndex ? 0
+            : dayIndex < monthIndex ? 2 : 1;
+        m_dateTimeTimeFormat = locale.timeFormat(QLocale::ShortFormat)
+            .contains(QLatin1Char('a'), Qt::CaseInsensitive) ? 0x80 : 0x81;
+        if (!m_requestQueue.contains(RequestSetDateTime)) {
+            m_requestQueue.enqueue(RequestSetDateTime);
+        }
+    }
+    m_cv.notify_one();
+    m_cvDebug.notify_one();
+    m_cvSpeed.notify_one();
+}
+
+void EmuThread::doSetDateTime() {
+    uint16_t year;
+    uint8_t month, day, hour, minute, second, dateFormat, timeFormat;
+    {
+        std::lock_guard<std::mutex> requestLock{m_requestMutex};
+        year = m_dateTimeYear;
+        month = m_dateTimeMonth;
+        day = m_dateTimeDay;
+        hour = m_dateTimeHour;
+        minute = m_dateTimeMinute;
+        second = m_dateTimeSecond;
+        dateFormat = m_dateTimeDateFormat;
+        timeFormat = m_dateTimeTimeFormat;
+        m_backupThrottleForTransfers = m_throttle;
+    }
+    setThrottle(false);
+    if (emu_set_datetime(year, month, day, hour, minute, second, dateFormat, timeFormat,
+                         [](void *context, int value, int total) {
+                             auto *emuThread = static_cast<EmuThread *>(context);
+                             emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
+                             emit emuThread->dateTimeSet(total && value == total);
+                             return false;
+                         }, this) != LINK_GOOD) {
+        setThrottle(m_backupThrottleForTransfers);
+        emit dateTimeSet(false);
+    }
+}
+
 void EmuThread::debugOpen(int reason, uint32_t data) {
     std::unique_lock<std::mutex> lock(m_mutexDebug);
     m_debug = true;
@@ -587,13 +662,14 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
         m_cvDebug.wait(lock, [this]() {
             std::lock_guard<std::mutex> requestLock{m_requestMutex};
             return !m_debug || m_stopping.load() || m_requestQueue.contains(RequestSave) ||
-                   m_requestQueue.contains(RequestHitCounter);
+                   m_requestQueue.contains(RequestHitCounter) || m_requestQueue.contains(RequestSetDateTime);
         });
-        bool savePending, hitCounterPending;
+        bool savePending, hitCounterPending, setDateTimePending;
         {
             std::lock_guard<std::mutex> requestLock{m_requestMutex};
             savePending = m_requestQueue.removeOne(RequestSave);
             hitCounterPending = m_requestQueue.removeOne(RequestHitCounter);
+            setDateTimePending = m_requestQueue.removeOne(RequestSetDateTime);
         }
         if (savePending) {
             /* Serialize the paused state before allowing execution to resume. */
@@ -604,6 +680,11 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
         if (hitCounterPending) {
             lock.unlock();
             doHitCounter();
+            lock.lock();
+        }
+        if (setDateTimePending) {
+            lock.unlock();
+            doSetDateTime();
             lock.lock();
         }
     } while (m_debug && !m_stopping.load());

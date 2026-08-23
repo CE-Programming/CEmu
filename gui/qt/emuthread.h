@@ -38,6 +38,7 @@ public:
     void setAsicRev(int rev);
     void setAllowAnyRev(bool allow);
     void setForcePython(Qt::CheckState state);
+    void setCurrentDateTime();
     asic_rev_t handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRev, asic_rev_t defaultRev, emu_device_t device, bool* python);
     void writeConsole(int console, const char *format, va_list args);
     void debugOpen(int reason, uint32_t addr);
@@ -76,7 +77,8 @@ public:
         RequestAutoTester,
         RequestDebugger,
         RequestBasicDebugger,
-        RequestHitCounter
+        RequestHitCounter,
+        RequestSetDateTime
     };
 
     int type = ConsoleNorm;
@@ -105,6 +107,7 @@ signals:
     void loaded(emu_state_t state, emu_data_t type);
     void blocked(int req);
     void linkProgress(int value, int total);
+    void dateTimeSet(bool success);
 
 public slots:
     void send(const QStringList &names, int location);
@@ -125,6 +128,7 @@ private:
     void doUsbPlugDevice();
     void doAutotest();
     void doHitCounter();
+    void doSetDateTime();
     void finishHitCounterRequests();
     bool hasPendingRequest(int request);
     bool takePendingRequest(int request);
@@ -152,6 +156,15 @@ private:
 
     QString m_autotesterPath;
     bool m_autotesterRun;
+
+    uint16_t m_dateTimeYear = 0;
+    uint8_t m_dateTimeMonth = 0;
+    uint8_t m_dateTimeDay = 0;
+    uint8_t m_dateTimeHour = 0;
+    uint8_t m_dateTimeMinute = 0;
+    uint8_t m_dateTimeSecond = 0;
+    uint8_t m_dateTimeDateFormat = 0;
+    uint8_t m_dateTimeTimeFormat = 0x81;
 
     QStringList m_vars;
     int m_sendLoc;

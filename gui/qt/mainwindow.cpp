@@ -197,6 +197,13 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&emu, &EmuThread::loaded, this, &MainWindow::emuCheck, Qt::QueuedConnection);
     connect(&emu, &EmuThread::blocked, this, &MainWindow::emuBlocked, Qt::QueuedConnection);
     connect(&emu, &EmuThread::tested, this, &MainWindow::autotesterTested, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::dateTimeSet, this, [this](bool success) {
+        if (success) {
+            ui->statusBar->showMessage(tr("Calculator date and time set from computer"), 3000);
+        } else {
+            QMessageBox::critical(this, MSG_ERROR, tr("Unable to set calculator date and time"));
+        }
+    }, Qt::QueuedConnection);
 
     // console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -383,6 +390,13 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionHideStatusBar, &QAction::triggered, this, &MainWindow::setStatusBarState);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
     connect(ui->buttonReloadROM, &QPushButton::clicked, [this]{ emuLoad(EMU_DATA_ROM); });
+    connect(ui->actionSyncDateTime, &QAction::triggered, this, [this] {
+        if (guiEmuValid) {
+            emu.setCurrentDateTime();
+        } else {
+            QMessageBox::critical(this, MSG_ERROR, tr("Unable to set date and time: no calculator is loaded"));
+        }
+    });
 
 #ifdef Q_OS_MACOS
     touchBar->addSeparator();

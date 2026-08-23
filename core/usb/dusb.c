@@ -2,6 +2,7 @@
 
 #include "../defines.h"
 #include "../emu.h"
+#include "../realclock.h"
 #include "../os/os.h"
 #include "../vat.h"
 
@@ -73,6 +74,18 @@
 #define DUSB_VPKT_EOT_SIZE                  0
 #define DUSB_VPKT_ERROR                     0xEE00
 
+#define DUSB_PID_CLK_ON                     0x0024
+#define DUSB_PID_CLK_DATE_FMT               0x0027
+#define DUSB_PID_CLK_TIME_FMT               0x0028
+#define DUSB_PID_CLK_SECONDS                0x003B
+#define DUSB_PID_CLK_MINUTES                0x003C
+#define DUSB_PID_CLK_HOURS                  0x003D
+#define DUSB_PID_CLK_DAY                    0x003E
+#define DUSB_PID_CLK_MONTH                  0x003F
+#define DUSB_PID_CLK_YEAR                   0x0040
+
+#define DUSB_CLOCK_PARAMETER_COUNT          9
+
 
 #define DUSB_CONTROL_ENDPOINT               0
 #define DUSB_IN_ENDPOINT                    1
@@ -107,11 +120,12 @@ typedef enum dusb_command_type {
     DUSB_LIST_COMMAND,
     DUSB_SEND_COMMAND,
     DUSB_RECEIVE_COMMAND,
+    DUSB_CLOCK_COMMAND,
     DUSB_NUM_COMMANDS,
 } dusb_command_type_t;
 
 static const char *command_names[DUSB_NUM_COMMANDS] = {
-    "done", "screenshot", "romdump", "list", "send", "receive"
+    "done", "screenshot", "romdump", "list", "send", "receive", "clock"
 };
 
 typedef struct dusb_command {
@@ -119,6 +133,8 @@ typedef struct dusb_command {
     uint32_t file_length;
     dusb_command_type_t type;
     uint8_t flag, vartype, varname_length, varname[8], varname_utf8_length, varname_utf8[8 * 3];
+    uint16_t year;
+    uint8_t month, day, hour, minute, second, date_format, time_format;
 } dusb_command_t;
 
 typedef enum dusb_state {
@@ -217,14 +233,64 @@ typedef enum dusb_state {
     DUSB_VAR_EOT_ACK_WAIT_STATE,
     DUSB_VAR_EOT_ACK_STATE,
     DUSB_VAR_NEXT_STATE,
+
+    DUSB_CLOCK_SET_WAIT_STATE,
+    DUSB_CLOCK_SET_STATE,
+    DUSB_CLOCK_SET_ACK_WAIT_STATE,
+    DUSB_CLOCK_SET_ACK_STATE,
+    DUSB_CLOCK_DATA_ACK_WAIT_STATE,
+    DUSB_CLOCK_DATA_ACK_STATE,
+    DUSB_CLOCK_ACK_DATA_ACK_WAIT_STATE,
+    DUSB_CLOCK_ACK_DATA_ACK_STATE,
+    DUSB_CLOCK_PAUSE_STATE,
 } dusb_state_t;
 
 typedef struct dusb_context {
     dusb_state_t state;
     uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size, delay;
     uint8_t version, flag, buffer[8];
+    bool clock_operation, clock_complete;
     dusb_command_t *command, commands[];
 } dusb_context_t;
+
+static uint16_t dusb_clock_parameter(const dusb_context_t *context, uint16_t *size,
+                                     uint8_t value[4]) {
+    const dusb_command_t *command = context->command;
+    *size = 1;
+    switch (context->position) {
+        case 0:
+            value[0] = command->date_format;
+            return DUSB_PID_CLK_DATE_FMT;
+        case 1:
+            value[0] = command->time_format;
+            return DUSB_PID_CLK_TIME_FMT;
+        case 2:
+            *size = 2;
+            value[0] = command->year >> 8;
+            value[1] = command->year;
+            return DUSB_PID_CLK_YEAR;
+        case 3:
+            value[0] = command->month;
+            return DUSB_PID_CLK_MONTH;
+        case 4:
+            value[0] = command->day;
+            return DUSB_PID_CLK_DAY;
+        case 5:
+            value[0] = command->hour;
+            return DUSB_PID_CLK_HOURS;
+        case 6:
+            value[0] = command->minute;
+            return DUSB_PID_CLK_MINUTES;
+        case 7:
+            value[0] = command->second;
+            return DUSB_PID_CLK_SECONDS;
+        case 8:
+            value[0] = 1;
+            return DUSB_PID_CLK_ON;
+        default:
+            unreachable();
+    }
+}
 
 static uint32_t min_u32(uint32_t x, uint32_t y) {
     return x < y ? x : y;
@@ -582,6 +648,10 @@ static usb_event_type_t dusb_transfer_event(dusb_state_t state) {
         case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
         case DUSB_VAR_EOT_WAIT_STATE:
         case DUSB_VAR_EOT_ACK_WAIT_STATE:
+        case DUSB_CLOCK_SET_WAIT_STATE:
+        case DUSB_CLOCK_SET_ACK_WAIT_STATE:
+        case DUSB_CLOCK_DATA_ACK_WAIT_STATE:
+        case DUSB_CLOCK_ACK_DATA_ACK_WAIT_STATE:
             return USB_TRANSFER_REQUEST_EVENT;
         case DUSB_BUF_SIZE_REQ_STATE:
         case DUSB_BUF_SIZE_ALLOC_STATE:
@@ -622,6 +692,10 @@ static usb_event_type_t dusb_transfer_event(dusb_state_t state) {
         case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
         case DUSB_VAR_EOT_STATE:
         case DUSB_VAR_EOT_ACK_STATE:
+        case DUSB_CLOCK_SET_STATE:
+        case DUSB_CLOCK_SET_ACK_STATE:
+        case DUSB_CLOCK_DATA_ACK_STATE:
+        case DUSB_CLOCK_ACK_DATA_ACK_STATE:
             return USB_TRANSFER_RESPONSE_EVENT;
     }
 }
@@ -668,6 +742,10 @@ static uint8_t dusb_transfer_endpoint(dusb_state_t state) {
         case DUSB_VAR_ACK_VAR_CNTS_STATE:
         case DUSB_VAR_EOT_ACK_WAIT_STATE:
         case DUSB_VAR_EOT_ACK_STATE:
+        case DUSB_CLOCK_SET_ACK_WAIT_STATE:
+        case DUSB_CLOCK_SET_ACK_STATE:
+        case DUSB_CLOCK_DATA_ACK_WAIT_STATE:
+        case DUSB_CLOCK_DATA_ACK_STATE:
             return DUSB_IN_DIRECTION | DUSB_IN_ENDPOINT;
         case DUSB_BUF_SIZE_REQ_WAIT_STATE:
         case DUSB_BUF_SIZE_REQ_STATE:
@@ -708,6 +786,10 @@ static uint8_t dusb_transfer_endpoint(dusb_state_t state) {
         case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
         case DUSB_VAR_EOT_WAIT_STATE:
         case DUSB_VAR_EOT_STATE:
+        case DUSB_CLOCK_SET_WAIT_STATE:
+        case DUSB_CLOCK_SET_STATE:
+        case DUSB_CLOCK_ACK_DATA_ACK_WAIT_STATE:
+        case DUSB_CLOCK_ACK_DATA_ACK_STATE:
             return DUSB_OUT_DIRECTION | DUSB_OUT_ENDPOINT;
     }
 }
@@ -763,7 +845,18 @@ static uint32_t dusb_transfer_length(dusb_context_t *context) {
         case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
         case DUSB_VAR_EOT_ACK_WAIT_STATE:
         case DUSB_VAR_EOT_ACK_STATE:
+        case DUSB_CLOCK_SET_ACK_WAIT_STATE:
+        case DUSB_CLOCK_SET_ACK_STATE:
+        case DUSB_CLOCK_ACK_DATA_ACK_WAIT_STATE:
+        case DUSB_CLOCK_ACK_DATA_ACK_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_RPKT_VIRT_DATA_ACK_SIZE;
+        case DUSB_CLOCK_SET_WAIT_STATE:
+        case DUSB_CLOCK_SET_STATE: {
+            uint16_t size;
+            uint8_t value[4];
+            (void)dusb_clock_parameter(context, &size, value);
+            return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + 4 + size;
+        }
         case DUSB_OS_MODE_SET_WAIT_STATE:
         case DUSB_OS_MODE_SET_STATE:
         case DUSB_VAR_MODE_SET_WAIT_STATE:
@@ -793,6 +886,8 @@ static uint32_t dusb_transfer_length(dusb_context_t *context) {
         case DUSB_VAR_ACK_RTS_STATE:
         case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
         case DUSB_VAR_ACK_VAR_CNTS_STATE:
+        case DUSB_CLOCK_DATA_ACK_WAIT_STATE:
+        case DUSB_CLOCK_DATA_ACK_STATE:
             return DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_DATA_ACK_SIZE;
         case DUSB_OS_EOT_WAIT_STATE:
         case DUSB_OS_EOT_STATE:
@@ -978,6 +1073,14 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
             case DUSB_VAR_EOT_STATE:
             case DUSB_VAR_EOT_ACK_WAIT_STATE:
             case DUSB_VAR_EOT_ACK_STATE:
+            case DUSB_CLOCK_SET_WAIT_STATE:
+            case DUSB_CLOCK_SET_STATE:
+            case DUSB_CLOCK_SET_ACK_WAIT_STATE:
+            case DUSB_CLOCK_SET_ACK_STATE:
+            case DUSB_CLOCK_DATA_ACK_WAIT_STATE:
+            case DUSB_CLOCK_DATA_ACK_STATE:
+            case DUSB_CLOCK_ACK_DATA_ACK_WAIT_STATE:
+            case DUSB_CLOCK_ACK_DATA_ACK_STATE:
                 event->type = dusb_transfer_event(state);
                 transfer->length = dusb_transfer_length(context);
                 transfer->status = USB_TRANSFER_COMPLETED;
@@ -1006,6 +1109,11 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                         continue;
                     case DUSB_RECEIVE_COMMAND:
                         state = DUSB_INVALID_STATE;
+                        continue;
+                    case DUSB_CLOCK_COMMAND:
+                        context->position = 0;
+                        /* Clock and variable commands use the same service handshake. */
+                        state = DUSB_VAR_PING_WAIT_STATE;
                         continue;
                     default:
                         state = DUSB_INVALID_STATE;
@@ -1056,6 +1164,12 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                     state = DUSB_VAR_PING_WAIT_STATE;
                 }
                 continue;
+            case DUSB_CLOCK_PAUSE_STATE:
+                ++context->position;
+                event->type = USB_TIMER_EVENT;
+                timer->mode = USB_TIMER_ABSOLUTE_MODE;
+                timer->useconds = 10000;
+                break;
             case DUSB_INVALID_STATE:
                 gui_console_err_printf("[CEmu] USB transfer failed, stopping activity\n");
                 event->type = USB_DESTROY_EVENT;
@@ -1081,6 +1195,17 @@ static int parse_hex_digit(char c) {
 
 static int parse_hex_digits(const char *c) {
     return parse_hex_digit(c[0]) << 4 | parse_hex_digit(c[1]) << 0;
+}
+
+static bool dusb_valid_date(uint32_t year, uint32_t month, uint32_t day) {
+    static const uint8_t month_days[] = {
+        0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+    };
+    if (!year || year > UINT16_MAX || month < 1 || month > 12 || !day) {
+        return false;
+    }
+    return day <= month_days[month] +
+        (month == 2 && year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
 
 int usb_dusb_device(usb_event_t *event) {
@@ -1148,6 +1273,10 @@ int usb_dusb_device(usb_event_t *event) {
                 case DUSB_VAR_ACK_VAR_CNTS_ACK_STATE:
                 case DUSB_VAR_EOT_STATE:
                 case DUSB_VAR_EOT_ACK_STATE:
+                case DUSB_CLOCK_SET_STATE:
+                case DUSB_CLOCK_SET_ACK_STATE:
+                case DUSB_CLOCK_DATA_ACK_STATE:
+                case DUSB_CLOCK_ACK_DATA_ACK_STATE:
                     break;
                 case DUSB_OS_HEADER_STATE:
                 case DUSB_OS_DATA_STATE:
@@ -1194,6 +1323,28 @@ int usb_dusb_device(usb_event_t *event) {
                 }
                 if (!command->type) {
                     return EINVAL;
+                }
+                if (command->type == DUSB_CLOCK_COMMAND) {
+                    uint32_t year, month, day, hour, minute, second, date_format, time_format;
+                    char extra;
+                    if (sscanf(arg, ":%u-%u-%uT%u:%u:%u,%u,%u%c",
+                               &year, &month, &day, &hour, &minute, &second,
+                               &date_format, &time_format, &extra) != 8 ||
+                        !dusb_valid_date(year, month, day) || hour >= 24 || minute >= 60 ||
+                        second >= 60 || date_format > 2 ||
+                        (time_format != 0x80 && time_format != 0x81)) {
+                        return EINVAL;
+                    }
+                    command->year = year;
+                    command->month = month;
+                    command->day = day;
+                    command->hour = hour;
+                    command->minute = minute;
+                    command->second = second;
+                    command->date_format = date_format;
+                    command->time_format = time_format;
+                    context->clock_operation = true;
+                    continue;
                 }
                 while (*arg == '-') {
                     switch (command->type) {
@@ -1323,10 +1474,37 @@ int usb_dusb_device(usb_event_t *event) {
                 case DUSB_VAR_RTS_ACK_WAIT_STATE:
                 case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
                 case DUSB_VAR_EOT_ACK_WAIT_STATE:
+                case DUSB_CLOCK_SET_ACK_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_VIRT_DATA_ACK) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     break;
+                case DUSB_CLOCK_SET_WAIT_STATE: {
+                    uint16_t parameter_size;
+                    uint8_t parameter_value[4];
+                    const uint16_t parameter =
+                        dusb_clock_parameter(context, &parameter_size, parameter_value);
+
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  0 & 0xFF;
+                    *buffer++ = DUSB_RPKT_VIRT_DATA_LAST;
+
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE - DUSB_VPKT_HEADER_SIZE) >> 24 & 0xFF;
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE - DUSB_VPKT_HEADER_SIZE) >> 16 & 0xFF;
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE - DUSB_VPKT_HEADER_SIZE) >>  8 & 0xFF;
+                    *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE - DUSB_VPKT_HEADER_SIZE) >>  0 & 0xFF;
+                    *buffer++ = DUSB_VPKT_PARM_SET >> 8 & 0xFF;
+                    *buffer++ = DUSB_VPKT_PARM_SET >> 0 & 0xFF;
+
+                    *buffer++ = parameter >> 8;
+                    *buffer++ = parameter;
+                    *buffer++ = parameter_size >> 8;
+                    *buffer++ = parameter_size;
+                    memcpy(buffer, parameter_value, parameter_size);
+                    break;
+                }
                 case DUSB_OS_PING_WAIT_STATE:
                 case DUSB_VAR_PING_WAIT_STATE: {
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
@@ -1376,6 +1554,7 @@ int usb_dusb_device(usb_event_t *event) {
                 case DUSB_VAR_MODE_SET_ACK_WAIT_STATE:
                 case DUSB_VAR_ACK_RTS_ACK_WAIT_STATE:
                 case DUSB_VAR_ACK_VAR_CNTS_ACK_WAIT_STATE:
+                case DUSB_CLOCK_ACK_DATA_ACK_WAIT_STATE:
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 24 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >> 16 & 0xFF;
                     *buffer++ = (transfer_length - DUSB_RPKT_HEADER_SIZE) >>  8 & 0xFF;
@@ -1472,6 +1651,7 @@ int usb_dusb_device(usb_event_t *event) {
                 case DUSB_OS_ACK_DATA_WAIT_STATE:
                 case DUSB_VAR_ACK_RTS_WAIT_STATE:
                 case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
+                case DUSB_CLOCK_DATA_ACK_WAIT_STATE:
                     if (buffer[4] != DUSB_RPKT_VIRT_DATA_LAST || (buffer[9] << 8 | buffer[10] << 0) != DUSB_VPKT_DATA_ACK) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
@@ -1598,13 +1778,31 @@ int usb_dusb_device(usb_event_t *event) {
                 case DUSB_POWER_WAIT_STATE:
                 case DUSB_RESET_WAIT_STATE:
                     break;
+                case DUSB_CLOCK_PAUSE_STATE:
+                    /* TI-OS starts an asynchronous RTC load after setting the date, hour, minute, and second.
+                     * Do not let the next DUSB parameter overwrite fields that the emulated RTC is still loading. */
+                    if (context->position >= 5 && context->position <= 8 && (rtc.control & 64) != 0) {
+                        event->type = USB_TIMER_EVENT;
+                        timer->mode = USB_TIMER_ABSOLUTE_MODE;
+                        timer->useconds = 10000;
+                        return USB_SUCCESS;
+                    }
+                    if (context->position < DUSB_CLOCK_PARAMETER_COUNT) {
+                        return dusb_transition(event, DUSB_CLOCK_SET_WAIT_STATE);
+                    }
+                    context->clock_complete = true;
+                    return dusb_transition(event, DUSB_NEXT_COMMAND_STATE);
                 default:
                     return USB_SUCCESS;
             }
             break;
         case USB_DESTROY_EVENT:
             if (event->progress_handler) {
-                event->progress_handler(event->progress_context, 1, 1);
+                if (context && context->clock_operation && !context->clock_complete) {
+                    event->progress_handler(event->progress_context, 0, 0);
+                } else {
+                    event->progress_handler(event->progress_context, 1, 1);
+                }
                 event->progress_handler = NULL;
             }
             if (!context) {
@@ -1620,6 +1818,10 @@ int usb_dusb_device(usb_event_t *event) {
             return USB_SUCCESS;
         default:
             return EINVAL;
+    }
+    if (context->state == DUSB_VAR_MODE_SET_ACK_STATE &&
+        context->command->type == DUSB_CLOCK_COMMAND) {
+        return dusb_transition(event, DUSB_CLOCK_SET_WAIT_STATE);
     }
     return dusb_transition(event, context->state + 1);
 }
