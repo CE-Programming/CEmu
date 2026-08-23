@@ -42,6 +42,7 @@ private:
     uint32_t m_base;
     uint32_t m_control;
     bool m_grid;
+    QVector<VisualizerTransform> m_transforms;
 
     VisualizerDisplayWidget *m_view;
     QLineEdit *m_config;

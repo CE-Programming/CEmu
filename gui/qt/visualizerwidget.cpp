@@ -11,6 +11,8 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QFrame>
+#include <QtWidgets/QListWidget>
 
 VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWidget{parent} {
     QIcon iconRefresh(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
@@ -96,6 +98,7 @@ void VisualizerWidget::showConfig() {
     QGridLayout *mlayout = new QGridLayout(dialog);
     QGridLayout *glayout = new QGridLayout;
     QHBoxLayout *hlayout = new QHBoxLayout;
+    QGridLayout *transformSectionLayout = new QGridLayout;
 
     QLabel *baseLbl = new QLabel(tr("Base Address"));
     QLineEdit *baseEdit = new QLineEdit(int2hex(m_base, 6));
@@ -109,6 +112,13 @@ void VisualizerWidget::showConfig() {
     QSpinBox *heightSpin = new QSpinBox;
     QLabel *bppLbl = new QLabel(QStringLiteral("BPP"));
     QComboBox *bppCombo = new QComboBox;
+    QLabel *transformLbl = new QLabel(tr("Transforms (top to bottom)"));
+    QComboBox *transformCombo = new QComboBox;
+    QListWidget *transformList = new QListWidget;
+    QPushButton *transformAddBtn = new QPushButton(tr("Add"));
+    QPushButton *transformRemoveBtn = new QPushButton(tr("Remove"));
+    QPushButton *transformUpBtn = new QPushButton(tr("Move up"));
+    QPushButton *transformDownBtn = new QPushButton(tr("Move down"));
     QCheckBox *beboChk = new QCheckBox(QStringLiteral("BEBO"));
     QCheckBox *bepoChk = new QCheckBox(QStringLiteral("BEPO"));
     QCheckBox *bgrChk = new QCheckBox(QStringLiteral("BGR"));
@@ -143,6 +153,41 @@ void VisualizerWidget::showConfig() {
 
     bppCombo->setCurrentIndex((m_control >> 1) & 7);
 
+    transformCombo->addItem(tr("Rotate 90° clockwise"), static_cast<int>(VisualizerTransform::Rotate90));
+    transformCombo->addItem(tr("Rotate 180°"), static_cast<int>(VisualizerTransform::Rotate180));
+    transformCombo->addItem(tr("Rotate 90° counter-clockwise"), static_cast<int>(VisualizerTransform::Rotate270));
+    transformCombo->addItem(tr("Flip horizontally"), static_cast<int>(VisualizerTransform::FlipHorizontal));
+    transformCombo->addItem(tr("Flip vertically"), static_cast<int>(VisualizerTransform::FlipVertical));
+    transformCombo->addItem(tr("Transpose"), static_cast<int>(VisualizerTransform::Transpose));
+    transformCombo->addItem(tr("Transpose across anti-diagonal"), static_cast<int>(VisualizerTransform::Transverse));
+
+    auto addTransformItem = [transformCombo, transformList](VisualizerTransform transform) {
+        const int comboIndex = transformCombo->findData(static_cast<int>(transform));
+        QListWidgetItem *item = new QListWidgetItem(transformCombo->itemText(comboIndex), transformList);
+        item->setData(Qt::UserRole, static_cast<int>(transform));
+        transformList->setCurrentItem(item);
+    };
+    for (VisualizerTransform transform : m_transforms) {
+        addTransformItem(transform);
+    }
+    transformList->setToolTip(tr("Transforms are applied from top to bottom"));
+    transformList->setDragDropMode(QAbstractItemView::InternalMove);
+    transformList->setMaximumHeight(90);
+
+    QHBoxLayout *transformAddLayout = new QHBoxLayout;
+    transformAddLayout->addWidget(transformCombo);
+    transformAddLayout->addWidget(transformAddBtn);
+
+    QHBoxLayout *transformMoveLayout = new QHBoxLayout;
+    transformMoveLayout->addWidget(transformRemoveBtn);
+    transformMoveLayout->addWidget(transformUpBtn);
+    transformMoveLayout->addWidget(transformDownBtn);
+
+    QVBoxLayout *transformLayout = new QVBoxLayout;
+    transformLayout->addLayout(transformAddLayout);
+    transformLayout->addWidget(transformList);
+    transformLayout->addLayout(transformMoveLayout);
+
     glayout->addWidget(baseLbl, 0, 0);
     glayout->addWidget(baseEdit, 0, 1);
     glayout->addWidget(fpsLbl, 1, 0);
@@ -160,16 +205,54 @@ void VisualizerWidget::showConfig() {
     hlayout->addWidget(bepoChk);
     hlayout->addWidget(bgrChk);
     hlayout->addWidget(gridChk);
-    hlayout->addWidget(submitBtn);
+    hlayout->addStretch();
+
+    transformSectionLayout->addWidget(transformLbl, 0, 0, Qt::AlignTop);
+    transformSectionLayout->addLayout(transformLayout, 0, 1);
+
+    QFrame *settingsSeparator = new QFrame;
+    settingsSeparator->setFrameShape(QFrame::HLine);
+    settingsSeparator->setFrameShadow(QFrame::Sunken);
+
+    QFrame *submitSeparator = new QFrame;
+    submitSeparator->setFrameShape(QFrame::HLine);
+    submitSeparator->setFrameShadow(QFrame::Sunken);
 
     mlayout->addLayout(glayout, 0, 0);
     mlayout->addLayout(hlayout, 1, 0);
+    mlayout->addWidget(settingsSeparator, 2, 0);
+    mlayout->addLayout(transformSectionLayout, 3, 0);
+    mlayout->addWidget(submitSeparator, 4, 0);
+    mlayout->addWidget(submitBtn, 5, 0, Qt::AlignRight);
 
     dialog->setLayout(mlayout);
 
+    connect(transformAddBtn, &QPushButton::clicked, [transformCombo, addTransformItem] {
+        addTransformItem(static_cast<VisualizerTransform>(transformCombo->currentData().toInt()));
+    });
+    connect(transformRemoveBtn, &QPushButton::clicked, [transformList] {
+        delete transformList->takeItem(transformList->currentRow());
+    });
+    connect(transformUpBtn, &QPushButton::clicked, [transformList] {
+        const int row = transformList->currentRow();
+        if (row > 0) {
+            QListWidgetItem *item = transformList->takeItem(row);
+            transformList->insertItem(row - 1, item);
+            transformList->setCurrentItem(item);
+        }
+    });
+    connect(transformDownBtn, &QPushButton::clicked, [transformList] {
+        const int row = transformList->currentRow();
+        if (row >= 0 && row + 1 < transformList->count()) {
+            QListWidgetItem *item = transformList->takeItem(row);
+            transformList->insertItem(row + 1, item);
+            transformList->setCurrentItem(item);
+        }
+    });
+
     connect(submitBtn, &QPushButton::clicked, [this, dialog, baseEdit,
             fpsSpin, scaleSpin, widthSpin, heightSpin,
-            bppCombo, beboChk, bepoChk, bgrChk, gridChk]{
+            bppCombo, transformList, beboChk, bepoChk, bgrChk, gridChk]{
 
         m_base = static_cast<uint32_t>(hex2int(baseEdit->text()));
 
@@ -181,6 +264,11 @@ void VisualizerWidget::showConfig() {
         m_width = widthSpin->value();
         m_height = heightSpin->value();
         m_grid = gridChk->isChecked();
+        m_transforms.clear();
+        for (int row = 0; row < transformList->count(); row++) {
+            m_transforms.append(static_cast<VisualizerTransform>(
+                transformList->item(row)->data(Qt::UserRole).toInt()));
+        }
 
         set_reset(bepoChk->isChecked(), 0x400u, m_control);
         set_reset(beboChk->isChecked(), 0x200u, m_control);
@@ -202,6 +290,7 @@ void VisualizerWidget::stringToView() {
     m_fps = 30;
     m_scale = 100;
     m_grid = false;
+    m_transforms.clear();
 
     set_reset(false, 0x400u, m_control);
     set_reset(false, 0x200u, m_control);
@@ -220,6 +309,21 @@ void VisualizerWidget::stringToView() {
         }
         if (!str.compare(QLatin1String("bgr"), Qt::CaseInsensitive)) {
             set_reset(true, 0x100u, m_control);
+        }
+        if (str == QLatin1String("rotate90")) {
+            m_transforms.append(VisualizerTransform::Rotate90);
+        } else if (str == QLatin1String("rotate180")) {
+            m_transforms.append(VisualizerTransform::Rotate180);
+        } else if (str == QLatin1String("rotate270")) {
+            m_transforms.append(VisualizerTransform::Rotate270);
+        } else if (str == QLatin1String("fliph")) {
+            m_transforms.append(VisualizerTransform::FlipHorizontal);
+        } else if (str == QLatin1String("flipv")) {
+            m_transforms.append(VisualizerTransform::FlipVertical);
+        } else if (str == QLatin1String("transpose")) {
+            m_transforms.append(VisualizerTransform::Transpose);
+        } else if (str == QLatin1String("transverse")) {
+            m_transforms.append(VisualizerTransform::Transverse);
         }
         if (str.contains('x')) {
             QStringList wh = str.split('x');
@@ -280,6 +384,7 @@ void VisualizerWidget::resetView() {
     m_control = lcd.control;
     m_scale = 100.0;
     m_grid = false;
+    m_transforms.clear();
     viewToString();
 }
 
@@ -313,12 +418,32 @@ void VisualizerWidget::viewToString() {
     if (m_scale != 100) { m_setup.append(QString::number(m_scale) + QStringLiteral("%")); }
     if (m_fps != 30) { m_setup.append(QString::number(m_fps) + QStringLiteral("fps")); }
     if (m_grid == true) { m_setup.append(QStringLiteral("grid")); }
+    for (VisualizerTransform transform : m_transforms) {
+        switch (transform) {
+            case VisualizerTransform::Rotate90: m_setup.append(QStringLiteral("rotate90")); break;
+            case VisualizerTransform::Rotate180: m_setup.append(QStringLiteral("rotate180")); break;
+            case VisualizerTransform::Rotate270: m_setup.append(QStringLiteral("rotate270")); break;
+            case VisualizerTransform::FlipHorizontal: m_setup.append(QStringLiteral("fliph")); break;
+            case VisualizerTransform::FlipVertical: m_setup.append(QStringLiteral("flipv")); break;
+            case VisualizerTransform::Transpose: m_setup.append(QStringLiteral("transpose")); break;
+            case VisualizerTransform::Transverse: m_setup.append(QStringLiteral("transverse")); break;
+        }
+    }
 
     m_config->setText(m_setup.join(","));
 
     float s = m_scale / 100.0f;
-    float w = m_width * s;
-    float h = m_height * s;
+    bool swapDimensions = false;
+    for (VisualizerTransform transform : m_transforms) {
+        if (transform == VisualizerTransform::Rotate90
+                || transform == VisualizerTransform::Rotate270
+                || transform == VisualizerTransform::Transpose
+                || transform == VisualizerTransform::Transverse) {
+            swapDimensions = !swapDimensions;
+        }
+    }
+    float w = (swapDimensions ? m_height : m_width) * s;
+    float h = (swapDimensions ? m_width : m_height) * s;
 
     uint32_t *data;
     uint32_t *data_end;
@@ -327,7 +452,8 @@ void VisualizerWidget::viewToString() {
 
     m_view->setFixedSize(static_cast<int>(w), static_cast<int>(h));
     m_view->setRefreshRate(m_fps);
-    m_view->setConfig(bppstep, m_width, m_height, m_base, m_control, m_grid, data, data_end);
+    m_view->setConfig(bppstep, m_width, m_height, m_base, m_control, m_grid,
+                      m_transforms, data, data_end);
     adjustSize();
 
     emit configChanged();
