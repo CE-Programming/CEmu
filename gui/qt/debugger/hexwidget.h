@@ -2,6 +2,8 @@
 #define HEXWIDGET_H
 
 #include <QtCore/QPoint>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QHash>
 #include <QtCore/QStack>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QAbstractScrollArea>
@@ -13,9 +15,12 @@ public:
     explicit HexWidget(QWidget *parent = Q_NULLPTR);
     virtual ~HexWidget() { }
     void setData(const QByteArray &ba);
-    void setBase(int address) { m_base = address; adjust(); }
+    void setDataSize(int size);
+    void setBase(int address);
     void setBytesPerLine(int bytes) { m_bytesPerLine = bytes; adjust(); }
     void setAsciiArea(bool area) { m_asciiArea = area; adjust(); }
+    void setDimZeroBytes(bool dim);
+    void setDimFFBytes(bool dim);
     void setCursorOffset(int address, bool selection = true);
     void setHighlight(int address);
     void setScrollable(bool state) { m_scrollable = state; adjust(); }
@@ -23,6 +28,9 @@ public:
     void setOffset(int addr);
     void prependData(const QByteArray &ba);
     void appendData(const QByteArray &ba);
+    int refreshVisibleData();
+    void setLiveRefreshEnabled(bool enabled);
+    void setReadOnly(bool readOnly) { m_readOnly = readOnly; }
     int getBase() const { return m_base; }
     int getOffset() const { return m_cursorOffset / 2; }
     int getCursorOffset() const { return m_cursorOffset; }
@@ -64,6 +72,7 @@ private:
     void overwrite(int pos, char c);
     void overwrite(int pos, const QByteArray &ba);
     int getPosition(QPoint posa, bool allow = true);
+    void resetLiveChanges(bool dataIsCurrent = false);
 
     typedef struct {
         int addr;
@@ -105,7 +114,16 @@ private:
     bool m_asciiArea = true;            // show character representations
     bool m_scrolled = false;            // scrolled while focused
     bool m_asciiEdit = false;           // editing from the ascii side
+    bool m_readOnly = false;
+    bool m_dimZeroBytes = false;
+    bool m_dimFFBytes = false;
+    bool m_liveRefreshEnabled = false;
     int m_highlightedAddr = -1;         // Address to highlight with a box
+    int m_lastRefreshStart = -1;
+    int m_lastRefreshEnd = -1;
+
+    QElapsedTimer m_liveChangeClock;
+    QHash<int, qint64> m_liveChanges;
 
     QStack<stack_entry_t> m_stack;
 };

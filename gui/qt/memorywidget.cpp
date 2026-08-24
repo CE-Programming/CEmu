@@ -58,6 +58,120 @@ void MainWindow::ramUpdate() const {
     ui->ramEdit->setData({reinterpret_cast<const char *>(mem.ram.block), 0x65800});
 }
 
+void MainWindow::updateMemoryGuiState(bool debuggerEnabled) const {
+    const bool flashViewEnabled = debuggerEnabled || ui->checkFlashLiveRefresh->isChecked();
+    const bool ramViewEnabled = debuggerEnabled || ui->checkRamLiveRefresh->isChecked();
+    ui->groupFlash->setEnabled(true);
+    ui->groupRAM->setEnabled(true);
+
+    ui->buttonFlashGoto->setEnabled(true);
+    ui->buttonFlashSearch->setEnabled(debuggerEnabled);
+    ui->buttonFlashSync->setEnabled(debuggerEnabled);
+    ui->flashDimZeros->setEnabled(true);
+    ui->flashDimFFs->setEnabled(true);
+    ui->flashAscii->setEnabled(debuggerEnabled);
+    ui->flashBytes->setEnabled(debuggerEnabled);
+    ui->buttonRamGoto->setEnabled(true);
+    ui->buttonRamSearch->setEnabled(debuggerEnabled);
+    ui->buttonRamSync->setEnabled(debuggerEnabled);
+    ui->ramDimZeros->setEnabled(true);
+    ui->ramDimFFs->setEnabled(true);
+    ui->ramAscii->setEnabled(debuggerEnabled);
+    ui->ramBytes->setEnabled(debuggerEnabled);
+    ui->flashEdit->setEnabled(flashViewEnabled);
+    ui->ramEdit->setEnabled(ramViewEnabled);
+    ui->flashEdit->setReadOnly(!debuggerEnabled);
+    ui->ramEdit->setReadOnly(!debuggerEnabled);
+
+    for (const QString &magic : m_docksMemory) {
+        QDockWidget *dock = findChild<QDockWidget*>(magic);
+        if (dock == Q_NULLPTR) {
+            continue;
+        }
+        if (HexWidget *edit = dock->findChild<HexWidget*>()) {
+            const QCheckBox *liveRefresh = dock->findChild<QCheckBox*>(QStringLiteral("checkMemoryLiveRefresh"));
+            edit->setEnabled(debuggerEnabled || (liveRefresh != Q_NULLPTR && liveRefresh->isChecked()));
+            edit->setReadOnly(!debuggerEnabled);
+        }
+        for (QPushButton *button : dock->findChildren<QPushButton*>()) {
+            button->setEnabled(debuggerEnabled || button->objectName() == QStringLiteral("buttonMemoryGoto"));
+        }
+        for (QToolButton *tool : dock->findChildren<QToolButton*>()) {
+            const QString name = tool->objectName();
+            tool->setEnabled(debuggerEnabled || name == QStringLiteral("buttonMemoryDimZeros")
+                             || name == QStringLiteral("buttonMemoryDimFFs"));
+        }
+        for (QSpinBox *spin : dock->findChildren<QSpinBox*>()) {
+            spin->setEnabled(debuggerEnabled);
+        }
+    }
+}
+
+void MainWindow::setMemLiveRefresh() {
+    ui->flashEdit->setLiveRefreshEnabled(ui->checkFlashLiveRefresh->isChecked());
+    ui->ramEdit->setLiveRefreshEnabled(ui->checkRamLiveRefresh->isChecked());
+    updateMemoryGuiState(guiDebug);
+    bool enabled = ui->checkFlashLiveRefresh->isChecked() || ui->checkRamLiveRefresh->isChecked();
+    for (const QString &magic : m_docksMemory) {
+        QDockWidget *dock = findChild<QDockWidget*>(magic);
+        const QCheckBox *liveRefresh = dock == Q_NULLPTR
+            ? Q_NULLPTR : dock->findChild<QCheckBox*>(QStringLiteral("checkMemoryLiveRefresh"));
+        HexWidget *edit = dock == Q_NULLPTR ? Q_NULLPTR : dock->findChild<HexWidget*>();
+        const bool dockEnabled = liveRefresh != Q_NULLPTR && liveRefresh->isChecked();
+        if (edit != Q_NULLPTR) {
+            edit->setLiveRefreshEnabled(dockEnabled);
+        }
+        enabled = enabled || dockEnabled;
+    }
+
+    if (!enabled) {
+        m_memRefreshTimer.stop();
+        return;
+    }
+
+    memLiveRefresh();
+    m_memRefreshTimer.start();
+}
+
+void MainWindow::memLiveRefresh() {
+    if (!guiEmuValid) {
+        return;
+    }
+
+    if (ui->debugMemoryWidget->isVisible()) {
+        if (ui->checkFlashLiveRefresh->isChecked()) {
+            if (!ui->flashEdit->getSize()) {
+                ui->flashEdit->setDataSize(static_cast<int>(qMin(mem.flash.size, UINT32_C(0xC00000))));
+            }
+            ui->flashEdit->refreshVisibleData();
+        }
+        if (ui->checkRamLiveRefresh->isChecked()) {
+            if (!ui->ramEdit->getSize()) {
+                ui->ramEdit->setBase(0xD00000);
+                ui->ramEdit->setDataSize(0x65800);
+            }
+            ui->ramEdit->refreshVisibleData();
+        }
+    }
+
+    for (const QString &magic : m_docksMemory) {
+        QDockWidget *dock = findChild<QDockWidget*>(magic);
+        if (dock != Q_NULLPTR && dock->isVisible()) {
+            const QCheckBox *liveRefresh = dock->findChild<QCheckBox*>(QStringLiteral("checkMemoryLiveRefresh"));
+            if (liveRefresh != Q_NULLPTR && liveRefresh->isChecked()) {
+                HexWidget *edit = dock->findChild<HexWidget*>();
+                if (edit == Q_NULLPTR) {
+                    continue;
+                }
+                if (!edit->getSize()) {
+                    edit->setDataSize(0x1000);
+                }
+                edit->refreshVisibleData();
+            }
+        }
+    }
+}
+
 void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
     if (edit == Q_NULLPTR || !guiEmuValid) {
         return;
@@ -114,8 +228,12 @@ void MainWindow::flashGotoPressed() {
         const QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
             m_flashGotoAddr = typed;
+            if (!ui->flashEdit->getSize() && guiEmuValid) {
+                ui->flashEdit->setDataSize(static_cast<int>(qMin(mem.flash.size, UINT32_C(0xC00000))));
+            }
             ui->flashEdit->setFocus();
             ui->flashEdit->setOffset(hex2int(resolved));
+            ui->flashEdit->refreshVisibleData();
 
             auto &hist = m_memGotoHistory;
             std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
@@ -135,8 +253,13 @@ void MainWindow::ramGotoPressed() {
         const QString resolved = resolveAddressOrEquate(typed, &ok);
         if (ok) {
             m_RamGotoAddr = typed;
+            if (!ui->ramEdit->getSize() && guiEmuValid) {
+                ui->ramEdit->setBase(0xD00000);
+                ui->ramEdit->setDataSize(0x65800);
+            }
             ui->ramEdit->setFocus();
             ui->ramEdit->setOffset(hex2int(resolved) - 0xD00000);
+            ui->ramEdit->refreshVisibleData();
 
             auto &hist = m_memGotoHistory;
             std::erase_if(hist, [&](const QString &s){ return s.compare(typed, Qt::CaseInsensitive) == 0; });
@@ -202,13 +325,32 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
 }
 
 void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
-    if (edit == Q_NULLPTR) {
+    if (edit == Q_NULLPTR || !guiEmuValid) {
         return;
     }
 
-    edit->setBase(static_cast<int>(address));
-    edit->setOffset(0);
-    memUpdateEdit(edit, true);
+    if (guiDebug) {
+        edit->setBase(static_cast<int>(address));
+        edit->setOffset(0);
+        memUpdateEdit(edit, true);
+        edit->setHighlight(static_cast<int>(address));
+        return;
+    }
+
+    constexpr int windowSize = 0x1000;
+    const uint32_t base = static_cast<uint32_t>(edit->getBase());
+    const uint32_t size = static_cast<uint32_t>(edit->getSize());
+    if (!size || address < base || address - base >= size) {
+        constexpr uint32_t addressSpaceSize = UINT32_C(0x1000000);
+        uint32_t start = address > windowSize / 2 ? address - windowSize / 2 : 0;
+        if (start > addressSpaceSize - windowSize) {
+            start = addressSpaceSize - windowSize;
+        }
+        edit->setBase(static_cast<int>(start));
+        edit->setDataSize(windowSize);
+    }
+    edit->setOffset(static_cast<int>(address) - edit->getBase());
+    edit->refreshVisibleData();
     edit->setHighlight(static_cast<int>(address));
 }
 

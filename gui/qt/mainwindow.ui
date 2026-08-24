@@ -3860,14 +3860,11 @@
          <normaloff>:/icons/resources/icons/memory.png</normaloff>:/icons/resources/icons/memory.png</iconset>
        </attribute>
        <attribute name="title">
-        <string>Memory</string>
+       <string>Memory</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_33">
         <item>
          <widget class="QGroupBox" name="groupFlash">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
           <property name="title">
            <string>Flash</string>
           </property>
@@ -3912,7 +3909,7 @@
               </widget>
              </item>
              <item>
-              <spacer name="hs_4">
+              <spacer name="hsFlashLiveLeft">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -3923,6 +3920,64 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkFlashLiveRefresh">
+               <property name="toolTip">
+                <string>Refresh only the visible Flash range while emulation is running</string>
+               </property>
+               <property name="text">
+                <string>Live refresh</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="hsFlashLiveRight">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>20</height>
+                </size>
+               </property>
+             </spacer>
+             </item>
+             <item>
+              <widget class="QToolButton" name="flashDimZeros">
+               <property name="toolTip">
+                <string>Show zero bytes at half opacity</string>
+               </property>
+               <property name="text">
+                <string>00</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="flashDimFFs">
+               <property name="toolTip">
+                <string>Show FF bytes at half opacity</string>
+               </property>
+               <property name="text">
+                <string>FF</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="flashAscii">
@@ -3988,9 +4043,6 @@
         </item>
         <item>
          <widget class="QGroupBox" name="groupRAM">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
           <property name="title">
            <string>RAM</string>
           </property>
@@ -4035,7 +4087,7 @@
               </widget>
              </item>
              <item>
-              <spacer name="hs_2">
+              <spacer name="hsRamLiveLeft">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -4046,6 +4098,64 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkRamLiveRefresh">
+               <property name="toolTip">
+                <string>Refresh only the visible RAM range while emulation is running</string>
+               </property>
+               <property name="text">
+                <string>Live refresh</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="hsRamLiveRight">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>20</height>
+                </size>
+               </property>
+             </spacer>
+             </item>
+             <item>
+              <widget class="QToolButton" name="ramDimZeros">
+               <property name="toolTip">
+                <string>Show zero bytes at half opacity</string>
+               </property>
+               <property name="text">
+                <string>00</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="ramDimFFs">
+               <property name="toolTip">
+                <string>Show FF bytes at half opacity</string>
+               </property>
+               <property name="text">
+                <string>FF</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="ramAscii">

@@ -9,6 +9,10 @@
 #include <QtGui/QClipboard>
 #include <QtGui/QFontDatabase>
 
+namespace {
+constexpr qint64 LIVE_CHANGE_DURATION_MS = 2000;
+}
+
 HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{Q_NULLPTR} {
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     monospace.setStyleHint(QFont::Monospace);
@@ -18,6 +22,7 @@ HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{Q_NU
     connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
     connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjust);
 
+    m_liveChangeClock.start();
     resetSelection();
     adjust();
 }
@@ -31,19 +36,107 @@ void HexWidget::setData(const QByteArray &ba) {
     m_data = ba;
     m_modified.resize(m_data.size());
     m_modified.fill(0);
+    resetLiveChanges(true);
     adjust();
+}
+
+void HexWidget::setDataSize(int size) {
+    m_scrolled = false;
+    m_data.resize(size);
+    m_data.fill(0);
+    m_modified.resize(size);
+    m_modified.fill(0);
+    resetLiveChanges();
+    adjust();
+}
+
+void HexWidget::setBase(int address) {
+    if (m_base != address) {
+        m_base = address;
+        resetLiveChanges();
+    }
+    adjust();
+}
+
+void HexWidget::setDimZeroBytes(bool dim) {
+    if (m_dimZeroBytes != dim) {
+        m_dimZeroBytes = dim;
+        viewport()->update();
+    }
+}
+
+void HexWidget::setDimFFBytes(bool dim) {
+    if (m_dimFFBytes != dim) {
+        m_dimFFBytes = dim;
+        viewport()->update();
+    }
+}
+
+void HexWidget::setLiveRefreshEnabled(bool enabled) {
+    if (m_liveRefreshEnabled != enabled) {
+        m_liveRefreshEnabled = enabled;
+        resetLiveChanges();
+        viewport()->update();
+    }
+}
+
+void HexWidget::resetLiveChanges(bool dataIsCurrent) {
+    m_liveChanges.clear();
+    m_lastRefreshStart = dataIsCurrent && !m_data.isEmpty() ? 0 : -1;
+    m_lastRefreshEnd = dataIsCurrent ? m_data.size() - 1 : -1;
 }
 
 void HexWidget::prependData(const QByteArray &ba) {
     m_data.prepend(ba);
     m_modified.prepend(QByteArray(ba.size(), 0));
+    resetLiveChanges();
     adjust();
 }
 
 void HexWidget::appendData(const QByteArray &ba) {
     m_data.append(ba);
     m_modified.append(QByteArray(ba.size(), 0));
+    resetLiveChanges();
     adjust();
+}
+
+int HexWidget::refreshVisibleData() {
+    if (m_size <= 0 || m_lineStart < 0 || m_lineEnd < m_lineStart) {
+        return 0;
+    }
+
+    const int end = qMin(m_lineEnd, m_size - 1);
+    const qint64 now = m_liveChangeClock.elapsed();
+    const bool hadLiveChanges = !m_liveChanges.isEmpty();
+    for (auto it = m_liveChanges.begin(); it != m_liveChanges.end();) {
+        if (it.key() < m_lineStart || it.key() > end || now - it.value() >= LIVE_CHANGE_DURATION_MS) {
+            it = m_liveChanges.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    int changed = 0;
+    for (int offset = m_lineStart; offset <= end; ++offset) {
+        if (!m_modified.isEmpty() && m_modified[offset]) {
+            continue;
+        }
+        const char value = static_cast<char>(mem_peek_byte(static_cast<uint32_t>(m_base + offset)));
+        if (m_data[offset] != value) {
+            m_data[offset] = value;
+            if (m_liveRefreshEnabled && offset >= m_lastRefreshStart && offset <= m_lastRefreshEnd) {
+                m_liveChanges.insert(offset, now);
+            }
+            ++changed;
+        }
+    }
+    m_lastRefreshStart = m_lineStart;
+    m_lastRefreshEnd = end;
+
+    if (changed || hadLiveChanges || !m_liveChanges.isEmpty()) {
+        viewport()->update();
+    }
+    return changed;
 }
 
 void HexWidget::scroll(int value) {
@@ -318,7 +411,6 @@ void HexWidget::overwrite(int addr, const QByteArray &ba) {
 }
 
 void HexWidget::paintEvent(QPaintEvent *event) {
-    QRect r;
     QPainter painter(viewport());
     const QRect &region = event->rect();
     const QPalette &pal = viewport()->palette();
@@ -328,11 +420,13 @@ void HexWidget::paintEvent(QPaintEvent *event) {
     const QColor cModified = QColor(Qt::blue).lighter(160);
     const QColor cBoth = QColor(Qt::green).lighter(160);
     const bool darkMode = isRunningInDarkMode();
+    const QColor cLiveChange = darkMode ? QColor(255, 80, 80) : QColor(210, 45, 45);
     const QColor boxBorder = darkMode ? QColor(0xdb, 0xdb, 0xdb) : QColor(0x66, 0x66, 0x66);
     QColor boxFill = darkMode ? QColor(0x55, 0x55, 0x55) : QColor(0xd0, 0xd0, 0xd0);
     boxFill.setAlpha(140);
     const int xOffset = horizontalScrollBar()->value();
     const int xAddr = m_addrLoc - xOffset;
+    const qint64 now = m_liveChanges.isEmpty() ? 0 : m_liveChangeClock.elapsed();
 
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(region, cBg);
@@ -368,9 +462,18 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             uint8_t flags = debug.addr[addr + m_base];
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = !m_modified.isEmpty() && m_modified[addr];
+            const bool dimByte = ((m_dimZeroBytes && data == 0x00) || (m_dimFFBytes && data == 0xFF))
+                && !(flags & (DBG_MASK_READ | DBG_MASK_WRITE | DBG_MASK_EXEC));
             const bool highlighted = m_highlightedAddr >= 0 && (m_base + addr) == m_highlightedAddr;
             const int xDataStart = xData;
             const int xAsciiStart = xAscii;
+            QRect dataCellRect;
+            if (!col) {
+                dataCellRect.setRect(xData, y - m_charHeight + m_margin, 2 * m_charWidth, m_charHeight);
+            } else {
+                dataCellRect.setRect(xData - m_charWidth, y - m_charHeight + m_margin, 3 * m_charWidth, m_charHeight);
+            }
+            const QRect asciiCellRect(xAscii, y - m_charHeight + m_margin, m_charWidth, m_charHeight);
             QRect dataHighlightRect;
             QRect asciiHighlightRect;
 
@@ -404,19 +507,30 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                 painter.setPen(Qt::darkRed);
             }
 
-            if (modified || selected) {
-                if (!col) {
-                    r.setRect(xData, y - m_charHeight + m_margin, 2 * m_charWidth, m_charHeight);
-                } else {
-                    r.setRect(xData - m_charWidth, y - m_charHeight + m_margin, 3 * m_charWidth, m_charHeight);
+            const auto liveChange = m_liveChanges.constFind(addr);
+            if (liveChange != m_liveChanges.cend()) {
+                const qint64 age = now - liveChange.value();
+                if (age >= 0 && age < LIVE_CHANGE_DURATION_MS) {
+                    QColor color = cLiveChange;
+                    color.setAlpha(static_cast<int>(140 * (LIVE_CHANGE_DURATION_MS - age) / LIVE_CHANGE_DURATION_MS));
+                    painter.fillRect(dataCellRect, color);
+                    if (m_asciiArea) {
+                        painter.fillRect(asciiCellRect, color);
+                    }
                 }
-                painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
+            }
+
+            if (modified || selected) {
+                painter.fillRect(dataCellRect, modified ? selected ? cBoth : cModified : cSelected);
             }
 
             if (highlighted) {
                 drawHighlightBox(dataHighlightRect);
             }
 
+            if (dimByte) {
+                painter.setOpacity(0.5);
+            }
             QString hex = int2hex(data, 2);
             if ((flags & DBG_MASK_READ) && (flags & DBG_MASK_WRITE)) {
                 painter.setPen(Qt::darkGreen);
@@ -429,6 +543,9 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                 painter.drawText(xData, y, hex);
                 xData += 3 * m_charWidth;
             }
+            if (dimByte) {
+                painter.setOpacity(1.0);
+            }
 
             painter.setFont(fontorig);
 
@@ -438,13 +555,18 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                     ch = '.';
                 }
                 if (modified || selected) {
-                    r.setRect(xAscii, y - m_charHeight + m_margin, m_charWidth, m_charHeight);
-                    painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
+                    painter.fillRect(asciiCellRect, modified ? selected ? cBoth : cModified : cSelected);
                 }
                 if (highlighted) {
                     drawHighlightBox(asciiHighlightRect);
                 }
+                if (dimByte) {
+                    painter.setOpacity(0.5);
+                }
                 painter.drawText(xAscii, y, QChar(ch));
+                if (dimByte) {
+                    painter.setOpacity(1.0);
+                }
                 xAscii += m_charWidth;
             }
         }
@@ -534,7 +656,7 @@ void HexWidget::keyPressEvent(QKeyEvent *event) {
             qApp->clipboard()->setText(ba);
         }
     } else
-    if (event->matches(QKeySequence::Paste)) {
+    if (!m_readOnly && event->matches(QKeySequence::Paste)) {
         QByteArray ba = qApp->clipboard()->text().toLatin1();
         if (!m_asciiEdit) {
             ba = QByteArray::fromHex(ba);
@@ -542,7 +664,7 @@ void HexWidget::keyPressEvent(QKeyEvent *event) {
         overwrite(addr, ba);
         setCursorOffset(addr + ba.size() * 2);
     } else
-    if (event->matches(QKeySequence::Delete)) {
+    if (!m_readOnly && event->matches(QKeySequence::Delete)) {
         if (isSelected()) {
             setSelected(0);
         } else {
@@ -550,10 +672,10 @@ void HexWidget::keyPressEvent(QKeyEvent *event) {
         }
         setCursorOffset(addr + 2);
     } else
-    if (event->matches(QKeySequence::Undo)) {
+    if (!m_readOnly && event->matches(QKeySequence::Undo)) {
         undo();
     } else
-    if (!(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier))) {
+    if (!m_readOnly && !(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier))) {
         int key = event->key();
         if (!m_asciiEdit) {
             if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'F')) {

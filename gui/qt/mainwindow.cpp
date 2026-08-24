@@ -502,6 +502,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramAscii, &QToolButton::toggled, [this](bool set){ ui->ramEdit->setAsciiArea(set); });
     connect(ui->flashAscii, &QToolButton::toggled, [this](bool set){ ui->flashEdit->setAsciiArea(set); });
+    connect(ui->ramDimZeros, &QToolButton::toggled, ui->ramEdit, &HexWidget::setDimZeroBytes);
+    connect(ui->flashDimZeros, &QToolButton::toggled, ui->flashEdit, &HexWidget::setDimZeroBytes);
+    connect(ui->ramDimFFs, &QToolButton::toggled, ui->ramEdit, &HexWidget::setDimFFBytes);
+    connect(ui->flashDimFFs, &QToolButton::toggled, ui->flashEdit, &HexWidget::setDimFFBytes);
     connect(ui->emuVarView, &QTableView::doubleClicked, this, &MainWindow::varPressed);
     connect(ui->emuVarView, &QTableView::customContextMenuRequested, this, &MainWindow::contextVars);
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::stateAddNew);
@@ -577,6 +581,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->ramEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
     connect(ui->flashEdit, &HexWidget::focused, [this] { m_memWidget = Q_NULLPTR; });
     connect(ui->ramEdit, &HexWidget::focused, [this] { m_memWidget = Q_NULLPTR; });
+    m_memRefreshTimer.setInterval(250);
+    m_memRefreshTimer.setTimerType(Qt::CoarseTimer);
+    connect(&m_memRefreshTimer, &QTimer::timeout, this, &MainWindow::memLiveRefresh);
+    connect(ui->checkFlashLiveRefresh, &QCheckBox::toggled, this, &MainWindow::setMemLiveRefresh);
+    connect(ui->checkRamLiveRefresh, &QCheckBox::toggled, this, &MainWindow::setMemLiveRefresh);
+    updateMemoryGuiState(guiDebug);
 
     // keymap
     connect(ui->radioNaturalKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);

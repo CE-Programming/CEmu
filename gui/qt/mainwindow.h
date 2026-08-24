@@ -615,6 +615,9 @@ private:
     void ramGotoPressed();
     void ramSyncPressed();
     void memUpdate();
+    void memLiveRefresh();
+    void setMemLiveRefresh();
+    void updateMemoryGuiState(bool debuggerEnabled) const;
     void setMemDocks();
     void setVisualizerDocks();
     void setKeyHistoryDocks();
@@ -876,6 +879,7 @@ private:
     QTimer m_timerEmu;
     QTimer m_timerFps;
     QTimer m_watchHitTimer;
+    QTimer m_memRefreshTimer;
     bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
 

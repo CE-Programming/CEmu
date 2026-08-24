@@ -33,6 +33,7 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QLabel>
@@ -819,8 +820,7 @@ void MainWindow::debugGuiState(bool state) const {
     ui->groupRegisters->setEnabled(state);
     ui->groupInterrupts->setEnabled(state);
     ui->groupStack->setEnabled(state);
-    ui->groupFlash->setEnabled(state);
-    ui->groupRAM->setEnabled(state);
+    updateMemoryGuiState(state);
     ui->cycleView->setEnabled(state);
     ui->flashAvgView->setEnabled(state);
     ui->flashMissesView->setEnabled(state);
@@ -840,26 +840,6 @@ void MainWindow::debugGuiState(bool state) const {
     ui->buttonSend->setEnabled(!state);
     ui->buttonResendFiles->setEnabled(!state);
     ui->buttonClipboardListToL1->setEnabled(!state);
-
-    QList<QDockWidget*> docks = findChildren<QDockWidget*>();
-    foreach (QDockWidget* dock, docks) {
-        if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
-            if (dock->isVisible()) {
-                QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
-                QList<QToolButton*> tools = dock->findChildren<QToolButton*>();
-                QList<HexWidget*> editChildren = dock->findChildren<HexWidget*>();
-                QList<QSpinBox*> spinChildren = dock->findChildren<QSpinBox*>();
-                editChildren.first()->setEnabled(state);
-                spinChildren.first()->setEnabled(state);
-                foreach (QPushButton *button, buttons) {
-                    button->setEnabled(state);
-                }
-                foreach (QToolButton *tool, tools) {
-                    tool->setEnabled(state);
-                }
-            }
-        }
-    }
 
     debugBasicGuiState(state);
 }
@@ -3584,24 +3564,46 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     QHBoxLayout *hlayout = new QHBoxLayout();
     QPushButton *buttonGoto = new QPushButton(m_iconGoto, tr("Goto"));
     QPushButton *buttonSearch = new QPushButton(m_iconSearch, tr("Search"));
+    QToolButton *buttonDimZeros = new QToolButton();
+    QToolButton *buttonDimFFs = new QToolButton();
     QToolButton *buttonAscii = new QToolButton();
     QToolButton *buttonSync = new QToolButton();
+    buttonDimZeros->setObjectName(QStringLiteral("buttonMemoryDimZeros"));
+    buttonDimZeros->setText(QStringLiteral("00"));
+    buttonDimZeros->setToolTip(tr("Show zero bytes at half opacity"));
+    buttonDimZeros->setCheckable(true);
+    buttonDimZeros->setChecked(false);
+    buttonDimFFs->setObjectName(QStringLiteral("buttonMemoryDimFFs"));
+    buttonDimFFs->setText(QStringLiteral("FF"));
+    buttonDimFFs->setToolTip(tr("Show FF bytes at half opacity"));
+    buttonDimFFs->setCheckable(true);
+    buttonDimFFs->setChecked(false);
     buttonAscii->setCheckable(true);
     buttonAscii->setChecked(ascii);
     buttonAscii->setIcon(m_iconAscii);
     buttonSync->setIcon(m_iconSync);
     buttonAscii->setToolTip(tr("Show ASCII"));
     buttonSync->setToolTip(tr("Sync Changes"));
-    QSpacerItem *spacer = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Maximum);
+    QSpacerItem *liveRefreshLeft = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Maximum);
+    QCheckBox *checkLiveRefresh = new QCheckBox(tr("Live refresh"));
+    QSpacerItem *liveRefreshRight = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Maximum);
     QSpinBox *spin = new QSpinBox();
     HexWidget *edit = new HexWidget();
 
-    buttonGoto->setEnabled(guiDebug);
+    buttonGoto->setObjectName(QStringLiteral("buttonMemoryGoto"));
+    checkLiveRefresh->setObjectName(QStringLiteral("checkMemoryLiveRefresh"));
+    checkLiveRefresh->setToolTip(tr("Refresh only the visible memory range while emulation is running"));
+    checkLiveRefresh->setChecked(false);
+
+    buttonGoto->setEnabled(true);
     buttonSearch->setEnabled(guiDebug);
+    buttonDimZeros->setEnabled(true);
+    buttonDimFFs->setEnabled(true);
     buttonAscii->setEnabled(guiDebug);
     buttonSync->setEnabled(guiDebug);
     spin->setEnabled(guiDebug);
     edit->setEnabled(guiDebug);
+    edit->setReadOnly(!guiDebug);
     edit->setContextMenuPolicy(Qt::CustomContextMenu);
     edit->setAsciiArea(ascii);
     edit->setScrollable(true);
@@ -3612,6 +3614,9 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     connect(buttonSearch, &QPushButton::clicked, [this, edit]{ memSearchEdit(edit); });
     connect(buttonGoto, &QPushButton::clicked, [this, edit]{ memGotoEdit(edit); });
     connect(buttonSync, &QToolButton::clicked, [this, edit]{ memSyncEdit(edit); });
+    connect(checkLiveRefresh, &QCheckBox::toggled, this, &MainWindow::setMemLiveRefresh);
+    connect(buttonDimZeros, &QToolButton::toggled, edit, &HexWidget::setDimZeroBytes);
+    connect(buttonDimFFs, &QToolButton::toggled, edit, &HexWidget::setDimFFBytes);
     connect(buttonAscii, &QToolButton::toggled, [this, edit, magic]{
         memAsciiToggle(edit);
         int index;
@@ -3633,6 +3638,7 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
             m_docksMemory.removeAt(index);
             m_docksMemoryBytes.removeAt(index);
             m_docksMemoryAscii.removeAt(index);
+            setMemLiveRefresh();
         }
     });
 
@@ -3642,7 +3648,11 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
 
     hlayout->addWidget(buttonGoto);
     hlayout->addWidget(buttonSearch);
-    hlayout->addSpacerItem(spacer);
+    hlayout->addSpacerItem(liveRefreshLeft);
+    hlayout->addWidget(checkLiveRefresh);
+    hlayout->addSpacerItem(liveRefreshRight);
+    hlayout->addWidget(buttonDimZeros);
+    hlayout->addWidget(buttonDimFFs);
     hlayout->addWidget(buttonAscii);
     hlayout->addWidget(buttonSync);
     hlayout->addWidget(spin);
