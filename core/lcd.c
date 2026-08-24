@@ -18,6 +18,13 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
+/*
+ * Empirically delay the initial FIFO prefill after a new frame's base-address
+ * update. A 34-tick offset on the 48 MHz DMA clock matches the timing benchmark
+ * seen in https://github.com/CE-Programming/CEmu/issues/198
+ */
+#define LCD_DMA_PREFILL_DELAY 34
+
 #define c1555(w) (((w) & ~0x8000) + ((w) & 0xFFE07FE0) + ((w) >> 10 & 0x00200020))
 #define c888(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
 #define c444(w)  (((w) << 4 & 0xF000F000) | ((w) << 3 & 0x07800780) | ((w) << 1 & 0x001E001E))
@@ -444,7 +451,7 @@ static void lcd_event(enum sched_item_id id) {
                 lcd.pos = 0;
                 lcd.curRow = lcd.curCol = 0;
                 panel_vsync();
-                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
+                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, LCD_DMA_PREFILL_DELAY);
             } else {
                 (void)lcd_gui_event();
                 panel.skipFrame = true;
