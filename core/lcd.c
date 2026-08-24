@@ -318,6 +318,16 @@ static inline void lcd_fill_bytes(uint8_t bytes) {
     lcd.upcurr += bytes;
 }
 
+/*
+ * LCD and DMA scheduler callbacks may run in either order at frame start.
+ * Latch only before the first burst so a late LNBU cannot rewind the FIFO.
+ */
+static inline void lcd_latch_prefill_base(void) {
+    if (lcd.prefill && !lcd.pos) {
+        lcd.upcurr = lcd.upbase;
+    }
+}
+
 static uint32_t lcd_words(uint8_t words) {
     assert(words > 0);
     uint32_t ticks = 0;
@@ -410,6 +420,8 @@ static void lcd_event(enum sched_item_id id) {
         default:
             fallthrough;
         case LCD_SYNC:
+            /* Hardware clears LCDUPCURR at the start of frame sync. */
+            lcd.upcurr = 0;
             if (compare == LCD_SYNC) {
                 lcd.ris |= 1 << 3;
             }
@@ -459,6 +471,7 @@ static void lcd_event(enum sched_item_id id) {
             lcd.compare = LCD_LNBU;
             break;
         case LCD_LNBU:
+            lcd_latch_prefill_base();
             lcd.ris |= 1 << 2;
             duration = (lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD - 1;
             lcd.compare = LCD_BACK_PORCH;
@@ -491,9 +504,7 @@ static void lcd_event(enum sched_item_id id) {
 static uint32_t lcd_dma(enum sched_item_id id) {
     uint32_t ticks;
     if (unlikely(lcd.prefill)) {
-        if (!lcd.pos) {
-            lcd.upcurr = lcd.upbase;
-        }
+        lcd_latch_prefill_base();
         lcd_fill_bytes(64);
         if ((lcd.prefill = lcd.pos)) {
             sched_repeat(id, lcd.pos == 128 ? 22 : 19);
