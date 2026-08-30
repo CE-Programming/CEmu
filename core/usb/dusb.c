@@ -73,6 +73,7 @@
 #define DUSB_VPKT_EOT                       0xDD00
 #define DUSB_VPKT_EOT_SIZE                  0
 #define DUSB_VPKT_ERROR                     0xEE00
+#define DUSB_VPKT_ERROR_SIZE                2
 
 #define DUSB_PID_CLK_ON                     0x0024
 #define DUSB_PID_CLK_DATE_FMT               0x0027
@@ -247,11 +248,150 @@ typedef enum dusb_state {
 
 typedef struct dusb_context {
     dusb_state_t state;
+    dusb_state_t error_state;
     uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size, delay;
+    uint16_t error_code;
     uint8_t version, flag, buffer[8];
-    bool clock_operation, clock_complete;
+    bool clock_operation, clock_complete, error_code_valid;
     dusb_command_t *command, commands[];
 } dusb_context_t;
+
+/* D-USB status catalogue, based on the DirectLink implementation in libticalcs. */
+static const char *dusb_error_message(uint16_t code) {
+    static const char *const messages[] = {
+        "unknown packet",
+        "cannot receive OS",
+        "timeout",
+        "unknown attribute",
+        "path does not exist",
+        "file does not exist",
+        "invalid packet length",
+        "unexpected packet",
+        "unknown protocol ID",
+        "cannot create directory",
+        "cannot create null file",
+        "insufficient memory",
+        "invalid path",
+        "invalid filename",
+        "file is archived",
+        "file is locked",
+        "operation is forbidden",
+        "file already exists",
+        "file cannot be archived",
+        "unsupported filter",
+        "filter is not applicable",
+        "unknown filter",
+        "list element is out of range",
+        "list element is not applicable",
+        "OS downgrade is not allowed",
+        "multiple files matched",
+        "file exceeds the maximum accepted size",
+        "timeout is too short",
+        "timeout is too long",
+        "unsupported protocol version",
+        "unsupported string character",
+        "attribute count does not match the request",
+        "attribute does not match the request",
+        "invalid attribute value",
+        "unsupported attribute",
+        "unknown option",
+        "unsupported option",
+        "invalid option",
+        "invalid filter value",
+        "insufficient information for write",
+        "invalid packet field",
+        "wait time exceeded",
+        "battery is too low",
+        "invalid certificate",
+        "no certificate present",
+        "bad signature",
+        "certificate has expired",
+        "certificate cannot be replaced",
+        "unsupported version",
+        "no data for variable",
+        "bad load address",
+        "file must be archived",
+        "cannot send OS",
+        "calculator is busy (return it to the home screen)",
+    };
+
+    if (code >= 1 && code <= sizeof messages / sizeof *messages) {
+        return messages[code - 1];
+    }
+    switch (code) {
+        case 0xCCCC: return "operation canceled";
+        case 0xCCCD: return "all operations canceled";
+        case 0xF001: return "missing directory information";
+        case 0xF002: return "missing data information";
+        case 0xF003: return "unable to allocate packet";
+        case 0xF004: return "short send or receive";
+        case 0xF005: return "failed to communicate";
+        case 0xF006: return "device disconnected";
+        case 0xEFF0: return "protocol handling violation";
+        default: return "unknown calculator error";
+    }
+}
+
+static const char *dusb_error_phase(dusb_state_t state) {
+    switch (state) {
+        case DUSB_OS_PING_ACK_WAIT_STATE:
+            return "OS-service handshake";
+        case DUSB_OS_MODE_SET_WAIT_STATE:
+            return "OS-service setup";
+        case DUSB_OS_BEGIN_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_BEGIN_WAIT_STATE:
+            return "OS transfer initialization";
+        case DUSB_OS_HEADER_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_HEADER_WAIT_STATE:
+            return "OS header transfer";
+        case DUSB_OS_DATA_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_DATA_WAIT_STATE:
+            return "OS data transfer";
+        case DUSB_OS_EOT_ACK_WAIT_STATE:
+        case DUSB_OS_ACK_EOT_WAIT_STATE:
+            return "OS transfer completion";
+        case DUSB_VAR_PING_ACK_WAIT_STATE:
+            return "variable-service handshake";
+        case DUSB_VAR_MODE_SET_WAIT_STATE:
+            return "variable-service setup";
+        case DUSB_VAR_RTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_RTS_WAIT_STATE:
+            return "variable metadata negotiation";
+        case DUSB_VAR_VAR_CNTS_ACK_WAIT_STATE:
+        case DUSB_VAR_ACK_VAR_CNTS_WAIT_STATE:
+            return "variable contents transfer";
+        case DUSB_VAR_EOT_ACK_WAIT_STATE:
+            return "variable transfer completion";
+        case DUSB_CLOCK_SET_ACK_WAIT_STATE:
+        case DUSB_CLOCK_DATA_ACK_WAIT_STATE:
+            return "clock update";
+        default:
+            return "D-USB exchange";
+    }
+}
+
+static uint32_t dusb_read_be32(const uint8_t *buffer) {
+    return (uint32_t)buffer[0] << 24 | (uint32_t)buffer[1] << 16 |
+           (uint32_t)buffer[2] << 8 | buffer[3];
+}
+
+static bool dusb_decode_error_packet(const usb_transfer_info_t *transfer, uint16_t *code) {
+    const uint8_t *buffer = transfer->buffer;
+    const uint16_t expected_length =
+        DUSB_RPKT_HEADER_SIZE + DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_ERROR_SIZE;
+
+    if (transfer->length != expected_length ||
+        transfer->endpoint != DUSB_IN_ENDPOINT || !transfer->direction ||
+        buffer[4] != DUSB_RPKT_VIRT_DATA_LAST ||
+        dusb_read_be32(buffer) != DUSB_VPKT_HEADER_SIZE + DUSB_VPKT_ERROR_SIZE ||
+        dusb_read_be32(buffer + DUSB_RPKT_HEADER_SIZE) != DUSB_VPKT_ERROR_SIZE ||
+        (buffer[9] << 8 | buffer[10]) != DUSB_VPKT_ERROR) {
+        return false;
+    }
+
+    *code = buffer[11] << 8 | buffer[12];
+    return true;
+}
 
 static uint16_t dusb_clock_parameter(const dusb_context_t *context, uint16_t *size,
                                      uint8_t value[4]) {
@@ -962,7 +1102,6 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
     usb_transfer_info_t *transfer = &event->info.transfer;
     usb_timer_info_t *timer = &event->info.timer;
     dusb_state_t original_state = context->state;
-    (void)original_state;
     while (true) {
         switch ((context->state = state)) {
             case DUSB_INIT_STATE:
@@ -1171,7 +1310,17 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 timer->useconds = 10000;
                 break;
             case DUSB_INVALID_STATE:
-                gui_console_err_printf("[CEmu] USB transfer failed, stopping activity\n");
+                if (context->error_code_valid) {
+                    gui_console_err_printf(
+                        "[CEmu] USB transfer failed during %s: D-USB error 0x%04X (%s).\n",
+                        dusb_error_phase(context->error_state),
+                        (unsigned int)context->error_code,
+                        dusb_error_message(context->error_code));
+                } else {
+                    gui_console_err_printf(
+                        "[CEmu] USB transfer failed during %s (no D-USB error code received).\n",
+                        dusb_error_phase(original_state));
+                }
                 event->type = USB_DESTROY_EVENT;
                 break;
         }
@@ -1436,6 +1585,11 @@ int usb_dusb_device(usb_event_t *event) {
                 transfer->type = USB_BULK_TRANSFER;
                 transfer->direction = true;
                 return USB_SUCCESS;
+            }
+            if (dusb_decode_error_packet(transfer, &context->error_code)) {
+                context->error_state = context->state;
+                context->error_code_valid = true;
+                return dusb_transition(event, DUSB_INVALID_STATE);
             }
             transfer_length = dusb_transfer_length(context);
             endpoint = dusb_transfer_endpoint(context->state);
