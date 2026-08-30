@@ -3005,7 +3005,7 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
             }
         }
         if (!m_pathArmRom.isEmpty()) {
-            loadArmRomOverride();
+            loadArmRomOverride(m_pathArmRom);
         }
         emu.start();
         guiEmuValid = true;

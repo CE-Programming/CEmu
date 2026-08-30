@@ -45,7 +45,7 @@ const QStringList &luaBuiltins()
 
 const QStringList &cemuGlobals()
 {
-    static const QStringList values = QStringLiteral("cemu cpu mem vars peripherals lcd keys gui emu link dbg basic "
+    static const QStringList values = QStringLiteral("cemu cpu coproc mem vars peripherals lcd keys gui emu link dbg basic "
                                                      "autotester cLog cErr R F")
                                           .split(QLatin1Char(' '));
     return values;
@@ -87,6 +87,9 @@ const QHash<QString, QStringList> &completionMembers()
         {words("cpu.registers.flags"), flags},
         {words("R.flags"), flags},
         {words("F"), flags},
+        {words("coproc"), wordList("present bootloader state time readByte readHalf readWord "
+                                   "writeByte writeHalf writeWord reset loadFlash spiSelect "
+                                   "spiPeek spiTransfer uartSend uartReceive")},
         {words("mem"), wordList("read readTable readByte readShort readLong readWord write "
                                 "writeByte writeShort writeLong writeWord fill copy crc32 search")},
         {words("vars"), wordList("list find read launch types")},

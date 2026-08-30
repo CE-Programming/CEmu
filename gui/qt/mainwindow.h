@@ -507,7 +507,7 @@ private:
     // settings
     void setRom(const QString &path);
     void setArmRom();
-    void loadArmRomOverride();
+    bool loadArmRomOverride(const QString &path);
     void clearArmRom();
     void setImagePath();
     void setCalcId();
