@@ -75,6 +75,8 @@
 #define DUSB_VPKT_ERROR                     0xEE00
 #define DUSB_VPKT_ERROR_SIZE                2
 
+#define DUSB_ERROR_UNSUPPORTED_VERSION      0x0031
+
 #define DUSB_PID_CLK_ON                     0x0024
 #define DUSB_PID_CLK_DATE_FMT               0x0027
 #define DUSB_PID_CLK_TIME_FMT               0x0028
@@ -249,10 +251,10 @@ typedef enum dusb_state {
 typedef struct dusb_context {
     dusb_state_t state;
     dusb_state_t error_state;
-    uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size, delay;
+    uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size, delay, send_count;
     uint16_t error_code;
     uint8_t version, flag, buffer[8];
-    bool clock_operation, clock_complete, error_code_valid, failed;
+    bool clock_operation, clock_complete, error_code_valid, failed, skip_command;
     dusb_command_t *command, commands[];
 } dusb_context_t;
 
@@ -1234,7 +1236,9 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
             case DUSB_COMMAND_STATE:
                 switch (context->command->type) {
                     case DUSB_DONE_COMMAND:
-                        gui_console_printf("[CEmu] USB transfer(s) finished.\n");
+                        gui_console_printf(context->failed
+                            ? "[CEmu] USB transfer(s) finished with skipped files.\n"
+                            : "[CEmu] USB transfer(s) finished.\n");
                         event->type = USB_DESTROY_EVENT;
                         break;
                     case DUSB_SCREENSHOT_COMMAND:
@@ -1544,6 +1548,7 @@ int usb_dusb_device(usb_event_t *event) {
                     }
                     command->file_length = file_length;
                     context->total += file_length;
+                    ++context->send_count;
                 }
             }
             event->context = context;
@@ -1590,6 +1595,30 @@ int usb_dusb_device(usb_event_t *event) {
             if (dusb_decode_error_packet(transfer, &context->error_code)) {
                 context->error_state = context->state;
                 context->error_code_valid = true;
+                if (context->error_code == DUSB_ERROR_UNSUPPORTED_VERSION &&
+                    context->state == DUSB_VAR_ACK_RTS_WAIT_STATE &&
+                    context->send_count > 1) {
+                    gui_console_err_printf(
+                        "[CEmu] Skipping file for variable %.*s (version 0x%02X) "
+                        "after %s: D-USB error 0x%04X (%s); continuing.\n",
+                        command->varname_utf8_length, command->varname_utf8,
+                        (unsigned int)context->version,
+                        dusb_error_phase(context->error_state),
+                        (unsigned int)context->error_code,
+                        dusb_error_message(context->error_code));
+                    context->error_code_valid = false;
+                    context->failed = true;
+                    context->skip_command = true;
+                    context->state = DUSB_VAR_ACK_RTS_STATE;
+                    event->type = USB_TRANSFER_RESPONSE_EVENT;
+                    transfer->length = length;
+                    transfer->status = USB_TRANSFER_COMPLETED;
+                    transfer->address = 1;
+                    transfer->endpoint = DUSB_IN_ENDPOINT;
+                    transfer->type = USB_BULK_TRANSFER;
+                    transfer->direction = true;
+                    return USB_SUCCESS;
+                }
                 return dusb_transition(event, DUSB_INVALID_STATE);
             }
             transfer_length = dusb_transfer_length(context);
@@ -1978,6 +2007,11 @@ int usb_dusb_device(usb_event_t *event) {
     if (context->state == DUSB_VAR_MODE_SET_ACK_STATE &&
         context->command->type == DUSB_CLOCK_COMMAND) {
         return dusb_transition(event, DUSB_CLOCK_SET_WAIT_STATE);
+    }
+    if (context->state == DUSB_VAR_ACK_RTS_ACK_STATE && context->skip_command) {
+        context->skip_command = false;
+        context->position = context->offset = 0;
+        return dusb_transition(event, DUSB_NEXT_COMMAND_STATE);
     }
     return dusb_transition(event, context->state + 1);
 }
