@@ -8,6 +8,82 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BOOTLOADER_REGION_SIZE UINT32_C(0x2000)
+
+static const uint8_t *find_bytes(const uint8_t *data, size_t data_size, const char *text) {
+    size_t text_size = strlen(text);
+    if (!text_size || text_size > data_size) {
+        return NULL;
+    }
+    for (size_t offset = 0; offset <= data_size - text_size; ++offset) {
+        if (memcmp(data + offset, text, text_size) == 0) {
+            return data + offset;
+        }
+    }
+    return NULL;
+}
+
+static void copy_description(char *description, size_t desc_size, const char *prefix,
+                             const uint8_t *value, size_t value_size) {
+    if (!desc_size) {
+        return;
+    }
+    size_t prefix_size = strlen(prefix);
+    size_t copy_prefix = prefix_size < desc_size - 1 ? prefix_size : desc_size - 1;
+    memcpy(description, prefix, copy_prefix);
+    size_t remaining = desc_size - 1 - copy_prefix;
+    size_t copy_value = value_size < remaining ? value_size : remaining;
+    if (copy_value) {
+        memcpy(description + copy_prefix, value, copy_value);
+    }
+    description[copy_prefix + copy_value] = '\0';
+}
+
+static bool parse_uf2_info(const uint8_t *flash, const char *line_prefix,
+                           const char *metadata, const char *description_prefix,
+                           char *description, size_t desc_size) {
+    const uint8_t *search = flash;
+    const uint8_t *region_end = flash + BOOTLOADER_REGION_SIZE;
+    size_t remaining = BOOTLOADER_REGION_SIZE;
+    while (remaining) {
+        const uint8_t *line = find_bytes(search, remaining, line_prefix);
+        if (!line) {
+            return false;
+        }
+        const uint8_t *version = line + strlen(line_prefix);
+        const uint8_t *end = version;
+        while (end < region_end && *end >= UINT8_C(0x20) && *end <= UINT8_C(0x7E)) {
+            ++end;
+        }
+        size_t metadata_size = strlen(metadata);
+        if (end != version && (size_t)(region_end - end) >= metadata_size &&
+            memcmp(end, metadata, metadata_size) == 0) {
+            copy_description(description, desc_size, description_prefix, version, (size_t)(end - version));
+            return true;
+        }
+        search = line + 1;
+        remaining = (size_t)(region_end - search);
+    }
+    return false;
+}
+
+static arm_bootloader_type_t parse_bootloader_info(const uint8_t *flash, char *desc, size_t desc_size) {
+    static const char free_prefix[] = "UF2 Bootloader CEmu free ";
+    static const char free_metadata[] = "\r\nModel: TI-Python compatible\r\nBoard-ID: TI Python\r\n";
+    static const char ti_prefix[] = "UF2 Bootloader ";
+    static const char ti_metadata[] = "\r\nModel: TI-Python\r\nBoard-ID: TI Python\r\n";
+
+    if (parse_uf2_info(flash, free_prefix, free_metadata, "CEmu free ", desc, desc_size)) {
+        return ARM_BOOTLOADER_CEMU_FREE;
+    }
+    if (parse_uf2_info(flash, ti_prefix, ti_metadata, "TI UF2 ", desc, desc_size)) {
+        return ARM_BOOTLOADER_TI_UF2;
+    }
+
+    copy_description(desc, desc_size, "unknown/custom", NULL, 0);
+    return ARM_BOOTLOADER_UNKNOWN;
+}
+
 static void reset(arm_t *arm, uint8_t rcause) {
     sync_wake(&arm->sync);
     arm_mem_reset(&arm->mem, rcause);
@@ -183,6 +259,14 @@ bool arm_load(arm_t *arm, const char *path) {
         sync_leave(&arm->sync);
     }
     return success;
+}
+
+arm_bootloader_type_t arm_get_bootloader_info(arm_t *arm, char *desc, size_t desc_size) {
+    arm_bootloader_type_t type;
+    sync_enter(&arm->sync);
+    type = parse_bootloader_info((const uint8_t *)arm->mem.nvm, desc, desc_size);
+    sync_leave(&arm->sync);
+    return type;
 }
 
 bool arm_save_flash(arm_t *arm, FILE *image) {
