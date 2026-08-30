@@ -485,8 +485,17 @@ void MainWindow::setArmRom() {
         ui->pathArmRom->setText(path);
         ui->buttonClearArmRom->setEnabled(true);
         if (guiEmuValid) {
-            coproc_load(path.toUtf8().constData());
+            loadArmRomOverride();
         }
+    }
+}
+
+void MainWindow::loadArmRomOverride() {
+    if (!m_pathArmRom.isEmpty() && coproc_load(m_pathArmRom.toUtf8().constData())) {
+        QMessageBox::warning(this, MSG_WARNING,
+                             tr("An external ARM flash image was loaded successfully.\n\n"
+                                "After the Python app finishes flashing the ARM firmware, "
+                                "quit and relaunch the Python app before using it."));
     }
 }
 
