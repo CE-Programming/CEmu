@@ -3044,7 +3044,7 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
             }
         }
         if (!m_pathArmRom.isEmpty()) {
-            loadArmRomOverride();
+            loadArmRomOverride(m_pathArmRom);
         }
         if (m_autotesterState == AutotesterState::Reloading && type == EMU_DATA_ROM) {
             m_autotesterState = AutotesterState::Booting;
