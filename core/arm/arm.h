@@ -2,10 +2,19 @@
 #define ARM_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
 typedef struct arm arm_t;
+
+typedef enum arm_bootloader_type {
+    ARM_BOOTLOADER_UNKNOWN,
+    ARM_BOOTLOADER_CEMU_FREE,
+    ARM_BOOTLOADER_TI_UF2,
+} arm_bootloader_type_t;
+
+#define ARM_BOOTLOADER_DESCRIPTION_SIZE 64
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +31,7 @@ void arm_pause(arm_t *arm);
 uint64_t arm_get_time(arm_t *arm);
 void arm_reset(arm_t *arm);
 bool arm_load(arm_t *arm, const char *path);
+arm_bootloader_type_t arm_get_bootloader_info(arm_t *arm, char *desc, size_t desc_size);
 bool arm_save_flash(arm_t *arm, FILE *image);
 bool arm_restore_flash(arm_t *arm, FILE *image);
 bool arm_save_state(arm_t *arm, FILE *image);
