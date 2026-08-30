@@ -252,7 +252,7 @@ typedef struct dusb_context {
     uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size, delay;
     uint16_t error_code;
     uint8_t version, flag, buffer[8];
-    bool clock_operation, clock_complete, error_code_valid;
+    bool clock_operation, clock_complete, error_code_valid, failed;
     dusb_command_t *command, commands[];
 } dusb_context_t;
 
@@ -1310,6 +1310,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                 timer->useconds = 10000;
                 break;
             case DUSB_INVALID_STATE:
+                context->failed = true;
                 if (context->error_code_valid) {
                     gui_console_err_printf(
                         "[CEmu] USB transfer failed during %s: D-USB error 0x%04X (%s).\n",
@@ -1556,20 +1557,20 @@ int usb_dusb_device(usb_event_t *event) {
             buffer = transfer->buffer;
             length = transfer->length;
             if (transfer->status != USB_TRANSFER_COMPLETED) {
-                return EINVAL;
+                return dusb_transition(event, DUSB_INVALID_STATE);
             }
             switch (context->state) {
                 case DUSB_SET_ADDRESS_STATE:
                 case DUSB_SET_CONFIG_STATE:
                     if (type != USB_TRANSFER_RESPONSE_EVENT ||
                         transfer->type != USB_CONTROL_TRANSFER) {
-                        return EINVAL;
+                        return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     break;
                 default:
                     if (type != USB_TRANSFER_REQUEST_EVENT ||
                         transfer->type != USB_BULK_TRANSFER) {
-                        return EINVAL;
+                        return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     break;
             }
@@ -1952,7 +1953,8 @@ int usb_dusb_device(usb_event_t *event) {
             break;
         case USB_DESTROY_EVENT:
             if (event->progress_handler) {
-                if (context && context->clock_operation && !context->clock_complete) {
+                if (context && (context->failed ||
+                                (context->clock_operation && !context->clock_complete))) {
                     event->progress_handler(event->progress_context, 0, 0);
                 } else {
                     event->progress_handler(event->progress_context, 1, 1);
