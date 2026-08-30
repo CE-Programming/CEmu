@@ -3005,7 +3005,7 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
             }
         }
         if (!m_pathArmRom.isEmpty()) {
-            coproc_load(m_pathArmRom.toUtf8().constData());
+            loadArmRomOverride();
         }
         emu.start();
         guiEmuValid = true;
