@@ -241,6 +241,84 @@ uint64_t arm_get_time(arm_t *arm) {
     return cycles;
 }
 
+bool arm_get_cpu_snapshot(arm_t *arm, arm_cpu_snapshot_t *snapshot) {
+    if (!arm || !snapshot) {
+        return false;
+    }
+
+    sync_enter(&arm->sync);
+    memcpy(snapshot->registers, arm->cpu.r, sizeof(snapshot->registers));
+    snapshot->alternate_stack_pointer = arm->cpu.altsp;
+    snapshot->active_exceptions = arm->cpu.active;
+    snapshot->overflow = arm->cpu.v;
+    snapshot->carry = arm->cpu.c;
+    snapshot->zero = arm->cpu.z;
+    snapshot->negative = arm->cpu.n;
+    snapshot->primask = arm->cpu.pm;
+    snapshot->process_stack = arm->cpu.spsel;
+    snapshot->exception = arm->cpu.exc;
+    snapshot->wait_for_interrupt = arm->cpu.wfi;
+    snapshot->svc_pending = arm->cpu.svc_pending;
+    snapshot->systick.control = arm->cpu.systick.ctrl;
+    snapshot->systick.reload = arm->cpu.systick.load;
+    snapshot->systick.current = arm->cpu.systick.val;
+    snapshot->systick.calibration = arm->cpu.systick.calib;
+    snapshot->nvic.interrupt_enable = arm->cpu.nvic.ier;
+    snapshot->nvic.interrupt_pending = arm->cpu.nvic.ipr;
+    memcpy(snapshot->nvic.priorities, arm->cpu.nvic.ip,
+           sizeof(snapshot->nvic.priorities));
+    snapshot->scb.interrupt_control = arm->cpu.scb.icsr;
+    snapshot->scb.vector_table = arm->cpu.scb.vtor;
+    snapshot->scb.application_interrupt_reset_control = arm->cpu.scb.aircr;
+    snapshot->scb.system_control = arm->cpu.scb.scr;
+    memcpy(snapshot->scb.system_priorities, arm->cpu.scb.shp,
+           sizeof(snapshot->scb.system_priorities));
+    snapshot->cycles = arm->cycles;
+    snapshot->cycle_limit = arm->cycle_limit;
+    snapshot->sleeping = arm->sync.slp;
+    sync_leave(&arm->sync);
+    return true;
+}
+
+uint8_t arm_read_byte(arm_t *arm, uint32_t address) {
+    sync_enter(&arm->sync);
+    const uint8_t value = arm_mem_load_byte(arm, address);
+    sync_leave(&arm->sync);
+    return value;
+}
+
+uint16_t arm_read_half(arm_t *arm, uint32_t address) {
+    sync_enter(&arm->sync);
+    const uint16_t value = arm_mem_load_half(arm, address);
+    sync_leave(&arm->sync);
+    return value;
+}
+
+uint32_t arm_read_word(arm_t *arm, uint32_t address) {
+    sync_enter(&arm->sync);
+    const uint32_t value = arm_mem_load_word(arm, address);
+    sync_leave(&arm->sync);
+    return value;
+}
+
+void arm_write_byte(arm_t *arm, uint32_t address, uint8_t value) {
+    sync_enter(&arm->sync);
+    arm_mem_store_byte(arm, value, address);
+    sync_leave(&arm->sync);
+}
+
+void arm_write_half(arm_t *arm, uint32_t address, uint16_t value) {
+    sync_enter(&arm->sync);
+    arm_mem_store_half(arm, value, address);
+    sync_leave(&arm->sync);
+}
+
+void arm_write_word(arm_t *arm, uint32_t address, uint32_t value) {
+    sync_enter(&arm->sync);
+    arm_mem_store_word(arm, value, address);
+    sync_leave(&arm->sync);
+}
+
 void arm_reset(arm_t *arm) {
     sync_enter(&arm->sync);
     reset(arm, PM_RCAUSE_EXT);

@@ -17,6 +17,7 @@ This directory is the versioned, shareable home for CEmu Lua scripts. The exampl
 - `disassembly_walk.lua`: decode instructions starting at the current PC.
 - `debugger_snapshot.lua`: report registers, debugger configuration, equates, and the next instruction.
 - `peripheral_inspector.lua`: summarize every core peripheral range and the LCD state.
+- `coprocessor_inspector.lua`: report the Python ARM bootloader and synchronized Cortex-M0+ state.
 - `lcd_diagnostics.lua`: report detailed PL111, ST7789, gamma, timing, and backlight state.
 - `framebuffer_inspection.lua`: inspect framebuffer metadata, pixels, regions, hashes, and the next frame.
 - `filtered_events.lua`: install a filtered, one-shot keypad event handler.

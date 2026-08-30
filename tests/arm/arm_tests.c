@@ -1000,6 +1000,100 @@ static void test_arm_cycle_throttle(void) {
     arm_destroy(arm);
 }
 
+static void test_arm_cpu_snapshot(void) {
+    arm_t *arm = arm_create();
+    arm_cpu_snapshot_t snapshot = {0};
+    CHECK(arm != NULL, "ARM instance initializes for CPU snapshots");
+    if (!arm) {
+        return;
+    }
+
+    sync_enter(&arm->sync);
+    for (unsigned int index = 0; index != 16; ++index) {
+        arm->cpu.r[index] = UINT32_C(0x1000) + index;
+    }
+    arm->cpu.altsp = UINT32_C(0x20002000);
+    arm->cpu.active = UINT64_C(0x123456789ABC);
+    arm->cpu.v = true;
+    arm->cpu.c = false;
+    arm->cpu.z = true;
+    arm->cpu.n = false;
+    arm->cpu.pm = true;
+    arm->cpu.spsel = true;
+    arm->cpu.exc = true;
+    arm->cpu.wfi = true;
+    arm->cpu.svc_pending = true;
+    arm->cpu.systick.ctrl = UINT32_C(0x11);
+    arm->cpu.systick.load = UINT32_C(0x22);
+    arm->cpu.systick.val = UINT32_C(0x33);
+    arm->cpu.systick.calib = UINT32_C(0x44);
+    arm->cpu.nvic.ier = UINT32_C(0x55);
+    arm->cpu.nvic.ipr = UINT32_C(0x66);
+    arm->cpu.nvic.ip[7] = UINT32_C(0x77);
+    arm->cpu.scb.icsr = UINT32_C(0x88);
+    arm->cpu.scb.vtor = UINT32_C(0x99);
+    arm->cpu.scb.aircr = UINT32_C(0xAA);
+    arm->cpu.scb.scr = UINT32_C(0xBB);
+    arm->cpu.scb.shp[1] = UINT32_C(0xCC);
+    sync_sleep(&arm->sync);
+    sync_leave(&arm->sync);
+
+    CHECK(arm_get_cpu_snapshot(arm, &snapshot),
+          "ARM CPU snapshot synchronizes with the worker thread");
+    CHECK(snapshot.registers[0] == UINT32_C(0x1000) &&
+              snapshot.registers[15] == UINT32_C(0x100F) &&
+              snapshot.alternate_stack_pointer == UINT32_C(0x20002000),
+          "ARM CPU snapshot copies general and alternate stack registers");
+    CHECK(snapshot.active_exceptions == UINT64_C(0x123456789ABC) &&
+              snapshot.overflow && !snapshot.carry && snapshot.zero && !snapshot.negative &&
+              snapshot.primask && snapshot.process_stack && snapshot.exception &&
+              snapshot.wait_for_interrupt && snapshot.svc_pending,
+          "ARM CPU snapshot copies execution flags");
+    CHECK(snapshot.systick.control == UINT32_C(0x11) &&
+              snapshot.systick.reload == UINT32_C(0x22) &&
+              snapshot.systick.current == UINT32_C(0x33) &&
+              snapshot.systick.calibration == UINT32_C(0x44) &&
+              snapshot.nvic.interrupt_enable == UINT32_C(0x55) &&
+              snapshot.nvic.interrupt_pending == UINT32_C(0x66) &&
+              snapshot.nvic.priorities[7] == UINT32_C(0x77) &&
+              snapshot.scb.interrupt_control == UINT32_C(0x88) &&
+              snapshot.scb.vector_table == UINT32_C(0x99) &&
+              snapshot.scb.application_interrupt_reset_control == UINT32_C(0xAA) &&
+              snapshot.scb.system_control == UINT32_C(0xBB) &&
+              snapshot.scb.system_priorities[1] == UINT32_C(0xCC),
+          "ARM CPU snapshot copies Cortex-M0+ system state");
+    CHECK(snapshot.sleeping, "ARM CPU snapshot reports the worker sleep state");
+    CHECK(!arm_get_cpu_snapshot(NULL, &snapshot) &&
+              !arm_get_cpu_snapshot(arm, NULL),
+          "ARM CPU snapshot rejects missing arguments");
+
+    arm_destroy(arm);
+}
+
+static void test_arm_synchronized_memory_access(void) {
+    arm_t *arm = arm_create();
+    const uint32_t address = HMCRAMC0_ADDR + UINT32_C(0x100);
+    CHECK(arm != NULL, "ARM instance initializes for synchronized memory access");
+    if (!arm) {
+        return;
+    }
+
+    arm_write_word(arm, address, UINT32_C(0x44332211));
+    CHECK(arm_read_byte(arm, address) == UINT8_C(0x11) &&
+              arm_read_byte(arm, address + 3) == UINT8_C(0x44),
+          "synchronized ARM byte reads observe little-endian memory");
+    CHECK(arm_read_half(arm, address) == UINT16_C(0x2211) &&
+              arm_read_word(arm, address) == UINT32_C(0x44332211),
+          "synchronized ARM halfword and word reads preserve values");
+
+    arm_write_byte(arm, address + 1, UINT8_C(0xAA));
+    arm_write_half(arm, address + 2, UINT16_C(0xBBCC));
+    CHECK(arm_read_word(arm, address) == UINT32_C(0xBBCCAA11),
+          "synchronized ARM byte and halfword writes preserve neighboring bytes");
+
+    arm_destroy(arm);
+}
+
 static void test_bundled_bootloader_identification(void) {
     arm_t *arm = arm_create();
     CHECK(arm != NULL, "ARM instance initializes for bootloader identification");
@@ -1159,6 +1253,8 @@ int main(void) {
     test_arm_flash_serialization();
     test_arm_bootloader_info();
     test_arm_cycle_throttle();
+    test_arm_cpu_snapshot();
+    test_arm_synchronized_memory_access();
     test_bundled_bootloader_identification();
     test_coproc_reset_rebases_clock();
     test_coproc_state_serialization();
