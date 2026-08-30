@@ -917,6 +917,58 @@ static void test_arm_flash_serialization(void) {
     arm_destroy(arm);
 }
 
+static void test_arm_bootloader_info(void) {
+    static const char old_free_info[] =
+        "UF2 Bootloader CEmu free 0.9\r\n"
+        "Model: TI-Python compatible\r\n"
+        "Board-ID: TI Python\r\n";
+    static const char ti_info[] =
+        "UF2 Bootloader v1.1.1S SFRO\r\n"
+        "Model: TI-Python\r\n"
+        "Board-ID: TI Python\r\n";
+    arm_t *arm = arm_create();
+    char description[ARM_BOOTLOADER_DESCRIPTION_SIZE];
+    CHECK(arm != NULL, "ARM instance initializes for bootloader identification");
+    if (!arm) {
+        return;
+    }
+
+    CHECK(arm_get_bootloader_info(arm, description, sizeof(description)) ==
+              ARM_BOOTLOADER_CEMU_FREE &&
+              strcmp(description, "CEmu free 1.0") == 0,
+          "bundled ARM flash identifies the CEmu free bootloader");
+
+    sync_enter(&arm->sync);
+    memset(arm->mem.nvm, UINT8_C(0xFF), UINT32_C(0x2000));
+    memcpy((uint8_t *)arm->mem.nvm + UINT32_C(0x120), old_free_info,
+           sizeof(old_free_info) - 1);
+    sync_leave(&arm->sync);
+    CHECK(arm_get_bootloader_info(arm, description, sizeof(description)) ==
+              ARM_BOOTLOADER_CEMU_FREE &&
+              strcmp(description, "CEmu free 0.9") == 0,
+          "saved ARM flash reports its older CEmu free bootloader version");
+
+    sync_enter(&arm->sync);
+    memset(arm->mem.nvm, UINT8_C(0xFF), UINT32_C(0x2000));
+    memcpy((uint8_t *)arm->mem.nvm + UINT32_C(0x120), ti_info,
+           sizeof(ti_info) - 1);
+    sync_leave(&arm->sync);
+    CHECK(arm_get_bootloader_info(arm, description, sizeof(description)) ==
+              ARM_BOOTLOADER_TI_UF2 &&
+              strcmp(description, "TI UF2 v1.1.1S SFRO") == 0,
+          "TI INFO_UF2 metadata identifies and versions its bootloader");
+
+    sync_enter(&arm->sync);
+    ((uint8_t *)arm->mem.nvm)[UINT32_C(0x120) + sizeof(ti_info) - 3] = 'X';
+    sync_leave(&arm->sync);
+    CHECK(arm_get_bootloader_info(arm, description, sizeof(description)) ==
+              ARM_BOOTLOADER_UNKNOWN &&
+              strcmp(description, "unknown/custom") == 0,
+          "incomplete TI metadata does not identify a custom bootloader as TI");
+
+    arm_destroy(arm);
+}
+
 static void test_arm_cycle_throttle(void) {
     arm_t *arm = arm_create();
     CHECK(arm != NULL, "ARM instance initializes for cycle throttling");
@@ -1105,6 +1157,7 @@ int main(void) {
     test_bundled_bootloader();
     test_bundled_bootloader_double_tap_reset();
     test_arm_flash_serialization();
+    test_arm_bootloader_info();
     test_arm_cycle_throttle();
     test_bundled_bootloader_identification();
     test_coproc_reset_rebases_clock();

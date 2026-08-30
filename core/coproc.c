@@ -15,6 +15,12 @@ static uint64_t coproc_cycle(void) {
     return sched_total_time(CLOCK_48M);
 }
 
+static void coproc_log_bootloader(void) {
+    char description[ARM_BOOTLOADER_DESCRIPTION_SIZE];
+    (void)arm_get_bootloader_info(coproc.arm, description, sizeof(description));
+    gui_console_printf("[CEmu] ARM bootloader: %s.\n", description);
+}
+
 void coproc_advance(void) {
     if (coproc.arm) {
         arm_advance_to(coproc.arm, coproc_cycle());
@@ -41,6 +47,8 @@ void coproc_reset(void) {
     if (asic.python && !coproc.arm) {
         coproc.arm = arm_create();
         if (coproc.arm) {
+            gui_console_printf("[CEmu] Loaded bundled ARM flash.\n");
+            coproc_log_bootloader();
             arm_set_time(coproc.arm, coproc_cycle());
         }
     }
@@ -66,6 +74,8 @@ bool coproc_load(const char *path) {
     if (coproc.arm) {
         bool success = arm_load(coproc.arm, path);
         if (success) {
+            gui_console_printf("[CEmu] Loaded ARM flash override: %s.\n", path);
+            coproc_log_bootloader();
             arm_set_time(coproc.arm, coproc_cycle());
         }
         return success;
@@ -111,6 +121,8 @@ bool coproc_restore(FILE *image) {
     arm_set_time(restored, coproc_cycle());
     coproc_free();
     coproc.arm = restored;
+    gui_console_printf("[CEmu] Restored ARM flash from emulator image.\n");
+    coproc_log_bootloader();
     return true;
 }
 
