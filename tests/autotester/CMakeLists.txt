@@ -12,3 +12,7 @@ set(SOURCE_FILES
     autotester_cli.cpp)
 
 add_executable(autotester ${SOURCE_FILES})
+
+add_executable(cemu-headless
+    autotester.cpp
+    headless_cli.cpp)
