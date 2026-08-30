@@ -38,6 +38,7 @@
 #include "../../core/backlight.h"
 #include "../../core/cpu.h"
 #include "../../core/control.h"
+#include "../../core/coproc.h"
 #include "../../core/lcd.h"
 #include "../../core/link.h"
 #include "../../core/mem.h"
@@ -206,6 +207,73 @@ sol::table stringListTable(const sol::this_state &thisState, const QStringList &
         result[index + 1] = values[index].toStdString();
     }
     return result;
+}
+
+const char *armBootloaderTypeName(arm_bootloader_type_t type) {
+    switch (type) {
+        case ARM_BOOTLOADER_CEMU_FREE:
+            return "cemu-free";
+        case ARM_BOOTLOADER_TI_UF2:
+            return "ti-uf2";
+        case ARM_BOOTLOADER_UNKNOWN:
+        default:
+            return "unknown";
+    }
+}
+
+sol::table armCpuSnapshotTable(const sol::this_state &thisState,
+                               const arm_cpu_snapshot_t &snapshot) {
+    sol::state_view view(thisState);
+    sol::table registers = view.create_table();
+    for (unsigned int index = 0; index != 16; ++index) {
+        registers["r" + std::to_string(index)] = snapshot.registers[index];
+    }
+    registers["sp"] = snapshot.registers[13];
+    registers["lr"] = snapshot.registers[14];
+    registers["pc"] = snapshot.registers[15];
+
+    sol::table priorities = view.create_table(8, 0);
+    for (unsigned int index = 0; index != 8; ++index) {
+        priorities[index + 1] = snapshot.nvic.priorities[index];
+    }
+    sol::table systemPriorities = view.create_table(2, 0);
+    for (unsigned int index = 0; index != 2; ++index) {
+        systemPriorities[index + 1] = snapshot.scb.system_priorities[index];
+    }
+
+    return view.create_table_with(
+        "cycles", snapshot.cycles,
+        "cycleLimit", snapshot.cycle_limit,
+        "sleeping", snapshot.sleeping,
+        "registers", registers,
+        "alternateStackPointer", snapshot.alternate_stack_pointer,
+        "activeExceptions", snapshot.active_exceptions,
+        "flags", view.create_table_with(
+            "overflow", snapshot.overflow,
+            "carry", snapshot.carry,
+            "zero", snapshot.zero,
+            "negative", snapshot.negative,
+            "primask", snapshot.primask,
+            "processStack", snapshot.process_stack,
+            "inException", snapshot.exception,
+            "waitingForInterrupt", snapshot.wait_for_interrupt,
+            "svcPending", snapshot.svc_pending),
+        "systick", view.create_table_with(
+            "control", snapshot.systick.control,
+            "reload", snapshot.systick.reload,
+            "current", snapshot.systick.current,
+            "calibration", snapshot.systick.calibration),
+        "nvic", view.create_table_with(
+            "interruptEnable", snapshot.nvic.interrupt_enable,
+            "interruptPending", snapshot.nvic.interrupt_pending,
+            "priorities", priorities),
+        "scb", view.create_table_with(
+            "interruptControl", snapshot.scb.interrupt_control,
+            "vectorTable", snapshot.scb.vector_table,
+            "applicationInterruptResetControl",
+                snapshot.scb.application_interrupt_reset_control,
+            "systemControl", snapshot.scb.system_control,
+            "systemPriorities", systemPriorities));
 }
 
 constexpr std::array<const char *, 16> PeripheralNames = {
@@ -608,6 +676,124 @@ void MainWindow::initLuaThings(sol::state &lua, bool isREPL) {
         "next", sol::readonly(&eZ80cpu_t::next),
         "prefetch", sol::readonly(&eZ80cpu_t::prefetch)
     );
+
+    sol::table coprocTable = lua.create_named_table("coproc");
+    coprocTable.set_function("present", [] { return coproc.arm != nullptr; });
+    coprocTable.set_function("bootloader", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        if (!coproc.arm) {
+            return sol::make_object(view, sol::lua_nil);
+        }
+        char description[ARM_BOOTLOADER_DESCRIPTION_SIZE];
+        const arm_bootloader_type_t type =
+            arm_get_bootloader_info(coproc.arm, description, sizeof(description));
+        return sol::make_object(view, view.create_table_with(
+            "type", armBootloaderTypeName(type),
+            "typeId", static_cast<int>(type),
+            "description", description));
+    });
+    coprocTable.set_function("state", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        arm_cpu_snapshot_t snapshot;
+        if (!coproc.arm || !arm_get_cpu_snapshot(coproc.arm, &snapshot)) {
+            return sol::make_object(view, sol::lua_nil);
+        }
+        return sol::make_object(view, armCpuSnapshotTable(thisState, snapshot));
+    });
+    coprocTable.set_function("time", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        return coproc.arm
+            ? sol::make_object(view, arm_get_time(coproc.arm))
+            : sol::make_object(view, sol::lua_nil);
+    });
+    coprocTable.set_function("readByte", [](const sol::this_state &thisState, uint32_t address) {
+        sol::state_view view(thisState);
+        return coproc.arm
+            ? sol::make_object(view, arm_read_byte(coproc.arm, address))
+            : sol::make_object(view, sol::lua_nil);
+    });
+    coprocTable.set_function("readHalf", [](const sol::this_state &thisState, uint32_t address) {
+        sol::state_view view(thisState);
+        return coproc.arm
+            ? sol::make_object(view, arm_read_half(coproc.arm, address))
+            : sol::make_object(view, sol::lua_nil);
+    });
+    coprocTable.set_function("readWord", [](const sol::this_state &thisState, uint32_t address) {
+        sol::state_view view(thisState);
+        return coproc.arm
+            ? sol::make_object(view, arm_read_word(coproc.arm, address))
+            : sol::make_object(view, sol::lua_nil);
+    });
+    coprocTable.set_function("writeByte", [](uint32_t address, uint64_t value) {
+        if (value > UINT8_MAX) {
+            throw sol::error("ARM byte value must be between 0 and 255");
+        }
+        if (!coproc.arm) return false;
+        arm_write_byte(coproc.arm, address, static_cast<uint8_t>(value));
+        return true;
+    });
+    coprocTable.set_function("writeHalf", [](uint32_t address, uint64_t value) {
+        if (value > UINT16_MAX) {
+            throw sol::error("ARM halfword value must be between 0 and 65535");
+        }
+        if (!coproc.arm) return false;
+        arm_write_half(coproc.arm, address, static_cast<uint16_t>(value));
+        return true;
+    });
+    coprocTable.set_function("writeWord", [](uint32_t address, uint64_t value) {
+        if (value > UINT32_MAX) {
+            throw sol::error("ARM word value must be between 0 and 4294967295");
+        }
+        if (!coproc.arm) return false;
+        arm_write_word(coproc.arm, address, static_cast<uint32_t>(value));
+        return true;
+    });
+    coprocTable.set_function("reset", [] {
+        coproc_reset();
+        return coproc.arm != nullptr;
+    });
+    coprocTable.set_function("loadFlash", [this](const std::string &path) {
+        return loadArmRomOverride(QString::fromStdString(path));
+    });
+    coprocTable.set_function("spiSelect", [](bool selected) {
+        if (!coproc.arm) return false;
+        coproc_spi_select(selected);
+        return true;
+    });
+    coprocTable.set_function("spiPeek", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        if (!coproc.arm) {
+            return sol::make_object(view, sol::lua_nil);
+        }
+        uint32_t value;
+        const uint8_t bits = coproc_spi_peek(&value);
+        return sol::make_object(view, view.create_table_with(
+            "bits", static_cast<unsigned int>(bits), "value", value));
+    });
+    coprocTable.set_function("spiTransfer", [](const sol::this_state &thisState, uint32_t value) {
+        sol::state_view view(thisState);
+        if (!coproc.arm) {
+            return sol::make_object(view, sol::lua_nil);
+        }
+        uint32_t response;
+        const uint8_t bits = coproc_spi_transfer(value, &response);
+        return sol::make_object(view, view.create_table_with(
+            "bits", static_cast<unsigned int>(bits), "value", response));
+    });
+    coprocTable.set_function("uartSend", [](unsigned int value) {
+        if (value > UINT8_MAX) {
+            throw sol::error("UART value must be between 0 and 255");
+        }
+        if (!coproc.arm) return false;
+        return arm_usart_send(coproc.arm, static_cast<uint8_t>(value));
+    });
+    coprocTable.set_function("uartReceive", [](const sol::this_state &thisState) {
+        sol::state_view view(thisState);
+        uint8_t value;
+        return coproc.arm && arm_usart_recv(coproc.arm, &value)
+            ? sol::make_object(view, value)
+            : sol::make_object(view, sol::lua_nil);
+    });
 
     sol::table memoryTable = lua.create_named_table("mem",
         "readByte", mem_peek_byte,
