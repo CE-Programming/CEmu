@@ -511,18 +511,13 @@ bool arm_debug_read_memory(arm_t *arm, uint32_t address, uint8_t *data, size_t s
     size_t offset = 0;
     while (offset != size) {
         const uint32_t current = address + (uint32_t)offset;
-        if (!(current & 3) && size - offset >= 4) {
-            const uint32_t value = arm_mem_load_word(arm, current);
-            for (unsigned int byte = 0; byte != 4; ++byte) {
-                data[offset + byte] = (uint8_t)(value >> (byte * 8));
-            }
-            offset += 4;
-        } else if (!(current & 1) && size - offset >= 2) {
-            const uint16_t value = arm_mem_load_half(arm, current);
-            data[offset++] = (uint8_t)value;
-            data[offset++] = (uint8_t)(value >> 8);
-        } else {
-            data[offset++] = arm_mem_load_byte(arm, current);
+        uint32_t value;
+        if (!arm_mem_peek_word(arm, current & ~UINT32_C(3), &value)) {
+            sync_leave(&arm->sync);
+            return false;
+        }
+        for (unsigned int byte = current & 3; byte != 4 && offset != size; ++byte) {
+            data[offset++] = (uint8_t)(value >> (byte * 8));
         }
     }
     sync_leave(&arm->sync);
