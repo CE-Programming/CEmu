@@ -22,6 +22,7 @@ public:
     bool start(quint16 port);
     void stop();
     [[nodiscard]] quint16 port() const;
+    [[nodiscard]] bool hasClient() const;
 
 private:
     void acceptConnection();

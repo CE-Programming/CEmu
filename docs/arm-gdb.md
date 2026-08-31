@@ -4,8 +4,8 @@ CEmu can expose the SAMD21E18A coprocessor in Python-enabled calculator models
 to a GDB client through the GDB Remote Serial Protocol. This is available when
 the Qt build is compiled with `COPROC_DEBUG_SUPPORT`, which depends on CEmu's
 general `DEBUG_SUPPORT`. Configuring CMake with
-`-DCOPROC_DEBUG_SUPPORT=OFF` removes the server and command-line option while
-leaving normal ARM emulation enabled.
+`-DCOPROC_DEBUG_SUPPORT=OFF` removes the server, command-line option, and
+built-in debugger while leaving normal ARM emulation enabled.
 
 Start the Qt build with a local TCP port:
 
@@ -25,6 +25,19 @@ arm-none-eabi-gdb path/to/firmware.elf
 Without a matching ELF file, registers, memory, instruction stepping, and
 address breakpoints remain available, but GDB cannot show firmware symbols or
 source lines.
+
+The Qt build also includes a lightweight client under **Debug > ARM
+Coprocessor Debugger**. If no port was selected on the command line, opening
+the window starts the same local RSP server on an ephemeral port. The window
+provides CPU register editing, run/halt/step/reset controls, virtual
+breakpoints, a memory editor, and a searchable view of the modeled SAMD21
+peripheral registers. It deliberately communicates through RSP rather than
+accessing the ARM core directly, so it exercises the same debugger interface
+as an external GDB client.
+
+Only one client can be connected at a time. Detach an external GDB session
+before opening the built-in debugger, or close CEmu to disconnect the built-in
+client before attaching externally.
 
 The server supports the Cortex-M register set (`r0` through `r15` and `xpsr`),
 memory reads and writes, continue, single-step, Ctrl-C interrupt, and virtual

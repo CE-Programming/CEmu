@@ -163,6 +163,10 @@ quint16 ArmGdbServer::port() const {
     return m_server.serverPort();
 }
 
+bool ArmGdbServer::hasClient() const {
+    return !m_client.isNull();
+}
+
 void ArmGdbServer::acceptConnection() {
     while (QTcpSocket *connection = m_server.nextPendingConnection()) {
         if (m_client) {

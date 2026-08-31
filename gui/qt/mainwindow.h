@@ -52,6 +52,7 @@ QT_END_NAMESPACE
 
 class BasicEditor;
 #ifdef COPROC_DEBUG_SUPPORT
+class ArmDebugger;
 class ArmGdbServer;
 #endif
 
@@ -651,6 +652,10 @@ private:
     void optUsb(CEmuOpts &o);
     void optLoadFiles(CEmuOpts &o);
     void optAttemptLoad(CEmuOpts &o);
+#ifdef COPROC_DEBUG_SUPPORT
+    bool ensureArmGdbServer();
+    void showArmDebugger();
+#endif
 
     // lcd
     void lcdUpdate(double emuFps);
@@ -815,6 +820,9 @@ private:
     QAction *m_actionToggleUI;
     QAction *m_actionAddMemory;
     QAction *m_actionAddVisualizer;
+#ifdef COPROC_DEBUG_SUPPORT
+    QAction *m_actionArmDebugger = nullptr;
+#endif
 
     QIcon m_iconRun, m_iconStop;
     QIcon m_iconSave, m_iconLoad;
@@ -1121,6 +1129,7 @@ private:
 #endif
     QButtonGroup *m_usbConnectGroup = nullptr;
 #ifdef COPROC_DEBUG_SUPPORT
+    ArmDebugger *m_armDebugger = nullptr;
     ArmGdbServer *m_armGdbServer = nullptr;
 #endif
 
