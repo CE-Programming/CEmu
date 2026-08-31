@@ -92,16 +92,72 @@ static void reset(arm_t *arm, uint8_t rcause) {
     spsc_queue_clear(&arm->usart[1]);
 }
 
+#ifdef COPROC_DEBUG_SUPPORT
+static uint32_t debug_current_pc(const arm_t *arm) {
+    return arm->cpu.pc >= 2 ? (arm->cpu.pc - 2) & ~UINT32_C(1) : 0;
+}
+
+static void debug_stop(arm_t *arm, arm_debug_stop_reason_t reason) {
+    arm->gdb.stopped = true;
+    arm->gdb.step_pending = false;
+    arm->gdb.stop_reason = reason;
+    sync_throttle(&arm->sync);
+}
+
+static bool debug_breakpoint_hit(arm_t *arm) {
+    arm_debug_state_t *debug = &arm->gdb;
+    if (!debug->attached || !debug->breakpoint_count) {
+        debug->skip_breakpoint_once = false;
+        return false;
+    }
+
+    const uint32_t pc = debug_current_pc(arm);
+    if (debug->skip_breakpoint_once) {
+        const bool skip = debug->skip_breakpoint == pc;
+        debug->skip_breakpoint_once = false;
+        if (skip) {
+            return false;
+        }
+    }
+    for (size_t index = 0; index != debug->breakpoint_count; ++index) {
+        if (debug->breakpoints[index] == pc) {
+            debug_stop(arm, ARM_DEBUG_STOP_BREAKPOINT);
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
 static void run_quantum(arm_t *arm, bool limited) {
     uint8_t i = 0;
     spsc_queue_entry_t peek;
     uint16_t val;
 
+#ifdef COPROC_DEBUG_SUPPORT
+    if (!arm->gdb.stopped &&
+        (!limited || arm->cycles < arm->cycle_limit || arm->gdb.step_pending)) {
+#else
     if (!limited || arm->cycles < arm->cycle_limit) {
+#endif
         do {
+#ifdef COPROC_DEBUG_SUPPORT
+            if (debug_breakpoint_hit(arm)) {
+                break;
+            }
+#endif
             arm_cpu_execute(arm);
+#ifdef COPROC_DEBUG_SUPPORT
+            if (arm->gdb.step_pending) {
+                debug_stop(arm, ARM_DEBUG_STOP_STEP);
+                break;
+            }
+        } while (++i && !arm->sync.slp && !arm->gdb.stopped &&
+                 (!limited || arm->cycles < arm->cycle_limit));
+#else
         } while (++i && !arm->sync.slp &&
                  (!limited || arm->cycles < arm->cycle_limit));
+#endif
     }
 
     peek = spsc_queue_peek(&arm->usart[0]);
@@ -129,6 +185,9 @@ static void service_spi_event(arm_t *arm, uint8_t pending_flag) {
      * normally clear after only a few instructions. */
     for (uint8_t i = 0;
          i < ARM_SPI_EVENT_MAX_QUANTA && !arm->sync.slp &&
+#ifdef COPROC_DEBUG_SUPPORT
+         !arm->gdb.stopped &&
+#endif
          (i == 0 ||
           (arm->mem.sercom[0].SPI.INTFLAG.reg & pending_flag));
          ++i) {
@@ -139,7 +198,13 @@ static void service_spi_event(arm_t *arm, uint8_t pending_flag) {
 static int arm_thrd(void *context) {
     arm_t *arm = context;
     reset(arm, PM_RCAUSE_POR);
+#ifdef COPROC_DEBUG_SUPPORT
+    while (sync_loop(&arm->sync,
+                     arm->gdb.stopped ||
+                     (arm->cycles >= arm->cycle_limit && !arm->gdb.step_pending))) {
+#else
     while (sync_loop(&arm->sync, arm->cycles >= arm->cycle_limit)) {
+#endif
         run_quantum(arm, true);
     }
     spsc_queue_destroy(&arm->usart[1]);
@@ -158,6 +223,9 @@ arm_t *arm_create(void) {
                     if (likely(spsc_queue_init(&arm->usart[1]))) {
                         arm->cycles = 0;
                         arm->cycle_limit = 0;
+#ifdef COPROC_DEBUG_SUPPORT
+                        memset(&arm->gdb, 0, sizeof(arm->gdb));
+#endif
                         arm->debug = false;
                         if (likely(thrd_create(&arm->thrd, &arm_thrd, arm) == thrd_success)) {
                             return arm;
@@ -208,7 +276,11 @@ void arm_advance_to(arm_t *arm, uint64_t cycles) {
         sync_leave(&arm->sync);
         return;
     }
+#ifdef COPROC_DEBUG_SUPPORT
+    if (!arm->gdb.stopped && arm->cycles < arm->cycle_limit) {
+#else
     if (arm->cycles < arm->cycle_limit) {
+#endif
         sync_throttle_wake(&arm->sync);
     }
     sync_leave(&arm->sync);
@@ -318,6 +390,212 @@ void arm_write_word(arm_t *arm, uint32_t address, uint32_t value) {
     arm_mem_store_word(arm, value, address);
     sync_leave(&arm->sync);
 }
+
+#ifdef COPROC_DEBUG_SUPPORT
+bool arm_debug_attach(arm_t *arm) {
+    if (!arm) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    arm->gdb.attached = true;
+    arm->gdb.skip_breakpoint_once = false;
+    debug_stop(arm, ARM_DEBUG_STOP_ATTACH);
+    sync_leave(&arm->sync);
+    return true;
+}
+
+void arm_debug_detach(arm_t *arm) {
+    if (!arm) {
+        return;
+    }
+    sync_enter(&arm->sync);
+    memset(&arm->gdb, 0, sizeof(arm->gdb));
+    /* Release the debug stop independently of firmware sleep. If the core was
+     * already cycle-throttled, its worker will immediately throttle again. */
+    sync_throttle_wake(&arm->sync);
+    sync_leave(&arm->sync);
+}
+
+bool arm_debug_status(arm_t *arm, bool *stopped, arm_debug_stop_reason_t *reason) {
+    if (!arm || !stopped || !reason) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    const bool attached = arm->gdb.attached;
+    *stopped = arm->gdb.stopped;
+    *reason = arm->gdb.stop_reason;
+    sync_leave(&arm->sync);
+    return attached;
+}
+
+bool arm_debug_interrupt(arm_t *arm) {
+    if (!arm) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    const bool attached = arm->gdb.attached;
+    if (attached) {
+        debug_stop(arm, ARM_DEBUG_STOP_INTERRUPT);
+    }
+    sync_leave(&arm->sync);
+    return attached;
+}
+
+bool arm_debug_resume(arm_t *arm, bool step) {
+    if (!arm) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    if (!arm->gdb.attached) {
+        sync_leave(&arm->sync);
+        return false;
+    }
+    if (arm->gdb.stop_reason == ARM_DEBUG_STOP_BREAKPOINT) {
+        arm->gdb.skip_breakpoint = debug_current_pc(arm);
+        arm->gdb.skip_breakpoint_once = true;
+    }
+    arm->gdb.stopped = false;
+    arm->gdb.step_pending = step;
+    arm->gdb.stop_reason = ARM_DEBUG_STOP_NONE;
+    if (step) {
+        sync_wake(&arm->sync);
+    }
+    if (step || (!arm->sync.slp && arm->cycles < arm->cycle_limit)) {
+        sync_throttle_wake(&arm->sync);
+    }
+    sync_leave(&arm->sync);
+    return true;
+}
+
+static uint32_t debug_xpsr(const arm_cpu_t *cpu) {
+    return (uint32_t)cpu->n << 31 |
+           (uint32_t)cpu->z << 30 |
+           (uint32_t)cpu->c << 29 |
+           (uint32_t)cpu->v << 28 |
+           UINT32_C(1) << 24 |
+           (cpu->scb.icsr & SCB_ICSR_VECTACTIVE_Msk);
+}
+
+bool arm_debug_get_registers(arm_t *arm, arm_debug_registers_t *registers) {
+    if (!arm || !registers) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    memcpy(registers->registers, arm->cpu.r, sizeof(registers->registers));
+    registers->registers[15] = debug_current_pc(arm);
+    registers->xpsr = debug_xpsr(&arm->cpu);
+    sync_leave(&arm->sync);
+    return true;
+}
+
+bool arm_debug_set_registers(arm_t *arm, const arm_debug_registers_t *registers) {
+    if (!arm || !registers) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    memcpy(arm->cpu.r, registers->registers, 15 * sizeof(uint32_t));
+    arm->cpu.pc = (registers->registers[15] & ~UINT32_C(1)) + 2;
+    arm->cpu.n = registers->xpsr >> 31 & 1;
+    arm->cpu.z = registers->xpsr >> 30 & 1;
+    arm->cpu.c = registers->xpsr >> 29 & 1;
+    arm->cpu.v = registers->xpsr >> 28 & 1;
+    sync_leave(&arm->sync);
+    return true;
+}
+
+bool arm_debug_read_memory(arm_t *arm, uint32_t address, uint8_t *data, size_t size) {
+    if (!arm || (!data && size) || size > UINT32_MAX - address) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    size_t offset = 0;
+    while (offset != size) {
+        const uint32_t current = address + (uint32_t)offset;
+        if (!(current & 3) && size - offset >= 4) {
+            const uint32_t value = arm_mem_load_word(arm, current);
+            for (unsigned int byte = 0; byte != 4; ++byte) {
+                data[offset + byte] = (uint8_t)(value >> (byte * 8));
+            }
+            offset += 4;
+        } else if (!(current & 1) && size - offset >= 2) {
+            const uint16_t value = arm_mem_load_half(arm, current);
+            data[offset++] = (uint8_t)value;
+            data[offset++] = (uint8_t)(value >> 8);
+        } else {
+            data[offset++] = arm_mem_load_byte(arm, current);
+        }
+    }
+    sync_leave(&arm->sync);
+    return true;
+}
+
+bool arm_debug_write_memory(arm_t *arm, uint32_t address, const uint8_t *data, size_t size) {
+    if (!arm || (!data && size) || size > UINT32_MAX - address) {
+        return false;
+    }
+    sync_enter(&arm->sync);
+    size_t offset = 0;
+    while (offset != size) {
+        const uint32_t current = address + (uint32_t)offset;
+        if (!(current & 3) && size - offset >= 4) {
+            const uint32_t value = (uint32_t)data[offset] |
+                (uint32_t)data[offset + 1] << 8 |
+                (uint32_t)data[offset + 2] << 16 |
+                (uint32_t)data[offset + 3] << 24;
+            arm_mem_store_word(arm, value, current);
+            offset += 4;
+        } else if (!(current & 1) && size - offset >= 2) {
+            const uint16_t value = (uint16_t)data[offset] |
+                (uint16_t)data[offset + 1] << 8;
+            arm_mem_store_half(arm, value, current);
+            offset += 2;
+        } else {
+            arm_mem_store_byte(arm, data[offset++], current);
+        }
+    }
+    sync_leave(&arm->sync);
+    return true;
+}
+
+bool arm_debug_add_breakpoint(arm_t *arm, uint32_t address) {
+    if (!arm) {
+        return false;
+    }
+    address &= ~UINT32_C(1);
+    sync_enter(&arm->sync);
+    for (size_t index = 0; index != arm->gdb.breakpoint_count; ++index) {
+        if (arm->gdb.breakpoints[index] == address) {
+            sync_leave(&arm->sync);
+            return true;
+        }
+    }
+    if (arm->gdb.breakpoint_count == ARM_DEBUG_MAX_BREAKPOINTS) {
+        sync_leave(&arm->sync);
+        return false;
+    }
+    arm->gdb.breakpoints[arm->gdb.breakpoint_count++] = address;
+    sync_leave(&arm->sync);
+    return true;
+}
+
+bool arm_debug_remove_breakpoint(arm_t *arm, uint32_t address) {
+    if (!arm) {
+        return false;
+    }
+    address &= ~UINT32_C(1);
+    sync_enter(&arm->sync);
+    for (size_t index = 0; index != arm->gdb.breakpoint_count; ++index) {
+        if (arm->gdb.breakpoints[index] == address) {
+            --arm->gdb.breakpoint_count;
+            arm->gdb.breakpoints[index] = arm->gdb.breakpoints[arm->gdb.breakpoint_count];
+            sync_leave(&arm->sync);
+            return true;
+        }
+    }
+    sync_leave(&arm->sync);
+    return true;
+}
+#endif
 
 void arm_reset(arm_t *arm) {
     sync_enter(&arm->sync);

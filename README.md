@@ -58,6 +58,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * TI-Basic program debugger with line-by-line stepping
 * Recent files list with ability to quickly resend
 * Cycle counter for benchmarking/profiling
+* [Remote GDB debugging](docs/arm-gdb.md) for the Python ARM coprocessor
 * Emulation of DMA and SPI (for optimal accuracy)
 * Misc. emulation (backlight, battery...)
 * "Autotester" (automated unit testing, light scripting)
