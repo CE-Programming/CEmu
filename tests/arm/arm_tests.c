@@ -1107,6 +1107,91 @@ static bool wait_for_debug_stop(arm_t *arm, arm_debug_stop_reason_t expected) {
     return false;
 }
 
+static void test_arm_debug_memory_peek(void) {
+    arm_t *arm = arm_create();
+    CHECK(arm != NULL, "ARM instance initializes for debugger memory inspection");
+    if (!arm) return;
+    arm_debug_attach(arm);
+
+    const uint32_t address = HMCRAMC0_ADDR + UINT32_C(0x100);
+    sync_enter(&arm->sync);
+    arm->cpu.pc = address + 2;
+    arm->cpu.sp = HMCRAMC0_ADDR + HMCRAMC0_SIZE;
+    arm->cpu.systick.ctrl = SysTick_CTRL_COUNTFLAG_Msk;
+    arm->mem.ram[0x100 >> 2] = UINT32_C(0xE7FEBF00); /* NOP; B . */
+    SERCOM_USART_Type *usart = &arm->mem.sercom[3].USART;
+    usart->CTRLA.bit.MODE = SERCOM_USART_CTRLA_MODE_USART_INT_CLK_Val;
+    usart->BUFFER[2].bit.DATA = 0x5A;
+    usart->BUFFER[2].bit.VLD = true;
+    usart->BUFFER[2].bit.OVF = true;
+    usart->INTFLAG.bit.RXC = true;
+    SERCOM_SPI_Type *spi = &arm->mem.sercom[0].SPI;
+    spi->CTRLA.bit.MODE = SERCOM_SPI_CTRLA_MODE_SPI_SLAVE_Val;
+    spi->BUFFER[3].bit.DATA = 0xA5;
+    spi->BUFFER[3].bit.VLD = true;
+    spi->INTFLAG.bit.RXC = true;
+    sync_leave(&arm->sync);
+
+    FILE *before = tmpfile(), *after = tmpfile();
+    CHECK(before && after, "temporary files initialize for debugger state comparison");
+    if (!before || !after) {
+        if (before) fclose(before);
+        if (after) fclose(after);
+        arm_destroy(arm);
+        return;
+    }
+    CHECK(arm_save_state(arm, before), "save state before debugger inspection");
+    uint8_t data[4] = {0};
+    CHECK(arm_debug_read_memory(arm, SysTick_BASE, data, 4) && data[2] == 1,
+          "debugger reads SysTick COUNTFLAG");
+    CHECK(arm_debug_read_memory(arm, SysTick_BASE + 2, data, 1) && data[0] == 1,
+          "debugger byte reads of core peripherals preserve COUNTFLAG");
+    CHECK(arm_debug_read_memory(arm, SysTick_BASE + 2, data, 2) && data[0] == 1,
+          "debugger halfword reads of core peripherals preserve COUNTFLAG");
+    CHECK(arm_debug_read_memory(arm, (uint32_t)SERCOM3 + SERCOM_USART_DATA_OFFSET, data, 2) &&
+              data[0] == 0x5A,
+          "debugger peeks USART data without consuming input or signaling overflow");
+    CHECK(arm_debug_read_memory(arm, (uint32_t)SERCOM0 + SERCOM_SPI_DATA_OFFSET, data, 2) &&
+              data[0] == 0xA5,
+          "debugger peeks SPI data without consuming input");
+    CHECK(!arm_debug_read_memory(arm, (uint32_t)SERCOM3 + SERCOM_SPI_ADDR_OFFSET, data, 4),
+          "debugger rejects SPI-only registers in USART mode");
+    CHECK(!arm_debug_read_memory(arm, UINT32_C(0xFFFFFFFC), data, 1),
+          "debugger rejects unmapped memory");
+    CHECK(arm_save_state(arm, after), "save state after debugger inspection");
+    rewind(before);
+    rewind(after);
+    int a, b;
+    do {
+        a = fgetc(before);
+        b = fgetc(after);
+    } while (a == b && a != EOF);
+    CHECK(a == b, "debugger memory reads preserve CPU, RAM, and peripheral state exactly");
+    fclose(before);
+    fclose(after);
+
+    arm_debug_add_breakpoint(arm, address + 2);
+    arm_advance_to(arm, arm_get_time(arm) + 1024);
+    CHECK(arm_debug_resume(arm, false) &&
+              wait_for_debug_stop(arm, ARM_DEBUG_STOP_BREAKPOINT),
+          "continue after peripheral inspection executes the original program");
+    CHECK(arm_read_word(arm, SysTick_BASE) == SysTick_CTRL_COUNTFLAG_Msk &&
+              arm_read_word(arm, SysTick_BASE) == 0,
+          "normal CPU reads still clear SysTick COUNTFLAG");
+    CHECK(arm_read_half(arm, (uint32_t)SERCOM3 + SERCOM_USART_DATA_OFFSET) == 0x5A &&
+              arm_read_half(arm, (uint32_t)SERCOM3 + SERCOM_USART_DATA_OFFSET) == 0,
+          "normal CPU reads still consume USART input");
+    CHECK(arm_read_half(arm, (uint32_t)SERCOM0 + SERCOM_SPI_DATA_OFFSET) == 0xA5 &&
+              arm_read_half(arm, (uint32_t)SERCOM0 + SERCOM_SPI_DATA_OFFSET) == 0,
+          "normal CPU reads still consume SPI input");
+    arm_cpu_snapshot_t snapshot = {0};
+    arm_read_word(arm, UINT32_C(0xFFFFFFFC));
+    arm_get_cpu_snapshot(arm, &snapshot);
+    CHECK(snapshot.active_exceptions & (UINT64_C(1) << ARM_Exception_HardFault),
+          "normal CPU reads of unmapped memory still raise HardFault");
+    arm_destroy(arm);
+}
+
 static void test_arm_remote_debug_control(void) {
     arm_t *arm = arm_create();
     const uint32_t address = HMCRAMC0_ADDR + UINT32_C(0x100);
@@ -1154,7 +1239,7 @@ static void test_arm_remote_debug_control(void) {
                (uint32_t)systick_data[1] << 8 |
                (uint32_t)systick_data[2] << 16 |
                (uint32_t)systick_data[3] << 24) == systick_value,
-          "remote debugger reads side-effectful words exactly once");
+          "remote debugger reads side-effectful words without consuming status");
     CHECK(arm_debug_add_breakpoint(arm, address) &&
               arm_debug_add_breakpoint(arm, address + 2),
           "remote debugger installs software breakpoints");
@@ -1367,6 +1452,7 @@ int main(void) {
     test_arm_cpu_snapshot();
     test_arm_synchronized_memory_access();
 #ifdef COPROC_DEBUG_SUPPORT
+    test_arm_debug_memory_peek();
     test_arm_remote_debug_control();
 #endif
     test_bundled_bootloader_identification();

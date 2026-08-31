@@ -130,6 +130,10 @@ void arm_mem_update_pending(arm_t *arm);
 uint8_t arm_mem_load_byte(arm_t *arm, uint32_t addr);
 uint16_t arm_mem_load_half(arm_t *arm, uint32_t addr);
 uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr);
+#ifdef COPROC_DEBUG_SUPPORT
+/* Aligned debugger read: no peripheral side effects or CPU exceptions. */
+bool arm_mem_peek_word(arm_t *arm, uint32_t addr, uint32_t *value);
+#endif
 void arm_mem_store_byte(arm_t *arm, uint8_t val, uint32_t addr);
 void arm_mem_store_half(arm_t *arm, uint16_t val, uint32_t addr);
 void arm_mem_store_word(arm_t *arm, uint32_t val, uint32_t addr);
