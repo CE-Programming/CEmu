@@ -1,4 +1,5 @@
 appname := arm-tests
+debug_appname := arm-debug-tests
 
 CC ?= cc
 
@@ -22,10 +23,14 @@ all: $(appname)
 $(appname): $(sources)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $(sources) $(LDLIBS)
 
-test: $(appname)
+$(debug_appname): $(sources)
+	$(CC) $(CPPFLAGS) -DDEBUG_SUPPORT -DCOPROC_DEBUG_SUPPORT $(CFLAGS) $(LDFLAGS) -o $@ $(sources) $(LDLIBS)
+
+test: $(appname) $(debug_appname)
 	./$(appname)
+	./$(debug_appname)
 
 clean:
-	rm -f $(appname)
+	rm -f $(appname) $(debug_appname)
 
 .PHONY: all test clean

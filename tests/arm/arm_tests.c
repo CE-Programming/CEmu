@@ -1094,6 +1094,117 @@ static void test_arm_synchronized_memory_access(void) {
     arm_destroy(arm);
 }
 
+#ifdef COPROC_DEBUG_SUPPORT
+static bool wait_for_debug_stop(arm_t *arm, arm_debug_stop_reason_t expected) {
+    for (unsigned int attempt = 0; attempt != 100000; ++attempt) {
+        bool stopped = false;
+        arm_debug_stop_reason_t reason = ARM_DEBUG_STOP_NONE;
+        if (arm_debug_status(arm, &stopped, &reason) && stopped && reason == expected) {
+            return true;
+        }
+        thrd_yield();
+    }
+    return false;
+}
+
+static void test_arm_remote_debug_control(void) {
+    arm_t *arm = arm_create();
+    const uint32_t address = HMCRAMC0_ADDR + UINT32_C(0x100);
+    const uint8_t program[] = { 0x00, 0xBF, 0x00, 0xBF, 0x00, 0xBF };
+    uint8_t memory[sizeof(program)] = {0};
+    arm_debug_registers_t registers = {0};
+    bool stopped = false;
+    arm_debug_stop_reason_t reason = ARM_DEBUG_STOP_NONE;
+
+    CHECK(arm != NULL, "ARM instance initializes for remote debugging");
+    if (!arm) {
+        return;
+    }
+
+    CHECK(arm_debug_attach(arm), "remote debugger attaches to the ARM core");
+    CHECK(arm_debug_status(arm, &stopped, &reason) && stopped &&
+              reason == ARM_DEBUG_STOP_ATTACH,
+          "remote debugger attachment halts the ARM core");
+
+    CHECK(arm_debug_get_registers(arm, &registers),
+          "remote debugger reads the ARM register file");
+    registers.registers[0] = UINT32_C(0x12345678);
+    registers.registers[15] = address;
+    registers.xpsr = UINT32_C(0xA1000000);
+    CHECK(arm_debug_set_registers(arm, &registers) &&
+              arm_debug_get_registers(arm, &registers),
+          "remote debugger writes the ARM register file");
+    CHECK(registers.registers[0] == UINT32_C(0x12345678) &&
+              registers.registers[15] == address &&
+              (registers.xpsr & UINT32_C(0xF1000000)) == UINT32_C(0xA1000000),
+          "remote debugger preserves general registers, PC, and xPSR flags");
+
+    CHECK(arm_debug_write_memory(arm, address, program, sizeof(program)) &&
+              arm_debug_read_memory(arm, address, memory, sizeof(memory)) &&
+              memcmp(memory, program, sizeof(program)) == 0,
+          "remote debugger reads and writes synchronized ARM memory");
+
+    const uint32_t systick_value = SysTick_CTRL_COUNTFLAG_Msk | SysTick_CTRL_ENABLE_Msk;
+    sync_enter(&arm->sync);
+    arm->cpu.systick.ctrl = systick_value;
+    sync_leave(&arm->sync);
+    uint8_t systick_data[4] = {0};
+    CHECK(arm_debug_read_memory(arm, SysTick_BASE, systick_data, sizeof(systick_data)) &&
+              ((uint32_t)systick_data[0] |
+               (uint32_t)systick_data[1] << 8 |
+               (uint32_t)systick_data[2] << 16 |
+               (uint32_t)systick_data[3] << 24) == systick_value,
+          "remote debugger reads side-effectful words exactly once");
+    CHECK(arm_debug_add_breakpoint(arm, address) &&
+              arm_debug_add_breakpoint(arm, address + 2),
+          "remote debugger installs software breakpoints");
+
+    arm_advance_to(arm, UINT64_C(1024));
+    CHECK(arm_debug_resume(arm, false) &&
+              wait_for_debug_stop(arm, ARM_DEBUG_STOP_BREAKPOINT),
+          "remote debugger stops before executing a breakpoint");
+    CHECK(arm_debug_get_registers(arm, &registers) &&
+              registers.registers[15] == address,
+          "breakpoint stop reports the matching instruction address");
+
+    CHECK(arm_debug_resume(arm, false) &&
+              wait_for_debug_stop(arm, ARM_DEBUG_STOP_BREAKPOINT),
+          "continuing skips the current breakpoint exactly once");
+    CHECK(arm_debug_get_registers(arm, &registers) &&
+              registers.registers[15] == address + 2,
+          "continue reaches the next breakpoint");
+
+    CHECK(arm_debug_resume(arm, true) &&
+              wait_for_debug_stop(arm, ARM_DEBUG_STOP_STEP),
+          "remote debugger single-steps one ARM instruction");
+    CHECK(arm_debug_get_registers(arm, &registers) &&
+              registers.registers[15] == address + 4,
+          "single-step reports the following instruction address");
+
+    CHECK(arm_debug_remove_breakpoint(arm, address) &&
+              arm_debug_remove_breakpoint(arm, address + 2),
+          "remote debugger removes software breakpoints");
+    arm_debug_detach(arm);
+    CHECK(!arm_debug_status(arm, &stopped, &reason),
+          "detaching resumes and releases the ARM core");
+
+    CHECK(arm_debug_attach(arm),
+          "remote debugger reattaches before a sleeping-core detach");
+    sync_enter(&arm->sync);
+    sync_sleep(&arm->sync);
+    sync_leave(&arm->sync);
+    arm_debug_detach(arm);
+    sync_enter(&arm->sync);
+    const bool sleep_preserved = arm->sync.slp;
+    const bool debug_throttle_released = !arm->sync.thr;
+    sync_wake(&arm->sync);
+    sync_leave(&arm->sync);
+    CHECK(sleep_preserved && debug_throttle_released,
+          "detaching releases the debug throttle while preserving CPU sleep");
+    arm_destroy(arm);
+}
+#endif
+
 static void test_bundled_bootloader_identification(void) {
     arm_t *arm = arm_create();
     CHECK(arm != NULL, "ARM instance initializes for bootloader identification");
@@ -1255,6 +1366,9 @@ int main(void) {
     test_arm_cycle_throttle();
     test_arm_cpu_snapshot();
     test_arm_synchronized_memory_access();
+#ifdef COPROC_DEBUG_SUPPORT
+    test_arm_remote_debug_control();
+#endif
     test_bundled_bootloader_identification();
     test_coproc_reset_rebases_clock();
     test_coproc_state_serialization();

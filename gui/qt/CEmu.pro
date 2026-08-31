@@ -77,6 +77,9 @@ QMAKE_LINK = $$BACKUP_QMAKE_LINK
 
 # Core options
 DEFINES += DEBUG_SUPPORT
+contains(DEFINES, DEBUG_SUPPORT) {
+    DEFINES += COPROC_DEBUG_SUPPORT
+}
 
 # These options can be disabled / enabled depending on
 # compiler / library support for your toolchain
@@ -389,6 +392,11 @@ HEADERS  += \
     keyhistorywidget.h \
     tablewidget.h \
     gotodialog.h
+
+contains(DEFINES, COPROC_DEBUG_SUPPORT) {
+    SOURCES += armgdbserver.cpp
+    HEADERS += armgdbserver.h
+}
 
 FORMS    += \
     mainwindow.ui \
