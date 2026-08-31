@@ -92,6 +92,13 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "Script"));
     parser.addOption(luaScript);
 
+#ifdef COPROC_DEBUG_SUPPORT
+    QCommandLineOption armGdbPort(QStringList() << QStringLiteral("arm-gdb-port"),
+                QCoreApplication::translate("main", "Listen for an ARM coprocessor GDB client on localhost:<Port>."),
+                QCoreApplication::translate("main", "Port"));
+    parser.addOption(armGdbPort);
+#endif
+
     // Suppresses the output of an autotester file
     QCommandLineOption suppressTestDialog(QStringList() << QStringLiteral("no-test-dialog"),
                 QCoreApplication::translate("main", "Hides test complete dialog"));
@@ -183,6 +190,9 @@ int main(int argc, char *argv[]) {
     opts.deforceReset       = parser.isSet(deforceReset);
     opts.forceReloadRom     = parser.isSet(forceRomReload);
     opts.ipcOnly            = parser.isSet(ipcOnly);
+#ifdef COPROC_DEBUG_SUPPORT
+    opts.armGdbPort         = 0;
+#endif
     opts.romFile            = parser.value(loadRomFile);
     opts.settingsFile       = parser.value(settingsFile);
     opts.launchPrgm         = parser.value(launchPrgm);
@@ -197,6 +207,18 @@ int main(int argc, char *argv[]) {
     for (const QString &script : parser.values(luaScript)) {
         opts.luaScripts.append(QFileInfo(script).absoluteFilePath());
     }
+#ifdef COPROC_DEBUG_SUPPORT
+    if (parser.isSet(armGdbPort)) {
+        bool validPort = false;
+        const uint port = parser.value(armGdbPort).toUInt(&validPort);
+        if (!validPort || !port || port > 65535) {
+            fprintf(stderr, "Invalid ARM GDB port: %s\n",
+                    parser.value(armGdbPort).toUtf8().constData());
+            return EXIT_FAILURE;
+        }
+        opts.armGdbPort = static_cast<quint16>(port);
+    }
+#endif
     opts.reset              = parser.isSet(resetOption);
     if (parser.isSet(emuSpeed)) {
         opts.speed          = parser.value(emuSpeed).toInt();

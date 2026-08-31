@@ -18,6 +18,12 @@ extern "C" {
 
 extern coproc_state_t coproc;
 
+#ifdef COPROC_DEBUG_SUPPORT
+/* Pins the current coprocessor instance against replacement or destruction.
+ * Every successful acquire, including one returning NULL, must be released. */
+arm_t *coproc_acquire(void);
+void coproc_release(void);
+#endif
 void coproc_reset(void);
 void coproc_free(void);
 void coproc_advance(void);

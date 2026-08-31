@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#if defined(COPROC_DEBUG_SUPPORT) && !defined(DEBUG_SUPPORT)
+# error COPROC_DEBUG_SUPPORT requires DEBUG_SUPPORT
+#endif
+
 typedef struct arm arm_t;
 
 typedef enum arm_bootloader_type {
@@ -34,6 +38,21 @@ typedef struct arm_cpu_snapshot {
     bool sleeping;
 } arm_cpu_snapshot_t;
 
+#ifdef COPROC_DEBUG_SUPPORT
+typedef enum arm_debug_stop_reason {
+    ARM_DEBUG_STOP_NONE,
+    ARM_DEBUG_STOP_ATTACH,
+    ARM_DEBUG_STOP_INTERRUPT,
+    ARM_DEBUG_STOP_BREAKPOINT,
+    ARM_DEBUG_STOP_STEP,
+} arm_debug_stop_reason_t;
+
+typedef struct arm_debug_registers {
+    uint32_t registers[16];
+    uint32_t xpsr;
+} arm_debug_registers_t;
+#endif
+
 #define ARM_BOOTLOADER_DESCRIPTION_SIZE 64
 
 #ifdef __cplusplus
@@ -56,6 +75,19 @@ uint32_t arm_read_word(arm_t *arm, uint32_t address);
 void arm_write_byte(arm_t *arm, uint32_t address, uint8_t value);
 void arm_write_half(arm_t *arm, uint32_t address, uint16_t value);
 void arm_write_word(arm_t *arm, uint32_t address, uint32_t value);
+#ifdef COPROC_DEBUG_SUPPORT
+bool arm_debug_attach(arm_t *arm);
+void arm_debug_detach(arm_t *arm);
+bool arm_debug_status(arm_t *arm, bool *stopped, arm_debug_stop_reason_t *reason);
+bool arm_debug_interrupt(arm_t *arm);
+bool arm_debug_resume(arm_t *arm, bool step);
+bool arm_debug_get_registers(arm_t *arm, arm_debug_registers_t *registers);
+bool arm_debug_set_registers(arm_t *arm, const arm_debug_registers_t *registers);
+bool arm_debug_read_memory(arm_t *arm, uint32_t address, uint8_t *data, size_t size);
+bool arm_debug_write_memory(arm_t *arm, uint32_t address, const uint8_t *data, size_t size);
+bool arm_debug_add_breakpoint(arm_t *arm, uint32_t address);
+bool arm_debug_remove_breakpoint(arm_t *arm, uint32_t address);
+#endif
 void arm_reset(arm_t *arm);
 bool arm_load(arm_t *arm, const char *path);
 arm_bootloader_type_t arm_get_bootloader_info(arm_t *arm, char *desc, size_t desc_size);

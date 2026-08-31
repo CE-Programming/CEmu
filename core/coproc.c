@@ -4,12 +4,45 @@
 #include "emu.h"
 #include "interrupt.h"
 #include "schedule.h"
+#include "arm/threading.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 coproc_state_t coproc;
 
 static const uint8_t coproc_image_magic[] = { 'C', 'A', 'R', 'M' };
+#ifdef COPROC_DEBUG_SUPPORT
+static once_flag coproc_mutex_once = ONCE_FLAG_INIT;
+static mtx_t coproc_mutex;
+
+static void coproc_mutex_init(void) {
+    if (mtx_init(&coproc_mutex, mtx_plain) != thrd_success) {
+        abort();
+    }
+}
+
+static void coproc_lock(void) {
+    call_once(&coproc_mutex_once, coproc_mutex_init);
+    if (mtx_lock(&coproc_mutex) != thrd_success) {
+        abort();
+    }
+}
+
+void coproc_release(void) {
+    if (mtx_unlock(&coproc_mutex) != thrd_success) {
+        abort();
+    }
+}
+
+arm_t *coproc_acquire(void) {
+    coproc_lock();
+    return coproc.arm;
+}
+#else
+# define coproc_lock() ((void)0)
+# define coproc_release() ((void)0)
+#endif
 
 static uint64_t coproc_cycle(void) {
     return sched_total_time(CLOCK_48M);
@@ -37,12 +70,19 @@ void coproc_resume(void) {
     coproc_advance();
 }
 
-void coproc_free(void) {
+static void coproc_free_locked(void) {
     arm_destroy(coproc.arm);
     memset(&coproc, 0, sizeof(coproc));
 }
 
+void coproc_free(void) {
+    coproc_lock();
+    coproc_free_locked();
+    coproc_release();
+}
+
 void coproc_reset(void) {
+    coproc_lock();
     gui_console_printf("[CEmu] Reset Coprocessor Interface...\n");
     if (asic.python && !coproc.arm) {
         coproc.arm = arm_create();
@@ -59,12 +99,14 @@ void coproc_reset(void) {
              * budget to the reset scheduler epoch as well. */
             arm_set_time(coproc.arm, coproc_cycle());
         } else {
-            coproc_free();
+            coproc_free_locked();
         }
     }
+    coproc_release();
 }
 
 bool coproc_load(const char *path) {
+    coproc_lock();
     if (asic.python && !coproc.arm) {
         coproc.arm = arm_create();
         if (coproc.arm) {
@@ -78,18 +120,22 @@ bool coproc_load(const char *path) {
             coproc_log_bootloader();
             arm_set_time(coproc.arm, coproc_cycle());
         }
+        coproc_release();
         return success;
-    } else {
-        return false;
     }
+    coproc_release();
+    return false;
 }
 
 bool coproc_save(FILE *image) {
+    coproc_lock();
     const uint8_t present = coproc.arm != NULL;
-    return fwrite(coproc_image_magic, sizeof(coproc_image_magic), 1, image) == 1 &&
-           fwrite(&present, sizeof(present), 1, image) == 1 &&
-           (!present || (arm_save_flash(coproc.arm, image) &&
-                         arm_save_state(coproc.arm, image)));
+    const bool success = fwrite(coproc_image_magic, sizeof(coproc_image_magic), 1, image) == 1 &&
+                         fwrite(&present, sizeof(present), 1, image) == 1 &&
+                         (!present || (arm_save_flash(coproc.arm, image) &&
+                                       arm_save_state(coproc.arm, image)));
+    coproc_release();
+    return success;
 }
 
 bool coproc_restore(FILE *image) {
@@ -100,29 +146,36 @@ bool coproc_restore(FILE *image) {
         fread(&present, sizeof(present), 1, image) != 1 || present > 1) {
         return false;
     }
+    coproc_lock();
     if (!present) {
         if (asic.python) {
+            coproc_release();
             return false;
         }
-        coproc_free();
+        coproc_free_locked();
+        coproc_release();
         return true;
     }
     if (!asic.python) {
+        coproc_release();
         return false;
     }
     arm_t *restored = arm_create();
     if (!restored) {
+        coproc_release();
         return false;
     }
     if (!arm_restore_flash(restored, image) || !arm_restore_state(restored, image)) {
         arm_destroy(restored);
+        coproc_release();
         return false;
     }
     arm_set_time(restored, coproc_cycle());
-    coproc_free();
+    coproc_free_locked();
     coproc.arm = restored;
     gui_console_printf("[CEmu] Restored ARM flash from emulator image.\n");
     coproc_log_bootloader();
+    coproc_release();
     return true;
 }
 

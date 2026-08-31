@@ -6,6 +6,7 @@ if(APPLE)
 endif()
 
 option(DEPS_RELEASE_ONLY "Build only release versions of vcpkg dependencies" OFF)
+option(COPROC_DEBUG_SUPPORT "Build ARM coprocessor debugging support" ON)
 
 if(DEPS_RELEASE_ONLY)
     if(NOT DEFINED VCPKG_TARGET_TRIPLET)
@@ -184,6 +185,12 @@ set(CEmu_Sources
     ${CEmu_Resources}
 )
 
+if(COPROC_DEBUG_SUPPORT)
+    list(APPEND CEmu_Sources
+        armgdbserver.cpp armgdbserver.h
+    )
+endif()
+
 include(CheckCSourceCompiles)
 check_c_source_compiles("
 	#include <threads.h>
@@ -237,6 +244,10 @@ target_compile_definitions(CEmu PRIVATE
     MULTITHREAD
     TH_GDB_SUPPORT=1
 )
+
+if(COPROC_DEBUG_SUPPORT)
+    target_compile_definitions(CEmu PRIVATE COPROC_DEBUG_SUPPORT)
+endif()
 
 if(CYGWIN OR NOT WIN32)
     include(CheckSymbolExists)
