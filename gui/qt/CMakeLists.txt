@@ -187,6 +187,8 @@ set(CEmu_Sources
 
 if(COPROC_DEBUG_SUPPORT)
     list(APPEND CEmu_Sources
+        armdebugger.cpp armdebugger.h
+        armgdbclient.cpp armgdbclient.h
         armgdbserver.cpp armgdbserver.h
     )
 endif()

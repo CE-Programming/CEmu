@@ -83,6 +83,7 @@ bool arm_debug_interrupt(arm_t *arm);
 bool arm_debug_resume(arm_t *arm, bool step);
 bool arm_debug_get_registers(arm_t *arm, arm_debug_registers_t *registers);
 bool arm_debug_set_registers(arm_t *arm, const arm_debug_registers_t *registers);
+/* Non-destructive inspection; returns false for unsupported memory/registers. */
 bool arm_debug_read_memory(arm_t *arm, uint32_t address, uint8_t *data, size_t size);
 bool arm_debug_write_memory(arm_t *arm, uint32_t address, const uint8_t *data, size_t size);
 bool arm_debug_add_breakpoint(arm_t *arm, uint32_t address);

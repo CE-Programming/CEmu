@@ -354,7 +354,18 @@ bool arm_mem_load_rom(arm_mem_t *mem, FILE *file) {
     return read;
 }
 
-static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
+/* A non-null peek_valid requests an inspection without bus side effects.
+ * Unsupported addresses then report failure instead of faulting the CPU. */
+static uint32_t arm_mem_read_fault(arm_t *arm, bool *peek_valid) {
+    if (peek_valid) {
+        *peek_valid = false;
+    } else {
+        arm_cpu_exception(arm, ARM_Exception_HardFault);
+    }
+    return 0;
+}
+
+static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr, bool *peek_valid) {
     uint8_t offset = addr >> 2 & 0xFF;
     uint32_t val = 0;
     assert(!(addr & 3) &&
@@ -629,6 +640,10 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
                                 return SERCOM_USART_SYNCBUSY_RESETVALUE;
                             case SERCOM_USART_DATA_OFFSET >> 2: {
                                 SERCOM_BUFFER_Type *buffer = &usart->BUFFER[3];
+                                if (peek_valid) {
+                                    if (!buffer->bit.VLD) --buffer;
+                                    return buffer->bit.DATA;
+                                }
                                 if (!buffer->bit.VLD) {
                                     usart->INTFLAG.bit.RXC = false;
                                     arm_mem_sercom_update_pending(arm, id - ID_SERCOM0);
@@ -673,6 +688,10 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
                                 return spi->ADDR.reg;
                             case SERCOM_SPI_DATA_OFFSET >> 2: {
                                 SERCOM_BUFFER_Type *buffer = &spi->BUFFER[3];
+                                if (peek_valid) {
+                                    if (!buffer->bit.VLD) --buffer;
+                                    return buffer->bit.DATA;
+                                }
                                 if (!buffer->bit.VLD) {
                                     spi->INTFLAG.bit.RXC = false;
                                     arm_mem_sercom_update_pending(arm, id - ID_SERCOM0);
@@ -749,12 +768,11 @@ static uint32_t arm_mem_load_any(arm_t *arm, uint32_t addr) {
     if (arm->debug) {
         printf("%08X: load %08X %08X\n", arm->cpu.pc - 4, val, addr);
     }
-    arm_cpu_exception(arm, ARM_Exception_HardFault);
-    return val;
+    return arm_mem_read_fault(arm, peek_valid);
 }
 
 uint8_t arm_mem_load_byte(arm_t *arm, uint32_t addr) {
-    return arm_mem_load_any(arm, addr & ~3) >> ((addr & 3) << 3);
+    return arm_mem_load_any(arm, addr & ~3, NULL) >> ((addr & 3) << 3);
 }
 
 uint16_t arm_mem_load_half(arm_t *arm, uint32_t addr) {
@@ -762,19 +780,18 @@ uint16_t arm_mem_load_half(arm_t *arm, uint32_t addr) {
     if (unlikely(addr & 1)) {
         arm_cpu_exception(arm, ARM_Exception_HardFault);
     } else {
-        val = arm_mem_load_any(arm, addr & ~2) >> ((addr & 2) << 3);
+        val = arm_mem_load_any(arm, addr & ~2, NULL) >> ((addr & 2) << 3);
     }
     return val;
 }
 
-uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
+static uint32_t arm_mem_read_word(arm_t *arm, uint32_t addr, bool *peek_valid) {
     uint32_t val = 0;
     if (unlikely(addr & 3)) {
-        arm_cpu_exception(arm, ARM_Exception_HardFault);
-        return val;
+        return arm_mem_read_fault(arm, peek_valid);
     }
     if (likely(addr < PPB_ADDR)) {
-        return arm_mem_load_any(arm, addr);
+        return arm_mem_load_any(arm, addr, peek_valid);
     } else if (unlikely(addr < SCS_BASE)) {
     } else if (unlikely(addr < SysTick_BASE)) {
     } else if (unlikely(addr < NVIC_BASE)) {
@@ -782,7 +799,7 @@ uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
         switch (addr - SysTick_BASE) {
             case 0x000: // CTRL
                 val = systick->ctrl;
-                systick->ctrl &= ~SysTick_CTRL_COUNTFLAG_Msk;
+                if (!peek_valid) systick->ctrl &= ~SysTick_CTRL_COUNTFLAG_Msk;
                 return val;
             case 0x004: // LOAD
                 return systick->load;
@@ -838,9 +855,20 @@ uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
     if (arm->debug) {
         printf("%08X: load %08X %08X\n", arm->cpu.pc - 4, val, addr);
     }
-    arm_cpu_exception(arm, ARM_Exception_HardFault);
-    return val;
+    return arm_mem_read_fault(arm, peek_valid);
 }
+
+uint32_t arm_mem_load_word(arm_t *arm, uint32_t addr) {
+    return arm_mem_read_word(arm, addr, NULL);
+}
+
+#ifdef COPROC_DEBUG_SUPPORT
+bool arm_mem_peek_word(arm_t *arm, uint32_t addr, uint32_t *value) {
+    bool valid = true;
+    *value = arm_mem_read_word(arm, addr, &valid);
+    return valid;
+}
+#endif
 
 static void arm_mem_store_any(arm_t *arm, uint32_t val, uint32_t mask, uint32_t addr) {
     uint8_t offset = addr >> 2 & 0xFF;

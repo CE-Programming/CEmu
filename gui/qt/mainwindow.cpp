@@ -1,5 +1,6 @@
 ﻿#include "mainwindow.h"
 #ifdef COPROC_DEBUG_SUPPORT
+#include "armdebugger.h"
 #include "armgdbserver.h"
 #endif
 #include "ui_mainwindow.h"
@@ -1254,6 +1255,9 @@ void MainWindow::translateExtras(int init) {
         m_actionToggleUI->setText(MSG_EDIT_UI);
         m_actionAddMemory->setText(MSG_ADD_MEMORY);
         m_actionAddVisualizer->setText(MSG_ADD_VISUALIZER);
+#ifdef COPROC_DEBUG_SUPPORT
+        if (m_actionArmDebugger) m_actionArmDebugger->setText(tr("ARM Coprocessor Debugger..."));
+#endif
         m_menuDebug->setTitle(TITLE_DEBUG);
         m_menuDocks->setTitle(TITLE_DOCKS);
 
@@ -1478,16 +1482,18 @@ void MainWindow::setup() {
 
 
     setUIDocks();
+#ifdef COPROC_DEBUG_SUPPORT
+    m_actionArmDebugger = new QAction(QIcon(QStringLiteral(":/icons/resources/icons/debugger.png")),
+                                      tr("ARM Coprocessor Debugger..."), this);
+    connect(m_actionArmDebugger, &QAction::triggered, this, &MainWindow::showArmDebugger);
+    m_menuDebug->addSeparator();
+    m_menuDebug->addAction(m_actionArmDebugger);
+#endif
     show();
 
 #ifdef COPROC_DEBUG_SUPPORT
     if (opts.armGdbPort) {
-        m_armGdbServer = new ArmGdbServer(
-            [this](const QString &message, bool error) {
-                console(QStringLiteral("[CEmu] %1\n").arg(message),
-                        error ? EmuThread::ConsoleErr : EmuThread::ConsoleNorm);
-            }, this);
-        m_armGdbServer->start(opts.armGdbPort);
+        ensureArmGdbServer();
     }
 #endif
 
@@ -1570,6 +1576,38 @@ void MainWindow::setup() {
     ui->lcd->setFocus();
     m_setup = true;
 }
+
+#ifdef COPROC_DEBUG_SUPPORT
+bool MainWindow::ensureArmGdbServer() {
+    if (!m_armGdbServer) {
+        m_armGdbServer = new ArmGdbServer(
+            [this](const QString &message, bool error) {
+                console(QStringLiteral("[CEmu] %1\n").arg(message),
+                        error ? EmuThread::ConsoleErr : EmuThread::ConsoleNorm);
+            }, this);
+    }
+    return m_armGdbServer->port() || m_armGdbServer->start(opts.armGdbPort);
+}
+
+void MainWindow::showArmDebugger() {
+    if (!ensureArmGdbServer()) {
+        QMessageBox::warning(this, MSG_ERROR, tr("Could not start the ARM GDB server."));
+        return;
+    }
+    if (!m_armDebugger) m_armDebugger = new ArmDebugger(this);
+    if (!m_armDebugger->isConnectedToServer(m_armGdbServer->port())) {
+        if (m_armGdbServer->hasClient()) {
+            QMessageBox::information(this, tr("ARM GDB server in use"),
+                                     tr("The ARM GDB server already has a client connected."));
+            return;
+        }
+        m_armDebugger->connectToServer(m_armGdbServer->port());
+    }
+    m_armDebugger->show();
+    m_armDebugger->raise();
+    m_armDebugger->activateWindow();
+}
+#endif
 
 void MainWindow::sendEmuKey(uint16_t key) {
     emu.enqueueKeys(key);
@@ -1711,6 +1749,8 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 
 MainWindow::~MainWindow() {
 #ifdef COPROC_DEBUG_SUPPORT
+    delete m_armDebugger;
+    m_armDebugger = nullptr;
     delete m_armGdbServer;
     m_armGdbServer = nullptr;
 #endif
