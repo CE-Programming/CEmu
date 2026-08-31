@@ -394,8 +394,14 @@ HEADERS  += \
     gotodialog.h
 
 contains(DEFINES, COPROC_DEBUG_SUPPORT) {
-    SOURCES += armgdbserver.cpp
-    HEADERS += armgdbserver.h
+    SOURCES += \
+        armdebugger.cpp \
+        armgdbclient.cpp \
+        armgdbserver.cpp
+    HEADERS += \
+        armdebugger.h \
+        armgdbclient.h \
+        armgdbserver.h
 }
 
 FORMS    += \
