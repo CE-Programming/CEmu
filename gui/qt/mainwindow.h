@@ -51,6 +51,9 @@ class QObject;
 QT_END_NAMESPACE
 
 class BasicEditor;
+#ifdef COPROC_DEBUG_SUPPORT
+class ArmGdbServer;
+#endif
 
 #ifdef LIBUSB_SUPPORT
 # include <libusb.h>
@@ -1117,6 +1120,9 @@ private:
     uint16_t m_usbLangId = 0x0409;
 #endif
     QButtonGroup *m_usbConnectGroup = nullptr;
+#ifdef COPROC_DEBUG_SUPPORT
+    ArmGdbServer *m_armGdbServer = nullptr;
+#endif
 
 #ifdef _WIN32
     QAction *actionToggleConsole;

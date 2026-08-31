@@ -1,4 +1,7 @@
 ﻿#include "mainwindow.h"
+#ifdef COPROC_DEBUG_SUPPORT
+#include "armgdbserver.h"
+#endif
 #include "ui_mainwindow.h"
 #include "utils.h"
 #include "sendinghandler.h"
@@ -1463,6 +1466,17 @@ void MainWindow::setup() {
     setUIDocks();
     show();
 
+#ifdef COPROC_DEBUG_SUPPORT
+    if (opts.armGdbPort) {
+        m_armGdbServer = new ArmGdbServer(
+            [this](const QString &message, bool error) {
+                console(QStringLiteral("[CEmu] %1\n").arg(message),
+                        error ? EmuThread::ConsoleErr : EmuThread::ConsoleNorm);
+            }, this);
+        m_armGdbServer->start(opts.armGdbPort);
+    }
+#endif
+
     const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
     if (restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) && restoreGeometry(geometry) && restoreGeometry(geometry)) {
         const QPoint position = m_config->value(SETTING_WINDOW_POSITION).toPoint();
@@ -1682,6 +1696,10 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
+#ifdef COPROC_DEBUG_SUPPORT
+    delete m_armGdbServer;
+    m_armGdbServer = nullptr;
+#endif
     if (m_edLuaInitialized && ed_lua) runLuaCleanup(*ed_lua, "shutdown");
     if (m_replLuaInitialized && repl_lua) runLuaCleanup(*repl_lua, "shutdown");
     if (m_watchpoints) {

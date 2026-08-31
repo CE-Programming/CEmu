@@ -3,10 +3,16 @@
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
+#ifdef COPROC_DEBUG_SUPPORT
+# include <QtCore/QtTypes>
+#endif
 
 struct CEmuOpts {
     int speed;
     int fullscreen;
+#ifdef COPROC_DEBUG_SUPPORT
+    quint16 armGdbPort;
+#endif
     bool restoreOnOpen;
     bool useUnthrottled;
     bool suppressTestDialog;
