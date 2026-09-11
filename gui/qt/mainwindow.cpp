@@ -3036,79 +3036,28 @@ void MainWindow::emuLoad(emu_data_t type) {
 }
 
 void MainWindow::disasmLine(bool prepend) {
-    bool useLabel = false;
-    map_t::iterator sit;
-    std::pair<map_t::iterator, map_t::iterator> range;
-    unsigned int numLines = 1;
+    QString line;
     QTextCursor cursor = m_disasm->textCursor();
     cursor.movePosition(prepend ? QTextCursor::Start : QTextCursor::End);
 
-    if (disasm.base != disasm.next) {
-        disasm.base = disasm.next;
-        if (disasm.map.count(static_cast<uint32_t>(disasm.next))) {
-            range = disasm.map.equal_range(static_cast<uint32_t>(disasm.next));
+    disasm.base = disasm.next;
 
-            numLines = 0;
-            for (sit = range.first;  sit != range.second;  ++sit) {
-               numLines++;
-            }
+    disasm.highlight.watchR = false;
+    disasm.highlight.watchW = false;
+    disasm.highlight.breakP = false;
+    disasm.highlight.pc = false;
 
-            disasm.highlight.watchR = false;
-            disasm.highlight.watchW = false;
-            disasm.highlight.breakP = false;
-            disasm.highlight.pc = false;
+    disasm.instr.data.clear();
+    disasm.instr.opcode.clear();
+    disasm.instr.operands.clear();
+    disasm.instr.size = 0;
 
-            disasm.instr.data.clear();
-            disasm.instr.opcode.clear();
-            disasm.instr.operands.clear();
-            disasm.instr.size = 0;
-
-            useLabel = true;
-        } else {
-            disasmGet();
-        }
-    } else {
-        disasmGet();
-    }
-
-    if (useLabel) {
-        range = disasm.map.equal_range(static_cast<uint32_t>(disasm.next));
-        sit = range.first;
-    }
-
-    for (unsigned int j = 0; j < numLines; j++) {
-
-        QString line;
-        QString symbols;
-
-        if (useLabel) {
-            if (disasm.base > 511 || (disasm.base < 512 && sit->second[0] == '_')) {
-                line = QStringLiteral("%1  %2:")
-                       .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
-                            QString::fromStdString(sit->second));
-
-                if (!prepend && !cursor.atStart()) {
-                    cursor.insertBlock();
-                }
-                cursor.insertText(line);
-                if (prepend && !cursor.atEnd()) {
-                    cursor.insertBlock();
-                }
-            }
-
-            if (numLines == j + 1) {
-                useLabel = false;
-            }
-            sit++;
-        } else {
-            line = QString(QStringLiteral("%1 %2%3%4 %5  %6%7"))
-                           .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
-                                disasm.highlight.watchR ? QStringLiteral("R") : QStringLiteral(" "),
-                                disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" "),
-                                disasm.highlight.breakP ? QStringLiteral("X") : QStringLiteral(" "),
-                                disasm.bytes ? QString::fromStdString(disasm.instr.data).leftJustified(12, ' ') : QStringLiteral(" "),
-                                QString::fromStdString(disasm.instr.opcode),
-                                QString::fromStdString(disasm.instr.operands));
+    auto range = disasm.map.equal_range(static_cast<uint32_t>(disasm.base));
+    for (auto sit = range.first; sit != range.second; sit++) {
+        if (disasm.base >= 512 || sit->second[0] == '_') {
+            line = QStringLiteral("%1  %2:")
+                   .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
+                        QString::fromStdString(sit->second));
 
             if (!prepend && !cursor.atStart()) {
                 cursor.insertBlock();
@@ -3120,9 +3069,27 @@ void MainWindow::disasmLine(bool prepend) {
         }
     }
 
+    disasmGet();
+    line = QString(QStringLiteral("%1 %2%3%4 %5  %6%7"))
+                   .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
+                        disasm.highlight.watchR ? QStringLiteral("R") : QStringLiteral(" "),
+                        disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" "),
+                        disasm.highlight.breakP ? QStringLiteral("X") : QStringLiteral(" "),
+                        disasm.bytes ? QString::fromStdString(disasm.instr.data).leftJustified(12, ' ') : QStringLiteral(" "),
+                        QString::fromStdString(disasm.instr.opcode),
+                        QString::fromStdString(disasm.instr.operands));
+
+    if (!prepend && !cursor.atStart()) {
+        cursor.insertBlock();
+    }
+    cursor.insertText(line);
+    if (prepend && !cursor.atEnd()) {
+        cursor.insertBlock();
+    }
+
     if (!m_disasmOffsetSet && disasm.next > m_disasmAddr) {
         m_disasmOffsetSet = true;
-        m_disasmOffset = m_disasm->textCursor();
+        m_disasmOffset = cursor;
         m_disasmOffset.movePosition(QTextCursor::StartOfLine);
     }
 
