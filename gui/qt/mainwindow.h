@@ -379,8 +379,10 @@ private:
     // disassembly
     void disasmUpdateAddr(int base, bool pane);
     void disasmUpdate();
-    void disasmLine();
+    void disasmLine(bool prepend = false);
     void disasmScroll(int value);
+    void disasmScrollUp();
+    void disasmUpdateRange(int min, int max);
 
     // stack
     void stackUpdate();
@@ -747,6 +749,7 @@ private:
     bool m_disasmOffsetSet;
     bool m_disasmPane;
     int32_t m_disasmAddr;
+    int32_t m_disasmPaneAddr;
     uint32_t m_stackAddr;
 
     QString m_searchStr;
