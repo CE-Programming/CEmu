@@ -2283,12 +2283,86 @@ void MainWindow::batterySet(int value) const {
 
 void MainWindow::disasmScroll(int value) {
     QScrollBar *v = m_disasm->verticalScrollBar();
-    if (value >= v->maximum()) {
+    if (value < 0) {
+        disasmScrollUp();
+    } else if (value >= v->maximum() && disasm.next <= 0xFFFFFF) {
         v->blockSignals(true);
         disasmLine();
-        v->setValue(m_disasm->verticalScrollBar()->maximum() - 1);
+        v->setMinimum(m_disasmPaneAddr > 0 ? -1 : 0);
+        v->setValue(v->maximum() - 1);
         v->blockSignals(false);
     }
+}
+
+void MainWindow::disasmScrollUp() {
+    // peek a window of preceding bytes to scan
+    static constexpr uint32_t MAX_DATA_SIZE = 0x40;
+    uint8_t data[MAX_DATA_SIZE];
+    uint32_t target_addr = static_cast<uint32_t>(m_disasmPaneAddr);
+    uint32_t base_addr = target_addr >= MAX_DATA_SIZE ? target_addr - MAX_DATA_SIZE : 0;
+    uint32_t data_size = target_addr - base_addr;
+    for (uint32_t offset = 0; offset < data_size; offset++) {
+        data[offset] = mem_peek_byte(base_addr + offset);
+    }
+
+    // set up a zdis context to query instruction sizes from the peeked data
+    zdis_ctx ctx{};
+    ctx.zdis_adl = disasm.adl;
+    ctx.zdis_user_ptr = data;
+    ctx.zdis_user_size = data_size;
+    ctx.zdis_read = [](struct zdis_ctx *ctx, uint32_t addr) {
+        return addr < ctx->zdis_user_size ? ctx->zdis_user_ptr[addr] : -1;
+    };
+
+    // scan forward through the data and count paths hitting each instruction
+    uint16_t hits[MAX_DATA_SIZE + 1] = {0};
+    uint32_t best_offset = data_size;
+    for (uint32_t offset = 0; offset < data_size; offset++) {
+        ctx.zdis_end_addr = offset;
+        int8_t size = zdis_inst_size(&ctx);
+        // if instruction passed the end of data, skip it
+        if (size <= 0) {
+            continue;
+        }
+        // treat as a potential starting point, with more weight based on past execution
+        uint16_t hit_this = hits[offset];
+        if (hit_this == 0) {
+            hit_this = 1;
+        }
+        hit_this += debug.addr[base_addr + offset] & DBG_INST_START_MARKER ? 1 : 0;
+        if (offset + size < data_size) {
+            // count paths into next instruction
+            hits[offset + size] += hit_this;
+        } else {
+            // next instruction is current address, track most hits and prefer shorter instrs
+            if (hit_this >= hits[best_offset]) {
+                best_offset = offset;
+            }
+        }
+    }
+
+    if (best_offset == data_size) {
+        // couldn't find matching prior instruction, so repopulate from the previous byte
+        disasmUpdateAddr(target_addr - 1, false);
+    } else {
+        // disassemble one instruction and prepend
+        m_disasmPaneAddr = static_cast<int32_t>(base_addr + best_offset);
+        int32_t old_next = std::exchange(disasm.next, m_disasmPaneAddr);
+        QScrollBar *v = m_disasm->verticalScrollBar();
+        v->blockSignals(true);
+        disasmLine(true);
+        v->setMinimum(m_disasmPaneAddr > 0 ? -1 : 0);
+        v->setValue(0);
+        v->blockSignals(false);
+        disasm.next = old_next;
+    }
+}
+
+void MainWindow::disasmUpdateRange(int min, int max) {
+    QScrollBar *v = m_disasm->verticalScrollBar();
+    v->blockSignals(true);
+    v->setMinimum(m_disasmPaneAddr > 0 ? -1 : 0);
+    v->blockSignals(false);
 }
 
 void MainWindow::stackScroll(int value) {
@@ -2499,7 +2573,8 @@ void MainWindow::disasmUpdateAddr(int base, bool pane) {
     m_disasm->cursorState(false);
     m_disasm->clearAllHighlights();
 
-    while (disasm.next < lastAddr) {
+    m_disasmPaneAddr = disasm.next;
+    while (disasm.next <= lastAddr) {
         disasmLine();
     }
 

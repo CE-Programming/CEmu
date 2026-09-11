@@ -264,6 +264,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::setCalcId);
     connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
     connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
+    connect(m_disasm->verticalScrollBar(), &QScrollBar::rangeChanged, this, &MainWindow::disasmUpdateRange);
 
 #ifdef Q_OS_MACOS
     {
@@ -3034,11 +3035,13 @@ void MainWindow::emuLoad(emu_data_t type) {
     emu.load(type, path);
 }
 
-void MainWindow::disasmLine() {
+void MainWindow::disasmLine(bool prepend) {
     bool useLabel = false;
     map_t::iterator sit;
     std::pair<map_t::iterator, map_t::iterator> range;
     unsigned int numLines = 1;
+    QTextCursor cursor = m_disasm->textCursor();
+    cursor.movePosition(prepend ? QTextCursor::Start : QTextCursor::End);
 
     if (disasm.base != disasm.next) {
         disasm.base = disasm.next;
@@ -3084,7 +3087,13 @@ void MainWindow::disasmLine() {
                        .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
                             QString::fromStdString(sit->second));
 
-                m_disasm->appendPlainText(line);
+                if (!prepend && !cursor.atStart()) {
+                    cursor.insertBlock();
+                }
+                cursor.insertText(line);
+                if (prepend && !cursor.atEnd()) {
+                    cursor.insertBlock();
+                }
             }
 
             if (numLines == j + 1) {
@@ -3101,7 +3110,13 @@ void MainWindow::disasmLine() {
                                 QString::fromStdString(disasm.instr.opcode),
                                 QString::fromStdString(disasm.instr.operands));
 
-            m_disasm->appendPlainText(line);
+            if (!prepend && !cursor.atStart()) {
+                cursor.insertBlock();
+            }
+            cursor.insertText(line);
+            if (prepend && !cursor.atEnd()) {
+                cursor.insertBlock();
+            }
         }
     }
 
