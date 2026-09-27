@@ -430,6 +430,9 @@ asic_rev_t EmuThread::handleReset(const boot_ver_t* bootVer, asic_rev_t loadedRe
 
     // If CPU reset, override the ASIC revision
     if (loadedRev == ASIC_REV_AUTO) {
+#ifdef PNG_WRITE_APNG_SUPPORTED
+        apng_handle_reset();
+#endif
         loadedRev = (asic_rev_t)m_asicRev.load();
         if (!m_allowAnyRev.load() && !supportedRevs.contains((int)loadedRev)) {
             loadedRev = ASIC_REV_AUTO;

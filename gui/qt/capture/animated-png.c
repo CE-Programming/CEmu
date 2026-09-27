@@ -49,18 +49,28 @@ bool apng_start(const char *tmp_name, int frameskip) {
     apng.recording = true;
     apng.skipped = 0;
     apng.n = 0;
+    apng.time_offset = 0;
 
     return true;
 }
 
 static void apng_write_delay(void) {
-    uint64_t time = sched_total_time(CLOCK_48M) - apng.prev_time;
-    int logo = 48 - clzll(time);
+    uint64_t time = apng.time_offset + sched_total_time(CLOCK_48M) - apng.prev_time;
+    /* Stopping immediately after a reset/frame can leave no elapsed time. */
+    int logo = 48 - clzll(time | 1);
     uint64_t shift = logo > 10 ? (uint64_t)logo : 10;
     png_uint_16 num = time >> shift, den = sched_get_clock_rate(CLOCK_48M) >> shift;
     fwrite(&num, sizeof(num), 1, apng.tmp);
     fwrite(&den, sizeof(den), 1, apng.tmp);
-    apng.prev_time += num << shift;
+    apng.prev_time += (uint64_t)num << shift;
+}
+
+void apng_handle_reset(void) {
+    if (apng.recording && apng.n) {
+        /* Called before the emulated clock returns to zero. Keep the recording's
+         * timeline continuous, including time spent on an unchanged frame. */
+        apng.time_offset += sched_total_time(CLOCK_48M);
+    }
 }
 
 void apng_add_frame(const void *frame) {
@@ -73,7 +83,7 @@ void apng_add_frame(const void *frame) {
 
         if (!apng.n || memcmp(frame, apng.frame, sizeof(apng.frame))) {
             if (!apng.n) {
-                apng.prev_time = sched_total_time(CLOCK_48M);
+                apng.prev_time = apng.time_offset + sched_total_time(CLOCK_48M);
             } else {
                 apng_write_delay();
             }
