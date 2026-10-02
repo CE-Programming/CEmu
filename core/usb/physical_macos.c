@@ -1,3 +1,5 @@
+#ifdef __APPLE__
+
 #include "physical_macos.h"
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -391,3 +393,5 @@ physical_hid_read_result_t physical_hid_read(physical_hid_device_t *device,
     pthread_mutex_unlock(&device->mutex);
     return PHYSICAL_HID_READ_COMPLETED;
 }
+
+#endif /* __APPLE__ */
