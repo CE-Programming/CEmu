@@ -16,6 +16,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-core-sdl:
+    name: "Build: standalone core and SDL"
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout Git Repo
+      uses: actions/checkout@v7
+      with:
+        submodules: 'recursive'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends build-essential libsdl2-dev
+
+    - name: Build standalone core
+      run: make -C core -j"$(nproc)"
+
+    - name: Build SDL frontend
+      run: make -C gui/sdl -j"$(nproc)" CC=gcc
+
   build:
     name: "Build: ${{ matrix.os }} - ${{ matrix.archvariant }}"
     runs-on: ${{ matrix.os }}
@@ -44,7 +67,7 @@ jobs:
 
     steps:
     - name: Checkout Git Repo
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         submodules: 'recursive'
 
@@ -114,7 +137,7 @@ jobs:
         VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-linux-${{ matrix.host_triplet }}
 
     - name: Upload binary as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: CEmu_linux_${{ matrix.archvariant }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Linux-${{ matrix.archvariant }}/${{ matrix.config }}/CEmu

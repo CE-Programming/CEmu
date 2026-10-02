@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout Git Repo
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         submodules: 'recursive'
 

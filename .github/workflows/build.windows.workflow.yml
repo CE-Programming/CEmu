@@ -43,7 +43,7 @@ jobs:
         Remove-Item -Recurse -Force C:/Strawberry -ErrorAction SilentlyContinue
 
     - name: Checkout Git Repo
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         submodules: 'recursive'
 
@@ -92,7 +92,7 @@ jobs:
         VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload ${{ matrix.arch }} ${{ matrix.config }} EXE
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: CEmu_win-${{ matrix.arch }}_master
         path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe
