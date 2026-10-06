@@ -27,6 +27,7 @@ namespace cemucore
     extern "C"
     {
         #include "../../core/usb/usb.h"
+        #include "../../core/debug/debug.h"
 
         void gui_console_clear() {}
         void gui_debug_close(void) {}
@@ -321,6 +322,22 @@ bool runCommand(const std::string& line)
         }
         return true;
     }
+    if (command == "launch-asm") {
+        std::string name, extra;
+        input >> name;
+        const bool valid = !name.empty() && name.size() <= 8 &&
+            name[0] >= 'A' && name[0] <= 'Z' &&
+            name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") == std::string::npos;
+        if (!valid || (input >> extra)) {
+            respond("ERR usage: launch-asm <program-name>");
+        } else {
+            autotester::config.target.name = name;
+            autotester::config.target.isASM = true;
+            autotester::launchCommand({"action", "launch"});
+            respond("OK launch-asm " + name);
+        }
+        return true;
+    }
     if (command == "screenshot" || command == "save-state") {
         std::string path;
         std::getline(input >> std::ws, path);
@@ -422,6 +439,13 @@ int main(int argc, char **argv)
         printUsage(argv[0]);
         return EXIT_FAILURE;
     }
+
+#ifdef DEBUG_SUPPORT
+    struct debugger_lifetime_t {
+        debugger_lifetime_t() { cemucore::debug_init(); }
+        ~debugger_lifetime_t() { cemucore::debug_free(); }
+    } debugger_lifetime;
+#endif
 
     const cemucore::emu_data_t type = options.image.empty()
         ? cemucore::EMU_DATA_ROM : cemucore::EMU_DATA_IMAGE;

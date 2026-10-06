@@ -15,6 +15,10 @@ Supported commands:
   clock, allowing asynchronous physical USB reset and hotplug work to settle.
 - `key <name> [hold-ms]` presses and releases one calculator key.
 - `keys <sequence>` runs the same comma-separated key syntax as the autotester.
+- `launch-asm <program-name>` queues `Asm(prgmNAME` through the OS keycode
+  interface, starting from the home screen. Requires an OS that permits ASM
+  execution and a program name of 1-8 uppercase letters/digits, starting with a
+  letter. Advance emulation with `run` to execute the queued Enter key.
 - `screenshot <path>` writes the current 320x240 LCD as a 24-bit BMP.
 - `screen-hash` returns an FNV-1a hash of the RGBA8888 LCD frame.
 - `save-state <path>` writes a CEmu `.ce` state.
