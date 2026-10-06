@@ -8,31 +8,8 @@ import subprocess
 import tempfile
 
 
-def run(args):
-    with socket.socket() as temporary:
-        temporary.bind(("127.0.0.1", 0))
-        port = temporary.getsockname()[1]
-    fixture = Path(args.fixture).resolve()
-    with tempfile.TemporaryFile(mode="w+") as log:
-        emulator = subprocess.Popen(
-            [args.emulator, "--rom", args.rom], stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=log, text=True,
-            env=dict(os.environ, CEMU_GDB_PORT=str(port)))
-        def command(value):
-            emulator.stdin.write(value + "\n")
-            emulator.stdin.flush()
-            result = emulator.stdout.readline().strip()
-            assert result.startswith("OK"), result
-        try:
-            assert emulator.stdout.readline().startswith("CEMU_HEADLESS_READY")
-            command("run 6000")
-            command("key enter")
-            command("key clear")
-            command("send-file ram " + str(fixture / "GDBTEST.8xp"))
-            # Let GDB attach and install main's breakpoint before the OS launches it.
-            emulator.stdin.write("run-realtime 1000\nlaunch-asm GDBTEST\nrun-realtime 1000\n")
-            emulator.stdin.flush()
-            script = rf'''
+def gdb_script(fixture, port):
+    return rf'''
 set pagination off
 set confirm off
 set remotetimeout 5
@@ -49,6 +26,18 @@ break *_probe_write
 continue
 if $hl != 0x123456
   echo FAIL HL\n
+  quit 1
+end
+set $caller_pc = (unsigned long)*(unsigned char *)$sp | ((unsigned long)*(unsigned char *)($sp + 1) << 8) | ((unsigned long)*(unsigned char *)($sp + 2) << 16)
+set $probe_sp = $sp
+frame 1
+if $pc != $caller_pc || $sp != $probe_sp + 3
+  echo FAIL 24-bit CFI caller PC\n
+  quit 1
+end
+frame 0
+if $sp != $probe_sp
+  echo FAIL 24-bit CFI stack restoration\n
   quit 1
 end
 watch watched_value
@@ -95,9 +84,36 @@ if $pc != $return_pc || $sp != $return_sp
   echo FAIL stepi did not execute RET\n
   quit 1
 end
-echo PASS real GDB: OS launch, symbols, breakpoints, write/read/access watchpoints, LD and RET stepi\n
+echo PASS real GDB: OS launch, symbols, breakpoints, write/read/access watchpoints, CFI unwinding, LD and RET stepi\n
 detach
 '''
+
+
+def run(args, program="GDBTEST", script_factory=gdb_script):
+    with socket.socket() as temporary:
+        temporary.bind(("127.0.0.1", 0))
+        port = temporary.getsockname()[1]
+    fixture = Path(args.fixture).resolve()
+    with tempfile.TemporaryFile(mode="w+") as log:
+        emulator = subprocess.Popen(
+            [args.emulator, "--rom", args.rom], stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=log, text=True,
+            env=dict(os.environ, CEMU_GDB_PORT=str(port)))
+        def command(value):
+            emulator.stdin.write(value + "\n")
+            emulator.stdin.flush()
+            result = emulator.stdout.readline().strip()
+            assert result.startswith("OK"), result
+        try:
+            assert emulator.stdout.readline().startswith("CEMU_HEADLESS_READY")
+            command("run 6000")
+            command("key enter")
+            command("key clear")
+            command("send-file ram " + str(fixture / (program + ".8xp")))
+            # Let GDB attach and install main's breakpoint before the OS launches it.
+            emulator.stdin.write(f"run-realtime 1000\nlaunch-asm {program}\nrun-realtime 1000\n")
+            emulator.stdin.flush()
+            script = script_factory(fixture, port)
             with tempfile.NamedTemporaryFile(mode="w", suffix=".gdb", delete=False) as file:
                 file.write(script)
                 script_path = file.name
@@ -114,7 +130,7 @@ detach
             print(result.stderr, end="")
             assert result.returncode == 0, result.returncode
             assert "PASS real GDB:" in result.stdout
-            emulator.stdin.write("screenshot " + str(Path(args.screenshot).resolve()) + "\nquit\n")
+            emulator.stdin.write("run 1000\nscreenshot " + str(Path(args.screenshot).resolve()) + "\nquit\n")
             emulator.stdin.flush()
             emulator.communicate(timeout=15)
             assert emulator.returncode == 0

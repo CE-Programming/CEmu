@@ -87,9 +87,25 @@ python3 tests/gdbstub/test_gdb.py \
 
 The test transfers and launches `GDBTEST`, loads its ELF symbols, verifies
 breakpoints and all three watchpoint types through real GDB, executes `stepi`
-on both a linear instruction and a 24-bit `RET`,
+on both a linear instruction and a 24-bit `RET`, checks 24-bit CFI unwinding,
 and captures the final calculator screen. The headless `launch-asm` command
 reuses the autotester's OS keycode launch path.
+
+The nested C fixture checks DWARF 5 indexed addresses and source breakpoints,
+24-bit arguments and locals, a three-frame backtrace, `finish`, natural
+24/32-bit returns, and a forced 32-bit return. It requires the corresponding DWARF, prologue,
+and return-value fixes in the CEdev GDB branch based on binutils 2.47:
+
+```sh
+make -C tests/gdbstub/fixture_nested debug
+python3 tests/gdbstub/test_gdb_nested.py \
+  --emulator /tmp/cemu-gdb-tests/cemu-gdb-headless --rom /path/to/CE.rom \
+  --gdb z80-none-elf-gdb --screenshot /tmp/cemu-gdb-nested.bmp
+```
+
+The compiler describes these locals relative to SP. The nested test inspects
+caller locals after the caller cleans up its pushed argument; while stopped
+inside the callee, that temporary push can shift SP-relative caller locations.
 
 Enable ASan/UBSan with `-DGDBSTUB_SANITIZERS=ON`. ROM initialization currently
 triggers an unrelated signed-shift report in `core/flash.c:flash_set_mask`.

@@ -1,4 +1,6 @@
 __pycache__/
 fixture/bin/
 fixture/obj/
+fixture_nested/bin/
+fixture_nested/obj/
 !ubsan.supp
