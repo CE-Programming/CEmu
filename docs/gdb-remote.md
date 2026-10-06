@@ -93,8 +93,9 @@ reuses the autotester's OS keycode launch path.
 
 The nested C fixture checks DWARF 5 indexed addresses and source breakpoints,
 24-bit arguments and locals, a three-frame backtrace, `finish`, natural
-24/32-bit returns, and a forced 32-bit return. It requires the corresponding DWARF, prologue,
-and return-value fixes in the CEdev GDB branch based on binutils 2.47:
+24/32-bit returns, and a forced 32-bit return. It requires the corresponding
+DWARF, prologue, and return-value fixes in `binutils-2_47-cedev` and the DWARF
+register/location fixes in the Clang 22 `z80` branch:
 
 ```sh
 make -C tests/gdbstub/fixture_nested debug
@@ -103,9 +104,34 @@ python3 tests/gdbstub/test_gdb_nested.py \
   --gdb z80-none-elf-gdb --screenshot /tmp/cemu-gdb-nested.bmp
 ```
 
-The compiler describes these locals relative to SP. The nested test inspects
-caller locals after the caller cleans up its pushed argument; while stopped
-inside the callee, that temporary push can shift SP-relative caller locations.
+Clang 22 describes stack locals relative to the actual IX/IY frame base. The
+nested test checks caller arguments and locals while inside the callee and
+immediately after `finish`, before the caller cleans up its pushed argument.
+
+The mixed fixture keeps an IX caller at `-O0`, with separate leaves at `-O2`
+that use an unsaved IY frame and a frameless register-held variable. It tests
+caller PC/SP/IX, caller locals, IY setup instruction boundaries, the final
+`RET` after IY teardown, register locations, and return values:
+
+```sh
+make -C tests/gdbstub/fixture_frames debug
+python3 tests/gdbstub/test_gdb_frames.py \
+  --emulator /tmp/cemu-gdb-tests/cemu-gdb-headless --rom /path/to/CE.rom \
+  --gdb z80-none-elf-gdb --screenshot /tmp/cemu-gdb-frames.bmp
+python3 tests/gdbstub/test_gdb_frames.py \
+  --emulator /tmp/cemu-gdb-tests/cemu-gdb-headless --rom /path/to/CE.rom \
+  --gdb z80-none-elf-gdb --screenshot /tmp/cemu-gdb-frames-fallback.bmp \
+  --without-cfi --objcopy z80-none-elf-objcopy
+```
+
+Clang emits CFI for GAS debug builds; the updated assembler and linker retain
+16/24-bit address sizes, and GDB uses these rules before its prologue fallback.
+The second run removes `.debug_frame` and `.eh_frame` from a temporary ELF copy
+to exercise that fallback. IX is preserved by the compiler ABI; IY is
+caller-clobbered, so an IY frame carries the caller IX unchanged and switches
+its CFA to SP before popping IY. Optimized variables can still be unavailable:
+this fixture checks the optimized IY local in raw memory and the frameless
+variable through its register location.
 
 Enable ASan/UBSan with `-DGDBSTUB_SANITIZERS=ON`. ROM initialization currently
 triggers an unrelated signed-shift report in `core/flash.c:flash_set_mask`.

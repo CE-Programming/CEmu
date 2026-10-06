@@ -37,6 +37,10 @@ if $pc != $caller_pc || $ix != $caller_ix
   echo FAIL C outer frame\n
   quit 1
 end
+if saved != 0x2468b3 || value != 0x2468ac
+  echo FAIL C caller locals while inside inner\n
+  quit 1
+end
 frame 2
 if $pc != $main_pc
   echo FAIL C main frame\n
@@ -49,9 +53,8 @@ if $ != 0x373f2b || $hl != 0x373f2b
   echo FAIL C inner return value\n
   quit 1
 end
-stepi 3
 if saved != 0x2468b3 || value != 0x2468ac
-  echo FAIL C caller locals after argument cleanup\n
+  echo FAIL C caller locals before argument cleanup\n
   quit 1
 end
 finish
@@ -77,7 +80,7 @@ if $hl != 0xabcdef || ((unsigned long)$de & 0xff) != 0x89
   quit 1
 end
 delete breakpoints
-echo PASS real GDB: nested C arguments, global and caller locals, three-frame backtrace, finish, 24/32-bit and forced return values\n
+echo PASS real GDB: nested C arguments, global and caller locals during calls, three-frame backtrace, finish, 24/32-bit and forced return values\n
 detach
 '''
 
