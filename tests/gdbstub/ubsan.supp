@@ -1,0 +1,2 @@
+# Existing core/flash.c:41 shift during ROM initialization, outside the GDB stub.
+shift-base:flash_set_mask

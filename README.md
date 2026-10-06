@@ -40,6 +40,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Rich text console for easier logging/debugging
 * Code stepping, jumping...
 * R/W/X breakpoints, watchpoints
+* [GDB remote debugging](docs/gdb-remote.md) with the CE toolchain
 * eZ80 disassembler (with equates support)
 * Port monitor/editor
 * General Timer monitor/editor
