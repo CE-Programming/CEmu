@@ -288,31 +288,35 @@ static bool parseRemoteKey(const std::string& str, uint16_t& key)
 }
 
 typedef std::function<void(const std::string&)> seq_cmd_func_t;
-typedef std::function<void(void)> seq_cmd_action_func_t;
+typedef std::function<void(const std::string&)> seq_cmd_action_func_t;
+
+std::string str_replace_all(std::string str, const std::string& from, const std::string& to);
+static const std::regex valid_program_name("[A-Z][0-9A-Zθ]{0,7}");
 
 static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_actions = {
     {
-        "launch", [] {
+        "launch", [](const std::string& program) {
+            const std::string name = program.empty() ? config.target.name : str_replace_all(program, "θ", "@");
             // Assuming we're in the home screen...
             sendKey(CE_KEY_CLEAR);
             if (config.target.isASM) {
                 sendKey(CE_KEY_ASM);
             }
             sendKey(CE_KEY_PRGM);
-            for (const char& c : config.target.name) {
+            for (const char& c : name) {
                 sendLetterKeyPress(c); // type program name
             }
             sendKey(CE_KEY_ENTER);
         }
     },
     {
-        "reset", [] {
+        "reset", [](const std::string&) {
             cemucore::cpu_crash("autotester action");
             cemucore::emu_run(1000);
         }
     },
     {
-        "useClassic", [] {
+        "useClassic", [](const std::string&) {
             // Assuming we're in the home screen...
             sendKey(CE_KEY_CLEAR);
             sendKey(CE_KEY_CLASSIC);
@@ -324,7 +328,9 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
 static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands = {
     {
         "action", [](const std::string &which_action) {
-            valid_actions.at(which_action)();
+            const size_t sep = which_action.find(':');
+            const std::string argument = sep == std::string::npos ? "" : which_action.substr(sep + 1);
+            valid_actions.at(which_action.substr(0, sep))(argument);
         }
     },
     {
@@ -574,7 +580,6 @@ bool launchCommand(const std::pair<std::string, std::string>& command)
 
 /****** Utility functions ******/
 inline bool file_exists(const std::string& name);
-std::string str_replace_all(std::string str, const std::string& from, const std::string& to);
 
 inline bool file_exists(const std::string& name)
 {
@@ -672,7 +677,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         tmp2 = tmp["name"];
         if (tmp2.is_string() && !tmp2.string_value().empty()) {
             const std::string& name_tmp = tmp2.string_value();
-            if (std::regex_match(name_tmp, std::regex("[A-Z][0-9A-Zθ]{0,7}"))) {
+            if (std::regex_match(name_tmp, valid_program_name)) {
                 config.target.name = str_replace_all(name_tmp, "θ", "@");
             } else {
                 std::cerr << "[Error] Target name parameter not a valid program name ([A-Z][0-9A-Zθ]{0,7})" << std::endl;
@@ -752,13 +757,16 @@ bool loadJSONConfig(const std::string& jsonContents)
                             std::cerr << "[Error] bad uint16 value for \"sendRemoteKey\": '" << value << "'" << std::endl;
                             return false;
                         }
-                        if (command != "action" || valid_actions.count(value))
-                        {
-                            config.sequence.emplace_back(command, value);
-                        } else {
-                            std::cerr << "[Error] bad value for \"action\": '" << value << "'" << std::endl;
-                            return false;
+                        if (command == "action") {
+                            const size_t sep = value.find(':');
+                            const std::string action = value.substr(0, sep);
+                            if (!valid_actions.count(action) ||
+                                (sep != std::string::npos && (action != "launch" || !std::regex_match(value.substr(sep + 1), valid_program_name)))) {
+                                std::cerr << "[Error] bad value for \"action\": '" << value << "'" << std::endl;
+                                return false;
+                            }
                         }
+                        config.sequence.emplace_back(command, value);
                     } else {
                         std::cerr << "[Error] unknown sequence command in pair: '" << tmpSeqItem_str << "'" << std::endl;
                         return false;

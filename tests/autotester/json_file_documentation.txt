@@ -34,6 +34,12 @@ Structure of the JSON object for the test config files:
             Clears the home screen, types the target program name, and presses enter.
             If target.isASM is true, Asm( is entered before the program name.
 
+        action|launch:PRGMNAME
+            Launches PRGMNAME instead of target.name, using the same launch sequence
+            and target.isASM setting. The default target is unchanged for later launches.
+            PRGMNAME follows the same naming rules as target.name (including theta).
+            Empty or invalid names are rejected when loading the config.
+
         action|reset
             Crashes/resets the emulation and runs for 1000 ms.
 
