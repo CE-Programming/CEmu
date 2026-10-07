@@ -17,6 +17,8 @@
 #include <regex>
 #include <cctype>
 #include <limits>
+#include <cerrno>
+#include <cstdlib>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   #include <windows.h>
@@ -269,6 +271,22 @@ void sendLetterKeyPress(char letter)
     } while(retry--);
 }
 
+static bool parseRemoteKey(const std::string& str, uint16_t& key)
+{
+    if (str.empty() || !std::isdigit(static_cast<unsigned char>(str.front()))) {
+        return false;
+    }
+    const bool hex = str.compare(0, 2, "0x") == 0 || str.compare(0, 2, "0X") == 0;
+    char* end;
+    errno = 0;
+    const unsigned long value = std::strtoul(str.c_str(), &end, hex ? 16 : 10);
+    if (errno == ERANGE || end != str.c_str() + str.size() || value > (std::numeric_limits<uint16_t>::max)()) {
+        return false;
+    }
+    key = static_cast<uint16_t>(value);
+    return true;
+}
+
 typedef std::function<void(const std::string&)> seq_cmd_func_t;
 typedef std::function<void(void)> seq_cmd_action_func_t;
 
@@ -487,6 +505,16 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not released." << std::endl;
             };
+        }
+    },
+    {
+        "sendRemoteKey", [](const std::string& value) {
+            uint16_t key;
+            if (parseRemoteKey(value, key)) {
+                sendKey(key);
+            } else {
+                std::cerr << "\t[Error] bad uint16 value for \"sendRemoteKey\": '" << value << "'" << std::endl;
+            }
         }
     },
     {
@@ -719,6 +747,11 @@ bool loadJSONConfig(const std::string& jsonContents)
                     std::string value = tmpSeqItem_str.substr(sep_pos+1);
                     if (valid_seq_commands.count(command))
                     {
+                        uint16_t remoteKey;
+                        if (command == "sendRemoteKey" && !parseRemoteKey(value, remoteKey)) {
+                            std::cerr << "[Error] bad uint16 value for \"sendRemoteKey\": '" << value << "'" << std::endl;
+                            return false;
+                        }
                         if (command != "action" || valid_actions.count(value))
                         {
                             config.sequence.emplace_back(command, value);

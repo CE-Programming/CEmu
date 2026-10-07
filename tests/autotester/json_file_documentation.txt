@@ -82,7 +82,15 @@ Structure of the JSON object for the test config files:
             Saves/exports the calculator variable named varName to the original working directory.
 
         sendCSC|keyName[|keyName...]
-            Sends one or more CSC values through the OS key queue.
+            Sends one or more CSC values (unsigned 8-bit integer) through the OS key queue.
+
+        sendRemoteKey|num
+            Calls sendKey(num) to inject a "remote" key/action in the OS' kbdKey/keyExtend,
+            with the same retries as the other autotester key operations.
+            num must be an unsigned 16-bit integer (0 through 65535), written in
+            decimal or 0x-prefixed hexadecimal, for example sendRemoteKey|0xFE09.
+            Signs, spaces, trailing characters, and out-of-range values are rejected.
+            For instance: [ENTER]=0x05, [CLEAR]=0x09, prgm=0xDA, Asm(=0xFC9C, CLASSIC=0xFBD3...
 
     Valid physical key names:
         graph, trace, zoom, window, wind, y=, yequ, 2nd, mode, del,
