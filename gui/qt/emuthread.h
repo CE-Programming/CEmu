@@ -46,6 +46,7 @@ public:
     void setRam(const QString &path);
     void load(emu_data_t fileType, const QString &filePath);
     void test(const QString &config, bool run);
+    void prepareAutotest();
 
     enum class HitCounterOperation {
         Add,
@@ -75,6 +76,7 @@ public:
         RequestReceive,
         RequestUsbPlugDevice,
         RequestAutoTester,
+        RequestAutoTesterBoot,
         RequestDebugger,
         RequestBasicDebugger,
         RequestHitCounter,
@@ -103,6 +105,7 @@ signals:
     // state
     void sendAsicRevInfo(const QList<int>& supportedRevs, int loadedRev, int defaultRev, bool python);
     void tested(int status);
+    void autotestPrepared(bool success);
     void saved(bool success);
     void loaded(emu_state_t state, emu_data_t type);
     void blocked(int req);

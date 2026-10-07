@@ -6596,27 +6596,51 @@
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="checkBoxTestReset">
-                 <property name="enabled">
-                  <bool>true</bool>
+                <layout class="QHBoxLayout" name="horizontalLayoutTestBefore">
+                 <property name="spacing">
+                  <number>12</number>
                  </property>
-                 <property name="text">
-                  <string>Reset before test</string>
-                 </property>
-                 <property name="checked">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="checkBoxTestClear">
-                 <property name="text">
-                  <string>[Clear] before test</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
+                 <item>
+                  <widget class="QLabel" name="labelTestBefore">
+                   <property name="text">
+                    <string>Before test:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="checkBoxTestReloadROM">
+                   <property name="text">
+                    <string>Reload ROM</string>
+                   </property>
+                   <property name="checked">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="checkBoxTestReset">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="text">
+                    <string>Reset</string>
+                   </property>
+                   <property name="checked">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="checkBoxTestClear">
+                   <property name="text">
+                    <string>[Clear]</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
                <item>
                 <spacer name="horizontalSpacer_20">

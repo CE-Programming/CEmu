@@ -231,6 +231,14 @@ void EmuThread::doStuff() {
                 case RequestLoad:
                     doLoad();
                     break;
+                case RequestAutoTesterBoot: {
+                    const uint32_t oldRunRate = emu_get_run_rate();
+                    emu_set_run_rate(1000);
+                    emu_run(10000); // same as the CLI
+                    emu_set_run_rate(oldRunRate);
+                    emit autotestPrepared(!(cpu_check_signals() & CPU_SIGNAL_EXIT));
+                    break;
+                }
                 case RequestAutoTester:
                     uint32_t run_rate_prev = emu_get_run_rate();
                     emu_set_run_rate(1000);
@@ -552,6 +560,11 @@ void EmuThread::test(const QString &config, bool run) {
     m_autotesterPath = config;
     m_autotesterRun = run;
     m_requestQueue.enqueue(RequestAutoTester);
+}
+
+void EmuThread::prepareAutotest() {
+    std::lock_guard<std::mutex> requestLock{m_requestMutex};
+    m_requestQueue.enqueue(RequestAutoTesterBoot);
 }
 
 void EmuThread::save(emu_data_t fileType, const QString &filePath) {

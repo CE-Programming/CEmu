@@ -594,6 +594,8 @@ private:
     void autotesterLoad();
     void autotesterReload();
     void autotesterLaunch();
+    void autotesterRun();
+    void autotesterSetBusy(bool busy);
     void autotesterRefreshCRC();
 
     // usb devices
@@ -841,6 +843,8 @@ private:
     LcdDebugWidget *m_lcdDebug = nullptr;
 
     bool m_isSendingRom = false;
+    enum class AutotesterState { Idle, Reloading, Booting, Running };
+    AutotesterState m_autotesterState = AutotesterState::Idle;
     QString m_dragRom;
 
     bool m_needReload = false;

@@ -197,6 +197,16 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&emu, &EmuThread::loaded, this, &MainWindow::emuCheck, Qt::QueuedConnection);
     connect(&emu, &EmuThread::blocked, this, &MainWindow::emuBlocked, Qt::QueuedConnection);
     connect(&emu, &EmuThread::tested, this, &MainWindow::autotesterTested, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::autotestPrepared, this, [this](bool success) {
+        if (m_autotesterState != AutotesterState::Booting) {
+            return;
+        }
+        if (success && guiEmuValid) {
+            autotesterRun();
+        } else {
+            autotesterSetBusy(false);
+        }
+    }, Qt::QueuedConnection);
     connect(&emu, &EmuThread::dateTimeSet, this, [this](bool success) {
         if (success) {
             ui->statusBar->showMessage(tr("Calculator date and time set from computer"), 3000);
@@ -341,6 +351,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::autotesterLoad);
     connect(ui->buttonReloadJSONconfig, &QPushButton::clicked, this, &MainWindow::autotesterReload);
     connect(ui->buttonLaunchTest, &QPushButton::clicked, this, &MainWindow::autotesterLaunch);
+    connect(ui->checkBoxTestReloadROM, &QCheckBox::toggled, this, [this](bool checked) {
+        ui->checkBoxTestReset->setEnabled(!checked);
+    });
     connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::autotesterUpdatePresets);
     connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::autotesterRefreshCRC);
 
@@ -2844,8 +2857,18 @@ void MainWindow::autotesterReload() {
 }
 
 void MainWindow::autotesterLaunch() {
+    if (m_autotesterState != AutotesterState::Idle) {
+        return;
+    }
     if (!autotester::configLoaded) {
         autotesterErr(-1);
+        return;
+    }
+
+    autotesterSetBusy(true);
+    if (ui->checkBoxTestReloadROM->isChecked()) {
+        emuLoad(EMU_DATA_ROM);
+        m_autotesterState = AutotesterState::Reloading;
         return;
     }
 
@@ -2853,6 +2876,22 @@ void MainWindow::autotesterLaunch() {
         resetEmu();
         guiDelay(4000);
     }
+
+    autotesterRun();
+}
+
+void MainWindow::autotesterSetBusy(bool busy) {
+    m_autotesterState = busy ? AutotesterState::Running : AutotesterState::Idle;
+    ui->buttonLaunchTest->setEnabled(!busy && autotester::configLoaded);
+    ui->buttonOpenJSONconfig->setEnabled(!busy);
+    ui->buttonReloadJSONconfig->setEnabled(!busy);
+    ui->checkBoxTestReloadROM->setEnabled(!busy);
+    ui->checkBoxTestReset->setEnabled(!busy && !ui->checkBoxTestReloadROM->isChecked());
+    ui->checkBoxTestClear->setEnabled(!busy);
+}
+
+void MainWindow::autotesterRun() {
+    m_autotesterState = AutotesterState::Running;
 
     if (ui->checkBoxTestClear->isChecked()) {
         sendEmuKey(CE_KEY_CLEAR);
@@ -2870,7 +2909,6 @@ void MainWindow::autotesterLaunch() {
     }
 
     // Follow the sequence
-    ui->buttonLaunchTest->setEnabled(false);
     emu.test(ui->JSONconfigPath->text(), true);
 }
 
@@ -2879,7 +2917,7 @@ void MainWindow::autotesterTested(int status) {
     if (!opts.suppressTestDialog) {
         QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
     }
-    ui->buttonLaunchTest->setEnabled(true);
+    autotesterSetBusy(false);
 }
 
 void MainWindow::autotesterUpdatePresets(int comboBoxIndex) {
@@ -2995,6 +3033,10 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
                 static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();
             }
         }
+        if (m_autotesterState == AutotesterState::Reloading && type == EMU_DATA_ROM) {
+            m_autotesterState = AutotesterState::Booting;
+            emu.prepareAutotest();
+        }
         emu.start();
         guiEmuValid = true;
         emitLuaEvent("loaded", [type](sol::table &payload) {
@@ -3003,10 +3045,19 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
         });
     }
 
+    if (m_autotesterState == AutotesterState::Reloading) {
+        // A failed ROM reload must never continue with the test sequence.
+        autotesterSetBusy(false);
+    }
+
     guiReset = false;
 }
 
 void MainWindow::emuLoad(emu_data_t type) {
+    if (m_autotesterState == AutotesterState::Reloading ||
+        m_autotesterState == AutotesterState::Booting) {
+        autotesterSetBusy(false);
+    }
     guiEmuValid = false;
     QString path;
 
