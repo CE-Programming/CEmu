@@ -27,6 +27,7 @@ namespace cemucore
 {
     extern "C"
     {
+        #include "../../core/flash.h"
         #include "../../core/usb/usb.h"
 
         void gui_console_clear() {}
@@ -55,6 +56,29 @@ namespace cemucore
 
 namespace
 {
+std::FILE *line_trace;
+std::vector<uint32_t> line_trace_buffer;
+
+void lineTraceHook(uint32_t line)
+{
+    line_trace_buffer.push_back(line);
+    if (line_trace_buffer.size() == 65536) {
+        std::fwrite(line_trace_buffer.data(), sizeof(uint32_t), line_trace_buffer.size(), line_trace);
+        line_trace_buffer.clear();
+    }
+}
+
+void lineTraceStop()
+{
+    if (line_trace) {
+        std::fwrite(line_trace_buffer.data(), sizeof(uint32_t), line_trace_buffer.size(), line_trace);
+        std::fclose(line_trace);
+        line_trace = nullptr;
+    }
+    line_trace_buffer.clear();
+    cemucore::flash_line_hook = nullptr;
+}
+
 struct options_t {
     std::string rom;
     std::string image;
@@ -270,7 +294,9 @@ bool runCommand(const std::string& line)
                 "send-file [ram|archive|auto] <path>; "
                 "usb <VID:PID|bus#address|disconnect>; reset; status; "
                 "peek <hex-address> [count]; poke <hex-address> <hex-bytes>; "
-                "keydown <name>; keyup <name>; regs; stats; lcd-dma <0|1>; quit");
+                "keydown <name>; keyup <name>; regs; stats; lcd-dma <0|1>; "
+                "line-profile <on|off|save <path>>; line-trace <on <path>|off>; "
+                "flash-cycles <n>; quit");
         return true;
     }
     if (command == "run") {
@@ -511,6 +537,70 @@ bool runCommand(const std::string& line)
         return true;
     }
 
+    if (command == "line-profile") {
+        std::string what;
+        input >> what;
+        const size_t counters = 2 * FLASH_PROFILE_LINES;
+        if (what == "on") {
+            if (!cemucore::flash_line_profile) {
+                cemucore::flash_line_profile = static_cast<uint32_t *>(std::calloc(counters, sizeof(uint32_t)));
+            } else {
+                std::memset(cemucore::flash_line_profile, 0, counters * sizeof(uint32_t));
+            }
+            respond(cemucore::flash_line_profile ? "OK line-profile on" : "ERR out of memory");
+        } else if (what == "save" && cemucore::flash_line_profile) {
+            std::string path;
+            std::getline(input >> std::ws, path);
+            std::FILE *file = path.empty() ? nullptr : std::fopen(path.c_str(), "wb");
+            if (!file) {
+                respond("ERR cannot write " + path);
+            } else {
+                const bool ok = std::fwrite(cemucore::flash_line_profile, sizeof(uint32_t), counters, file) == counters;
+                std::fclose(file);
+                respond(ok ? "OK line-profile save" : "ERR cannot write " + path);
+            }
+        } else if (what == "off") {
+            std::free(cemucore::flash_line_profile);
+            cemucore::flash_line_profile = nullptr;
+            respond("OK line-profile off");
+        } else {
+            respond("ERR usage: line-profile <on|off|save <path>> (save needs on)");
+        }
+        return true;
+    }
+    if (command == "line-trace") {
+        std::string what;
+        input >> what;
+        lineTraceStop();
+        if (what == "on") {
+            std::string path;
+            std::getline(input >> std::ws, path);
+            line_trace = path.empty() ? nullptr : std::fopen(path.c_str(), "wb");
+            if (!line_trace) {
+                respond("ERR cannot write " + path);
+            } else {
+                cemucore::flash_line_hook = lineTraceHook;
+                respond("OK line-trace on");
+            }
+        } else if (what == "off") {
+            respond("OK line-trace off");
+        } else {
+            respond("ERR usage: line-trace <on <path>|off>");
+        }
+        return true;
+    }
+    if (command == "flash-cycles") {
+        std::string value;
+        uint32_t cycles;
+        if (!(input >> value) || !parseUnsigned(value, cycles) || cycles > 1000) {
+            respond("ERR usage: flash-cycles <n> (0: the revision M cache)");
+        } else {
+            cemucore::flash_fixed_cycles = cycles;
+            respond("OK flash-cycles " + value);
+        }
+        return true;
+    }
+
     respond("ERR unknown command " + command);
     return true;
 }
@@ -543,6 +633,7 @@ int main(int argc, char **argv)
     std::string line;
     while (std::getline(std::cin, line) && runCommand(line)) {}
 
+    lineTraceStop();
     cemucore::emu_exit();
     cemucore::asic_free();
     return EXIT_SUCCESS;
