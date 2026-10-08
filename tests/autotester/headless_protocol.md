@@ -41,6 +41,11 @@ Supported commands:
 - `help` lists commands.
 - `quit` exits cleanly.
 
+If the core was built with `-DDEBUG_CONSOLE_SUPPORT` (for example `make
+CPPFLAGS=-DDEBUG_CONSOLE_SUPPORT` in `core/`), what the calculator's programs print
+to the debug console (the toolchain's `dbg_printf`) is written to standard error, as
+the core's diagnostics are.
+
 For example:
 
 ```text

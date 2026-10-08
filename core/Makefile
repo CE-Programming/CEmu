@@ -10,6 +10,10 @@ CFLAGS = -Wall -Wextra -fPIC -O3 -std=gnu11 -static
 # Add debugging support, with zdis disassembler
 #CFLAGS += -DDEBUG_SUPPORT
 
+# Without debugging support, print what programs write to the debug console (dbg_printf)
+# through gui_console_printf / gui_console_err_printf (cemu-headless, the autotester)
+#CFLAGS += -DDEBUG_CONSOLE_SUPPORT
+
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
