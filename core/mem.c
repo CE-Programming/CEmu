@@ -598,7 +598,7 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
 }
 
 static uint8_t mem_read_flash_serial(uint32_t addr) {
-    cpu.cycles += flash_touch_cache(addr);
+    cpu.cycles += unlikely(flash_fixed_cycles) ? flash_fixed_cycles : flash_touch_cache(addr);
     return mem.flash.block[addr & flash.mask];
 }
 

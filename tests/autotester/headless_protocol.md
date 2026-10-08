@@ -38,6 +38,18 @@ Supported commands:
   and later: an 8 KB cache, about 197 cycles per miss) and the flash wait cycles.
 - `lcd-dma <0|1>` emulates the LCD's DMA, which takes RAM cycles from the CPU
   while the screen refreshes (off by default here), or turns it off.
+- `line-profile on` counts, for each 32-byte line of flash, how many times the
+  CPU entered it (a read after a read of another line) and how many of those
+  missed the serial flash cache; `line-profile save <path>` writes the counters
+  (2 per line: entries then misses, 32-bit, host byte order, 524288 lines for
+  the 16 MB address space); `line-profile off` stops counting.
+- `line-trace on <path>` writes every line entered, in order, as 32-bit line
+  numbers (address / 32, host byte order), for cache simulations and code layout
+  studies; `line-trace off` closes the file.
+- `flash-cycles <n>` makes every serial flash read cost n cycles without the
+  cache; 10 is close to a calculator made before revision M (parallel flash with
+  the OS's 9 wait states), to compare a program's speed on older hardware with a
+  revision M ROM. `flash-cycles 0` restores the cache.
 - `help` lists commands.
 - `quit` exits cleanly.
 
