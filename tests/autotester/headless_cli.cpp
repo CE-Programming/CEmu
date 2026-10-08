@@ -5,6 +5,7 @@
  * keep one core instance alive without pulling in Qt or another IPC library.
  */
 
+#include <cctype>
 #include <cerrno>
 #include <chrono>
 #include <cstdarg>
@@ -26,6 +27,7 @@ namespace cemucore
 {
     extern "C"
     {
+        #include "../../core/flash.h"
         #include "../../core/usb/usb.h"
 
         void gui_console_clear() {}
@@ -54,6 +56,29 @@ namespace cemucore
 
 namespace
 {
+std::FILE *line_trace;
+std::vector<uint32_t> line_trace_buffer;
+
+void lineTraceHook(uint32_t line)
+{
+    line_trace_buffer.push_back(line);
+    if (line_trace_buffer.size() == 65536) {
+        std::fwrite(line_trace_buffer.data(), sizeof(uint32_t), line_trace_buffer.size(), line_trace);
+        line_trace_buffer.clear();
+    }
+}
+
+void lineTraceStop()
+{
+    if (line_trace) {
+        std::fwrite(line_trace_buffer.data(), sizeof(uint32_t), line_trace_buffer.size(), line_trace);
+        std::fclose(line_trace);
+        line_trace = nullptr;
+    }
+    line_trace_buffer.clear();
+    cemucore::flash_line_hook = nullptr;
+}
+
 struct options_t {
     std::string rom;
     std::string image;
@@ -69,6 +94,21 @@ bool parseUnsigned(const std::string& text, uint32_t& result)
     errno = 0;
     const unsigned long value = std::strtoul(text.c_str(), &end, 10);
     if (errno || !end || *end || value > (std::numeric_limits<uint32_t>::max)()) {
+        return false;
+    }
+    result = static_cast<uint32_t>(value);
+    return true;
+}
+
+bool parseAddress(const std::string& text, uint32_t& result)
+{
+    if (text.empty() || !std::isxdigit(static_cast<unsigned char>(text.front()))) {
+        return false;
+    }
+    char *end = nullptr;
+    errno = 0;
+    const unsigned long value = std::strtoul(text.c_str(), &end, 16);
+    if (errno || !end || *end || value > 0xFFFFFFu) {
         return false;
     }
     result = static_cast<uint32_t>(value);
@@ -252,7 +292,11 @@ bool runCommand(const std::string& line)
                 "key <name> [hold-ms]; keys <sequence>; "
                 "screenshot <bmp-path>; screen-hash; save-state <path>; "
                 "send-file [ram|archive|auto] <path>; "
-                "usb <VID:PID|bus#address|disconnect>; reset; status; quit");
+                "usb <VID:PID|bus#address|disconnect>; reset; status; "
+                "peek <hex-address> [count]; poke <hex-address> <hex-bytes>; "
+                "keydown <name>; keyup <name>; regs; stats; lcd-dma <0|1>; "
+                "line-profile <on|off|save <path>>; line-trace <on <path>|off>; "
+                "flash-cycles <n>; quit");
         return true;
     }
     if (command == "run") {
@@ -410,6 +454,153 @@ bool runCommand(const std::string& line)
         return true;
     }
 
+    if (command == "peek") {
+        std::string address_text;
+        std::string count_text;
+        uint32_t address;
+        uint32_t count = 1;
+        if (!(input >> address_text) || !parseAddress(address_text, address) ||
+            ((input >> count_text) && (!parseUnsigned(count_text, count) || count == 0 || count > 4096))) {
+            respond("ERR usage: peek <hex-address> [count 1-4096]");
+        } else {
+            std::string bytes;
+            char hex[3];
+            for (uint32_t i = 0; i < count; ++i) {
+                std::snprintf(hex, sizeof hex, "%02X", cemucore::mem_peek_byte((address + i) & 0xFFFFFFu));
+                bytes += hex;
+            }
+            respond("OK peek " + bytes);
+        }
+        return true;
+    }
+    if (command == "poke") {
+        std::string address_text;
+        std::string bytes;
+        uint32_t address;
+        if (!(input >> address_text >> bytes) || !parseAddress(address_text, address) || bytes.size() % 2 ||
+            bytes.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos) {
+            respond("ERR usage: poke <hex-address> <hex-bytes>");
+        } else {
+            for (size_t i = 0; i < bytes.size(); i += 2) {
+                cemucore::mem_poke_byte((address + static_cast<uint32_t>(i / 2)) & 0xFFFFFFu,
+                                        static_cast<uint8_t>(std::strtoul(bytes.substr(i, 2).c_str(), nullptr, 16)));
+            }
+            respond("OK poke " + std::to_string(bytes.size() / 2));
+        }
+        return true;
+    }
+    if (command == "keydown" || command == "keyup") {
+        std::string name;
+        autotester::key_coord_t coord{};
+        input >> name;
+        if (!autotester::keyCoordForName(name, coord)) {
+            respond("ERR unknown key " + name);
+        } else {
+            cemucore::emu_keypad_event(coord.y, coord.x, command == "keydown");
+            respond("OK " + command + " " + name);
+        }
+        return true;
+    }
+    if (command == "regs") {
+        const auto& r = cemucore::cpu.registers;
+        char text[192];
+        std::snprintf(text, sizeof text,
+                      "OK regs pc=%06X sp=%06X af=%04X bc=%06X de=%06X hl=%06X ix=%06X iy=%06X adl=%d halted=%d",
+                      static_cast<unsigned>(r.PC), static_cast<unsigned>(r.SPL), static_cast<unsigned>(r.AF),
+                      static_cast<unsigned>(r.BC), static_cast<unsigned>(r.DE), static_cast<unsigned>(r.HL),
+                      static_cast<unsigned>(r.IX), static_cast<unsigned>(r.IY),
+                      static_cast<int>(cemucore::cpu.ADL), static_cast<int>(cemucore::cpu.halted));
+        respond(text);
+        return true;
+    }
+    if (command == "stats") {
+        char text[192];
+        std::snprintf(text, sizeof text,
+                      "OK stats cycles=%llu halted=%llu dma=%llu flash-reads=%lu flash-misses=%lu flash-delay=%lld",
+                      static_cast<unsigned long long>(cemucore::cpu.baseCycles + cemucore::cpu.cycles),
+                      static_cast<unsigned long long>(cemucore::cpu.haltCycles),
+                      static_cast<unsigned long long>(cemucore::cpu.dmaCycles),
+                      static_cast<unsigned long>(cemucore::cpu.flashTotalAccesses),
+                      static_cast<unsigned long>(cemucore::cpu.flashCacheMisses),
+                      static_cast<long long>(cemucore::cpu.flashDelayCycles));
+        respond(text);
+        return true;
+    }
+    if (command == "lcd-dma") {
+        std::string value;
+        if (!(input >> value) || (value != "0" && value != "1")) {
+            respond("ERR usage: lcd-dma <0|1>");
+        } else {
+            cemucore::emu_set_lcd_dma(value == "1");
+            respond("OK lcd-dma " + value);
+        }
+        return true;
+    }
+
+    if (command == "line-profile") {
+        std::string what;
+        input >> what;
+        const size_t counters = 2 * FLASH_PROFILE_LINES;
+        if (what == "on") {
+            if (!cemucore::flash_line_profile) {
+                cemucore::flash_line_profile = static_cast<uint32_t *>(std::calloc(counters, sizeof(uint32_t)));
+            } else {
+                std::memset(cemucore::flash_line_profile, 0, counters * sizeof(uint32_t));
+            }
+            respond(cemucore::flash_line_profile ? "OK line-profile on" : "ERR out of memory");
+        } else if (what == "save" && cemucore::flash_line_profile) {
+            std::string path;
+            std::getline(input >> std::ws, path);
+            std::FILE *file = path.empty() ? nullptr : std::fopen(path.c_str(), "wb");
+            if (!file) {
+                respond("ERR cannot write " + path);
+            } else {
+                const bool ok = std::fwrite(cemucore::flash_line_profile, sizeof(uint32_t), counters, file) == counters;
+                std::fclose(file);
+                respond(ok ? "OK line-profile save" : "ERR cannot write " + path);
+            }
+        } else if (what == "off") {
+            std::free(cemucore::flash_line_profile);
+            cemucore::flash_line_profile = nullptr;
+            respond("OK line-profile off");
+        } else {
+            respond("ERR usage: line-profile <on|off|save <path>> (save needs on)");
+        }
+        return true;
+    }
+    if (command == "line-trace") {
+        std::string what;
+        input >> what;
+        lineTraceStop();
+        if (what == "on") {
+            std::string path;
+            std::getline(input >> std::ws, path);
+            line_trace = path.empty() ? nullptr : std::fopen(path.c_str(), "wb");
+            if (!line_trace) {
+                respond("ERR cannot write " + path);
+            } else {
+                cemucore::flash_line_hook = lineTraceHook;
+                respond("OK line-trace on");
+            }
+        } else if (what == "off") {
+            respond("OK line-trace off");
+        } else {
+            respond("ERR usage: line-trace <on <path>|off>");
+        }
+        return true;
+    }
+    if (command == "flash-cycles") {
+        std::string value;
+        uint32_t cycles;
+        if (!(input >> value) || !parseUnsigned(value, cycles) || cycles > 1000) {
+            respond("ERR usage: flash-cycles <n> (0: the revision M cache)");
+        } else {
+            cemucore::flash_fixed_cycles = cycles;
+            respond("OK flash-cycles " + value);
+        }
+        return true;
+    }
+
     respond("ERR unknown command " + command);
     return true;
 }
@@ -442,6 +633,7 @@ int main(int argc, char **argv)
     std::string line;
     while (std::getline(std::cin, line) && runCommand(line)) {}
 
+    lineTraceStop();
     cemucore::emu_exit();
     cemucore::asic_free();
     return EXIT_SUCCESS;

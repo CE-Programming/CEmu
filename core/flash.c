@@ -52,6 +52,10 @@ void flash_flush_cache(void) {
     }
 }
 
+uint32_t *flash_line_profile;
+void (*flash_line_hook)(uint32_t line);
+uint32_t flash_fixed_cycles;
+
 uint32_t flash_touch_cache(uint32_t addr) {
     if (unlikely(++cpu.flashTotalAccesses == 0)) {
         cpu.flashTotalAccesses = 0x80000000;
@@ -62,6 +66,12 @@ uint32_t flash_touch_cache(uint32_t addr) {
         return 2;
     } else {
         flash.lastCacheLine = line;
+        if (unlikely(flash_line_profile)) {
+            flash_line_profile[2 * (line & (FLASH_PROFILE_LINES - 1))]++;
+        }
+        if (unlikely(flash_line_hook)) {
+            flash_line_hook(line);
+        }
         flash_cache_set_t* set = &flash.cacheTags[line & (FLASH_CACHE_SETS - 1)];
         uint16_t tag = (uint16_t)(line >> FLASH_CACHE_SET_BITS);
         if (likely(set->mru == tag)) {
@@ -78,6 +88,9 @@ uint32_t flash_touch_cache(uint32_t addr) {
             set->lru = set->mru;
             set->mru = tag;
             cpu.flashCacheMisses++;
+            if (unlikely(flash_line_profile)) {
+                flash_line_profile[2 * (line & (FLASH_PROFILE_LINES - 1)) + 1]++;
+            }
             /* Supposedly this takes from 195-201 cycles, but typically seems to be 196-197 */
             cpu.flashDelayCycles += 195;
             return 197;

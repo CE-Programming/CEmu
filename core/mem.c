@@ -598,7 +598,7 @@ static uint8_t mem_read_flash_parallel(uint32_t addr) {
 }
 
 static uint8_t mem_read_flash_serial(uint32_t addr) {
-    cpu.cycles += flash_touch_cache(addr);
+    cpu.cycles += unlikely(flash_fixed_cycles) ? flash_fixed_cycles : flash_touch_cache(addr);
     return mem.flash.block[addr & flash.mask];
 }
 
@@ -812,6 +812,27 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
+#if defined(DEBUG_CONSOLE_SUPPORT) && !defined(DEBUG_SUPPORT)
+                /* opt-in without the debugger (see core/Makefile): what programs print to
+                   the debug console (the toolchain's dbg_printf, dbg_sprintf to dbgout/dbgerr)
+                   reaches the front end's console, for headless runs and test scripts */
+                if (addr >= DBGOUT_PORT_RANGE && addr < DBGEXT_PORT) {
+                    static char console_buffer[2][SIZEOF_DBG_BUFFER];
+                    static unsigned console_pos[2];
+                    const int err = addr >= DBGERR_PORT_RANGE;
+                    console_buffer[err][console_pos[err]] = (char)value;
+                    console_pos[err] = (console_pos[err] + 1) % (SIZEOF_DBG_BUFFER - 1);
+                    if (!value) {
+                        if (err) {
+                            gui_console_err_printf("%s", console_buffer[err]);
+                        } else {
+                            gui_console_printf("%s", console_buffer[err]);
+                        }
+                        console_pos[err] = 0;
+                    }
+                    break;
+                }
+#endif
 #ifdef DEBUG_SUPPORT
                 if (debug_get_flags() & DBG_SOFT_COMMANDS) {
                     if (addr >= DBG_PORT_RANGE) {
