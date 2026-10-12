@@ -812,7 +812,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
-#if defined(DEBUG_CONSOLE_SUPPORT) && !defined(DEBUG_SUPPORT)
+#if defined(DEBUG_CONSOLE_SUPPORT) || defined(DEBUG_SUPPORT)
                 if (addr >= DBGOUT_PORT_RANGE && addr < DBGEXT_PORT) {
                     static char console_buffer[2][SIZEOF_DBG_BUFFER];
                     static unsigned console_pos[2];
