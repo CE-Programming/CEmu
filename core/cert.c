@@ -53,7 +53,7 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
             break;
     }
 
-    if (length < 2 + additional_len + field_len) {
+    if (field_len > length - (2 + additional_len)) {
         return 1;
     }
 
