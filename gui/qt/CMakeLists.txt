@@ -1,33 +1,14 @@
-cmake_minimum_required(VERSION 3.21.1)
+cmake_minimum_required(VERSION 3.24)
 
 if(APPLE)
-    set(ENV{MACOSX_DEPLOYMENT_TARGET} "11.0")
-    set(ENV{VCPKG_KEEP_ENV_VARS} "MACOSX_DEPLOYMENT_TARGET")
-endif()
-
-option(DEPS_RELEASE_ONLY "Build only release versions of vcpkg dependencies" OFF)
-option(COPROC_DEBUG_SUPPORT "Build ARM coprocessor debugging support" ON)
-
-if(DEPS_RELEASE_ONLY)
-    if(NOT DEFINED VCPKG_TARGET_TRIPLET)
-        message(FATAL_ERROR "Must provide a VCPKG_TARGET_TRIPLET to set as release only")
+    if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "macOS deployment target")
     endif()
-    if(NOT VCPKG_TARGET_TRIPLET MATCHES "-release$")
-        set(VCPKG_TARGET_TRIPLET "${VCPKG_TARGET_TRIPLET}-release")
-        message("Updated VCPKG_TARGET_TRIPLET to ${VCPKG_TARGET_TRIPLET}")
-    endif()
-endif()
-
-if(APPLE)
     set(MAYBE_MACOSX_BUNDLE MACOSX_BUNDLE)
-    if(VCPKG_TARGET_TRIPLET MATCHES "^x64")
-        set(CMAKE_OSX_ARCHITECTURES "x86_64")
-        set(VCPKG_TARGET_ARCHITECTURE "x64")
-    else()
-        set(CMAKE_OSX_ARCHITECTURES "arm64")
-        set(VCPKG_TARGET_ARCHITECTURE "arm64")
-    endif()
 endif()
+
+option(BUILD_SHARED_LIBS "Build Qt as shared libraries (CPM auxiliary libraries stay static)" OFF)
+option(COPROC_DEBUG_SUPPORT "Build ARM coprocessor debugging support" ON)
 
 project(CEmu
         VERSION 3.0
@@ -37,13 +18,12 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../core/debug/zdis/zdis.c")
     message(FATAL_ERROR "zdis is missing - you have to run 'git submodule init' and 'git submodule update' first.")
 endif()
 
-if(WIN32 AND VCPKG_TARGET_TRIPLET MATCHES "-static(-|$)" AND NOT VCPKG_TARGET_TRIPLET MATCHES "-md(-|$)")
-    message("Using static MSVC runtime...")
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+get_property(CEMU_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT CEMU_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_SKIP_RPATH TRUE)
 
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
 message(STATUS "Detected system: ${CMAKE_SYSTEM_NAME} - host processor: ${CMAKE_HOST_SYSTEM_PROCESSOR} - CXX_COMPILER: ${CMAKE_CXX_COMPILER_ID}")
@@ -53,29 +33,13 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Sane flags
-if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /bigobj /utf-8 /D_CRT_SECURE_NO_WARNINGS")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /D_CRT_SECURE_NO_WARNINGS")
-    if(MSVC_VERSION GREATER_EQUAL 1935 AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /experimental:c11atomics")
-    endif()
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    # sane defaults + hardening
-    set(GLOBAL_COMPILE_FLAGS "-W -Wall -Wextra -Wno-unused-parameter -Werror=write-strings -Wredundant-decls -Werror=date-time -Werror=return-type -Werror=pointer-arith")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GLOBAL_COMPILE_FLAGS} -Werror=implicit-function-declaration -Werror=missing-prototypes")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GLOBAL_COMPILE_FLAGS}")
-    # useful flags for debugging
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
-endif()
-
 include(GNUInstallDirs)
+include(cmake/CEmuDependencies.cmake)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Gui Network Widgets)
 if(NOT WIN32)
-    find_package(Qt6 COMPONENTS DBus)
+    find_package(Qt6 QUIET OPTIONAL_COMPONENTS DBus)
 endif()
 
 set(CMAKE_AUTORCC ON)
@@ -208,6 +172,25 @@ endif()
 
 qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
 
+# Keep CEmu's warning policy and sanitizers out of third-party builds.
+if(MSVC)
+    target_compile_options(CEmu PRIVATE /bigobj /utf-8)
+    target_compile_definitions(CEmu PRIVATE _CRT_SECURE_NO_WARNINGS)
+    if(MSVC_VERSION GREATER_EQUAL 1935 AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(CEmu PRIVATE $<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>)
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(CEmu PRIVATE
+        -W -Wall -Wextra -Wno-unused-parameter -Werror=write-strings
+        -Wredundant-decls -Werror=date-time -Werror=return-type -Werror=pointer-arith
+        $<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration;-Werror=missing-prototypes>
+        $<$<CONFIG:Debug>:-fno-omit-frame-pointer;-fsanitize=address,bounds;-fsanitize-undefined-trap-on-error>
+    )
+    target_link_options(CEmu PRIVATE
+        $<$<CONFIG:Debug>:-fno-omit-frame-pointer;-fsanitize=address,bounds;-fsanitize-undefined-trap-on-error>
+    )
+endif()
+
 target_include_directories(CEmu PRIVATE
     ../../core/arm/CMSIS/Core/Include
 )
@@ -261,52 +244,16 @@ if(CYGWIN OR NOT WIN32)
     endif()
 endif()
 
-find_package(LibArchive QUIET)
-if(LibArchive_FOUND)
-    target_compile_definitions(CEmu PRIVATE "LIB_ARCHIVE_SUPPORT")
-    target_link_libraries(CEmu PRIVATE LibArchive::LibArchive)
-else()
-    message(WARNING "No LibArchive found! CE Bundle extraction/transfer will not be available")
+target_compile_definitions(CEmu PRIVATE LIB_ARCHIVE_SUPPORT LIBUSB_SUPPORT LUA_SUPPORT)
+get_target_property(CEMU_HAS_APNG CEmu::PNG CEMU_HAS_APNG)
+if(CEMU_HAS_APNG)
+    target_compile_definitions(CEmu PRIVATE PNG_SUPPORT)
+    # moc does not preprocess png.h, but must see the same APNG-enabled declarations.
+    set_property(TARGET CEmu APPEND PROPERTY AUTOMOC_MOC_OPTIONS -DPNG_SUPPORT -DPNG_WRITE_APNG_SUPPORTED)
 endif()
-
-find_package(PkgConfig REQUIRED)
-if(PkgConfig_FOUND)
-    pkg_check_modules(LibUsb libusb-1.0>=1.0.16)
-    if(LibUsb_FOUND)
-        target_compile_definitions(CEmu PRIVATE "LIBUSB_SUPPORT")
-        target_include_directories(CEmu PRIVATE ${LibUsb_INCLUDE_DIRS})
-        target_link_directories(CEmu PRIVATE ${LibUsb_LIBRARY_DIRS})
-        target_link_libraries(CEmu PRIVATE ${LibUsb_LIBRARIES})
-    else()
-        message(WARNING "No LibUsb found! Some USB things will not be available")
-    endif()
-endif()
-
-if((DEFINED ENV{GITHUB_ACTION}) AND APPLE AND NOT (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "arm64"))
-    message("For now, libpng-apng is disabled on intel macs on CI... see issue #528. APNG capture will not be available")
-else()
-    find_package(PNG QUIET)
-    if(PNG_FOUND)
-        include(CheckSymbolExists)
-        set(CMAKE_REQUIRED_INCLUDES ${PNG_INCLUDE_DIRS})
-        check_symbol_exists(PNG_WRITE_APNG_SUPPORTED "png.h" HAVE_PROPER_APNG_LIB)
-        if(HAVE_PROPER_APNG_LIB)
-            list(APPEND CMAKE_AUTOMOC_MOC_OPTIONS "-DPNG_SUPPORT" "-DPNG_WRITE_APNG_SUPPORTED")
-            target_compile_definitions(CEmu PRIVATE "PNG_SUPPORT")
-            target_link_libraries(CEmu PRIVATE PNG::PNG)
-        else()
-            message(WARNING "The LibPNG found does not seem to support APNG. APNG capture will not be available")
-        endif()
-    else()
-        message(WARNING "No LibPNG found! APNG capture will not be available")
-    endif()
-endif()
-
-find_package(Lua 5.4 REQUIRED)
-find_package(sol2 CONFIG REQUIRED)
-target_compile_definitions(CEmu PRIVATE "LUA_SUPPORT")
-target_include_directories(CEmu PRIVATE ${LUA_INCLUDE_DIR})
-target_link_libraries(CEmu PRIVATE ${LUA_LIBRARIES} sol2::sol2)
+target_link_libraries(CEmu PRIVATE
+    CEmu::LibArchive CEmu::LibUSB CEmu::PNG CEmu::Lua CEmu::Sol2
+)
 
 target_link_libraries(CEmu PRIVATE
     Qt::Core

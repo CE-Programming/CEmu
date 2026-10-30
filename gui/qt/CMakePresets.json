@@ -2,49 +2,34 @@
   "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 21,
-    "patch": 1
+    "minor": 24,
+    "patch": 0
   },
   "configurePresets": [
     {
-      "name": "ninja-vcpkg",
+      "name": "ninja-cpm",
       "hidden": true,
       "generator": "Ninja Multi-Config",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "binaryDir": "${sourceDir}/CEmu.build/${presetName}",
-      "installDir": "${sourceDir}/CEmu.build/${presetName}",
+      "binaryDir": "${sourceDir}/CEmu.build/cpm/${presetName}",
+      "installDir": "${sourceDir}/CEmu.build/cpm/${presetName}/stage",
       "cacheVariables": {
-        "VCPKG_MANIFEST_MODE": {
-          "type": "BOOL",
-          "value": "True"
-        },
-        "VCPKG_MANIFEST_INSTALL": {
-          "type": "BOOL",
-          "value": "True"
-        },
-        "VCPKG_OVERLAY_TRIPLETS": {
-          "type": "STRING",
-          "value": "${sourceDir}/triplets"
-        },
-        "VCPKG_INSTALL_OPTIONS": {
-          "type": "STRING",
-          "value": "--allow-unsupported"
-        }
+        "CEMU_DEPENDENCY_PROVIDER": "cpm",
+        "BUILD_SHARED_LIBS": false
       }
     },
     {
-      "name": "ninja-vcpkg-x64",
+      "name": "ninja-cpm-x64",
       "hidden": true,
-      "inherits": "ninja-vcpkg",
+      "inherits": "ninja-cpm",
       "architecture": {
         "strategy": "external",
         "value": "x64"
       }
     },
     {
-      "name": "ninja-vcpkg-arm64",
+      "name": "ninja-cpm-arm64",
       "hidden": true,
-      "inherits": "ninja-vcpkg",
+      "inherits": "ninja-cpm",
       "architecture": {
         "strategy": "external",
         "value": "arm64"
@@ -79,62 +64,53 @@
     },
     {
       "name": "Win-x64",
-      "inherits": [ "ninja-vcpkg-x64", "win-only" ],
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-windows-static"
-        }
-      }
+      "inherits": [
+        "ninja-cpm-x64",
+        "win-only"
+      ]
     },
     {
       "name": "Win-arm64",
-      "inherits": [ "ninja-vcpkg-arm64", "win-only" ],
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "arm64-windows-static"
-        }
-      }
+      "inherits": [
+        "ninja-cpm-arm64",
+        "win-only"
+      ]
     },
     {
       "name": "Mac-x64",
-      "inherits": [ "ninja-vcpkg-x64", "mac-only" ],
+      "inherits": [
+        "ninja-cpm-x64",
+        "mac-only"
+      ],
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-osx"
-        }
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
       }
     },
     {
       "name": "Mac-arm64",
-      "inherits": [ "ninja-vcpkg-arm64", "mac-only" ],
+      "inherits": [
+        "ninja-cpm-arm64",
+        "mac-only"
+      ],
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "arm64-osx"
-        }
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
       }
     },
     {
       "name": "Linux-x64",
-      "inherits": [ "ninja-vcpkg-x64", "linux-only" ],
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-linux"
-        }
-      }
+      "inherits": [
+        "ninja-cpm-x64",
+        "linux-only"
+      ]
     },
     {
       "name": "Linux-x64-Dynamic",
-      "inherits": [ "ninja-vcpkg-x64", "linux-only" ],
+      "inherits": [
+        "ninja-cpm-x64",
+        "linux-only"
+      ],
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-linux-dynamic-apng"
-        }
+        "BUILD_SHARED_LIBS": true
       }
     }
   ],
