@@ -66,6 +66,11 @@ _Note that Release builds have an update checking feature, which is disabled in 
 
 ## How to build
 
+The CMake build uses [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake) to download
+and build its dependencies, including Qt 6 and an APNG-enabled libpng. See the
+[CMake build instructions](docs/build-cmake.md) for prerequisites, presets, and
+using an existing Qt installation.
+
 You can find information for building CEmu yourself from the source on [this wiki page](https://github.com/CE-Programming/CEmu/wiki/Building-CEmu).  
 If you encounter any problems, feel free to open an [issue](https://github.com/CE-Programming/CEmu/issues)!
 

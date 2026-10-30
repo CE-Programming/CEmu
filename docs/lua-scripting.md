@@ -1,6 +1,6 @@
 # Lua scripting
 
-CEmu embeds Lua 5.4 or newer (currently Lua 5.5.1 in vcpkg) through Sol2 3.5. Scripts can be run from the editor, the REPL, the Scripts tab, an autoload list, or one or more `--lua-script <path>` command-line options. The Scripts tab uses a `scripts` directory beside the active CEmu configuration file. Bundled examples are copied there only when the corresponding file does not already exist.
+CEmu embeds Lua 5.4 or newer (the CMake/CPM build pins Lua 5.5.1) through Sol2 3.5. Scripts can be run from the editor, the REPL, the Scripts tab, an autoload list, or one or more `--lua-script <path>` command-line options. The Scripts tab uses a `scripts` directory beside the active CEmu configuration file. Bundled examples are copied there only when the corresponding file does not already exist.
 
 ## Safety and lifecycle
 

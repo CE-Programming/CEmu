@@ -1,0 +1,166 @@
+diff --git a/include/sol/compatibility/compat-5.3.h b/include/sol/compatibility/compat-5.3.h
+--- a/include/sol/compatibility/compat-5.3.h
++++ b/include/sol/compatibility/compat-5.3.h
+@@ -405,9 +405,9 @@
+ 
+ 
+ /* other Lua versions */
+-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 501 || LUA_VERSION_NUM > 504
+-
+-#  error "unsupported Lua version (i.e. not Lua 5.1, 5.2, 5.3, or 5.4)"
++#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 501 || LUA_VERSION_NUM > 505
++
++#  error "unsupported Lua version (i.e. not Lua 5.1, 5.2, 5.3, 5.4, or 5.5)"
+ 
+ #endif /* other Lua versions except 5.1, 5.2, 5.3, and 5.4 */
+ 
+diff --git a/include/sol/compatibility/compat-5.4.h b/include/sol/compatibility/compat-5.4.h
+--- a/include/sol/compatibility/compat-5.4.h
++++ b/include/sol/compatibility/compat-5.4.h
+@@ -17,7 +17,7 @@
+ }
+ #endif
+ 
+-#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM == 504
++#if defined(LUA_VERSION_NUM) && (LUA_VERSION_NUM == 504 || LUA_VERSION_NUM == 505)
+ 
+ #if !defined(LUA_ERRGCMM)
+ /* So Lua 5.4 actually removes this, which breaks sol2...
+diff --git a/include/sol/state.hpp b/include/sol/state.hpp
+--- a/include/sol/state.hpp
++++ b/include/sol/state.hpp
+@@ -27,6 +27,21 @@
+ #include <sol/state_view.hpp>
+ #include <sol/thread.hpp>
+ 
++inline lua_State* sol_lua_newstate(lua_Alloc f, void* ud,
++     [[maybe_unused]] unsigned seed
++#if LUA_VERSION_NUM >= 505
++     = luaL_makeseed(nullptr)
++#else
++     = 0
++#endif
++) {
++#if LUA_VERSION_NUM >= 505
++	return ::lua_newstate(f, ud, seed);
++#else
++	return ::lua_newstate(f, ud);
++#endif
++}
++
+ namespace sol {
+ 
+ 	class state : private std::unique_ptr<lua_State, detail::state_deleter>, public state_view {
+@@ -39,7 +54,7 @@
+ 		}
+ 
+ 		state(lua_CFunction panic, lua_Alloc alfunc, void* alpointer = nullptr)
+-		: unique_base(lua_newstate(alfunc, alpointer)), state_view(unique_base::get()) {
++		: unique_base(sol_lua_newstate(alfunc, alpointer)), state_view(unique_base::get()) {
+ 			set_default_state(unique_base::get(), panic);
+ 		}
+ 
+diff --git a/include/sol/state_view.hpp b/include/sol/state_view.hpp
+--- a/include/sol/state_view.hpp
++++ b/include/sol/state_view.hpp
+@@ -32,6 +32,7 @@
+ 
+ #include <memory>
+ #include <cstddef>
++#include <limits>
+ 
+ namespace sol {
+ 
+@@ -676,7 +677,9 @@
+ 			// THOUGHT: std::chrono-alikes to map "kilobyte size" here...?
+ 			// Make it harder to give MB or KB to a B parameter...?
+ 			// Probably overkill for now.
+-#if SOL_LUA_VERSION_I_ >= 504
++#if SOL_LUA_VERSION_I_ >= 505
++			return lua_gc(lua_state(), LUA_GCSTEP, static_cast<std::size_t>(step_size_kilobytes) * 1024) != 0;
++#elif SOL_LUA_VERSION_I_ >= 504
+ 			// The manual implies that this function is almost always successful...
+ 			// is it?? It could depend on the GC mode...
+ 			return lua_gc(lua_state(), LUA_GCSTEP, step_size_kilobytes) != 0;
+@@ -694,6 +697,7 @@
+ 		}
+ 
+ 		// Returns the old GC mode. Check support using the supports_gc_mode function.
++		// On Lua 5.4 and 5.5, zero preserves each parameter. The step size is a base-2 logarithm.
+ 		gc_mode change_gc_mode_incremental(int pause, int step_multiplier, int step_byte_size) {
+ 			// "What the fuck does any of this mean??"
+ 			// http://www.lua.org/manual/5.4/manual.html#2.5.1
+@@ -701,8 +705,22 @@
+ 			// THOUGHT: std::chrono-alikes to map "byte size" here...?
+ 			// Make it harder to give MB or KB to a B parameter...?
+ 			// Probably overkill for now.
++#if SOL_LUA_VERSION_I_ >= 505
++			if (pause != 0) {
++				lua_gc(lua_state(), LUA_GCPARAM, LUA_GCPPAUSE, pause);
++			}
++			if (step_multiplier != 0) {
++				lua_gc(lua_state(), LUA_GCPARAM, LUA_GCPSTEPMUL, step_multiplier);
++			}
++			if (step_byte_size > 0) {
++				int step_bytes = step_byte_size < std::numeric_limits<int>::digits ? 1 << step_byte_size : (std::numeric_limits<int>::max)();
++				lua_gc(lua_state(), LUA_GCPARAM, LUA_GCPSTEPSIZE, step_bytes);
++			}
++			int old_mode = lua_gc(lua_state(), LUA_GCINC);
++#elif SOL_LUA_VERSION_I_ >= 504
++			int old_mode = lua_gc(lua_state(), LUA_GCINC, pause, step_multiplier, step_byte_size);
++#endif
+ #if SOL_LUA_VERSION_I_ >= 504
+-			int old_mode = lua_gc(lua_state(), LUA_GCINC, pause, step_multiplier, step_byte_size);
+ 			if (old_mode == LUA_GCGEN) {
+ 				return gc_mode::generational;
+ 			}
+@@ -718,11 +736,23 @@
+ 		}
+ 
+ 		// Returns the old GC mode. Check support using the supports_gc_mode function.
++		// On Lua 5.5, major_multiplier controls the minor-to-major transition,
++		// not Lua 5.4's major multiplier. Zero preserves each parameter.
+ 		gc_mode change_gc_mode_generational(int minor_multiplier, int major_multiplier) {
+ #if SOL_LUA_VERSION_I_ >= 504
+ 			// "What does this shit mean?"
+ 			// http://www.lua.org/manual/5.4/manual.html#2.5.2
++#if SOL_LUA_VERSION_I_ >= 505
++			if (minor_multiplier != 0) {
++				lua_gc(lua_state(), LUA_GCPARAM, LUA_GCPMINORMUL, minor_multiplier);
++			}
++			if (major_multiplier != 0) {
++				lua_gc(lua_state(), LUA_GCPARAM, LUA_GCPMINORMAJOR, major_multiplier);
++			}
++			int old_mode = lua_gc(lua_state(), LUA_GCGEN);
++#else
+ 			int old_mode = lua_gc(lua_state(), LUA_GCGEN, minor_multiplier, major_multiplier);
++#endif
+ 			if (old_mode == LUA_GCGEN) {
+ 				return gc_mode::generational;
+ 			}
+diff --git a/documentation/source/api/state.rst b/documentation/source/api/state.rst
+--- a/documentation/source/api/state.rst
++++ b/documentation/source/api/state.rst
+@@ -182,6 +182,22 @@
+ Attempts to run the garbage collector. Note that this is subject to the same rules as the Lua API's collect_garbage function: memory may or may not be freed, depending on dangling references or other things, so make sure you don't have tables or other stack-referencing items currently alive or referenced that you want to be collected.
+ 
+ 
++On Lua 5.4 and 5.5, ``change_gc_mode_incremental`` leaves zero parameters
++unchanged and interprets the step size as a base-2 logarithm. Lua 5.5 converts
++positive step sizes to bytes and clamps them to the native ``int`` range before
++Lua compresses them. Negative step sizes leave the Lua 5.5 parameter unchanged.
++
++``step_gc`` retains its kilobyte budget. On Lua 5.5, the budget must be
++nonnegative and its byte count must fit the linked Lua build's memory type.
++Zero requests a basic collector step; older negative-budget debt adjustments
++have no portable Lua 5.5 equivalent.
++
++On Lua 5.5, ``change_gc_mode_generational`` sets the minor multiplier and the
++minor-to-major transition multiplier. Zero leaves either unchanged. The second
++parameter is not equivalent to Lua 5.4's major multiplier. Both mode-changing
++functions return the previous mode; older Lua behavior is unchanged.
++
++
+ .. code-block:: cpp
+ 	:caption: function: make a table
+ 

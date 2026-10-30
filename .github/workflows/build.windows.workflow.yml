@@ -3,7 +3,6 @@ name: Build Windows
 permissions:
   actions: write
   contents: write
-  packages: write
 
 on:
   push:
@@ -20,10 +19,7 @@ jobs:
     name: "Build: Windows ${{ matrix.arch }}-${{ matrix.config }}"
     runs-on: ${{ matrix.os }}
     env:
-      VCPKG_FEATURE_FLAGS: manifests,binarycaching
-      VCPKG_BINARY_SOURCES: ${{ format('clear;nuget,https://nuget.pkg.github.com/{0}/index.json,{1}', github.repository_owner, github.event_name == 'pull_request' && 'read' || 'readwrite') }}
-      VCPKG_NUGET_REPOSITORY: https://github.com/${{ github.repository }}.git
-      VCPKG_DOWNLOADS: ${{ github.workspace }}\.vcpkg-downloads
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm-cache
       SCCACHE_GHA_ENABLED: "true"
 
     strategy:
@@ -47,34 +43,27 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Configure MSVC environment
+      uses: TheMrMilchmann/setup-msvc-dev@v4
+      with:
+        arch: ${{ matrix.arch }}
+
     - name: Install latest CMake
       uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140 # latest as of 2025-10-04
 
-    - name: Ensure vcpkg downloads directory exists
-      shell: pwsh
-      run: |
-        New-Item -ItemType Directory -Path "$env:VCPKG_DOWNLOADS" -Force | Out-Null
-
-    - name: Cache vcpkg downloads
+    - name: Cache CPM sources
       uses: actions/cache@v4
       with:
-        path: ${{ env.VCPKG_DOWNLOADS }}
-        key: ${{ runner.os }}-vcpkg-downloads-${{ hashFiles('gui/qt/vcpkg.json', 'gui/qt/vcpkg-configuration.json') }}
+        path: ${{ env.CPM_SOURCE_CACHE }}
+        key: ${{ runner.os }}-${{ matrix.arch }}-cpm-${{ hashFiles('gui/qt/cmake/**') }}
         restore-keys: |
-          ${{ runner.os }}-vcpkg-downloads-
+          ${{ runner.os }}-${{ matrix.arch }}-cpm-
 
-    - name: Restore artifacts, or setup vcpkg (do not install any package)
-      uses: lukka/run-vcpkg@5ad8bfa6267ef808f7d48cf4004c879bed752401 # latest as of 2026-08-22
+    - name: Cache built Qt
+      uses: actions/cache@v4
       with:
-        vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
-
-    - name: Configure vcpkg NuGet source
-      shell: pwsh
-      run: |
-        $nugetExe = (& "$env:VCPKG_ROOT\vcpkg.exe" fetch nuget | Select-Object -Last 1)
-        & $nugetExe sources remove -Name GitHub -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" 2>$null
-        & $nugetExe sources add -Name GitHub -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" -Username "${{ github.repository_owner }}" -Password "${{ secrets.GITHUB_TOKEN }}" -StorePasswordInClearText
-        & $nugetExe setapikey "${{ secrets.GITHUB_TOKEN }}" -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/cpm/Win-${{ matrix.arch }}/_deps
+        key: ${{ runner.os }}-${{ matrix.arch }}-qt-${{ hashFiles('gui/qt/CMakeLists.txt', 'gui/qt/CMakePresets.json', 'gui/qt/cmake/**') }}
 
     - name: Start sccache
       uses: mozilla-actions/sccache-action@v0.0.9
@@ -84,24 +73,20 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Win-${{ matrix.arch }}'
-        configurePresetAdditionalArgs: "['-DDEPS_RELEASE_ONLY=ON', '-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
+        configurePresetAdditionalArgs: "['-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
         buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.config }}'
-      env:
-        VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-windows
-        VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.arch }}-windows-static-release
-        VCPKG_FORCE_SYSTEM_BINARIES: 1
 
     - name: Upload ${{ matrix.arch }} ${{ matrix.config }} EXE
       uses: actions/upload-artifact@v7
       with:
         name: CEmu_win-${{ matrix.arch }}_master
-        path: ${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe
+        path: ${{ github.workspace }}/gui/qt/CEmu.build/cpm/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe
 
     - name: Prepare binary for release upload
       if: ${{ matrix.config == 'Release' }}
       run: |
         $ReleaseName = "CEmu-nightly_win-${{ matrix.arch }}-msvc.exe"
-        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe" -NewName $ReleaseName
+        Rename-Item -Path "${{ github.workspace }}/gui/qt/CEmu.build/cpm/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe" -NewName $ReleaseName
         echo "RELEASE_NAME=$ReleaseName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Update nightly release
@@ -112,4 +97,4 @@ jobs:
         prerelease: true
         token: ${{secrets.GITHUB_TOKEN}}
         files: |
-          ./gui/qt/CEmu.build/Win-${{ matrix.arch }}/${{ matrix.config }}/${{ env.RELEASE_NAME }}
+          ./gui/qt/CEmu.build/cpm/Win-${{ matrix.arch }}/${{ matrix.config }}/${{ env.RELEASE_NAME }}

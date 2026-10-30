@@ -144,52 +144,34 @@ if (!win32-msvc*) {
     QMAKE_CXXFLAGS += /MP
 
     if (contains(DEFINES, LIBUSB_SUPPORT)) {
-        equals(LIBUSB_FROM_VCPKG, 1) {
-            warning("Enabled using libusb from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libusb installed within vcpkg, the build will likely fail.")
-        } else {
-            CONFIG += link_pkgconfig
-            PKGCONFIG += libusb-1.0
-        }
+        CONFIG += link_pkgconfig
+        PKGCONFIG += libusb-1.0
     }
 
-    # Do we have a flag specifying use of libpng-apng from vcpkg?
-    equals(LIBPNG_APNG_FROM_VCPKG, 1) {
-        warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
-        # This is a bad hack, but MOC kinda needs it to work correctly...
-        QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
-    }
-
-    # Otherwise...
-    !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
-        # If we're not using vcpkg, we rely on manual variables to find needed
-        # libpng-apng components.
-        #
-        # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
-        # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
-        # The logic below accounts for both specifying in the real shell environment,
-        # as well as directly on the command line (e.g. qmake VAR=1).
+    # MSVC builds use explicit paths to an APNG-enabled libpng and zlib.
+    # Accept these variables from qmake's command line or the environment.
+    isEmpty(LIBPNG_APNG_LIB) {
+        LIBPNG_APNG_LIB = $$(LIBPNG_APNG_LIB)
         isEmpty(LIBPNG_APNG_LIB) {
-            LIBPNG_APNG_LIB = $$(LIBPNG_APNG_LIB)
-            isEmpty(LIBPNG_APNG_LIB) {
-                error("For MSVC builds, we require LIBPNG_APNG_LIB to point to the libpng-apng lib file to compile against. Please set this in your environment and try again. Alternatively, set LIBPNG_APNG_FROM_VCPKG=1 if you use vcpkg and installed libpng-apng in it.")
-            }
+            error("For MSVC builds, set LIBPNG_APNG_LIB to the libpng-apng library file.")
         }
-        isEmpty(ZLIB_LIB) {
-            ZLIB_LIB = $$(ZLIB_LIB)
-            isEmpty(ZLIB_LIB) {
-                error("For MSVC builds, we require ZLIB_LIB to point to the zlib lib file to compile against. Please set this in your environment and try again. Alternatively, set LIBPNG_APNG_FROM_VCPKG=1 if you use vcpkg and installed libpng-apng in it.")
-            }
-        }
-        isEmpty(LIBPNG_APNG_INCLUDE) {
-            LIBPNG_APNG_INCLUDE = $$(LIBPNG_APNG_INCLUDE)
-            isEmpty(LIBPNG_APNG_INCLUDE) {
-                error("For MSVC builds, we require LIBPNG_APNG_INCLUDE to point to the libpng-apng include director to use for compiling. Please set this in your environment and try again. Alternatively, set LIBPNG_APNG_FROM_VCPKG=1 if you use vcpkg and installed libpng-apng in it.")
-            }
-        }
-
-        LIBS += $$LIBPNG_APNG_LIB $$ZLIB_LIB
-        INCLUDEPATH += $$LIBPNG_APNG_INCLUDE
     }
+    isEmpty(ZLIB_LIB) {
+        ZLIB_LIB = $$(ZLIB_LIB)
+        isEmpty(ZLIB_LIB) {
+            error("For MSVC builds, set ZLIB_LIB to the zlib library file.")
+        }
+    }
+    isEmpty(LIBPNG_APNG_INCLUDE) {
+        LIBPNG_APNG_INCLUDE = $$(LIBPNG_APNG_INCLUDE)
+        isEmpty(LIBPNG_APNG_INCLUDE) {
+            error("For MSVC builds, set LIBPNG_APNG_INCLUDE to the libpng-apng include directory.")
+        }
+    }
+
+    LIBS += $$LIBPNG_APNG_LIB $$ZLIB_LIB
+    INCLUDEPATH += $$LIBPNG_APNG_INCLUDE
+    QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
 }
 
 if (macx|linux) {
