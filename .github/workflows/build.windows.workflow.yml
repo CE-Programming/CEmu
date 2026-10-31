@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [ master, test-ci, feature/python ]
+    branches: [ master, test-ci, feature/python, cpm ]
   pull_request:
     branches: [ master, feature/python ]
 
@@ -64,17 +64,22 @@ jobs:
       with:
         path: ${{ github.workspace }}/gui/qt/CEmu.build/cpm/Win-${{ matrix.arch }}/_deps
         key: ${{ runner.os }}-${{ matrix.arch }}-qt-${{ hashFiles('gui/qt/CMakeLists.txt', 'gui/qt/CMakePresets.json', 'gui/qt/cmake/**') }}
+        # The Qt install prefix validates its own toolchain/configuration hash.
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.arch }}-qt-
 
     - name: Start sccache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Build CEmu ${{ matrix.config }} on Windows ${{ matrix.arch }}
-      uses: lukka/run-cmake@c575fbf7e977dee9e825cfea913263f7c4377960 # latest as of 2026-08-22
-      with:
-        cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: 'Win-${{ matrix.arch }}'
-        configurePresetAdditionalArgs: "['-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
-        buildPreset: 'Win-${{ matrix.arch }}-${{ matrix.config }}'
+    - name: Configure CEmu ${{ matrix.config }}
+      working-directory: gui/qt
+      shell: pwsh
+      run: cmake --preset "Win-${{ matrix.arch }}" "-DSHORT_VERSION=v3.0" "-DCMAKE_C_COMPILER_LAUNCHER=sccache" "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+
+    - name: Build CEmu ${{ matrix.config }}
+      working-directory: gui/qt
+      shell: pwsh
+      run: cmake --build --preset "Win-${{ matrix.arch }}-${{ matrix.config }}" --parallel
 
     - name: Upload ${{ matrix.arch }} ${{ matrix.config }} EXE
       uses: actions/upload-artifact@v7
@@ -83,6 +88,7 @@ jobs:
         path: ${{ github.workspace }}/gui/qt/CEmu.build/cpm/Win-${{ matrix.arch }}/${{ matrix.config }}/CEmu.exe
 
     - name: Prepare binary for release upload
+      shell: pwsh
       if: ${{ matrix.config == 'Release' }}
       run: |
         $ReleaseName = "CEmu-nightly_win-${{ matrix.arch }}-msvc.exe"

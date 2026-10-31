@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [ master, test-ci, feature/python ]
+    branches: [ master, test-ci, feature/python, cpm ]
   pull_request:
     branches: [ master, feature/python ]
 
@@ -91,17 +91,22 @@ jobs:
       with:
         path: ${{ github.workspace }}/gui/qt/CEmu.build/cpm/Linux-${{ matrix.archvariant }}/_deps
         key: ${{ runner.os }}-${{ matrix.archvariant }}-qt-${{ hashFiles('gui/qt/CMakeLists.txt', 'gui/qt/CMakePresets.json', 'gui/qt/cmake/**') }}
+        # The Qt install prefix validates its own toolchain/configuration hash.
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.archvariant }}-qt-
 
     - name: Start sccache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Build CEmu ${{ matrix.archvariant }} ${{ matrix.config }} on Linux ${{ matrix.arch }}
-      uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
-      with:
-        cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: 'Linux-${{ matrix.archvariant }}'
-        configurePresetAdditionalArgs: "['-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
-        buildPreset: 'Linux-${{ matrix.archvariant }}-${{ matrix.config }}'
+    - name: Configure CEmu ${{ matrix.config }}
+      working-directory: gui/qt
+      shell: bash
+      run: cmake --preset "Linux-${{ matrix.archvariant }}" "-DSHORT_VERSION=v3.0" "-DCMAKE_C_COMPILER_LAUNCHER=sccache" "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+
+    - name: Build CEmu ${{ matrix.config }}
+      working-directory: gui/qt
+      shell: bash
+      run: cmake --build --preset "Linux-${{ matrix.archvariant }}-${{ matrix.config }}" --parallel
 
     - name: Upload binary as artifact
       uses: actions/upload-artifact@v7

@@ -41,8 +41,9 @@ build and its libpng helper script are independent of this CMake setup.
 - **Windows:** Visual Studio 2022 or newer with C++ and the Windows SDK, Git,
   CMake, Ninja, and Perl. Run from an MSVC developer shell for the desired
   architecture. Use `Win-x64` or `Win-arm64`.
-- **macOS:** Xcode command-line tools, CMake, Ninja, and pkg-config. The
-  source-built Qt defaults to macOS 13.0 or newer. Use `Mac-x64` or
+- **macOS:** Xcode command-line tools with macOS SDK 15 or newer, CMake,
+  Ninja, and pkg-config. The source-built Qt defaults to a macOS 13.0
+  deployment target. Use `Mac-x64` or
   `Mac-arm64`; these explicitly set `CMAKE_OSX_ARCHITECTURES`. Building on a
   matching host architecture is recommended.
 - **Linux:** a C/C++ toolchain, CMake, Ninja, Git, Perl, pkg-config, and the

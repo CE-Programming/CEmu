@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [ master, test-ci, feature/python ]
+    branches: [ master, test-ci, feature/python, cpm ]
   pull_request:
     branches: [ master, feature/python ]
 
@@ -34,7 +34,7 @@ jobs:
             os: macos-15-intel
           - archname: "arm"
             arch: arm64
-            os: macos-14
+            os: macos-15
 
     steps:
     - name: Checkout Git Repo
@@ -63,17 +63,22 @@ jobs:
       with:
         path: ${{ github.workspace }}/gui/qt/CEmu.build/cpm/Mac-${{ matrix.arch }}/_deps
         key: ${{ runner.os }}-${{ matrix.arch }}-qt-${{ hashFiles('gui/qt/CMakeLists.txt', 'gui/qt/CMakePresets.json', 'gui/qt/cmake/**') }}
+        # The Qt install prefix validates its own toolchain/configuration hash.
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.arch }}-qt-
 
     - name: Start sccache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Build CEmu ${{ matrix.config }} on macOS ${{ matrix.arch }}
-      uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
-      with:
-        cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
-        configurePreset: 'Mac-${{ matrix.arch }}'
-        configurePresetAdditionalArgs: "['-DSHORT_VERSION=v3.0', '-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
-        buildPreset: 'Mac-${{ matrix.arch }}-${{ matrix.config }}'
+    - name: Configure CEmu ${{ matrix.config }}
+      working-directory: gui/qt
+      shell: bash
+      run: cmake --preset "Mac-${{ matrix.arch }}" "-DSHORT_VERSION=v3.0" "-DCMAKE_C_COMPILER_LAUNCHER=sccache" "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+
+    - name: Build CEmu ${{ matrix.config }}
+      working-directory: gui/qt
+      shell: bash
+      run: cmake --build --preset "Mac-${{ matrix.arch }}-${{ matrix.config }}" --parallel
 
     - name: Move to temp folder
       run: |

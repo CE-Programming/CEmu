@@ -208,9 +208,13 @@ function(cemu_add_libpng)
         NAME libpng VERSION 1.6.59
         URL https://codeload.github.com/pnggroup/libpng/tar.gz/refs/tags/v1.6.59
         URL_HASH SHA512=2d753e764846a0a75a10f2a00c6f4ae23d2ae37237c69d59d5e619da3f143d59f4ea9ce29c1fb39435df1cef77877c83b042a2275934c353a6603061da2d2dd9
-        PATCH_COMMAND "${GIT_EXECUTABLE}" apply --ignore-space-change --whitespace=nowarn
+        # Do not let git discover CEmu above a cache located inside its worktree.
+        PATCH_COMMAND "${CMAKE_COMMAND}" -E env "GIT_CEILING_DIRECTORIES=<SOURCE_DIR>/.."
+            "${GIT_EXECUTABLE}" -C "<SOURCE_DIR>" apply --ignore-space-change --whitespace=nowarn
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/patches/libpng-1.6.59-apng.patch"
-        EXCLUDE_FROM_ALL YES SYSTEM YES
+        # Use normal include paths so CPATH (e.g. Homebrew on macOS runners)
+        # cannot select an unpatched system png.h before this APNG build.
+        EXCLUDE_FROM_ALL YES SYSTEM NO
         OPTIONS "PNG_SHARED OFF" "PNG_STATIC ON" "PNG_TESTS OFF"
                 "PNG_TOOLS OFF" "PNG_FRAMEWORK OFF" "SKIP_INSTALL_ALL ON"
     )
@@ -324,15 +328,26 @@ function(cemu_add_sol2)
         file(SHA256 "${sol2_patch}" sol2_patch_hash)
         CPMAddPackage(
             NAME sol2 VERSION 3.5.0
-            CUSTOM_CACHE_KEY "3.5.0-${sol2_patch_hash}"
+            # Invalidate entries populated by the old patch command, which could skip files.
+            CUSTOM_CACHE_KEY "3.5.0-${sol2_patch_hash}-apply2"
             URL https://codeload.github.com/ThePhD/sol2/tar.gz/refs/tags/v3.5.0
             URL_HASH SHA512=5a6ec7e16dae05ad6abea02842f62db8f64935eda438d67b2c264cbee80cee6d82200bd060387c6df837fe9f212dbe22b2772af34df1ce8bd43296dd9429558d
             # Lua 5.5 compatibility, including khaneliman's seed and GC fixes in PR #1723.
-            PATCH_COMMAND "${GIT_EXECUTABLE}" apply --ignore-space-change --whitespace=nowarn
+            PATCH_COMMAND "${CMAKE_COMMAND}" -E env "GIT_CEILING_DIRECTORIES=<SOURCE_DIR>/.."
+                "${GIT_EXECUTABLE}" -C "<SOURCE_DIR>" apply --ignore-space-change --whitespace=nowarn
                 "${sol2_patch}"
             EXCLUDE_FROM_ALL YES SYSTEM YES
             OPTIONS "SOL2_BUILD_LUA OFF" "SOL2_ENABLE_INSTALL OFF"
         )
+        file(STRINGS "${sol2_SOURCE_DIR}/include/sol/compatibility/compat-5.3.h" sol2_lua55_guard
+            REGEX "LUA_VERSION_NUM > 505")
+        file(STRINGS "${sol2_SOURCE_DIR}/include/sol/state.hpp" sol2_lua55_seed
+            REGEX "luaL_makeseed")
+        file(STRINGS "${sol2_SOURCE_DIR}/include/sol/state_view.hpp" sol2_lua55_gc
+            REGEX "LUA_GCPARAM")
+        if(NOT sol2_lua55_guard OR NOT sol2_lua55_seed OR NOT sol2_lua55_gc)
+            message(FATAL_ERROR "CPM sol2 is missing the Lua 5.5 compatibility patch. Remove its cached source and reconfigure.")
+        endif()
     endif()
     add_library(cemu_sol2 INTERFACE)
     target_link_libraries(cemu_sol2 INTERFACE sol2::sol2)
@@ -350,5 +365,5 @@ function(cemu_add_dependencies)
     cemu_add_sol2()
 endfunction()
 
-cemu_add_qt()
 cemu_add_dependencies()
+cemu_add_qt()
