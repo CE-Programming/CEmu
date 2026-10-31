@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [ master, test-ci, feature/python ]
+    branches: [ master, test-ci, feature/python, cpm ]
   pull_request:
     branches: [ master, feature/python ]
 
