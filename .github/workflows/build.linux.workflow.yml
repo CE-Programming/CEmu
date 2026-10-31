@@ -89,7 +89,7 @@ jobs:
         mkdir -p "$VCPKG_DOWNLOADS"
 
     - name: Cache vcpkg downloads
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ env.VCPKG_DOWNLOADS }}
         key: ${{ runner.os }}-vcpkg-downloads-${{ hashFiles('gui/qt/vcpkg.json', 'gui/qt/vcpkg-configuration.json') }}
@@ -124,7 +124,7 @@ jobs:
         fi
 
     - name: Start sccache
-      uses: mozilla-actions/sccache-action@v0.0.9
+      uses: mozilla-actions/sccache-action@v0.0.11
 
     - name: Build CEmu ${{ matrix.archvariant }} ${{ matrix.config }} on Linux ${{ matrix.arch }}
       uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
@@ -148,7 +148,7 @@ jobs:
 
     - name: Update nightly release
       if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
-      uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # latest as of 2025-10-04
+      uses: softprops/action-gh-release@6680cc089e59314c4460b839412c25fb6a71ce3b # latest as of 2026-10-31
       with:
         tag_name: nightly
         prerelease: true
