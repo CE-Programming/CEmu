@@ -423,15 +423,27 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+#ifdef DEBUG_SUPPORT
+    cemucore::debug_init();
+    cemucore::debug_flag(DBG_SOFT_COMMANDS, true);
+#endif
     const cemucore::emu_data_t type = options.image.empty()
         ? cemucore::EMU_DATA_ROM : cemucore::EMU_DATA_IMAGE;
     const std::string& path = options.image.empty() ? options.rom : options.image;
     if (cemucore::emu_load(type, path.c_str()) != cemucore::EMU_STATE_VALID) {
         std::cerr << "Failed to load " << path << '\n';
+#ifdef DEBUG_SUPPORT
+        cemucore::debug_free();
+#endif
         return EXIT_FAILURE;
     }
     if (!cemucore::emu_set_run_rate(options.run_rate)) {
         std::cerr << "Failed to set run rate\n";
+        cemucore::emu_exit();
+        cemucore::asic_free();
+#ifdef DEBUG_SUPPORT
+        cemucore::debug_free();
+#endif
         return EXIT_FAILURE;
     }
 
@@ -444,5 +456,8 @@ int main(int argc, char **argv)
 
     cemucore::emu_exit();
     cemucore::asic_free();
+#ifdef DEBUG_SUPPORT
+    cemucore::debug_free();
+#endif
     return EXIT_SUCCESS;
 }

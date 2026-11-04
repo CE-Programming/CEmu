@@ -3,12 +3,14 @@ AR = ar
 RM = rm -f
 
 # If you want debug/symbol info, add -gX and remove -OX as needed
-# If you want core debug support, add -DDEBUG_SUPPORT
+# Set DEBUG_SUPPORT=1 to enable core debugging (requires the zdis submodule).
 # If you want the emulator to run on a different thread than the gui, add -DMULTITHREAD
 CFLAGS = -Wall -Wextra -fPIC -O3 -std=gnu11 -static
 
-# Add debugging support, with zdis disassembler
-#CFLAGS += -DDEBUG_SUPPORT
+DEBUG_SUPPORT ?= 0
+ifeq ($(DEBUG_SUPPORT),1)
+override CPPFLAGS += -DDEBUG_SUPPORT
+endif
 
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error

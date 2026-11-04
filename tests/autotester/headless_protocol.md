@@ -4,6 +4,34 @@
 commands on standard input. Each command produces exactly one `OK` or `ERR`
 response on standard output. Core diagnostics are written to standard error.
 
+Build from the repository root with:
+
+```sh
+make -C tests/autotester -j4 cemu-headless
+```
+
+For core debugging and calculator software-console output (for example,
+CEdev's `dbg_printf`), initialize the `core/debug/zdis` submodule and build with:
+
+```sh
+git submodule update --init core/debug/zdis
+make -C tests/autotester -j4 cemu-headless DEBUG_SUPPORT=1
+```
+
+The Makefile builds the core library automatically. `DEBUG_SUPPORT` defaults
+to `0` and also applies to the `autotester` target. It controls emulator debugger
+features; optimization and compiler debug symbols still follow `CFLAGS` and
+`CXXFLAGS`. The headless runner enables software debug commands and sends their
+console output to standard error, preserving the control protocol on standard
+output.
+
+Clean both the core and frontend before changing `DEBUG_SUPPORT`:
+
+```sh
+make -C core clean
+make -C tests/autotester clean
+```
+
 Start it with either a ROM or a saved CEmu image.
 
 The process prints `CEMU_HEADLESS_READY` when it is ready for commands.

@@ -117,9 +117,15 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+#ifdef DEBUG_SUPPORT
+    cemucore::debug_init();
+#endif
     if (cemucore::EMU_STATE_VALID != cemucore::emu_load(cemucore::EMU_DATA_ROM, autotester::config.rom.c_str()))
     {
         std::cerr << "[Error] Couldn't start emulation!" << std::endl;
+#ifdef DEBUG_SUPPORT
+        cemucore::debug_free();
+#endif
         return -1;
     }
 
@@ -161,6 +167,9 @@ cleanExit:
     }
     cemucore::emu_exit();
     cemucore::asic_free();
+#ifdef DEBUG_SUPPORT
+    cemucore::debug_free();
+#endif
 
     // If no JSON/program/misc. error, return the hash failure count.
     if (retVal == 0)

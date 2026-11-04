@@ -18,6 +18,9 @@
 namespace cemucore
 {
     extern "C" {
+        #ifdef DEBUG_SUPPORT
+        #include "../../core/debug/debug.h"
+        #endif
         #include "../../core/emu.h"
         #include "../../core/link.h"
         #include "../../core/asic.h"

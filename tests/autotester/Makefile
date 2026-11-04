@@ -6,7 +6,14 @@ CXX := g++
 CXXFLAGS := -std=c++11 -O2 -Wall -Wextra
 CXXFLAGS += -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=return-type -Werror=pointer-arith -Winit-self
 
-CPPFLAGS += -DGLOB_SUPPORT
+# Define that regardless of caller-supplied CPPFLAGS
+override CPPFLAGS += -DGLOB_SUPPORT
+
+# Enable emulator debugger features in both the frontend and core.
+DEBUG_SUPPORT ?= 0
+ifeq ($(DEBUG_SUPPORT),1)
+override CPPFLAGS += -DDEBUG_SUPPORT
+endif
 
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
@@ -23,6 +30,10 @@ objects  := $(patsubst %.cpp, %.o, $(srcfiles))
 
 all: $(appname) $(headless_appname)
 
+# Recheck the core sources as part of each build.
+$(CORELIB): FORCE
+	$(MAKE) -C ../../core DEBUG_SUPPORT=$(DEBUG_SUPPORT)
+
 $(appname): autotester.o autotester_cli.o $(CORELIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ autotester.o autotester_cli.o $(LDLIBS)
 
@@ -34,3 +45,7 @@ $(headless_appname): autotester.o headless_cli.o $(CORELIB)
 
 clean:
 	rm -f $(objects) $(appname) $(headless_appname)
+
+FORCE:
+
+.PHONY: all clean FORCE
