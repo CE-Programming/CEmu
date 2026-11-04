@@ -12,6 +12,10 @@ ifeq ($(DEBUG_SUPPORT),1)
 override CPPFLAGS += -DDEBUG_SUPPORT
 endif
 
+# Print what programs write to the debug console (dbg_printf) through gui_console_printf /
+# gui_console_err_printf without debugging support too (cemu-headless, the autotester)
+#CFLAGS += -DDEBUG_CONSOLE_SUPPORT
+
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
