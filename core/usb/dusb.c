@@ -87,7 +87,7 @@
 #define DUSB_PID_CLK_MONTH                  0x003F
 #define DUSB_PID_CLK_YEAR                   0x0040
 
-#define DUSB_CLOCK_PARAMETER_COUNT          9
+#define DUSB_CLOCK_PARAMETER_COUNT          10
 
 
 #define DUSB_CONTROL_ENDPOINT               0
@@ -404,7 +404,9 @@ static uint16_t dusb_clock_parameter(const dusb_context_t *context, uint16_t *si
             value[0] = command->date_format;
             return DUSB_PID_CLK_DATE_FMT;
         case 1:
-            value[0] = command->time_format;
+            /* TI-OS copies display hours into the RTC when setting clock fields.
+             * Keep 24-hour mode until all fields are loaded to preserve AM/PM. */
+            value[0] = 0x81;
             return DUSB_PID_CLK_TIME_FMT;
         case 2:
             *size = 2;
@@ -429,6 +431,9 @@ static uint16_t dusb_clock_parameter(const dusb_context_t *context, uint16_t *si
         case 8:
             value[0] = 1;
             return DUSB_PID_CLK_ON;
+        case 9:
+            value[0] = command->time_format;
+            return DUSB_PID_CLK_TIME_FMT;
         default:
             unreachable();
     }
