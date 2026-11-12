@@ -66,8 +66,8 @@ _Note that Release builds have an update checking feature, which is disabled in 
 
 ## How to build
 
-The CMake build uses [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake) to download
-and build its dependencies, including Qt 6 and an APNG-enabled libpng. See the
+The Qt frontend builds with CMake and uses [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
+to download and build its dependencies, including Qt 6 and an APNG-enabled libpng. See the
 [CMake build instructions](docs/build-cmake.md) for prerequisites, presets, and
 using an existing Qt installation.
 

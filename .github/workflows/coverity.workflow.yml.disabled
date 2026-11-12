@@ -1,9 +1,12 @@
 name: Coverity Scan
 
-# We only want to test official release code, not every pull request.
+# Kept disabled until Coverity scanning is re-enabled explicitly.
 on:
   push:
     branches: [master]
+
+permissions:
+  contents: read
 
 jobs:
   coverity:
@@ -14,31 +17,23 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Install Linux dependencies (Ubuntu 22.04+)
+    - name: Install dependencies
       run: |
-        set -e
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends qt6-base-dev qmake6 qtchooser libgl1-mesa-dev libarchive-dev libudev-dev libusb-1.0-0-dev
+        sudo apt-get install -y --no-install-recommends build-essential ninja-build pkg-config patch perl qt6-base-dev libudev-dev
 
-    - name: set-up qt6
-      run: |
-        qtchooser -install qt6 $(which qmake6)
-        sudo mv ~/.config/qtchooser/qt6.conf /usr/share/qtchooser/qt6.conf
-        sudo mkdir -p /usr/lib/$(uname -p)-linux-gnu/qt-default/qtchooser
-        sudo ln -n /usr/share/qtchooser/qt6.conf /usr/lib/$(uname -p)-linux-gnu/qt-default/qtchooser/default.conf
-        echo "QT_SELECT=qt6" >> "$GITHUB_ENV"
-        
-    - name: Prepare build
-      run: |
-        set -e
-        cd gui/qt/capture ; /bin/bash ./get_libpng-apng.sh ; cd ../../../
-        mkdir build
-        cd build
-        qmake6 ../gui/qt
-    
+    - name: Install latest CMake
+      uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140
+
+    - name: Configure CEmu
+      run: >-
+        cmake -S gui/qt -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        -DCEMU_QT_PROVIDER=system -DBUILD_SHARED_LIBS=ON
+        -DCEMU_DEPLOY_RUNTIME=OFF
+
     - uses: vapier/coverity-scan-action@v1
       with:
         email: ${{ secrets.COVERITY_SCAN_EMAIL }}
         token: ${{ secrets.COVERITY_SCAN_TOKEN }}
         working-directory: "${{ github.workspace }}/build"
-
+        command: cmake --build . --parallel 2

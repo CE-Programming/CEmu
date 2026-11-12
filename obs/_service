@@ -2,9 +2,10 @@
   <service name="tar_scm" mode="disabled">
     <param name="url">https://github.com/CE-Programming/CEmu.git</param>
     <param name="scm">git</param>
-    <param name="filename">CEmu</param>
-    <param name="revision">v2.0</param>
-    <param name="version">2.0</param>
+    <param name="filename">cemu</param>
+    <param name="revision">feature/python</param>
+    <param name="submodules">enable</param>
+    <param name="version">3.0</param>
   </service>
   <service name="recompress" mode="disabled">
     <param name="file">*.tar</param>
@@ -12,4 +13,3 @@
   </service>
   <service name="set_version" mode="disabled" />
 </services>
-

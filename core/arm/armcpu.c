@@ -21,7 +21,7 @@ static uint32_t sign_extend(uint32_t value, unsigned int bits) {
 # define __has_builtin(builtin) 0
 #endif
 
-#if defined(__aarch64__) && defined(__APPLE__)
+#if defined(__aarch64__)
 # define DEBUG_BREAK __builtin_trap()
 #elif defined(_MSC_VER)
 # define DEBUG_BREAK __debugbreak()

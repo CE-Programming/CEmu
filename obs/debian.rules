@@ -1,87 +1,20 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 to 1999 by Joey Hess.
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+# OBS may unpack the upstream tarball below the Debian packaging directory.
+CEMU_SOURCE_DIR := $(if $(wildcard gui/qt/CMakeLists.txt),.,cemu-3.0)
 
-export QT_SELECT := qt5
+%:
+	dh $@ --buildsystem=cmake+ninja --sourcedirectory=$(CEMU_SOURCE_DIR)/gui/qt --builddirectory=build
 
-CFLAGS = -g
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-CFLAGS += -O0
-else
-CFLAGS += -O2
-endif
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DCEMU_DEPENDENCY_PROVIDER=system -DBUILD_SHARED_LIBS=ON \
+		-DCEMU_DEPLOY_RUNTIME=OFF -DCEMU_EXECUTABLE_NAME=cemu \
+		-DSHORT_VERSION=v3.0
 
-CEMU_VERNUM = 2.0
+# The Qt CMake project does not define a test target.
+override_dh_auto_test:
 
-build: build-stamp
-build-stamp:
-	dh_testdir
-
-	# Add here commands to compile the package.
-	cd cemu-$(CEMU_VERNUM)/gui/qt/capture/libpng-apng && autoreconf -vif && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../../..
-	qmake cemu-$(CEMU_VERNUM)/gui/qt/CEmu.pro CEMU_VERSION=v$(CEMU_VERNUM) USE_LIBPNG=internal TARGET_NAME=cemu
-	make -j4
-	# --- end custom part for compiling
-
-	touch build-stamp
-
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp
-
-	# Add here commands to clean up after the build process.
-	make clean || true
-	# --- end custom part for cleaning up
-
-	dh_clean
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k
-	dh_installdirs
-
-	# Add here commands to install the package
-	make DESTDIR=/usr/src/packages/BUILD/debian/cemu/ install INSTALL_ROOT=/usr/src/packages/BUILD/debian/cemu/
-	# --- end custom part for installing
-
-# Build architecture-independent files here.
-binary-indep: build install
-	# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
-	dh_testdir
-	dh_testroot
-#   dh_installdebconf
-	dh_installdocs
-	dh_installexamples
-	dh_installmenu
-#   dh_installlogrotate
-#   dh_installemacsen
-#   dh_installpam
-#   dh_installmime
-#   dh_installinit
-	dh_installcron
-	dh_installman
-	dh_installinfo
-#   dh_undocumented
-	dh_installchangelogs
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-#   dh_makeshlibs
-	dh_installdeb
-#   dh_perl
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
+override_dh_auto_install:
+	dh_auto_install
+	install -Dm644 $(CEMU_SOURCE_DIR)/LICENSE debian/cemu/usr/share/doc/cemu/copyright

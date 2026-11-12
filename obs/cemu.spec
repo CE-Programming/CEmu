@@ -18,50 +18,35 @@
 
 %global debug_package %{nil}
 Name:           cemu
-Version:        2.0
+Version:        3.0
 Release:        0
 Summary:        TI-84 Plus CE / TI-83 Premium CE emulator
-License:        GPL-3.0
+License:        GPL-3.0-or-later
 Group:          Amusements/Teaching/Other
 Url:            https://github.com/CE-Programming/CEmu
 Source:         %{name}-%{version}.tar.xz
 
-BuildRequires:  git
-BuildRequires:  pkgconfig
-
-%if 0%{?suse_version} > 1600
-BuildRequires:  gcc14-c++
-%else
-%if 0%{?sle_version} == 150600
-BuildRequires:  gcc13-c++
-%else
-%if 0%{?sle_version} == 150500
-BuildRequires:  gcc12-c++
-%else
 BuildRequires:  gcc-c++
-%endif
-%endif
-%endif
-
-BuildRequires:  autoconf
-BuildRequires:  automake
-BuildRequires:  libtool
-BuildRequires:  zlib-devel
-BuildRequires:  libarchive-devel
-BuildRequires:  hicolor-icon-theme
-Requires:       hicolor-icon-theme
-%if  0%{?fedora_version}
-BuildRequires:  openssl-devel
-BuildRequires:  llvm-libs
-%endif
-%if  0%{?fedora_version} || 0%{?rhel_version} || 0%{?centos_version}
-BuildRequires:  qt5-qtbase-devel >= 5.7
-BuildRequires:  qt5-qtdeclarative-devel
+BuildRequires:  git
+BuildRequires:  cmake >= 3.24
+BuildRequires:  pkgconfig
+BuildRequires:  pkgconfig(Qt6Widgets) >= 6.2
+BuildRequires:  pkgconfig(Qt6Network) >= 6.2
+BuildRequires:  pkgconfig(zlib)
+BuildRequires:  pkgconfig(libpng)
+BuildRequires:  pkgconfig(libarchive)
+BuildRequires:  pkgconfig(libusb-1.0)
+BuildRequires:  cmake(sol2) >= 3.5
+%if 0%{?suse_version}
+BuildRequires:  ninja
+BuildRequires:  lua54-devel
 %else
-BuildRequires:  libqt5-qtbase-devel >= 5.7
-BuildRequires:  libqt5-qtdeclarative-devel
-BuildRequires:  update-desktop-files
+BuildRequires:  ninja-build
+BuildRequires:  lua-devel >= 5.4
+BuildRequires:  lua-devel < 5.5
 %endif
+Requires:       hicolor-icon-theme
+Requires:       shared-mime-info
 
 %description
 Third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator,
@@ -71,30 +56,23 @@ focused on developer features.
 %setup -q
 
 %build
-export CC=gcc
-export CXX=g++
-test -x "$(type -p gcc-8)"   && export CC=gcc-8
-test -x "$(type -p g++-8)"   && export CXX=g++-8
-test -x "$(type -p gcc-9)"   && export CC=gcc-9
-test -x "$(type -p g++-9)"   && export CXX=g++-9
-test -x "$(type -p gcc-10)"   && export CC=gcc-10
-test -x "$(type -p g++-10)"   && export CXX=g++-10
-test -x "$(type -p gcc-11)"   && export CC=gcc-11
-test -x "$(type -p g++-11)"   && export CXX=g++-11
-test -x "$(type -p gcc-12)"   && export CC=gcc-12
-test -x "$(type -p g++-12)"   && export CXX=g++-12
-test -x "$(type -p gcc-13)"   && export CC=gcc-13
-test -x "$(type -p g++-13)"   && export CXX=g++-13
-test -x "$(type -p gcc-14)"   && export CC=gcc-14
-test -x "$(type -p g++-14)"   && export CXX=g++-14
-cd gui/qt/capture/libpng-apng && autoreconf -vif && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../..
-qmake-qt5 QMAKE_CC="$CC" QMAKE_CXX="$CXX" QMAKE_LINK="$CXX" gui/qt/CEmu.pro CEMU_VERSION=v2.0 USE_LIBPNG=internal TARGET_NAME=cemu
-make %{?_smp_mflags}
+cmake -S gui/qt -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_C_FLAGS="%{optflags}" -DCMAKE_CXX_FLAGS="%{optflags}" \
+    -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_LIBDIR=%{_lib} \
+    -DCEMU_DEPENDENCY_PROVIDER=system -DBUILD_SHARED_LIBS=ON \
+    -DCEMU_DEPLOY_RUNTIME=OFF -DCEMU_EXECUTABLE_NAME=cemu \
+    -DSHORT_VERSION=v%{version}
+cmake --build build -- %{?_smp_mflags}
 
 %install
-make %{?_smp_mflags} DESTDIR=%{buildroot} install INSTALL_ROOT=%{buildroot}
+DESTDIR=%{buildroot} cmake --install build
 
 %files
+%license LICENSE
 %{_bindir}/cemu
+%{_datadir}/applications/cemu.desktop
+%{_datadir}/mime/packages/cemu.xml
+%{_datadir}/icons/hicolor/*/apps/cemu.png
 
 %changelog

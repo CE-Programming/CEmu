@@ -1,3 +1,9 @@
+cemu (3.0-0) UNRELEASED; urgency=medium
+
+  * Migrate development builds to CMake, Qt 6 and Lua 5.4.
+
+ -- Adrien Bertrand <bertrand.adrien@gmail.com>  Thu, 12 Nov 2026 12:00:00 +0100
+
 cemu (2.0-0) unstable; urgency=low
 
   * Major core and GUI improvements: USB transfers, HW rev M+ support,
@@ -40,4 +46,3 @@ cemu (1.0-0) unstable; urgency=low
   * Initial release
 
  -- Adrien Bertrand <bertrand.adrien@gmail.com>  Sat, 20 Jan 2018 18:16:20 +0100
-

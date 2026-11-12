@@ -9,6 +9,8 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build Qt as shared libraries (CPM auxiliary libraries stay static)" OFF)
 option(COPROC_DEBUG_SUPPORT "Build ARM coprocessor debugging support" ON)
+option(CEMU_DEPLOY_RUNTIME "Install Qt runtime dependencies with CEmu" ON)
+set(CEMU_EXECUTABLE_NAME CEmu CACHE STRING "Name of the CEmu executable")
 
 project(CEmu
         VERSION 3.0
@@ -171,6 +173,7 @@ else()
 endif()
 
 qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE} ${CEmu_Sources})
+set_target_properties(CEmu PROPERTIES OUTPUT_NAME "${CEMU_EXECUTABLE_NAME}")
 
 # Keep CEmu's warning policy and sanitizers out of third-party builds.
 if(MSVC)
@@ -324,9 +327,20 @@ install(TARGETS CEmu
 
 message("Binary dir: ${CMAKE_CURRENT_BINARY_DIR}")
 
-# TODO: linux .desktop/.xml files
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    configure_file(resources/linux/cemu.desktop.in cemu.desktop @ONLY)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cemu.desktop"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+    install(FILES resources/linux/cemu.xml
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/mime/packages")
+    foreach(size IN ITEMS 16 20 22 24 32 36 40 42 48 64 72 96 128 160 192 256 512)
+        install(FILES "resources/icons/linux/cemu-${size}x${size}.png"
+            DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${size}x${size}/apps"
+            RENAME cemu.png)
+    endforeach()
+endif()
 
-if(COMMAND qt_generate_deploy_app_script)
+if(CEMU_DEPLOY_RUNTIME AND COMMAND qt_generate_deploy_app_script)
     qt_generate_deploy_app_script(
         TARGET CEmu
         OUTPUT_SCRIPT deploy_script

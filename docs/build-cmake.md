@@ -25,8 +25,7 @@ Its source cache key includes the patch content, so reconfiguring after a patch
 change selects fresh sources. With system libpng, CMake checks APNG read/write
 macros and declarations. If they are missing, it warns
 and disables animated capture; static screenshots remain available through
-Qt. An APNG-enabled system libpng enables both capture modes. The older qmake
-build and its libpng helper script are independent of this CMake setup.
+Qt. An APNG-enabled system libpng enables both capture modes.
 
 ## Platform prerequisites and presets
 
@@ -147,6 +146,22 @@ cmake --install gui/qt/CEmu.build/local --prefix /path/to/stage
 Qt's deployment helper runs during installation where supported, including
 copying shared Qt frameworks/plugins into macOS bundles. Build outputs and
 staged files remain local unless explicitly published.
+
+For distribution packages, use `CEMU_DEPENDENCY_PROVIDER=system` and
+`CEMU_DEPLOY_RUNTIME=OFF`: runtime libraries are supplied by the package manager.
+`CEMU_EXECUTABLE_NAME=cemu` preserves the lowercase executable used by the OBS
+packages; the default remains `CEmu`. On Linux, installation also includes the
+desktop entry, MIME definitions, and icons, with the desktop entry matching the
+selected executable name. `DESTDIR` is supported for staged package installs.
+
+The recipes in `obs/` target the 3.0 development sources from `feature/python`
+and use system dependencies so builds do not need network access. Their target
+repositories must supply CMake 3.24+, Qt 6, Lua 5.4, and sol2 3.5+ development
+packages. APNG recording requires an APNG-enabled system libpng; ordinary
+libpng still supports static screenshots. The source service includes Git
+submodules. Update its revision/version and the package metadata together when
+preparing a release. The Coverity workflow uses CMake with installed Qt and CPM
+auxiliary libraries, and remains disabled until explicitly re-enabled.
 
 Dependency versions and archive hashes live in
 `gui/qt/cmake/CEmuDependencies.cmake`. Update the CPM libpng together with its APNG

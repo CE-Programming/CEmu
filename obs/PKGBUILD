@@ -1,29 +1,24 @@
 pkgname=cemu
-pkgver=2.0
+pkgver=3.0
 pkgrel=0
 pkgdesc='TI-84 Plus CE / TI-83 Premium CE emulator.'
-arch=('i686' 'x86_64')
+arch=('i686' 'x86_64' 'aarch64')
 url='https://github.com/CE-Programming/CEmu'
-conflicts=('cemu')
-license=()
-depends=()
-makedepends=('qt5-declarative')
+license=('GPL-3.0-or-later')
+depends=('qt6-base' 'zlib' 'libpng' 'libarchive' 'libusb' 'lua54' 'hicolor-icon-theme' 'shared-mime-info')
+makedepends=('cmake>=3.24' 'ninja' 'git' 'pkgconf' 'sol2>=3.5')
 source=("$pkgname-$pkgver.tar.xz")
-md5sums=('SKIP')
+sha256sums=('SKIP')
 
 build() {
-  # Compile...
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  cd gui/qt/capture/libpng-apng && autoreconf -vif && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../..
-  mkdir -p build
-  cd build
-  qmake ../gui/qt/CEmu.pro CEMU_VERSION=v2.0 USE_LIBPNG=internal TARGET_NAME=cemu
-  make -j4
+  cmake -S "${srcdir}/${pkgname}-${pkgver}/gui/qt" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCEMU_DEPENDENCY_PROVIDER=system -DBUILD_SHARED_LIBS=ON \
+    -DCEMU_DEPLOY_RUNTIME=OFF -DCEMU_EXECUTABLE_NAME=cemu \
+    -DSHORT_VERSION="v${pkgver}"
+  cmake --build build --parallel
 }
 
 package() {
-  # Install...
-  cd "${srcdir}/${pkgname}-${pkgver}/build"
-  INSTALL_ROOT="${pkgdir}" make install
+  DESTDIR="${pkgdir}" cmake --install build
 }
-

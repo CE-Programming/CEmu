@@ -1,9 +1,9 @@
 Format: 3.0 (quilt)
 Source: cemu
 Binary: cemu
-Version: 2.0-0
+Version: 3.0-0
 Architecture: any
 Maintainer: Adrien Bertrand <bertrand.adrien@gmail.com>
 Homepage: https://github.com/CE-Programming/CEmu
-Standards-Version: 3.9.6
-Build-Depends: automake, autoconf, libtool, pkg-config, debhelper (>= 9), qtbase5-dev (>= 5.7), qtdeclarative5-dev, qttools5-dev, qttools5-dev-tools, zlib1g-dev, libarchive-dev
+Standards-Version: 4.7.0
+Build-Depends: debhelper-compat (= 13), cmake (>= 3.24), ninja-build, git, pkg-config, qt6-base-dev (>= 6.2), zlib1g-dev, libpng-dev, libarchive-dev, libusb-1.0-0-dev, liblua5.4-dev, sol2-dev (>= 3.5)

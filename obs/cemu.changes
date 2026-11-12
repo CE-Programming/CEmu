@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Nov 12 11:00:00 UTC 2026 - bertrand.adrien@gmail.com
+
+- Migrate 3.0 development builds to CMake, Qt 6 and Lua 5.4.
+
+-------------------------------------------------------------------
 Thu Sep 5 10:00:00 UTC 2024 - bertrand.adrien@gmail.com
 
 - v2.0: Major core and GUI improvements: USB transfers, HW rev M+
