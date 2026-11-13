@@ -40,6 +40,20 @@ typedef struct flash_state {
 
 extern flash_state_t flash;
 
+/* Optional profiling of serial flash reads for front ends (off when NULL). A line is
+ * FLASH_CACHE_LINE_SIZE bytes; it is entered when a read follows a read of another line.
+ * flash_line_profile: 2 counters per line (FLASH_PROFILE_LINES lines), the times it was
+ * entered then its cache misses. flash_line_hook: called with each line entered, in order
+ * (for cache simulations and code layout studies). */
+#define FLASH_PROFILE_LINES (0x1000000 >> FLASH_CACHE_LINE_BITS)
+extern uint32_t *flash_line_profile;
+extern void (*flash_line_hook)(uint32_t line);
+
+/* Nonzero: every serial flash read costs this many cycles and the cache is not modeled.
+ * 10 is what a calculator made before revision M spends per byte (parallel flash with the
+ * OS's 9 wait states), to compare timings with a revision M ROM. */
+extern uint32_t flash_fixed_cycles;
+
 void flash_flush_cache(void);
 uint32_t flash_touch_cache(uint32_t addr);
 
